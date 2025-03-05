@@ -13,6 +13,7 @@ export interface Race {
     num_winners:    number; // number of winners
     candidates:     Candidate[]; // list of candidates
     precincts?:     String[]; // list of precincts that vote in this election, if null then open to all precincts
+    enable_write_in?: Boolean; //Allow voters to write in candidates
 }
 export function raceValidation(obj:Race):string | null {
     if (!obj.race_id || typeof obj.race_id !== 'string') {
