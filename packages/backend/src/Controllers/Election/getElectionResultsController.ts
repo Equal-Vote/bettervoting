@@ -140,7 +140,7 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
             numExcludedWriteIns: race.enable_write_in ? numExcludedWriteIns : undefined,
         };
     }
-
+    
     res.json(
         {
             election: election,
