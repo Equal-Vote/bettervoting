@@ -29,6 +29,7 @@ export const permissions = {
   canUpdatePublicArchive:    [roles.system_admin],
   canUploadBallots:          [roles.system_admin, roles.owner],
   canQueryElections:         [roles.system_admin],
+  canProcessWriteIns:        [roles.system_admin, roles.owner, roles.admin],
 }
 
 export const hasPermission = (roles:roles[],permission:permission) => {

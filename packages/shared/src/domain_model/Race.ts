@@ -2,6 +2,7 @@ import { Candidate } from "./Candidate";
 import { Uid } from "./Uid";
 import { checkForDuplicates } from "./Util";
 import { candidateValidation } from "./Candidate";
+import { WriteInCandidate } from "./WriteIn";
 
 const validVotingMethods = ['STAR', 'STAR_PR', 'Approval', 'RankedRobin', 'IRV', 'Plurality', 'STV'] as const;
 export type VotingMethod = typeof validVotingMethods[number];
@@ -14,6 +15,7 @@ export interface Race {
     candidates:     Candidate[]; // list of candidates
     precincts?:     String[]; // list of precincts that vote in this election, if null then open to all precincts
     enable_write_in?: Boolean; //Allow voters to write in candidates
+    write_in_candidates?: WriteInCandidate[]
 }
 export function raceValidation(obj:Race):string | null {
     if (!obj.race_id || typeof obj.race_id !== 'string') {
