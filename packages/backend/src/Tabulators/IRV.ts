@@ -34,7 +34,7 @@ export function IRV_STV(candidates: candidate[], votes: rawVote[], nWinners = 1,
         undefined,
 		[
 			makeBoundsTest(0, electionSettings?.max_rankings ?? Infinity), 
-			makeAbstentionTest(null),
+			makeAbstentionTest(),
 		]
 	);
 

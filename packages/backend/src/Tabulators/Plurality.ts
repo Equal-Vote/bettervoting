@@ -12,7 +12,7 @@ export function Plurality(candidates: candidate[], votes: rawVote[], nWinners = 
     'score',
 		[
 			makeBoundsTest(0, 1),
-			makeAbstentionTest(null),
+			makeAbstentionTest(),
       // not sure why I can't use Object.values below
       ['nOvervotes', (vote: rawVote) => Object.entries(vote.marks).reduce((prev, [_, m]) => prev + (m??0), 0) > 1]
 		]

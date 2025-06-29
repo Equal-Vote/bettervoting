@@ -30,6 +30,7 @@ ballot:
   dialog_email_placeholder: Receipt Email
   dialog_cancel: Cancel
   dialog_submit: Submit
+  dialog_abstention: Abstained - No preference was expressed
   warnings:
     skipped_rank: Do not skip rankings. Rank candidates in order to clearly show preferences. Candidates left blank are ranked last.
     duplicate_rank: Do not rank multiple candidates equally. (Ranking candidates equally can void your ballot.)

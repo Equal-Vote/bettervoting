@@ -11,7 +11,7 @@ export function RankedRobin(candidates: candidate[], votes: rawVote[], nWinners 
     'copelandScore',
 		[
 			makeBoundsTest(0, electionSettings?.max_rankings ?? Infinity), 
-			makeAbstentionTest(null),
+			makeAbstentionTest(),
 		]
 	);
 
