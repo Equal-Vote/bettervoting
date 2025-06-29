@@ -23,7 +23,7 @@ export function AllocatedScore(candidates: candidate[], votes: rawVote[], nWinne
         undefined,
 		[
 			makeBoundsTest(0, 5),
-			makeAbstentionTest(null), 
+			makeAbstentionTest(), 
 		]
 	)
 

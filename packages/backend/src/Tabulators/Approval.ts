@@ -11,7 +11,7 @@ export function Approval(candidates: candidate[], votes: rawVote[], nWinners = 1
     'score',
 		[
 			makeBoundsTest(0, 1),
-			makeAbstentionTest(null),
+			makeAbstentionTest(),
 		],
 	);
 

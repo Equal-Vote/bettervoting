@@ -183,8 +183,13 @@ const VotePage = () => {
   if(pages.length == 0){
     return <Container disableGutters={true} maxWidth="sm"><h3>No races created for election</h3></Container>
   }
+
+  const ALL_EQUAL_IS_ABSTENTION_VOTING_METHODS = new Set(['STAR', 'STAR_PR']);
+  const allEqualIsAbstention = (page) => {
+    return ALL_EQUAL_IS_ABSTENTION_VOTING_METHODS.has(page.voting_method);
+  }
   const pageIsUnderVote = (page) => {
-    return page.candidates.every(c => c.score == null);
+    return page.candidates.every(c => c.score === (allEqualIsAbstention(page) ? page.candidates[0].score : null));
   }
 
   return (
@@ -289,7 +294,7 @@ const VotePage = () => {
                 </Typography>
                 {pageIsUnderVote(page) ?
                   <Typography variant="body1" color='var(--ltbrand-blue)'>
-                    <b>Abstained</b>
+                    <b>{t("ballot.dialog_abstention")}</b>
                   </Typography>
                   :
                   page.candidates.map(candidate => (
