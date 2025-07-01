@@ -243,7 +243,7 @@ const headCellPool = {
         id: 'description',
         numeric: false,
         disablePadding: false,
-        label: 'Description',
+        label: 'Election Desription',
         filterType: 'search',
         formatter: descr => limit(descr, 30)
     },

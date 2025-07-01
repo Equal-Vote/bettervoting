@@ -173,7 +173,7 @@ export default function RaceForm({
                     <TextField
                         id={`race-description-${String(race_index)}`}
                         name="description"
-                        label="Description"
+                        label="Race Description"
                         disabled={isDisabled}
                         multiline
                         fullWidth
