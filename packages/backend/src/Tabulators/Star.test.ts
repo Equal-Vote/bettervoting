@@ -115,13 +115,17 @@ describe("STAR Tests", () => {
     test("Test valid/invalid/under/bullet vote counts", () => {
         const candidates = ['Allison', 'Bill', 'Carmen']
         const votes = [
-            [1, 3, 5],
-            [1, 3, 5],
-            [1, 3, 5],
+            [5, 5, 5],
+            [3, 3, 3],
             [null, null, null],
             [null, null, null],
-            [-1, 3, 5],
+            [0, null, null],
+            [null, 0, null],
             [0, 3, 6],
+            [-1, 3, 5],
+            [1, 3, 5],
+            [1, 3, 5],
+            [1, 3, 5],
             [5, 0, 0],
             [0, 5, 0],
             [0, 0, 5],
@@ -130,7 +134,7 @@ describe("STAR Tests", () => {
         const results = Star(...mapMethodInputs(candidates, votes), 1)
         expect(results.summaryData.nTallyVotes).toBe(6);
         expect(results.summaryData.nOutOfBoundsVotes).toBe(2);
-        expect(results.summaryData.nAbstentions).toBe(2);
+        expect(results.summaryData.nAbstentions).toBe(6);
     })
 })
 

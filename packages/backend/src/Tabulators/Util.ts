@@ -93,12 +93,13 @@ export const makeBoundsTest = (minValue:number, maxValue:number) => {
 	] as const;
 }
 
-export const makeAbstentionTest = (underVoteValue:number|null = 0) => {
+export const makeAbstentionTest = (markAllEqualAsAbstention:boolean = false) => {
 	return [
 		'nAbstentions',
 		(vote: rawVote) => {
-      return Object.values(vote.marks).every(b => (underVoteValue === null ? b : (b??0)) === underVoteValue);
-    }
+            const marks = Object.values(vote.marks).map(m => m ?? 0);
+            return marks.every(m => m === (markAllEqualAsAbstention ? marks[0] : 0));
+        }
 	] as const;
 }
 
