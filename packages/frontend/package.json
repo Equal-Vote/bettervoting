@@ -57,9 +57,9 @@
     ]
   },
   "devDependencies": {
-    "@eslint/css": "^0.7.0",
+    "@eslint/css": "^0.10.0",
     "@eslint/js": "^9.24.0",
-    "@eslint/markdown": "^6.4.0",
+    "@eslint/markdown": "^6.6.0",
     "@rsbuild/core": "^1.3.22",
     "@rsbuild/plugin-node-polyfill": "^1.3.0",
     "@rsbuild/plugin-react": "^1.3.1",
@@ -68,7 +68,7 @@
     "@types/node": "^20.11.24",
     "@types/react": "^17.0.44",
     "@types/react-dom": "^17.0.15",
-    "eslint": "^9.24.0",
+    "eslint": "^9.32.0",
     "eslint-plugin-react": "^7.37.5",
     "globals": "^16.0.0",
     "identity-obj-proxy": "^3.0.0",
