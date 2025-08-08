@@ -9,5 +9,6 @@ export * from './getElectionResultsController';
 export * from './getElectionsController';
 export * from './sandboxController';
 export * from './sendInvitesController';
+export * from './setOpenStateController';
 export * from './setPublicResultsController';
 export * from './sendEmailController';
