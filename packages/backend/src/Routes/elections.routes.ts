@@ -19,6 +19,7 @@ import {
     getSandboxResults,
     sendInvitationController,
     sendInvitationsController,
+    setOpenState,
     setPublicResults,
     sendEmailsController,
 } from '../Controllers/Election';
@@ -437,6 +438,44 @@ electionsRouter.post('/Election/:id/setPublicResults',asyncHandler(setPublicResu
  *         description: Election not found 
 */
 electionsRouter.post('/Election/:id/archive', asyncHandler(archiveElection))
+
+ /** 
+ * @swagger
+ * /Election/{id}/setOpenState:
+ *   post:
+ *     summary: Change an election's state from open to closed, or from closed to open
+ *     security:
+ *      - ApiKeyAuth: []
+ *     tags: [Elections]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The election ID
+ *     requestBody:
+ *      content:
+ *        application/json:
+ *          name: closing
+ *          schema:
+ *            type: boolean
+ *         description: True if closing an open election; false if reopening a closed election
+ *     responses:
+ *       200:
+ *         description: Election state changed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 election:
+ *                   type: object
+ *                   $ref: '#/components/schemas/Election'
+ *       404:
+ *         description: Election not found 
+*/
+electionsRouter.post('/Election/:id/setOpenState', asyncHandler(setOpenState))
 
 /** 
  * @swagger

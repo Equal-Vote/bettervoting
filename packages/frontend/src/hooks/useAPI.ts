@@ -96,6 +96,10 @@ export const useArchiveEleciton = (election_id: string) => {
     return useFetch<undefined, { election: Election }>(`/API/Election/${election_id}/archive`, 'post')
 }
 
+export const useSetOpenState = (election_id: string) => {
+    return useFetch<{ closing: boolean }, { election: Election }>(`/API/Election/${election_id}/setOpenState`, 'post')
+}
+
 export const useApproveRoll = (election_id: string) => {
     return useFetch<{ electionRollEntry: ElectionRoll }, object>(`/API/Election/${election_id}/rolls/approve`, 'post')
 }

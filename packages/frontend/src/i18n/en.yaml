@@ -1003,6 +1003,19 @@ admin_home:
     title: Confirm Archive {{capital_election}}
     message: Are you sure you wish to archive this {{election}}? This action cannot be undone.
 
+  close:
+    description: Close
+    subtext: Closes the {{election}}, preventing new votes
+    button: Close
+
+  open:
+    description: Open
+    subtext: Opens the {{election}}, allowing votes
+    button: Open
+
+  close_snack: 'Election successfully closed!'
+  open_snack: 'Election successfully opened!'
+
   share:
     description: Share {{capital_election}}
     # Button is defined in the top level share section
