@@ -83,6 +83,7 @@ const App = () => {
               <Route path='/:id/*' element={<Election />} />
               <Route path='/Sandbox' element={<Sandbox />} />
               <Route path='/Volunteer' element={<Redirect href={'https://docs.bettervoting.com/contributions/0_contribution_guide.html'}/>} />
+              <Route path='/PaperBallots' element={<Redirect href={'https://docs.bettervoting.com/help/paper_ballots.html'}/>} />
               <Route path='/NameMatchTesting' element={<NameMatchingTester />} />
               <Route path='/StyleGuide' element={<StyleGuide/>} />
             </Routes>
