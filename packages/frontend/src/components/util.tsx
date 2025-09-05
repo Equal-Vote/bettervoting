@@ -56,6 +56,16 @@ export const methodValueToTextKey = {
     IRV: 'rcv',
 };
 
+export const methodTextKeyToValue = Object.fromEntries(Object.entries(methodValueToTextKey).map(([k, v]) => [v, k]))
+
+const dbKeys = {
+        'star': 'STAR',
+        'approval': 'Approval',
+        'ranked_robin': 'RankedRobin',
+        'rcv': 'IRV',
+        'choose_one': 'Plurality',
+    }
+
 export const formatPercent = (f: number): string => {
   if(0 < f && f < .01) return '<1%';
   return `${Math.round(100*f)}%`

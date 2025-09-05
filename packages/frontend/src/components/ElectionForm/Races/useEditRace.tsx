@@ -10,6 +10,7 @@ import { makeID, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/ut
 import { Candidate } from '@equal-vote/star-vote-shared/domain_model/Candidate';
 import { useDeleteAllBallots } from '~/hooks/useAPI';
 import useSnackbar from '~/components/SnackbarContext';
+import { Election, NewElection } from '@equal-vote/star-vote-shared/domain_model/Election';
 
 export interface RaceErrors {
     raceTitle?: string,
@@ -17,26 +18,29 @@ export interface RaceErrors {
     raceNumWinners?: string,
     candidates?: string
 }
-export const useEditRace = (race: iRace | null, race_index: number) => {
-    const { election, refreshElection, updateElection } = useElection()
+
+export const makeDefaultRace = () => ({
+    title: '',
+    description: '',
+    race_id: '',
+    num_winners: 1,
+    voting_method: 'STAR',
+    candidates: [
+        { 
+            candidate_id: makeID(ID_PREFIXES.CANDIDATE, ID_LENGTHS.CANDIDATE),
+            candidate_name: ''
+        },
+    ] as Candidate[],
+    precincts: undefined,
+} as iRace);
+
+export const useEditRace = (election: Election | NewElection, race: iRace | null, race_index: number) => {
+    //const { election, refreshElection, updateElection } = useElection()
     const { setSnack } = useSnackbar()
-    const { makeRequest: deleteAllBallots } = useDeleteAllBallots(election.election_id);
+    //const { makeRequest: deleteAllBallots } = useDeleteAllBallots(election.election_id);
     const confirm = useConfirm();
-    const defaultRace = {
-        title: '',
-        description: '',
-        race_id: '',
-        num_winners: 1,
-        voting_method: 'STAR',
-        candidates: [
-            { 
-                candidate_id: makeID(ID_PREFIXES.CANDIDATE, ID_LENGTHS.CANDIDATE),
-                candidate_name: ''
-            },
-        ] as Candidate[],
-        precincts: undefined,
-    } as iRace
-    const [editedRace, setEditedRace] = useState(race !== null ? race : defaultRace)
+    
+    const [editedRace, setEditedRace] = useState(race !== null ? race : makeDefaultRace())
 
     const [errors, setErrors] = useState({
         raceTitle: '',
@@ -46,7 +50,7 @@ export const useEditRace = (race: iRace | null, race_index: number) => {
     } as RaceErrors)
 
     useEffect(() => {
-        setEditedRace(race !== null ? race : defaultRace)
+        setEditedRace(race !== null ? race : makeDefaultRace())
         setErrors({
             raceTitle: '',
             raceDescription: '',
@@ -61,7 +65,7 @@ export const useEditRace = (race: iRace | null, race_index: number) => {
         setEditedRace(raceCopy)
     };
 
-    const validatePage = () => {
+    const validateRace = () => {
         let isValid = true
         const newErrors: RaceErrors = {}
 
@@ -135,59 +139,44 @@ export const useEditRace = (race: iRace | null, race_index: number) => {
         return isValid
     }
 
-    const onAddRace = async () => {
-        if (!validatePage()) return false
-        let success = await updateElection(election => {
-            election.races.push({
-                ...editedRace,
-                race_id: makeID(ID_PREFIXES.RACE, ID_LENGTHS.RACE)
-            })
-        })
-        success = success && await deleteAllBallots()
-        if (!success) return false
-        await refreshElection()
-        setEditedRace(defaultRace)
-        return true
-    }
+    // TODO: Add these where they're needed
+    //const onDuplicateRace = async () => {
+    //    if (!validateRace()) return false
+    //    let success = await updateElection(election => {
+    //        election.races.push({
+    //            ...editedRace,
+    //            title: 'Copy Of ' + editedRace.title,
+    //            race_id: makeID(ID_PREFIXES.RACE, ID_LENGTHS.RACE)
+    //        })
+    //    })
+    //    success = success && await deleteAllBallots()
+    //    if (!success) return false
+    //    await refreshElection()
+    //    return true
+    //}
 
-    const onDuplicateRace = async () => {
-        if (!validatePage()) return false
-        let success = await updateElection(election => {
-            election.races.push({
-                ...editedRace,
-                title: 'Copy Of ' + editedRace.title,
-                race_id: makeID(ID_PREFIXES.RACE, ID_LENGTHS.RACE)
-            })
-        })
-        success = success && await deleteAllBallots()
-        if (!success) return false
-        await refreshElection()
-        return true
-    }
+    //const onSaveRace = async () => {
+    //    if (!validateRace()) return false
+    //    let success = await updateElection(election => {
+    //        election.races[race_index] = editedRace
+    //    })
+    //    success = success && await deleteAllBallots()
+    //    if (!success) return false
+    //    await refreshElection()
+    //    return true
+    //}
 
-    const onSaveRace = async () => {
-        if (!validatePage()) return false
-        let success = await updateElection(election => {
-            election.races[race_index] = editedRace
-        })
-        success = success && await deleteAllBallots()
-        if (!success) return false
-        await refreshElection()
-        return true
-    }
+    //const onDeleteRace = async () => {
+    //    const confirmed = await confirm({ title: 'Confirm', message: 'Are you sure?' })
+    //    if (!confirmed) return false
+    //    let success = await updateElection(election => {
+    //        election.races.splice(race_index, 1)
+    //    })
+    //    success = success && await deleteAllBallots()
+    //    if (!success) return false
+    //    await refreshElection()
+    //    return true
+    //}
 
-    const onDeleteRace = async () => {
-        const confirmed = await confirm({ title: 'Confirm', message: 'Are you sure?' })
-        if (!confirmed) return false
-        let success = await updateElection(election => {
-            election.races.splice(race_index, 1)
-        })
-        success = success && await deleteAllBallots()
-        if (!success) return false
-        await refreshElection()
-        return true
-    }
-
-    return { editedRace, errors, setErrors, applyRaceUpdate, onSaveRace, onDeleteRace, onAddRace, onDuplicateRace }
-
+    return { editedRace, setEditedRace, errors, setErrors, applyRaceUpdate, /*onSaveRace, onDeleteRace, onDuplicateRace,*/ validateRace }
 }

@@ -1,54 +1,36 @@
 import { useContext, useState } from 'react';
 import { useNavigate } from "react-router";
 import structuredClone from '@ungap/structured-clone';
-import { PrimaryButton, SecondaryButton, StyledTextField } from '../styles.js';
-import { Box, IconButton, MenuItem, Paper, Select, SelectChangeEvent, Typography } from '@mui/material';
+import { PrimaryButton, SecondaryButton, StyledTextField, Tip } from '../styles.js';
+import { Box, capitalize, FormControlLabel, IconButton, MenuItem, Paper, Radio, RadioGroup, Select, SelectChangeEvent, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { usePostElection } from '../../hooks/useAPI';
+import { useEditElection, usePostElection } from '../../hooks/useAPI';
 import { useCookie } from '../../hooks/useCookie';
 import { NewElection } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { CreateElectionContext } from './CreateElectionDialog.js';
 import useSnackbar from '../SnackbarContext.js';
 import { makeID, makeUniqueIDSync, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
 
-import { useSubstitutedTranslation } from '../util.jsx';
+import { methodTextKeyToValue, useSubstitutedTranslation } from '../util.jsx';
 import useAuthSession from '../AuthSessionContextProvider.js';
+import RaceForm from './Races/RaceForm.js';
+import { useEditRace } from './Races/useEditRace.js';
+import { VotingMethod } from '@equal-vote/star-vote-shared/domain_model/Race';
+import { TermType } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
 
-const QuickPoll = () => {
-    const authSession = useAuthSession();
-    const [tempID] = useCookie('temp_id', '0')
-    const navigate = useNavigate()
-    const [methodKey, setMethodKey] = useState('star');
-    const { isPending, makeRequest: postElection } = usePostElection()
-    const { setSnack} = useSnackbar();
-
-    const {t} = useSubstitutedTranslation('poll');
-
-    // TODO: we may edit the db entries in the future so that these align
-    // NOTE: this is redundant with methodValueToTextKey in util
-    const dbKeys = {
-        'star': 'STAR',
-        'approval': 'Approval',
-        'ranked_robin': 'RankedRobin',
-        'rcv': 'IRV',
-        'choose_one': 'Plurality',
-    }
-
-    const existingIds = new Set<string>();
-    const generateUniqueCandidateId = () => {
-        const hasCollision = (id: string) => existingIds.has(id);
-        const newId = makeUniqueIDSync(
+const makeDefaultElection = () => {
+    const ids = [];
+    for(let i = 0; i < 3; i++){
+        ids.push(makeUniqueIDSync(
             ID_PREFIXES.CANDIDATE, 
             ID_LENGTHS.CANDIDATE,
-            hasCollision
-        );
-        existingIds.add(newId);
-        return newId;
-    };
+            (id: string) => ids.includes(id)
+        ));
+    }
 
-    const QuickPollTemplate: NewElection = {
+    return {
         title: '',
-        state: 'open',
+        state: 'draft',
         frontend_url: '',
         owner_id: '0',
         is_public: false,
@@ -58,21 +40,11 @@ const QuickPoll = () => {
                 title: '',
                 race_id: '0',
                 num_winners: 1,
-                voting_method: 'STAR',
-                candidates: [
-                    {
-                        candidate_id: generateUniqueCandidateId(),
-                        candidate_name: '',
-                    },
-                    {
-                        candidate_id: generateUniqueCandidateId(),
-                        candidate_name: '',
-                    },
-                    {
-                        candidate_id: generateUniqueCandidateId(),
-                        candidate_name: '',
-                    }
-                ],
+                voting_method: undefined,
+                candidates: ids.map(id => ({
+                    candidate_id: id,
+                    candidate_name: ''
+                })),
                 precincts: undefined,
             }
         ],
@@ -88,9 +60,24 @@ const QuickPoll = () => {
             draggable_ballot: false,
             term_type: 'poll',
         }
-    }
+    } as NewElection;
+}
 
-    const [election, setElectionData] = useState<NewElection>(QuickPollTemplate)
+const QuickPoll = () => {
+    const authSession = useAuthSession();
+    const [tempID] = useCookie('temp_id', '0')
+    const navigate = useNavigate()
+    //const [methodKey, setMethodKey] = useState('star');
+    const [page, setPage] = useState(0);
+    const { isPending, makeRequest: postElection } = usePostElection()
+    const { setSnack} = useSnackbar();
+    const [election, setElectionData] = useState<NewElection>(makeDefaultElection())
+    const { editedRace, errors, setErrors, applyRaceUpdate} = useEditRace(election, null, 0)
+
+    const [activeMethodStep, setActiveMethodStep] = useState(0);
+
+    const {t} = useSubstitutedTranslation('poll');
+
     const onSubmitElection = async (election) => {
         // calls post election api, throws error if response not ok
         const newElection = await postElection(
@@ -100,7 +87,7 @@ const QuickPoll = () => {
         if ((!newElection)) {
             throw Error("Error submitting election");
         }
-        setElectionData(QuickPollTemplate)
+        setElectionData(makeDefaultElection())
         navigate(`/${newElection.election.election_id}`)
     }
     const applyElectionUpdate = (updateFunc) => {
@@ -111,34 +98,34 @@ const QuickPoll = () => {
 
     const createElectionContext = useContext(CreateElectionContext);
 
-    const validateForm = (e) => {
-        e.preventDefault()
+    //const validateForm = (e) => {
+    //    e.preventDefault()
 
-        if (!election.title) {
-            setSnack({
-                message: 'Must specify poll title',
-                severity: 'warning',
-                open: true,
-                autoHideDuration: 6000,
-            });
-            return false;
-        }
+    //    if (!election.title) {
+    //        setSnack({
+    //            message: 'Must specify poll title',
+    //            severity: 'warning',
+    //            open: true,
+    //            autoHideDuration: 6000,
+    //        });
+    //        return false;
+    //    }
 
-        if(election.races[0].candidates.filter(c => c.candidate_name != '').length < 2){
-            setSnack({
-                message: 'Must provide at least 2 options',
-                severity: 'warning',
-                open: true,
-                autoHideDuration: 6000,
-            });
-            return false;
-        }
+    //    if(election.races[0].candidates.filter(c => c.candidate_name != '').length < 2){
+    //        setSnack({
+    //            message: 'Must provide at least 2 options',
+    //            severity: 'warning',
+    //            open: true,
+    //            autoHideDuration: 6000,
+    //        });
+    //        return false;
+    //    }
 
-        return true;
-    }
+    //    return true;
+    //}
 
     const onSubmit = (e) => {
-        if(!validateForm(e)) return;
+        //if(!validateForm(e)) return;
 
         // This assigns only the new fields, but otherwise keeps the existing election fields
         const newElection = {
@@ -151,7 +138,7 @@ const QuickPoll = () => {
             // If only one race, use main eleciton title and description
             newElection.races[0].title = newElection.title
             newElection.races[0].description = newElection.description
-            newElection.races[0].voting_method = dbKeys[methodKey];
+            newElection.races[0].voting_method = methodTextKeyToValue[methodKey] as VotingMethod;
         }
 
         const newCandidates = []
@@ -199,6 +186,7 @@ const QuickPoll = () => {
         }
         setElectionData(updatedElection)
     }
+
     const handleEnter = (event) => {
         // Go to next entry instead of submitting form
         const form = event.target.form;
@@ -207,104 +195,85 @@ const QuickPoll = () => {
         event.preventDefault();
     }
 
+    const width = '500px';
+
+    const pageSX = {
+        display: 'flex',
+        gap: 0,
+        width: width,
+        flexDirection: 'column',
+        textAlign: 'center',
+        //backgroundColor: //'lightShade.main',
+        padding: 3,
+        borderRadius: '20px',
+        minWidth: {xs: '0px', md: '400px'}
+    }
+
     return (
         <Paper elevation={5} sx={{
-            maxWidth: '613px',
+            //maxWidth: '613px',
+            width: width,
             margin: 'auto',
+            overflow: 'clip',
         }}>
-        <form onSubmit={onSubmit} >
-            <Box 
-            sx={{
-                display: 'flex',
-                gap: 2,
-                flexDirection: 'column',
-                textAlign: 'center',
-                //backgroundColor: //'lightShade.main',
-                padding: 3,
-                borderRadius: '20px',
-                minWidth: {xs: '0px', md: '400px'}
-            }}>
-                {/*we use comonent here instead of variant since we want the styling to match p*/}
-                <Typography variant='h5' color={'lightShade.contrastText'}>{t('landing_page.quick_poll.title')}</Typography>
-                <Select value={methodKey} onChange={(ev: SelectChangeEvent) => setMethodKey(ev.target.value as string)}>
-                    <MenuItem value={'star'}>{t(`methods.star.full_name`)}</MenuItem>
-                    <MenuItem value={'approval'}>{t(`methods.approval.full_name`)}</MenuItem>
-                    <MenuItem value={'ranked_robin'}>{t(`methods.ranked_robin.full_name`)}</MenuItem>
-                    <MenuItem value={'choose_one'}>{t(`methods.choose_one.full_name`)}</MenuItem>
-                    <MenuItem value={'rcv'}>{t(`methods.rcv.full_name`)}</MenuItem>
-                    <MenuItem disabled sx={{maxWidth: '350px', whiteSpace: 'normal'}}>{
-                        t(`landing_page.hero.methods.more_methods.${
-                            authSession.isLoggedIn()? 'full_editor_description' : 'sign_in_description'
-                        }`)
-                    }</MenuItem>
-                </Select>
-                <StyledTextField
-                    autoFocus
-                    id="election-name"
-                    name="name"
-                    type="text"
-                    value={election.title}
-                    label={t('landing_page.quick_poll.question_prompt')}
-                    inputProps={{
-                        minLength: 3
-                    }}
-                    required 
-                    onChange={(e) => {
-                        applyElectionUpdate(election => { election.title = e.target.value })
-                    }}
-                    onKeyPress={(ev) => {
-                        if (ev.key === 'Enter') {
-                            handleEnter(ev)
-                        }
-                    }}
-                />
-                {election.races[0].candidates?.map((candidate, index) => (
-                    <StyledTextField
-                        key={index}
-                        id={`candidate-name-${String(index)}`}
-                        name="candidate-name"
-                        type="text"
-                        value={candidate.candidate_name}
-                        label={t('landing_page.quick_poll.option_prompt', {number: index+1})}
-                        onChange={(e) => {
-                            onUpdateCandidate(index, e.target.value)
-                        }}
-                        onKeyPress={(ev) => {
-                            if (ev.key === 'Enter') {
-                                handleEnter(ev)
-                            }
-                        }}
+            <Box
+                sx={{
+                    position: 'relative',
+                    width: '1000px',
+                    left: `-${page*500}px`,
+                    transition: 'left 1s',
+                    display: 'flex',
+                    flexDirection: 'row',
+                }}
+            >
+                <Box sx={pageSX}>
+                    <Typography variant='h5' color={'lightShade.contrastText'}>{t('landing_page.quick_poll.title')}</Typography>
+                    <Box display='flex' flexDirection='column' justifyContent='center'>
+                        <Typography>
+                            {t('election_creation.term_question')}
+                            <Tip name='polls_vs_elections' />
+                        </Typography>
+                        <RadioGroup row sx={{mx: 'auto'}}>
+                            {['poll', 'election'].map((type, i) =>
+                                <FormControlLabel
+                                    key={i}
+                                    value={capitalize(t(`keyword.${type}.election`))}
+                                    control={<Radio />}
+                                    label={capitalize(t(`keyword.${type}.election`))}
+                                    onClick={() => applyElectionUpdate(e => { e.settings.term_type = type as TermType })}
+                                    checked={election.settings.term_type === type}
+                                />
+                            )}
+                        </RadioGroup>
+                    </Box>
+                    <RaceForm
+                        election={election}
+                        race_index={0}
+                        editedRace={editedRace}
+                        errors={errors}
+                        setErrors={setErrors}
+                        applyRaceUpdate={applyRaceUpdate}
+                        activeStep={activeMethodStep}
+                        setActiveStep={setActiveMethodStep}
                     />
-                ))}
-                <Box sx={{
-                    marginLeft: 'auto'
-                }}>
-                    <IconButton
-                        type="button"
-                        onClick={() => setElectionData(QuickPollTemplate)}
-                        >
-                            <Typography component="p">{t('landing_page.quick_poll.clear_all')}</Typography>
-                        <DeleteIcon />
-                    </IconButton>
+                    <Box display='flex' flexDirection='row' justifyContent='flex-end' gap={1} sx={{mt: 3}}>
+                        <SecondaryButton onClick={() => setPage(pg => pg+1)}>Add Candidates Later</SecondaryButton>
+                        <PrimaryButton onClick={() => setPage(pg => pg+1)}>Create</PrimaryButton>
+                    </Box>
                 </Box>
-                <PrimaryButton
-                    type='submit'
-                    disabled={isPending} >
-                    {t('landing_page.quick_poll.create')}
-                </PrimaryButton>
-                    
-                <SecondaryButton
-                    onClick={(e) => {
-                        if(validateForm(e)){
-                            createElectionContext.openDialog(election)
-                        }
-                    }}
-                    disabled={isPending}
-                >
-                    {t('landing_page.quick_poll.continue_with_editor')}
-                </SecondaryButton>
+                <Box sx={pageSX}>
+                    <Typography variant='h5' color={'lightShade.contrastText'}>more settings...</Typography>
+                    <PrimaryButton
+                        onClick={() => setPage(0)}
+                        disabled={isPending} >
+                        {t('landing_page.quick_poll.create')}
+                    </PrimaryButton>
+                    <Box display='flex' flexDirection='row' justifyContent='flex-end' gap={1}>
+                        <SecondaryButton onClick={() => setPage(pg => pg-1)}>Back</SecondaryButton>
+                        <PrimaryButton onClick={() => setPage(pg => pg+1)}>Next</PrimaryButton>
+                    </Box>
+                </Box>
             </Box>
-        </form >
         </Paper>
     )
 }

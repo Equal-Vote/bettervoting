@@ -1157,6 +1157,9 @@ edit_race:
   single_winner: Single-Winner
   bloc_multi_winner:  Basic Multi-Winner !tip(bloc_multi_winner)
   proportional_multi_winner:  Proportional Multi-Winner !tip(proportional_multi_winner)
+  single_winner_adj: ''
+  bloc_multi_winner_adj: Bloc
+  proportional_multi_winner_adj: Proportional
   count_with_family: '**{{count}}** using **{{family}}**'
   methods:
     star:

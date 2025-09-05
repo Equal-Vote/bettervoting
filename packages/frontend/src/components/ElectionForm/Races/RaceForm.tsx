@@ -6,7 +6,7 @@ import TextField from "@mui/material/TextField";
 import FormControl from "@mui/material/FormControl";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Typography from '@mui/material/Typography';
-import { Box, FormHelperText, Radio, RadioGroup, Stack, Step, StepButton, StepContent, Stepper } from "@mui/material"
+import { Box, Button, FormHelperText, Radio, RadioGroup, Stack, Step, StepButton, StepContent, Stepper } from "@mui/material"
 import IconButton from '@mui/material/IconButton'
 import ExpandLess from '@mui/icons-material/ExpandLess'
 import ExpandMore from '@mui/icons-material/ExpandMore'
@@ -18,8 +18,12 @@ import { SortableList } from '~/components/DragAndDrop';
 import { NewRace } from './Race';
 import { RaceErrors } from './useEditRace';
 import { makeUniqueIDSync, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
+import { Election, NewElection } from '@equal-vote/star-vote-shared/domain_model/Election';
+import { PrimaryButton, SecondaryButton } from '~/components/styles';
+import VotingMethodSelector from './VotingMethodSelector';
 
 interface RaceFormProps {
+    election: Election | NewElection,
     race_index: number;
     editedRace: NewRace;
     errors: RaceErrors;
@@ -30,25 +34,16 @@ interface RaceFormProps {
 }
 
 export default function RaceForm({
+    election,
     race_index, editedRace, errors, setErrors, applyRaceUpdate,
     activeStep, setActiveStep
 }: RaceFormProps) {
     const { t } = useSubstitutedTranslation();
     const flags = useFeatureFlags();
-    const [showsAllMethods, setShowsAllMethods] = useState(false)
-    const { election } = useElection()
-    const PR_METHODS = ['STV', 'STAR_PR'];
+    //const { election } = useElection()
     const isDisabled = election.state !== 'draft';
-    const [methodFamily, setMethodFamily] = useState(
-        editedRace.num_winners == 1 ?
-            'single_winner'
-            : (
-                PR_METHODS.includes(editedRace.voting_method) ?
-                    'proportional_multi_winner'
-                    :
-                    'bloc_multi_winner'
-            )
-    )
+    const [showDescription, setShowDescription] = useState(false);
+    
     const confirm = useConfirm();
     const inputRefs = useRef([]);
     const ephemeralCandidates = useMemo(() => {
@@ -80,6 +75,8 @@ export default function RaceForm({
 
         setErrors((prev: RaceErrors) => ({ ...prev, candidates: '', raceNumWinners: '' }));
     }, [applyRaceUpdate, setErrors]);
+
+    
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleChangeCandidates = useCallback((newCandidateList: any[]) => {
@@ -134,265 +131,100 @@ export default function RaceForm({
         }
     }, [ephemeralCandidates.length, applyRaceUpdate]);
 
-    const MethodBullet = ({ value, disabled }: { value: string, disabled?: boolean }) => <>
-        <FormControlLabel value={value} disabled={disabled} control={<Radio />} label={t(`edit_race.methods.${methodValueToTextKey[value]}.title`)} sx={{ mb: 0, pb: 0 }} />
-        <FormHelperText sx={{ pl: 4, mt: -1 }}>
-            {t(`edit_race.methods.${methodValueToTextKey[value]}.description`)}
-        </FormHelperText>
+    const TitleAndDescription = () => <>
+        <Grid item xs={12} sx={{ m: 0, p: 1 }}>
+            <TextField
+                id={`race-title-${String(race_index)}`}
+                disabled={isDisabled}
+                name="title"
+                label={election.settings.term_type == 'poll' ? 'Poll Question' : 'Elected Office Title'}
+                type="text"
+                error={errors.raceTitle !== ''}
+                value={editedRace.title}
+                sx={{
+                    m: 0,
+                    boxShadow: 2,
+                }}
+                fullWidth
+                onChange={(e) => {
+                    setErrors({ ...errors, raceTitle: '' })
+                    applyRaceUpdate(race => { race.title = e.target.value })
+                }
+                }
+            />
+            <FormHelperText error sx={{ pl: 1, pt: 0 }}>
+                {errors.raceTitle}
+            </FormHelperText>
+        </Grid>
+
+        {showDescription && <Grid item xs={12} sx={{ m: 0, p: 1 }}>
+            <TextField
+                id={`race-description-${String(race_index)}`}
+                name="description"
+                label="Description"
+                disabled={isDisabled}
+                multiline
+                fullWidth
+                type="text"
+                error={errors.raceDescription !== ''}
+                value={editedRace.description}
+                minRows={3}
+                sx={{
+                    m: 0,
+                    boxShadow: 2,
+                }}
+                onChange={(e) => {
+                    setErrors({ ...errors, raceDescription: '' })
+                    applyRaceUpdate(race => { race.description = e.target.value })
+                }}
+            />
+            <FormHelperText error sx={{ pl: 1, pt: 0 }}>
+                {errors.raceDescription}
+            </FormHelperText>
+        </Grid>}
+        <Button
+            sx={{textDecoration: 'none', color: 'gray'}}
+            onClick={() => setShowDescription(d => !d)}
+        >
+            {showDescription? 'Hide Description' : '+ Add Description'}
+        </Button>
+    </>
+
+    const Precincts = () => <>
+        <Grid item xs={12}>
+            <TextField
+                id={`race-precincts-${String(race_index)}`}
+                name="precincts"
+                label="Precincts"
+                disabled={isDisabled}
+                fullWidth
+                multiline
+                type="text"
+                value={editedRace.precincts ? editedRace.precincts.join('\n') : ''}
+                sx={{
+                    m: 1,
+                    boxShadow: 2,
+                }}
+                onChange={(e) => applyRaceUpdate(race => {
+                    if (e.target.value === '') {
+                        race.precincts = undefined
+                    }
+                    else {
+                        race.precincts = e.target.value.split('\n')
+                    }
+                })}
+            />
+        </Grid>
     </>
 
     return (
         <>
             <Grid container sx={{ m: 0, p: 1 }} >
-                <Grid item xs={12} sx={{ m: 0, p: 1 }}>
-                    <TextField
-                        id={`race-title-${String(race_index)}`}
-                        disabled={isDisabled}
-                        name="title"
-                        label="Race Title"
-                        type="text"
-                        error={errors.raceTitle !== ''}
-                        value={editedRace.title}
-                        sx={{
-                            m: 0,
-                            boxShadow: 2,
-                        }}
-                        fullWidth
-                        onChange={(e) => {
-                            setErrors({ ...errors, raceTitle: '' })
-                            applyRaceUpdate(race => { race.title = e.target.value })
-                        }
-                        }
-                    />
-                    <FormHelperText error sx={{ pl: 1, pt: 0 }}>
-                        {errors.raceTitle}
-                    </FormHelperText>
-                </Grid>
-
-                <Grid item xs={12} sx={{ m: 0, p: 1 }}>
-                    <TextField
-                        id={`race-description-${String(race_index)}`}
-                        name="description"
-                        label="Race Description"
-                        disabled={isDisabled}
-                        multiline
-                        fullWidth
-                        type="text"
-                        error={errors.raceDescription !== ''}
-                        value={editedRace.description}
-                        helperText={errors.raceDescription || "Supports **bold** and [link text](url) formatting"}
-                        sx={{
-                            m: 0,
-                            boxShadow: 2,
-                        }}
-                        onChange={(e) => {
-                            setErrors({ ...errors, raceDescription: '' })
-                            applyRaceUpdate(race => { race.description = e.target.value })
-                        }}
-                    />
-                </Grid>
-
-                {
-                    flags.isSet('PRECINCTS') && election.settings.voter_access !== 'open' &&
-                    <Grid item xs={12}>
-                        <TextField
-                            id={`race-precincts-${String(race_index)}`}
-                            name="precincts"
-                            label="Precincts"
-                            disabled={isDisabled}
-                            fullWidth
-                            multiline
-                            type="text"
-                            value={editedRace.precincts ? editedRace.precincts.join('\n') : ''}
-                            sx={{
-                                m: 1,
-                                boxShadow: 2,
-                            }}
-                            onChange={(e) => applyRaceUpdate(race => {
-                                if (e.target.value === '') {
-                                    race.precincts = undefined
-                                }
-                                else {
-                                    race.precincts = e.target.value.split('\n')
-                                }
-                            })}
-                        />
-                    </Grid>
-                }
+                <TitleAndDescription/>
+                {flags.isSet('PRECINCTS') && election.settings.voter_access !== 'open' && <Precincts/>}
             </Grid>
 
-            <Stepper nonLinear activeStep={isDisabled ? -1 : activeStep} orientation="vertical" sx={{ my: 3 }}>
-                <Step >
-                    <StepButton disabled={isDisabled} aria-label='Method Family' onClick={() => setActiveStep(0)}>
-                        {t('edit_race.how_many_winners')}
-                        &nbsp;
-                        {editedRace.num_winners == 1 ?
-                            <b>{t(`edit_race.${methodFamily}`)}</b> :
-                            t('edit_race.count_with_family', {
-                                count: editedRace.num_winners,
-                                // .props.children[0] is a hack to remove the tip and parse out the string
-                                family: (typeof t(`edit_race.${methodFamily}`) == 'string') ?
-                                    t(`edit_race.${methodFamily}`) :
-                                    t(`edit_race.${methodFamily}`).props.children[0]
-                            })
-                        }
-                    </StepButton>
-                    <StepContent>
-                        <RadioGroup
-                            aria-labelledby="method-family-radio-group"
-                            name="method-family-radio-buttons-group"
-                            value={methodFamily}
-                            onChange={(e) => {
-                                if (e.target.value == 'single') {
-                                    setErrors({ ...errors, raceNumWinners: '' })
-                                    applyRaceUpdate(race => { race.num_winners = 1 })
-                                }
-                                setMethodFamily(e.target.value)
-                            }}
-                        >
-                            <FormControlLabel
-                                value="single_winner"
-                                control={<Radio />}
-                                label={t('edit_race.single_winner')}
-                                sx={{ mb: 0, pb: 0 }}
-                                onClick={() => {
-                                    applyRaceUpdate(race => {
-                                        if (PR_METHODS.includes(race.voting_method)) race.voting_method = '';
-                                        race.num_winners = 1
-                                    })
-                                }}
-                            />
-                            <FormControlLabel
-                                value="bloc_multi_winner"
-                                control={<Radio />}
-                                label={t('edit_race.bloc_multi_winner')}
-                                sx={{ mb: 0, pb: 0 }}
-                                onClick={() => {
-                                    applyRaceUpdate(race => {
-                                        if (PR_METHODS.includes(race.voting_method)) race.voting_method = '';
-                                        race.num_winners = Math.max(2, race.num_winners)
-                                    })
-                                }}
-                            />
-                            <FormControlLabel
-                                value="proportional_multi_winner"
-                                control={<Radio />}
-                                label={t('edit_race.proportional_multi_winner')}
-                                sx={{ mb: 0, pb: 0 }}
-                                onClick={() => {
-                                    applyRaceUpdate(race => {
-                                        if (!PR_METHODS.includes(race.voting_method)) race.voting_method = '';
-                                        race.num_winners = Math.max(2, race.num_winners)
-                                    })
-                                }}
-                            />
-                        </RadioGroup>
-                        <Box sx={{
-                            height: methodFamily == 'single_winner' ? 0 : '105px', // copied from the value for auto
-                            opacity: methodFamily == 'single_winner' ? 0 : 1,
-                            overflow: 'hidden',
-                            transition: 'height .4s, opacity .7s',
-                            maxWidth: '300px'
-                        }}>
-                            <Typography id="num-winners-label" gutterBottom component="p" sx={{ marginTop: 2 }}>
-                                <b>{t('edit_race.number_of_winners')}</b>
-                            </Typography>
-                            <TextField
-                                id={`num-winners-${String(race_index)}`}
-                                type="number"
-                                InputProps={{
-                                    inputProps: {
-                                        min: 2,
-                                        "aria-labelledby": "num-winners-label",
-                                    }
-                                }}
-                                fullWidth
-                                value={editedRace.num_winners}
-                                sx={{
-                                    p: 0,
-                                    boxShadow: 2,
-                                }}
-                                onChange={(e) => {
-                                    setErrors({ ...errors, raceNumWinners: '' })
-                                    applyRaceUpdate(race => { race.num_winners = parseInt(e.target.value) })
-                                }}
-                            />
-                            <FormHelperText error sx={{ pl: 1, pt: 0 }}>
-                                {errors.raceNumWinners}
-                            </FormHelperText>
-                        </Box>
-                    </StepContent>
-                </Step>
-
-                <Step>
-                    <StepButton disabled={isDisabled} onClick={() => setActiveStep(1)}>
-                        {t('edit_race.which_voting_method')}
-                        &nbsp;
-                        <b>{editedRace.voting_method != '' && t(`methods.${methodValueToTextKey[editedRace.voting_method]}.full_name`)}</b>
-                    </StepButton>
-                    <StepContent>
-                        <FormControl component="fieldset" variant="standard">
-                            <RadioGroup
-                                aria-labelledby="voting-method-radio-group"
-
-                                name="voter-method-radio-buttons-group"
-                                value={editedRace.voting_method}
-                                onChange={(e) => applyRaceUpdate(race => { race.voting_method = e.target.value as NewRace['voting_method'] })}
-
-                            >
-                                {methodFamily == 'proportional_multi_winner' ?
-                                    <MethodBullet value='STAR_PR'/>
-                                    : <>
-                                        <MethodBullet value='STAR'/>
-                                        <MethodBullet value='RankedRobin'/>
-                                        <MethodBullet value='Approval'/>
-                                    </>}
-
-                                <Box
-                                    display='flex'
-                                    justifyContent="left"
-                                    alignItems="center"
-                                    sx={{ width: '100%', ml: -1 }}>
-
-                                    {!showsAllMethods &&
-                                        <IconButton aria-labelledby='more-options' onClick={() => { setShowsAllMethods(true) }}>
-                                            <ExpandMore />
-                                            <Typography variant="body1" id={'more-options'} > More Options </Typography>
-                                        </IconButton>}
-                                    {showsAllMethods &&
-                                        <IconButton aria-label='more-options' onClick={() => { setShowsAllMethods(false) }}>
-                                            <ExpandLess />
-                                            <Typography variant="body1" id={'more-options'} > More Options </Typography>
-                                        </IconButton>}
-                                </Box>
-                                <Box sx={{
-                                    height: showsAllMethods ? 0 : 'auto',
-                                    opacity: showsAllMethods ? 0 : 1,
-                                    overflow: 'hidden',
-                                    transition: 'height .4s, opacity .7s',
-                                }}
-                                >
-                                    <Box
-                                        display='flex'
-                                        justifyContent="left"
-                                        alignItems="center"
-                                        sx={{ width: '100%', pl: 4, mt: -1 }}>
-                                    </Box>
-
-
-                                    {methodFamily == 'proportional_multi_winner' ?
-                                        <MethodBullet value='STV' />
-                                        : <>
-                                            <MethodBullet value='Plurality' />
-                                            <MethodBullet value='IRV' />
-                                        </>}
-
-                                </Box>
-                            </RadioGroup>
-                        </FormControl>
-                    </StepContent>
-                </Step>
-            </Stepper>
+            <VotingMethodSelector election={election} editedRace={editedRace} isDisabled={isDisabled} setErrors={setErrors} errors={errors}/>
 
             <Grid container sx={{ m: 0, p: 1 }} >
                 <Grid item xs={12} sx={{ m: 0, p: 1 }}>
