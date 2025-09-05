@@ -1,6 +1,6 @@
 import React, { Dispatch, useCallback, useMemo, useRef } from 'react'
 import { useState } from "react"
-import { CandidateForm } from "../Candidates/AddCandidate"
+import CandidateForm from "../Candidates/CandidateForm"
 import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
 import FormControl from "@mui/material/FormControl";
