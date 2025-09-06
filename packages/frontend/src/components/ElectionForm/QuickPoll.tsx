@@ -2,7 +2,7 @@ import { useContext, useState } from 'react';
 import { useNavigate } from "react-router";
 import structuredClone from '@ungap/structured-clone';
 import { PrimaryButton, SecondaryButton, StyledTextField, Tip } from '../styles.js';
-import { Box, capitalize, FormControlLabel, IconButton, MenuItem, Paper, Radio, RadioGroup, Select, SelectChangeEvent, Typography } from '@mui/material';
+import { Box, capitalize, Checkbox, FormControlLabel, FormHelperText, IconButton, MenuItem, Paper, Radio, RadioGroup, Select, SelectChangeEvent, Step, StepContent, StepLabel, Stepper, TextField, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useEditElection, usePostElection } from '../../hooks/useAPI';
 import { useCookie } from '../../hooks/useCookie';
@@ -11,13 +11,15 @@ import { CreateElectionContext } from './CreateElectionDialog.js';
 import useSnackbar from '../SnackbarContext.js';
 import { makeID, makeUniqueIDSync, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
 
-import { methodTextKeyToValue, useSubstitutedTranslation } from '../util.jsx';
+import { methodTextKeyToValue, RowButtonWithArrow, useSubstitutedTranslation } from '../util.jsx';
 import useAuthSession from '../AuthSessionContextProvider.js';
 import RaceForm from './Races/RaceForm.js';
 import { useEditRace } from './Races/useEditRace.js';
 import { VotingMethod } from '@equal-vote/star-vote-shared/domain_model/Race';
 import { TermType } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
 import useConfirm from '../ConfirmationDialogProvider.js';
+import { ElectionTitleField } from './Details/ElectionDetailsForm.js';
+import { Check, CheckBox } from '@mui/icons-material';
 
 const makeDefaultElection = () => {
     const ids = [];
@@ -78,6 +80,7 @@ const QuickPoll = () => {
     const confirm = useConfirm();
 
     const [activeMethodStep, setActiveMethodStep] = useState(0);
+    const [stepperStep, setStepperStep] = useState(0);
 
     const {t} = useSubstitutedTranslation('poll');
 
@@ -221,6 +224,28 @@ const QuickPoll = () => {
         minWidth: {xs: '0px', md: '400px'}
     }
 
+    const StepButtons = ({ activeStep, setActiveStep, canContinue }: { activeStep: number, setActiveStep: React.Dispatch<React.SetStateAction<number>>, canContinue: boolean }) => <>
+        {activeStep > 0 &&
+            <SecondaryButton
+                onClick={() => setActiveStep(i => i - 1)}
+                sx={{ mt: 1, mr: 1 }}
+            >
+                Back
+            </SecondaryButton>
+        }
+        {activeStep < 2 && // hard coding this for now
+            <PrimaryButton
+                fullWidth={false}
+                variant="contained"
+                disabled={!canContinue}
+                onClick={() => setActiveStep(i => i + 1)}
+                sx={{ mt: 1, mr: 1 }}
+            >
+                Continue
+            </PrimaryButton>
+        }
+    </>
+
     return (
         <Paper elevation={5} sx={{
             //maxWidth: '613px',
@@ -273,55 +298,37 @@ const QuickPoll = () => {
                         <PrimaryButton onClick={onNext}>Next</PrimaryButton>
                     </Box>
                 </Box>
-                <Box sx={pageSX}>
+                <Box sx={{...pageSX, textAlign: 'left'}}>
                     <Typography variant='h5' color={'lightShade.contrastText'}>just a few more questions...</Typography>
-                    <Stepper activeStep={activeStep} orientation="vertical">
-                        <Step>
-                            <StepLabel>{t('election_creation.term_title')} <strong>{
-                                election.settings.term_type === undefined ? '' : capitalize(t(`keyword.${election.settings.term_type}.election`))
-                            }</strong></StepLabel>
-                            <StepContent>
-                                <Typography>{t('election_creation.term_question')}
-                                    <Tip name='polls_vs_elections' />
-                                </Typography>
-                                <RadioGroup row>
-                                    {['poll', 'election'].map((type, i) =>
-                                        <FormControlLabel
-                                            key={i}
-                                            value={capitalize(t(`keyword.${type}.election`))}
-                                            control={<Radio />}
-                                            label={capitalize(t(`keyword.${type}.election`))}
-                                            onClick={() => {
-                                                setElection({
-                                                    ...election,
-                                                    settings: {
-                                                        ...election.settings,
-                                                        term_type: type as TermType
-                                                    }
-                                                });
-                                                setTimeout(() => setActiveStep(1), 250);
-                                            }}
-                                            checked={election.settings.term_type === type}
-                                        />
-                                    )}
-                                </RadioGroup>
-                            </StepContent>
-                        </Step>
+                    <Stepper activeStep={stepperStep} orientation="vertical">
                         <Step>
                             <StepLabel>{t('election_creation.title_title')} <strong>{election.title && election.title}</strong></StepLabel>
                             <StepContent>
                                 <Typography>{t('election_creation.title_question')}</Typography>
-                                <ElectionTitleField
-                                    termType={election.settings.term_type}
-                                    value={election.title}
-                                    onUpdateValue={
-                                        (value) => setElection({ ...election, title: value })
-                                    }
-                                    errors={errors}
-                                    setErrors={setErrors}
-                                    showLabel={false}
+                                <FormControlLabel control={<Checkbox defaultChecked />} label="same as poll question"/>
+                                <TextField
+                                    inputProps={{ "aria-label": "Title" }}
+                                    error={false}
+                                    required
+                                    disabled={true}
+                                    id="election-title"
+                                    label={t('election_details.title')}
+                                    type="text"
+                                    value={election.races[0].title}
+                                    sx={{
+                                        m: 0,
+                                        p: 0,
+                                        boxShadow: 2,
+                                    }}
+                                    fullWidth
+                                    onChange={(e) => {
+                                        election.title = e.target.value;
+                                    }}
                                 />
-                                <StepButtons activeStep={1} setActiveStep={setActiveStep} canContinue={/^[^\s][a-zA-Z0-9\s]{3,49}$/.test(election.title) && errors.title == ''} />
+                                <FormHelperText error sx={{ pl: 1, pt: 0 }}>
+                                    {/* TODO: Add errors */}
+                                </FormHelperText>
+                                <StepButtons activeStep={0} setActiveStep={setStepperStep} canContinue={true}/> {/*canContinue={/^[^\s][a-zA-Z0-9\s]{3,49}$/.test(election.title) /*&& errors.title == ''} />*/}
                             </StepContent>
                         </Step>
                         <Step>
@@ -341,16 +348,17 @@ const QuickPoll = () => {
                                             control={<Radio />}
                                             label={t(`keyword.${restricted ? 'yes' : 'no'}`)}
                                             onClick={() => {
-                                                setElection({
-                                                    ...election, settings: {
-                                                        ...election.settings,
-                                                        voter_access: restricted ? 'closed' : 'open',
-                                                        contact_email: restricted ? (
-                                                            (election.settings.contact_email != undefined && election.settings.contact_email != '') ?
-                                                                election.settings.contact_email : authSession.getIdField('email')
-                                                        ) : ''
-                                                    }
-                                                })
+                                                //setElection({
+                                                //    ...election, settings: {
+                                                //        ...election.settings,
+                                                //        voter_access: restricted ? 'closed' : 'open',
+                                                //        contact_email: restricted ? (
+                                                //            (election.settings.contact_email != undefined && election.settings.contact_email != '') ?
+                                                //                election.settings.contact_email : authSession.getIdField('email')
+                                                //        ) : ''
+                                                //    }
+                                                //})
+                                                election.settings.voter_access = restricted ? 'closed' : 'open'
                                             }}
                                             checked={election.settings.voter_access === (restricted ? 'closed' : 'open')}
                                         />
@@ -373,13 +381,14 @@ const QuickPoll = () => {
                                             id='contact_email'
                                             name='contact_email'
                                             value={election.settings.contact_email}
-                                            onChange={(e) =>
-                                                setElection({
-                                                    ...election, settings: {
-                                                        ...election.settings,
-                                                        contact_email: e.target.value
-                                                    }
-                                                })
+                                            onChange={(e) => 
+                                                //setElection({
+                                                //    ...election, settings: {
+                                                //        ...election.settings,
+                                                //        contact_email: e.target.value
+                                                //    }
+                                                //})
+                                                election.settings.contact_email = e.target.value
                                             }
                                             variant='standard'
                                             fullWidth
@@ -393,7 +402,7 @@ const QuickPoll = () => {
                                     />
                                 </Box>
 
-                                <StepButtons activeStep={2} setActiveStep={setActiveStep} canContinue={election.settings.voter_access !== undefined} />
+                                <StepButtons activeStep={1} setActiveStep={setStepperStep} canContinue={election.settings.voter_access !== undefined} />
                             </StepContent>
                         </Step>
                         <Step>
@@ -408,21 +417,16 @@ const QuickPoll = () => {
                                         title={t(`election_creation.${name}_title`)}
                                         description={t(`election_creation.${name}_description`)}
                                         key={name}
-                                        onClick={() => onAddElection(templateMappers[name](election))}
+                                        //onClick={() => onAddElection(templateMappers[name](election))}
+                                        onClick={() => navigate('/pet/admin')}
                                         ariaLabel={t(`election_creation.${name}_title`)}
                                     />
                                 )}
 
-                                <StepButtons activeStep={3} setActiveStep={setActiveStep} canContinue={false} />
+                                <StepButtons activeStep={2} setActiveStep={setStepperStep} canContinue={false} />
                             </StepContent>
                         </Step>
                     </Stepper>
-                    <PrimaryButton
-                        onClick={() => setPage(0)}
-                        disabled={isPending}
-                    >
-                        Create Election
-                    </PrimaryButton>
                 </Box>
             </Box>
         </Paper>
