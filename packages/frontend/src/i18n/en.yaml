@@ -470,6 +470,12 @@ landing_page:
     sign_in: Sign in for more options
     clear_all: Clear All
 
+    publish_confirm:
+      title: Publish?
+      message: Would you like to continue with full editor or publish now? !tip(full_editor)
+      cancel: 'Continue with full editor'
+      submit: 'Publish Now'
+
   # Election Stats Section
   election_stats:
     elections_created: Elections & Polls Created
@@ -703,6 +709,10 @@ tips:
   public_archive: 
     title: Public Election Archive
     description: This is a list of public elections that have been replicated on BetterVoting for research purposes
+
+  full_editor:
+    title: Full Editor
+    description: The full editor lets you continue drafting the election and allows for advanced features such as multi-race elections and elections with a defined voter list. There's also a variety of extra settings such start/end times and adjusting the security policy.
 
   columns_given: 
     title: Number of {{preferences}} given

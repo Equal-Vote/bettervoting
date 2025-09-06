@@ -140,9 +140,9 @@ export default ({election, editedRace, isDisabled, setErrors, errors}) => {
         </FormHelperText>
         <Box display='flex' flexDirection='row' justifyContent='flex-end' gap={1}>
             <SecondaryButton onClick={() => {
-                setMethodStep(m => m-1)
+                setMethodStep(0)
             }}>Back</SecondaryButton>
-            <PrimaryButton onClick={() => setMethodStep(m => m+1)}>Next</PrimaryButton>
+            <PrimaryButton onClick={() => setMethodStep(2)}>Next</PrimaryButton>
         </Box>
     </>
 
