@@ -4,10 +4,10 @@ import { useState } from "react";
 import { PrimaryButton, SecondaryButton } from "~/components/styles";
 import { methodValueToTextKey, useSubstitutedTranslation } from "~/components/util"
 
-export default ({election, editedRace, isDisabled, setErrors, errors}) => {
+export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceUpdate}) => {
     const { t } = useSubstitutedTranslation();
     const PR_METHODS = ['STV', 'STAR_PR'];
-    const [methodStep, innerStepMethodStep] = useState(0);//editedRace.voting_method == undefined? 0 : 3);
+    const [methodStep, innerStepMethodStep] = useState(editedRace.voting_method == undefined? 0 : 3);
     const [inputtedWinners, setInputtedWinners] = useState(String(editedRace.num_winners));
     const [showAllMethods, setShowAllMethods] = useState(false)
     const [methodFamily, setMethodFamily] = useState(
@@ -27,10 +27,10 @@ export default ({election, editedRace, isDisabled, setErrors, errors}) => {
 
     const setMethodStep = (n) => {
         if(n < 1) setMethodFamily(undefined);
-        if(n < 2) editedRace.num_winners = undefined;
+        if(n < 2) applyRaceUpdate(race => {race.num_winners = undefined});
         if(n < 3){
             setShowAllMethods(false);
-            editedRace.voting_method = undefined;
+            applyRaceUpdate(race => {race.voting_method = undefined});
         }
         innerStepMethodStep(n);
     }
@@ -64,7 +64,7 @@ export default ({election, editedRace, isDisabled, setErrors, errors}) => {
             onChange={(e) => {
                 if (e.target.value == 'single') {
                     setErrors({ ...errors, raceNumWinners: '' })
-                    editedRace.num_winners = 1;
+                    applyRaceUpdate(race => {race.num_winners = 1;});
                 }
                 setMethodFamily(e.target.value)
             }}
@@ -76,8 +76,10 @@ export default ({election, editedRace, isDisabled, setErrors, errors}) => {
                 label={t('edit_race.single_winner')}
                 sx={{ mb: 0, pb: 0 }}
                 onClick={() => {
-                    editedRace.num_winners = 1;
-                    setMethodStep(2)
+                    applyRaceUpdate(race => {
+                        race.num_winners = 1;
+                    });
+                    setMethodStep(2);
                 }}
             />
             <FormControlLabel
@@ -87,8 +89,10 @@ export default ({election, editedRace, isDisabled, setErrors, errors}) => {
                 label={t('edit_race.bloc_multi_winner')}
                 sx={{ mb: 0, pb: 0 }}
                 onClick={() => {
-                    editedRace.num_winners = Math.max(2, editedRace.num_winners)
-                    setMethodStep(1)
+                    applyRaceUpdate(race => {
+                        race.num_winners = Math.max(2, race.num_winners);
+                    });
+                    setMethodStep(1);
                 }}
             />
             <FormControlLabel
@@ -98,9 +102,11 @@ export default ({election, editedRace, isDisabled, setErrors, errors}) => {
                 label={t('edit_race.proportional_multi_winner')}
                 sx={{ mb: 0, pb: 0 }}
                 onClick={() => {
-                    if (!PR_METHODS.includes(editedRace.voting_method)) editedRace.voting_method = undefined;
-                    editedRace.num_winners = Math.max(2, editedRace.num_winners)
-                    setMethodStep(1)
+                    applyRaceUpdate(race => {
+                        if(!PR_METHODS.includes(race.voting_method)) race.voting_method = undefined;
+                        race.num_winners = Math.max(2, race.num_winners);
+                    });
+                    setMethodStep(1);
                 }}
             />
         </RadioGroup>
@@ -131,7 +137,7 @@ export default ({election, editedRace, isDisabled, setErrors, errors}) => {
                     setErrors({ ...errors, raceNumWinners: '' })
                     setInputtedWinners(e.target.value);
 
-                    if(e.target.value != '') editedRace.num_winners =  parseInt(e.target.value)
+                    if(e.target.value != '') applyRaceUpdate(race => { race.num_winners =  parseInt(e.target.value) });
                 }}
             />
         </Box>
@@ -152,7 +158,7 @@ export default ({election, editedRace, isDisabled, setErrors, errors}) => {
             aria-labelledby="voting-method-radio-group"
             name="voter-method-radio-buttons-group"
             value={editedRace.voting_method}
-            onChange={(e) => editedRace.voting_method = e.target.value}
+            onChange={(e) => applyRaceUpdate(race => { race.voting_method = e.target.value; })}
         >
             {methodFamily == 'proportional_multi_winner' ?
                 <MethodBullet value='STAR_PR' disabled={isDisabled} />
