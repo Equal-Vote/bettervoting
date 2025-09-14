@@ -462,7 +462,7 @@ landing_page:
 
   # Quick Poll Section
   quick_poll:
-    title: Make a Quick Poll 
+    title: Create Election
     question_prompt: What is your poll question?
     option_prompt: Option {{number}}
     create: Create Quick Poll
@@ -472,7 +472,7 @@ landing_page:
 
     publish_confirm:
       title: Publish?
-      message: Would you like to continue with full editor or publish now? !tip(full_editor)
+      message: Would you like to publish your simple poll now or continue to customize further? !tip(full_editor)
       cancel: 'Continue with full editor'
       submit: 'Publish Now'
 
@@ -771,7 +771,7 @@ tips:
     description: Set a maximum number of rankings supported on ranked ballots. (Must be between {{min_rankings}} and {{max_rankings}})
 
   contact_email:
-    title: Contact Email
+    title: Election Support Email
     description: >
       This email will be visible on the election page for your voters to contact you in case they have questions or need support.
       This is especially relevant for restricted elections where you're managing a specific set of voters.
@@ -1157,7 +1157,7 @@ election_settings:
 
   max_rankings: Set Number Of Rankings Allowed !tip(max_rankings)
 
-  contact_email: Contact Email !tip(contact_email)
+  contact_email: Election Support Email !tip(contact_email)
   
 # Admin Home -> Add/Edit Race
 edit_race:

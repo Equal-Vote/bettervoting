@@ -7,6 +7,7 @@ import { NewElection } from "@equal-vote/star-vote-shared/domain_model/Election"
 import useAuthSession from "../AuthSessionContextProvider";
 import { usePostElection } from "~/hooks/useAPI";
 import { useNavigate } from "react-router";
+import { title } from "process";
 
 const templateMappers = {
     'demo': (election: NewElection): NewElection => ({
@@ -55,6 +56,7 @@ export default ({election, setElection}) => {
     const { makeRequest: postElection } = usePostElection()
     const navigate = useNavigate();
     const {t} = useSubstitutedTranslation(election.settings.term_type);
+    const [titleMatchesRace, setTitleMatchesRace] = useState(true);
 
     const StepButtons = ({ activeStep, setActiveStep, canContinue }: { activeStep: number, setActiveStep: React.Dispatch<React.SetStateAction<number>>, canContinue: boolean }) => <>
         {activeStep > 0 &&
@@ -95,16 +97,25 @@ export default ({election, setElection}) => {
                 <StepLabel>{t('election_creation.title_title')} <strong>{election.title && election.title}</strong></StepLabel>
                 <StepContent>
                     <Typography>{t('election_creation.title_question')}</Typography>
-                    <FormControlLabel control={<Checkbox defaultChecked />} label="same as poll question"/>
+                    <FormControlLabel control={<Checkbox checked={titleMatchesRace} />} label="same as poll question" onClick={() => {
+                        let newMatchesRace = !titleMatchesRace;
+                        setTitleMatchesRace(newMatchesRace );
+                        if(newMatchesRace){
+                            setElection({
+                                ...election,
+                                title: election.races[0].title,
+                            })
+                        }
+                    }}/>
                     <TextField
                         inputProps={{ "aria-label": "Title" }}
                         error={false}
                         required
-                        disabled={true}
+                        disabled={titleMatchesRace}
                         id="election-title"
                         label={t('election_details.title')}
                         type="text"
-                        value={election.races[0].title}
+                        value={election.title}
                         sx={{
                             m: 0,
                             p: 0,

@@ -1,11 +1,12 @@
-import { useEffect } from 'react'
+import { Dispatch, useEffect } from 'react'
 import { useState } from "react"
 
 import { scrollToElement } from '../../util';
-import useElection from '../../ElectionContextProvider';
+import useElection, { IElectionContext } from '../../ElectionContextProvider';
 import { Race as iRace } from '@equal-vote/star-vote-shared/domain_model/Race';
 import structuredClone from '@ungap/structured-clone';
 import useConfirm from '../../ConfirmationDialogProvider';
+import { Election as IElection } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { makeID, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
 import { Candidate } from '@equal-vote/star-vote-shared/domain_model/Candidate';
 import { useDeleteAllBallots } from '~/hooks/useAPI';
@@ -23,8 +24,8 @@ export const makeDefaultRace = () => ({
     title: '',
     description: '',
     race_id: '',
-    num_winners: 1,
-    voting_method: 'STAR',
+    num_winners: undefined,
+    voting_method: undefined,
     candidates: [
         { 
             candidate_id: makeID(ID_PREFIXES.CANDIDATE, ID_LENGTHS.CANDIDATE),
@@ -34,7 +35,13 @@ export const makeDefaultRace = () => ({
     precincts: undefined,
 } as iRace);
 
-export const useEditRace = (election: Election | NewElection, race: iRace | null, race_index: number) => {
+export const useEditRace = (
+    election: Election | NewElection,
+    race: iRace | null,
+    race_index: number,
+    updateElection: (updateFunc: (election: Election | NewElection) => void) => void,
+    draftMode=true,
+) => {
     //const { election, refreshElection, updateElection } = useElection()
     const { setSnack } = useSnackbar()
     //const { makeRequest: deleteAllBallots } = useDeleteAllBallots(election.election_id);
@@ -63,6 +70,14 @@ export const useEditRace = (election: Election | NewElection, race: iRace | null
         const raceCopy: iRace = structuredClone(editedRace)
         updateFunc(raceCopy)
         setEditedRace(raceCopy)
+        if(!draftMode){
+            updateElection(election => {
+                if (race_index !== undefined) {
+                    election.races[race_index] = raceCopy
+                }
+            });
+            //TODO: make sure this works, we want the "same as previous title" checkbox to work
+        }
     };
 
     const validateRace = () => {

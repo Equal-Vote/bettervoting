@@ -3,11 +3,21 @@ import { Box, Button, FormControlLabel, FormHelperText, IconButton, Radio, Radio
 import { useState } from "react";
 import { PrimaryButton, SecondaryButton } from "~/components/styles";
 import { methodValueToTextKey, useSubstitutedTranslation } from "~/components/util"
+import EditIcon from '@mui/icons-material/Edit';
+
+type MethodStep = 'unset' | 'family' | 'num_winners' | 'method' | 'done';
+const stepIndex = {
+    'unset': 0,
+    'family': 1,
+    'num_winners': 2,
+    'method': 3,
+    'done': 4
+};
 
 export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceUpdate}) => {
     const { t } = useSubstitutedTranslation();
     const PR_METHODS = ['STV', 'STAR_PR'];
-    const [methodStep, innerStepMethodStep] = useState(editedRace.voting_method == undefined? 0 : 3);
+    const [methodStep, innerStepMethodStep] = useState<MethodStep>(editedRace.voting_method == undefined? 'family' : 'done');
     const [inputtedWinners, setInputtedWinners] = useState(String(editedRace.num_winners));
     const [showAllMethods, setShowAllMethods] = useState(false)
     const [methodFamily, setMethodFamily] = useState(
@@ -25,27 +35,34 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
         )
     )
 
-    const setMethodStep = (n) => {
-        if(n < 1) setMethodFamily(undefined);
-        if(n < 2) applyRaceUpdate(race => {race.num_winners = undefined});
-        if(n < 3){
-            setShowAllMethods(false);
-            applyRaceUpdate(race => {race.voting_method = undefined});
-        }
-        innerStepMethodStep(n);
+    const setMethodStep = (step: MethodStep) => {
+        applyRaceUpdate(race => {
+            if(step == 'unset' || step == 'family'){
+                race.num_winners = undefined;
+                setMethodFamily(undefined);
+                setInputtedWinners('');
+            }
+            if(step == 'unset' || step == 'family' || step == 'num_winners' || step == 'method'){
+                race.voting_method = undefined;
+                setShowAllMethods(false);
+            }
+        });
+        setTimeout(() => innerStepMethodStep(step), 100);
     }
 
     const MethodBullet = ({ value, disabled }: { value: string, disabled: boolean }) => <>
-        <FormControlLabel value={value} disabled={disabled} control={<Radio onClick={() => setMethodStep(3) }/>} label={t(`edit_race.methods.${methodValueToTextKey[value]}.title`)} sx={{ mb: 0, pb: 0 }} />
+        <FormControlLabel value={value} disabled={disabled} control={
+            <Radio onClick={() => setMethodStep('done') }/>
+        } label={t(`edit_race.methods.${methodValueToTextKey[value]}.title`)} sx={{ mb: 0, pb: 0 }} />
         <FormHelperText sx={{ pl: 4, mt: -1 }}>
             {t(`edit_race.methods.${methodValueToTextKey[value]}.description`)}
         </FormHelperText>
     </>
 
-    const makeMethodStepSX = (n) => ({
-        opacity: methodStep == n ? 1 : 0,
-        top: methodStep == n? 0 : ((methodStep < n) ? 20 : -20),
-        pointerEvents: methodStep == n? 'auto' : 'none',
+    const makeMethodStepSX = (step: MethodStep) => ({
+        opacity: methodStep == step ? 1 : 0,
+        top: methodStep == step ? 0 : ((stepIndex[methodStep] < stepIndex[step]) ? 20 : -20),
+        pointerEvents: methodStep == step ? 'auto' : 'none',
         transition: 'opacity 0.2s, top 0.2s',
         position: 'absolute',
         display: 'flex',
@@ -62,10 +79,12 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
             name="method-family-radio-buttons-group"
             value={methodFamily}
             onChange={(e) => {
-                if (e.target.value == 'single') {
-                    setErrors({ ...errors, raceNumWinners: '' })
-                    applyRaceUpdate(race => {race.num_winners = 1;});
-                }
+                // HACK: calling setMethodStep first beacause only the final applyRaceUpdate will apply
+                setMethodStep(e.target.value === 'single_winner' ? 'method' : 'num_winners');
+                applyRaceUpdate(race => {
+                    race.num_winners = e.target.value === 'single_winner'? 1 : 2;
+                    setInputtedWinners('' + race.num_winners)
+                });
                 setMethodFamily(e.target.value)
             }}
         >
@@ -75,12 +94,6 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
                 control={<Radio />}
                 label={t('edit_race.single_winner')}
                 sx={{ mb: 0, pb: 0 }}
-                onClick={() => {
-                    applyRaceUpdate(race => {
-                        race.num_winners = 1;
-                    });
-                    setMethodStep(2);
-                }}
             />
             <FormControlLabel
                 value="bloc_multi_winner"
@@ -88,12 +101,6 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
                 control={<Radio />}
                 label={t('edit_race.bloc_multi_winner')}
                 sx={{ mb: 0, pb: 0 }}
-                onClick={() => {
-                    applyRaceUpdate(race => {
-                        race.num_winners = Math.max(2, race.num_winners);
-                    });
-                    setMethodStep(1);
-                }}
             />
             <FormControlLabel
                 value="proportional_multi_winner"
@@ -101,13 +108,6 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
                 control={<Radio />}
                 label={t('edit_race.proportional_multi_winner')}
                 sx={{ mb: 0, pb: 0 }}
-                onClick={() => {
-                    applyRaceUpdate(race => {
-                        if(!PR_METHODS.includes(race.voting_method)) race.voting_method = undefined;
-                        race.num_winners = Math.max(2, race.num_winners);
-                    });
-                    setMethodStep(1);
-                }}
             />
         </RadioGroup>
     </>
@@ -127,7 +127,7 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
                     }
                 }}
                 fullWidth
-                value={editedRace.num_winners}
+                value={inputtedWinners}
                 sx={{
                     p: 0,
                     boxShadow: 2,
@@ -146,9 +146,9 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
         </FormHelperText>
         <Box display='flex' flexDirection='row' justifyContent='flex-end' gap={1}>
             <SecondaryButton onClick={() => {
-                setMethodStep(0)
+                setMethodStep('family')
             }}>Back</SecondaryButton>
-            <PrimaryButton onClick={() => setMethodStep(2)}>Next</PrimaryButton>
+            <PrimaryButton onClick={() => setMethodStep('method')}>Next</PrimaryButton>
         </Box>
     </>
 
@@ -190,6 +190,7 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
                 opacity: showAllMethods ? 1 : 0,
                 overflow: 'hidden',
                 transition: 'height .4s, opacity .7s',
+                textAlign: 'left', // this is necessary to keep the items under more options aligned left
             }}>
                 <Box
                     display='flex'
@@ -213,39 +214,44 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
         </RadioGroup>
         <Box display='flex' flexDirection='row' justifyContent='flex-end' gap={1}>
             <SecondaryButton onClick={() => {
-                setMethodStep(m => methodFamily === 'single_winner' ? 0 : 1)
+                setMethodStep(methodFamily === 'single_winner' ? 'family' : 'num_winners')
             }}>Back</SecondaryButton>
         </Box>
     </>
 
     const pad = 30;
 
+    // <Typography gutterBottom variant="h6" component="h6">Choose Voting Method</Typography>
     return <>
-        <Typography gutterBottom variant="h6" component="h6">Voting Method</Typography>
 
-        <Button
-            sx={{ margin: 'auto', textTransform: 'none'}}
-            disabled={methodStep < 3}
-            onClick={() => setMethodStep(0)}
-        >
-            {editedRace.voting_method == undefined ? '___' : t(`methods.${methodValueToTextKey[editedRace.voting_method]}.full_name`)} with&nbsp;
-            {methodFamily == 'single_winner' ? '1' : <>
-                {(editedRace.num_winners == undefined ? '___' : editedRace.num_winners)}&nbsp;
-                {methodFamily == undefined ? '___' : t(`edit_race.${methodFamily}_adj`)}
-            </>}&nbsp;
-            {methodFamily == 'single_winner'? 'winner' : 'winners'}
-        </Button>
-        
+               
         <Box sx={{
             position: 'relative',
-            height: `${[180, 122, showAllMethods? 407 : 287, -pad][methodStep]+pad}px`,
+            height: `${[0, 180, 122, showAllMethods? 407 : 287, -pad][stepIndex[methodStep]]+pad}px`,
             transition: 'height 0.5s',
-            display: 'flex', justifyContent: 'center'
+            display: 'flex',
+            justifyContent: 'flex-start'
         }}>
-            <Box sx={makeMethodStepSX(0)}> <FamilyPage/> </Box>
-            <Box sx={makeMethodStepSX(1)}> <NumWinnersPage/> </Box>
-            <Box sx={makeMethodStepSX(2)}> <VotingMethodPage/> </Box>
+            <Box sx={makeMethodStepSX('family')}> <FamilyPage/> </Box>
+            <Box sx={makeMethodStepSX('num_winners')}> <NumWinnersPage/> </Box>
+            <Box sx={makeMethodStepSX('method')}> <VotingMethodPage/> </Box>
         </Box>
         
+        <Button
+            variant='outlined'
+            sx={{ margin: 'auto', textTransform: 'none'}}
+            disabled={methodStep != 'unset' && methodStep != 'done'}
+            onClick={() => setMethodStep('family')}
+        >
+            {methodStep == 'unset' ? <>
+               {'<select voting method>'}
+            </> : <>
+                {editedRace.voting_method == undefined ? '___' : t(`methods.${methodValueToTextKey[editedRace.voting_method]}.full_name`)} with&nbsp;
+                {editedRace.num_winners == undefined ? '___' : editedRace.num_winners}&nbsp;
+                {methodFamily == undefined || methodFamily == 'single_winner' ? '' : <>{t(`edit_race.${methodFamily}_adj`)}&nbsp;</>}
+                {methodFamily == 'single_winner'? 'winner' : 'winners'}
+            </>}
+            <EditIcon/>
+        </Button>
     </>
 }

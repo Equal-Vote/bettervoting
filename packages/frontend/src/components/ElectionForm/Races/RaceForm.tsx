@@ -16,6 +16,9 @@ import VotingMethodSelector from './VotingMethodSelector';
 
 interface RaceFormProps {
     election: Election | NewElection,
+    updateElection: (updateFunc: (election: Election | NewElection) => void) => void,
+    raceIndex?: number,
+    draftMode?: boolean,
 }
 
 const TitleAndDescription = ({isDisabled, election, setErrors, errors, editedRace, applyRaceUpdate}) => {
@@ -81,12 +84,20 @@ const TitleAndDescription = ({isDisabled, election, setErrors, errors, editedRac
 
 export default function RaceForm({
     election,
+    updateElection,
+    raceIndex=undefined,
+    draftMode=true,
 }: RaceFormProps) {
     const { t } = useSubstitutedTranslation(election?.settings?.term_type ?? 'election');
     const flags = useFeatureFlags();
     const isDisabled = election.state !== 'draft';
-    const { editedRace, errors, setErrors, applyRaceUpdate} = useEditRace(election, null, 0)
-    const [title, setTitle] = useState('')
+    const { editedRace, errors, setErrors, applyRaceUpdate} = useEditRace(
+        election,
+        raceIndex == undefined ? null : election.races[raceIndex],
+        0,
+        updateElection,
+        draftMode,
+    )
     
     const confirm = useConfirm();
     const inputRefs = useRef([]);
@@ -109,7 +120,6 @@ export default function RaceForm({
     }, [editedRace.candidates]);
 
     const onEditCandidate = useCallback((candidate, index) => {
-        console.log('edit callback')
         applyRaceUpdate(race => {
             if (race.candidates[index]) {
                 race.candidates[index] = candidate;
@@ -124,7 +134,6 @@ export default function RaceForm({
     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleChangeCandidates = useCallback((newCandidateList: any[]) => {
-        console.log('change candidate callback')
         //remove the last candidate if it is empty
         if (newCandidateList.length > 1 && newCandidateList[newCandidateList.length - 1].candidate_name === '') {
             newCandidateList.pop();
@@ -136,7 +145,6 @@ export default function RaceForm({
     }, [applyRaceUpdate]);
 
     const onDeleteCandidate = useCallback(async (index) => {
-        console.log('delete candidate callback')
         if (editedRace.candidates.length < 2) {
             setErrors(prev => ({ ...prev, candidates: 'At least 2 candidates are required' }));
             return;
@@ -152,7 +160,6 @@ export default function RaceForm({
 
     // Handle tab and shift+tab to move focus between candidates
     const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLInputElement>, index: number) => {
-        console.log('handle key down candidate callback')
         const target = event.target as HTMLInputElement;
         if (event.key === 'Tab' && event.shiftKey) {
             // Move focus to the previous candidate
@@ -178,8 +185,6 @@ export default function RaceForm({
             )
         }
     }, [ephemeralCandidates.length, applyRaceUpdate]);
-
-    
 
     const Precincts = () => <>
         <Grid item xs={12}>

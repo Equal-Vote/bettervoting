@@ -1,6 +1,7 @@
 import { useContext, useState } from 'react';
 import { useNavigate } from "react-router";
 import structuredClone from '@ungap/structured-clone';
+import { Election as IElection } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { PrimaryButton, SecondaryButton, Tip } from '../styles.js';
 import { Box, capitalize, Checkbox, FormControlLabel, FormHelperText, IconButton, MenuItem, Paper, Radio, RadioGroup, Select, SelectChangeEvent, Step, StepContent, StepLabel, Stepper, TextField, Typography } from '@mui/material';
 import { usePostElection } from '../../hooks/useAPI';
@@ -18,10 +19,11 @@ import { VotingMethod } from '@equal-vote/star-vote-shared/domain_model/Race';
 import { TermType } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
 import useConfirm from '../ConfirmationDialogProvider.js';
 import QuickPollExtra from './QuickPollExtra.js';
+import { el } from 'date-fns/locale';
 
 const makeDefaultElection = () => {
     const ids = [];
-    for(let i = 0; i < 3; i++){
+    for(let i = 0; i < 1; i++){
         ids.push(makeUniqueIDSync(
             ID_PREFIXES.CANDIDATE, 
             ID_LENGTHS.CANDIDATE,
@@ -40,7 +42,7 @@ const makeDefaultElection = () => {
             {   
                 title: '',
                 race_id: '0',
-                num_winners: 1,
+                num_winners: undefined,
                 voting_method: undefined,
                 candidates: ids.map(id => ({
                     candidate_id: id,
@@ -75,8 +77,6 @@ const QuickPoll = () => {
     const [election, setElection] = useState<NewElection>(makeDefaultElection())
 
     const confirm = useConfirm();
-
-    const [activeMethodStep, setActiveMethodStep] = useState(0);
 
     const {t} = useSubstitutedTranslation(election.settings.term_type);
 
@@ -204,6 +204,10 @@ const QuickPoll = () => {
         if (confirmed) {
             navigate(`/pet`)
         }else{
+            setElection({
+                ...election,
+                title: election.races[0].title,
+            })
             setPage(1);
         }
     }
@@ -239,7 +243,7 @@ const QuickPoll = () => {
             >
                 <Box sx={pageSX}>
                     <Typography variant='h5' color={'lightShade.contrastText'}>{t('landing_page.quick_poll.title')}</Typography>
-                    <Box display='flex' flexDirection='column' justifyContent='center'>
+                    <Box display='flex' flexDirection='column' justifyContent='center' alignItems='left'>
                         <Typography>
                             {t('election_creation.term_question')}
                             <Tip name='polls_vs_elections' />
@@ -259,9 +263,16 @@ const QuickPoll = () => {
                     </Box>
                     <RaceForm
                         election={election}
+                        raceIndex={0}
+                        updateElection={(updateFunc) => {
+                            const electionCopy: IElection = structuredClone(election)
+                            updateFunc(electionCopy)
+                            setElection(electionCopy)
+                        }}
+                        draftMode={false}
                     />
                     <Box display='flex' flexDirection='row' justifyContent='flex-end' gap={1} sx={{mt: 3}}>
-                        <SecondaryButton onClick={() => setPage(pg => pg+1)}>Add Candidates Later</SecondaryButton>
+                        <SecondaryButton onClick={() => setPage(pg => pg+1)}>Skip for now</SecondaryButton>
                         <PrimaryButton onClick={onNext}>Next</PrimaryButton>
                     </Box>
                 </Box>
