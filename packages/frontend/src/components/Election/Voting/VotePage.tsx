@@ -142,10 +142,19 @@ const VotePage = () => {
 
   const { isPending, makeRequest: postBallot } = usePostBallot(election.election_id)
   const onUpdate = (pageIndex, newRaceScores) => {
-    const newPages = [...pages]
-    newPages[pageIndex].candidates.forEach((candidate, candidateIndex) => candidate.score = newRaceScores[candidateIndex])
-    // newPages[pageIndex].scores = newRaceScores
-    setPages(newPages)
+    setPages(prevPages => {
+      const nextPages = [...prevPages];
+      const prevPage = prevPages[pageIndex];
+      const nextCandidates = prevPage.candidates.map((candidate, idx) => ({
+        ...candidate,
+        score: newRaceScores[idx]
+      }));
+      nextPages[pageIndex] = {
+        ...prevPage,
+        candidates: nextCandidates
+      };
+      return nextPages;
+    });
   }
   const submit = async () => {
     const candidateScores = pages.map((p) => p.candidates)
@@ -323,4 +332,3 @@ const VotePage = () => {
 }
 
 export default VotePage
-

@@ -63,6 +63,7 @@ export const defaultElection: NewElection = {
         time_zone: DateTime.now().zone.name as TimeZone,
         random_candidate_order: false,
         require_instruction_confirmation: true,
+        draggable_ballot: false,
         invitation: undefined,
         // election_term, and voter_access are intentially omitted
         // this let's me start them at undefined for the stepper

@@ -149,6 +149,7 @@ export default function ElectionSettings() {
                                 <CheckboxSetting setting='voter_groups' disabled/>
                                 <CheckboxSetting setting='custom_email_invite' disabled/>
                                 <CheckboxSetting setting='require_instruction_confirmation'/>
+                                <CheckboxSetting setting='draggable_ballot'/>
                                 <CheckboxSetting setting='publicly_searchable' checked={editedIsPublic === true} onChange={(e) => setEditedIsPublic(e.target.checked)}/>
                                 <CheckboxSetting setting='max_rankings' onChange={(e) => applySettingsUpdate(settings => {
                                     settings.max_rankings = e.target.checked ? default_rankings : undefined })

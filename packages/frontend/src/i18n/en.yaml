@@ -18,12 +18,21 @@ election_home:
 # Ballot (ex. https://bettervoting.com/j87vqp/vote)
 ballot:
   this_election_uses: This {{election}} will use {{voting_method}} to elect {{spelled_count}} $t(winner.winner).
+  this_election_uses_draggable: This {{election}} will use {{voting_method}} with draggable ballots to elect {{spelled_count}} $t(winner.winner).
   instructions_checkbox: I have read the instructions
   learn_more: Learn more about {{voting_method}}
   previous: Previous
   next: Next
   submit_ballot: Submit
   submitting: Submitting...
+
+  # Draggable IRV UI strings
+  available: Available Candidates
+  yourRankings: Your Rankings
+  drop_here: Drop candidates here to rank them
+  no_available: No available candidates
+  instructions: Drag candidates from the left to the right list. Candidates on the right are your ranked order; left means unranked.
+  instructions_rcv_draggable: Drag candidates left → right. Rank 1 is your top choice. Unranked means no preference.
 
   dialog_submit_title: Submit {{capital_ballot}}?
   dialog_send_receipt: Send Ballot Receipt Email?
@@ -726,6 +735,10 @@ tips:
     title: Confirm That Voter Read Instructions
     description: Requires voters to confirm that they have read the ballot instructions before voting.
 
+  draggable_ballot:
+    title: Use Draggable Ballots for IRV
+    description: Enable a drag-and-drop interface for IRV (Instant Runoff Voting) ballots, allowing voters to rank candidates by dragging them into order.
+
   publicly_searchable:
     title: Make {{capital_election}} Publicly Searchable
     description: Allow {{capital_election}} to be listed under the browse polls tab.
@@ -1084,6 +1097,8 @@ election_settings:
   custom_email_invite: Customize Emails To Voters !tip(custom_email_invite)
 
   require_instruction_confirmation: Confirm That Voter Read Instructions !tip(require_instruction_confirmation)
+
+  draggable_ballot: Use Draggable Ballots for IRV !tip(draggable_ballot)
 
   publicly_searchable: Make {{capital_election}} Publicly Searchable !tip(publicly_searchable)
 
