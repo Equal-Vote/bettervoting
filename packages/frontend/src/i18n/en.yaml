@@ -825,6 +825,12 @@ draft_warning:
     All ballots will be counted as test votes and
     shall be reset prior to the final {{election}}.
 
+archived_warning:
+  title: Election is Archived
+  description: >
+    Unable to cast ballot: This {{election}} has been archived and is no longer accepting votes.
+    Please contact your Election Administrator if you need assistance.
+
 # Landing Page -> New Election Dialog
 election_creation:
   dialog_title: Create an Election or Poll
