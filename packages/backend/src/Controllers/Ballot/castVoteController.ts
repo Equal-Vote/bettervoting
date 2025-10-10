@@ -230,7 +230,13 @@ async function castVoteController(req: IElectionRequest, res: Response, next: Ne
         (io as Server).to('landing_page').emit('updated_stats', await innerGetGlobalElectionStats(req));
     }
 
-    res.status(200).json({ ballot: event.inputBallot} );
+    // Scrub ballot_id to prevent voters from creating receipts (vote buying/coercion)
+    const scrubbedBallot = {
+        ...event.inputBallot,
+        ballot_id: undefined
+    };
+
+    res.status(200).json({ ballot: scrubbedBallot} );
     Logger.debug(req, "CastVoteController done, saved event to store");
 };
 
