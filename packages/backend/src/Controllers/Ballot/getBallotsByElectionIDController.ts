@@ -20,8 +20,20 @@ const getBallotsByElectionID = async (req: IElectionRequest, res: Response, next
         Logger.info(req, msg);
         throw new BadRequest(msg)
     }
-    Logger.debug(req, "ballots = ", ballots);
-    res.json({ election: req.election, ballots: ballots })
+
+    // Scrub identifying information from ballots to preserve voter anonymity
+    const scrubbedBallots = ballots.map(ballot => ({
+        ...ballot,
+        history: undefined,
+        date_submitted: undefined,
+        create_date: undefined,
+        update_date: undefined,
+        user_id: undefined,
+        ip_hash: undefined
+    }));
+
+    Logger.debug(req, "ballots = ", scrubbedBallots);
+    res.json({ election: req.election, ballots: scrubbedBallots })
 }
 
 export {

@@ -18,6 +18,7 @@ election_home:
 # Ballot (ex. https://bettervoting.com/j87vqp/vote)
 ballot:
   this_election_uses: Esta {{election}} usará el {{voting_method}} para eligir a {{spelled_count}} $t(winner.winner).
+  this_election_uses_draggable: Esta {{election}} usará el {{voting_method}} con papeletas arrastrables para eligir a {{spelled_count}} $t(winner.winner).
   instructions_checkbox: He leído las instrucciones
   learn_more: Aprender más sobre el {{voting_method}}
   previous: Anterior

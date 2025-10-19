@@ -31,6 +31,7 @@ type CastVoteEvent = {
     inputBallot:Ballot,
     roll?:ElectionRoll,
     userEmail?:string,
+    isBallotUpdate: boolean,
 }
 
 // NOTE: discord isn't implemented yet, but that's the plan for the future
@@ -41,11 +42,10 @@ const castVoteEventQueue = "castVoteEvent";
 async function makeBallotEvent(req: IElectionRequest, targetElection: Election, inputBallot: NewBallot, submitType: BallotSubmitType, voter_id?: string){
     inputBallot.election_id = targetElection.election_id;
     let roll = null;
-
     // skip voter roll & validation steps while in draft mode
     // TODO: we may be able to shortcut further for elections that don't require authentication
     //       ^ that could be huge when creating elections from a set of ballots
-    if(targetElection.state !== 'draft' && req.election.ballot_source !== 'prior_election'){ 
+    if(targetElection.state !== 'draft' && req.election.ballot_source !== 'prior_election') {
         const missingAuthData = checkForMissingAuthenticationData(req, targetElection, req, voter_id)
         if (missingAuthData !== null) {
             throw new Unauthorized(missingAuthData);
@@ -55,7 +55,7 @@ async function makeBallotEvent(req: IElectionRequest, targetElection: Election, 
         roll = await getOrCreateElectionRoll(req, targetElection, req, voter_id, true);
         const voterAuthorization = getVoterAuthorization(roll,missingAuthData)
 
-        assertVoterMayVote(voterAuthorization, req);
+        assertVoterMayVote(voterAuthorization, targetElection, req);
 
         //TODO: currently we have both a value on the input Ballot, and the route param.
         //do we want to keep both?  enforce that they match?
@@ -71,12 +71,19 @@ async function makeBallotEvent(req: IElectionRequest, targetElection: Election, 
     }
 
     //some ballot info should be server-authorative
+    // TODO: move to db trigger
     inputBallot.date_submitted = Date.now();
     if (inputBallot.history == null){
         inputBallot.history = [];
     }
     // preserve the ballot id if it's already provided from prior election
-    if(!inputBallot.ballot_id || targetElection.ballot_source != 'prior_election'){
+    let updatableBallot;
+    if (targetElection.settings.ballot_updates) {
+        updatableBallot = await BallotModel.getBallotByVoterID(roll!.voter_id, inputBallot.election_id, req);
+    }
+    if (updatableBallot) {
+        inputBallot.ballot_id = updatableBallot.ballot_id;
+    } else if(!inputBallot.ballot_id || targetElection.ballot_source != 'prior_election') {
         inputBallot.ballot_id = await makeUniqueID(
             ID_PREFIXES.BALLOT,
             ID_LENGTHS.BALLOT,
@@ -98,7 +105,7 @@ async function makeBallotEvent(req: IElectionRequest, targetElection: Election, 
             roll.history = [];
         }
         roll.history.push({
-            action_type:"submit",
+            action_type: updatableBallot ? "update": "submit",
             actor: roll===null ? '' : roll.voter_id ,
             timestamp:inputBallot.date_submitted,
         });
@@ -112,6 +119,7 @@ async function makeBallotEvent(req: IElectionRequest, targetElection: Election, 
         inputBallot,
         roll,
         userEmail:undefined,
+        isBallotUpdate: !!updatableBallot,
     }
 }
 
@@ -230,7 +238,13 @@ async function castVoteController(req: IElectionRequest, res: Response, next: Ne
         (io as Server).to('landing_page').emit('updated_stats', await innerGetGlobalElectionStats(req));
     }
 
-    res.status(200).json({ ballot: event.inputBallot} );
+    // Scrub ballot_id to prevent voters from creating receipts (vote buying/coercion)
+    const scrubbedBallot = {
+        ...event.inputBallot,
+        ballot_id: undefined
+    };
+
+    res.status(200).json({ ballot: scrubbedBallot} );
     Logger.debug(req, "CastVoteController done, saved event to store");
 };
 
@@ -238,12 +252,17 @@ async function castVoteController(req: IElectionRequest, res: Response, next: Ne
 async function handleCastVoteEvent(job: { id: string; data: CastVoteEvent; }):Promise<void> {
     const event = job.data;
     const ctx = Logger.createContext(event.requestId);
-
-    var savedBallot = await BallotModel.getBallotByID(event.inputBallot.ballot_id, ctx);
-    if (!savedBallot){
-        savedBallot = await BallotModel.submitBallot(event.inputBallot, ctx, `User submits a ballot`);
+    let savedBallot;
+    if (event.isBallotUpdate) {
+        savedBallot = await BallotModel.updateBallot(event.inputBallot, ctx, `User updates a ballot`);
+    } else {
+        savedBallot = await BallotModel.getBallotByID(event.inputBallot.ballot_id, ctx);
+        if (!savedBallot){
+            savedBallot = await BallotModel.submitBallot(event.inputBallot, ctx, `User submits a ballot`);
+        }
     }
-    if (event.roll != null){
+
+    if (event.roll != null) {
         await ElectionRollModel.update(event.roll, ctx, `User submits a ballot`);
     }
 
@@ -258,12 +277,12 @@ async function handleCastVoteEvent(job: { id: string; data: CastVoteEvent; }):Pr
     }
 }
 
-function assertVoterMayVote(voterAuthorization:any, ctx:ILoggingContext ): void{
+function assertVoterMayVote(voterAuthorization:any, election: Election, ctx:ILoggingContext ): void{
     Logger.debug(ctx, "assert voter may vote");
     if (voterAuthorization.authorized_voter === false){
         throw new Unauthorized("User not authorized to vote");
     }
-    if (voterAuthorization.has_voted === true){
+    if (voterAuthorization.has_voted === true && !(election.settings.ballot_updates === true)){
         throw new BadRequest("User has already voted");
     }
     Logger.debug(ctx, "Voter authorized");

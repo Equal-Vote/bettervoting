@@ -6,6 +6,7 @@ import { VotingMethod } from "@equal-vote/star-vote-shared/domain_model/Race";
 import { ElectionResults } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
 import { Ballot, NewBallot, AnonymizedBallot, NewBallotWithVoterID, BallotSubmitStatus } from "@equal-vote/star-vote-shared/domain_model/Ballot";
 import { email_request_data } from "@equal-vote/star-vote-backend/src/Controllers/Election/sendEmailController"
+import { NumberObject } from "~/components/util";
 
 export const useGetElection = (electionID: string | undefined) => {
     return useFetch<undefined, {
@@ -27,6 +28,15 @@ export const useGetElections = () => {
         open_elections: Election[] | null,
         public_archive_elections: Election[] | null
     }>('/API/Elections', 'get')
+}
+
+export const useQueryElections = () => {
+    return useFetch<{start_time: Date, end_time: Date}, {
+        open_elections: Election[] | null,
+        closed_elections: Election[] | null,
+        popular_elections: Election[] | null,
+        vote_counts: {v: number, election_id: string}[] | null,
+    }>('/API/QueryElections', 'post')
 }
 
 export const usePostElection = () => {

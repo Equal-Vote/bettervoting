@@ -3,7 +3,7 @@ import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
-import { Box, IconButton, Link, Menu, MenuItem } from '@mui/material';
+import { Accordion, AccordionDetails, AccordionSummary, Box, IconButton, Link, Menu, MenuItem } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import useAuthSession from './AuthSessionContextProvider';
@@ -16,6 +16,8 @@ import { makeID, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/ut
 
 import { ReturnToClassicContext } from './ReturnToClassicDialog';
 import { useCookie } from '~/hooks/useCookie';
+import NavMenu from './NavMenu';
+import { PrimaryButton } from './styles';
 
 const headerTextColor = 'primary.contrastText'
 const Header = () => {
@@ -24,46 +26,89 @@ const Header = () => {
     const authSession = useAuthSession()
     // this is important for setting the default value
     useCookie('temp_id', makeID(ID_PREFIXES.VOTER, ID_LENGTHS.VOTER))
-    const [anchorElNav, setAnchorElNav] = useState(null)
-    const [anchorElUser, setAnchorElUser] = useState(null)
+    const [openedMenu, setOpenedMenu] = useState(null);
     const {t} = useSubstitutedTranslation();
 
     const createElectionContext = useContext(CreateElectionContext);
-
-    const handleOpenNavMenu = (event) => {
-        setAnchorElNav(event.currentTarget);
-    };
-
-    const handleCloseNavMenu = () => {
-        setAnchorElNav(null);
-    };
-
-    const handleOpenUserMenu = (event) => {
-        setAnchorElUser(event.currentTarget);
-    };
-
-    const handleCloseUserMenu = () => {
-        setAnchorElUser(null);
-    };
 
     const navTextSx = {fontWeight: 'bold', fontSize: '1rem'};
 
     const navItems = [
         {
             text: t('nav.about'),
-            href: '/About',
+            href: '/about',
             target: '_self',
         },
         {
-            text: t('nav.better_voting'),
-            href: 'https://equal.vote',
-            target: '_blank',
+            text: 'Voting Methods',
+            items: [
+                {
+                    text: 'STAR Voting',
+                    href: 'https://www.equal.vote/star',
+                    target: '_self',
+                },
+                {
+                    text: 'Ranked Robin',
+                    href: 'https://www.equal.vote/ranked_robin',
+                    target: '_self',
+                },
+                {
+                    text: 'Approval',
+                    href: 'https://www.equal.vote/approval',
+                    target: '_self',
+                },
+                {
+                    text: 'STAR PR',
+                    href: 'https://www.equal.vote/pr',
+                    target: '_self',
+                },
+                {
+                    text: 'Ranked Choice Voting',
+                    href: 'https://www.equal.vote/beyond_rcv',
+                    target: '_self',
+                },
+            ]
         },
         {
             text: t('nav.public_elections'),
-            href: '/OpenElections',
+            href: '/browse',
             target: '_self',
-        }
+        },
+        {
+            text: 'Paper Ballots',
+            items: [
+                {
+                    text: 'E-Voting w/ Paper Receipts',
+                    href: '/new_election',
+                    target: '_self',
+                },
+                {
+                    text: 'Print Ballots',
+                    href: 'https://docs.google.com/presentation/d/1va-XEsUy0VI0jCTAHrQ_f9HNKex3VK9cm7WfF6jhUYM/edit',
+                    target: '_self',
+                },
+                {
+                    text: 'Paper Ballots',
+                    href: 'https://docs.bettervoting.com/help/paper_ballots.html',
+                    target: '_self',
+                },
+                {
+                    text: 'Hand Counting',
+                    href: '/hand_count',
+                    target: '_self',
+                },
+            ]
+        },
+        {
+            text: 'Stories' ,
+            href: 'https://starvoting.org/case_studies',
+            target: '_self',
+        },
+        {
+            text: 'Create Election' ,
+            href: '/new_election',
+            target: '_self',
+        },
     ];
 
     const returnToClassicContext = useContext(ReturnToClassicContext);
@@ -73,33 +118,7 @@ const Header = () => {
             <Toolbar>
                 {/**** MOBILE HAMBURGER MENU ****/}
                 <Box sx={{ flexGrow: 0, display: { xs: 'flex', md: 'none' } }}>
-                    <IconButton
-                        size="large"
-                        aria-label="Navigation Menu"
-                        aria-controls="menu-appbar"
-                        aria-haspopup="true"
-                        onClick={handleOpenNavMenu}
-                        color="inherit">
-                        <MenuIcon />
-                    </IconButton>
-                    <Menu
-                        id="menu-appbar"
-                        anchorEl={anchorElNav}
-                        anchorOrigin={{
-                            vertical: 'bottom',
-                            horizontal: 'left',
-                        }}
-                        keepMounted
-                        transformOrigin={{
-                            vertical: 'top',
-                            horizontal: 'left',
-                        }}
-                        open={Boolean(anchorElNav)}
-                        onClose={handleCloseNavMenu}
-                        sx={{
-                            display: { xs: 'block', md: 'none' },
-                        }}
-                    >
+                    <NavMenu name='mobile-hamburger' mobileIcon={<MenuIcon/>}>
                         {navItems.map((item, i) => 
                             <MenuItem
                                 key={`mobile-nav-${i}`}
@@ -107,7 +126,25 @@ const Header = () => {
                                 href={item.href}
                                 target={item.target}
                             >
-                                {item.text}
+                                {!item.items && item.text }
+                                {item.items && <Accordion
+                                        elevation={0}
+                                        disableGutters
+                                        sx={{
+                                            backgroundColor: "transparent",
+                                            width: '100%'
+                                        }}
+                                    >
+                                        <AccordionSummary sx={{p: 0, m: 0, minHeight: 0}}>
+                                            <span>{item.text}</span>
+                                        </AccordionSummary>
+                                        <AccordionDetails sx={{p: 0, m: 0, mt: '.5rem', background: '#eeeeee', width: '100%' }}>
+                                            {item.items.map((subitem, i) => 
+                                                <MenuItem key={i} component={Link} href={subitem.href} target={subitem.target}>{subitem.text}</MenuItem>
+                                            )}
+                                        </AccordionDetails>
+                                    </Accordion>
+                                }
                             </MenuItem>
                         )}
                         <MenuItem onClick={openFeedback}>
@@ -116,14 +153,14 @@ const Header = () => {
                         <MenuItem onClick={returnToClassicContext.openDialog}>
                             {t('return_to_classic.button')}
                         </MenuItem>
-                    </Menu>
+                    </NavMenu>
                 </Box>
 
-                {/**** Title ****/}
+                {/**** BetterVoting Logo ****/}
                 <IconButton
                     size="large"
                     href="/"
-                    sx={{display: 'flex', gap: 1, flexGrow: {xs: '1', md: '0'}, mr: {xs: 0, md: 5}}}>
+                    sx={{display: 'flex', gap: 1, flexGrow: {xs: '1', md: '0'}, mr: {xs: 0, md: 5}, py: '12px', px: '8px'}}>
                         {/* I don't remember what the margin right 5 was for, but I added xs since it was breaking mobile*/}
                         {
                             /* I thought the favicon looked a bit too busy */
@@ -135,63 +172,37 @@ const Header = () => {
 
                 {/**** DESKTOP OPTIONS ****/}
                 <Box
-                    sx={{ flexGrow: 100, flexWrap: 'wrap', display: { xs: 'none', md: 'flex' }, gap: 4, rowGap: 0 }}>
+                    sx={{ flexGrow: 100, flexWrap: 'wrap', display: { xs: 'none', md: 'flex' }, gap: 4, rowGap: 0, position: 'relative', justifyContent: 'center' }}>
                     {navItems.map((item, i) => 
-                        <Button key={`desktop-nav-${i}`} href={item.href} target={item.target}>
-                            <Typography variant="h6" sx={navTextSx} color={headerTextColor} textTransform={'none'}>
-                                {item.text}
-                            </Typography>
-                        </Button>
+                        <NavMenu name={`desktop-nav-${i}`} desktopText={item.text} href={item.href} target={item.target}>
+                            {!item.items && <></>}
+                            {item.items && item.items.map((subitem, j) => 
+                                <MenuItem
+                                    key={`desktop-subnav-${i}-${j}`}
+                                    component={Link}
+                                    href={subitem.href}
+                                    target={subitem.target}
+                                >
+                                    {subitem.text}
+                                </MenuItem>
+                            )}
+                            {/* Saving this for when we have a search bar
+                            <Paper sx={{display: 'flex', alignItems: 'center', background: 'white', align: 'center', marginTop: 'auto', marginBottom: 'auto', padding: 1}}>
+                                <Search />
+                                <InputBase placeholder="Search Public Elections"/>
+                            </Paper>
+                            */}
+                        </NavMenu>
                     )}
-                    {/* Saving this for when we have a search bar
-                    <Paper sx={{display: 'flex', alignItems: 'center', background: 'white', align: 'center', marginTop: 'auto', marginBottom: 'auto', padding: 1}}>
-                        <Search />
-                        <InputBase placeholder="Search Public Elections"/>
-                    </Paper>
-                    */}
                 </Box>
 
                 {/**** ACCOUNT OPTIONS ****/}
-                <Box sx={{ flexGrow: 0, display: 'flex', gap: 4 }}>
+                <Box sx={{ flexGrow: 0, ml: 5}}>
                     {authSession.isLoggedIn() && <>
-                        <Button color='inherit' onClick={() => createElectionContext.openDialog()} sx={{display: { xs: 'none', md: 'flex' }}}>
-                            <Typography variant="h6" sx={navTextSx} color={headerTextColor} textTransform={'none'}>
-                                {t('nav.new_election')}
-                            </Typography>
-                        </Button>
-                        <IconButton
-                            size="large"
-                            aria-label="account of current user"
-                            aria-controls="menu-appbar"
-                            aria-haspopup="true"
-                            onClick={handleOpenUserMenu}
-                            color="inherit"
-                            sx={{display: { xs: 'inline', md: 'none' }}}
-                            >
-                            <AccountCircleIcon />
-                        </IconButton>
-                        <Button color='inherit' onClick={handleOpenUserMenu} sx={{display: { xs: 'none', md: 'flex' }}}>
-                            <Typography variant="h6" sx={navTextSx} color={headerTextColor} textTransform={'none'}>
-                                {t('nav.greeting', {name: authSession.getIdField('given_name')})}
-                            </Typography>
-                            <KeyboardArrowDownRoundedIcon sx={{transition: 'transform .2s', '&:hover': {transform: 'translateY(3px)'}}}/>
-                        </Button>
-                        <Menu
-                            id="menu-appbar"
-                            anchorEl={anchorElUser}
-                            anchorOrigin={{
-                                vertical: 'bottom',
-                                horizontal: 'left',
-                            }}
-                            keepMounted
-                            transformOrigin={{
-                                vertical: 'top',
-                                horizontal: 'left',
-                            }}
-                            open={Boolean(anchorElUser)}
-                            onClose={handleCloseUserMenu}
-                            sx={{ display: 'block'}}
-                        >
+                        {/*<NavMenu name='new_election' desktopText={t('nav.new_election')} onClick={() => createElectionContext.openDialog()}>
+                            <></>
+                        </NavMenu>*/}
+                        <NavMenu name='user' mobileIcon={<AccountCircleIcon/>} desktopText={t('nav.greeting', {name: authSession.getIdField('given_name')})}>
                             <MenuItem component={Link} href={authSession.accountUrl} target='_blank'>
                                 {t('nav.your_account')}
                             </MenuItem>
@@ -200,11 +211,11 @@ const Header = () => {
                             </MenuItem>
                             {/*<MenuItem component={Link} href='/ElectionInvitations'>
                                 Election Invitations
-                        </MenuItem>*/}
-                            <MenuItem component={Link} href='/ElectionsYouManage'>
+                            </MenuItem>*/}
+                            <MenuItem component={Link} href='/manage'>
                                 {t('nav.my_elections')}
                             </MenuItem>
-                            <MenuItem component={Link} href='/ElectionsYouVotedIn'>
+                            <MenuItem component={Link} href='/vote_history'>
                                 {t('nav.past_elections')}
                             </MenuItem>
                             <MenuItem
@@ -240,17 +251,14 @@ const Header = () => {
                                     </MenuItem>
                                 ))}
                             </>}
-                        </Menu>
-                    </>}
+                        </NavMenu></>
+                    }
                     {!authSession.isLoggedIn() &&
-                        <Button color='inherit' onClick={() => authSession.openLogin()} >
-                            <Typography sx={navTextSx} color={headerTextColor}>
-                                {t('nav.sign_in')}
-                            </Typography>
-                        </Button>
+                        <PrimaryButton onClick={() => authSession.openLogin()} >
+                            {t('nav.sign_in')}
+                        </PrimaryButton>
                     }
                 </Box>
-
             </Toolbar>
         </AppBar >
     )

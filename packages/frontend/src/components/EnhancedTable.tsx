@@ -17,7 +17,7 @@ import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
 import { makeChipStyle } from './ElectionForm/Details/ElectionStateChip';
 import { visuallyHidden } from '@mui/utils';
-import { epochToDateString, getLocalTimeZoneShort, useSubstitutedTranslation } from './util';
+import { epochToDateString, getLocalTimeZoneShort, NumberObject, useSubstitutedTranslation } from './util';
 import { Checkbox, FormControl, ListItemText, MenuItem, Select, TextField, Chip } from '@mui/material';
 import { ElectionState } from '@equal-vote/star-vote-shared/domain_model/Election';
 import Link from "@mui/material/Link";
@@ -175,7 +175,7 @@ const headCellPool = {
     disablePadding: false,
     label: 'Election Title',
     filterType: 'search',
-    formatter: a => a
+    formatter: (title, election) => <>{title}&nbsp;<a href={`/${election.election_id}`}>🔗</a></>
   },
   roles: {
     id: 'roles',
@@ -209,7 +209,7 @@ const headCellPool = {
     label: `Create Date (${getLocalTimeZoneShort()})`,
     filterType: 'search',
     isDate: true,
-    formatter: (time, election, t) => t('listed_datetime', { datetime: time })
+    formatter: (time, election, t) => t('listed_datetime', { listed_datetime: time })
   },
   update_date: {
     id: 'update_date',
@@ -247,13 +247,32 @@ const headCellPool = {
     filterType: 'search',
     formatter: descr => limit(descr, 30)
   },
+  owner_id: {
+    id: 'owner_id',
+    numeric: false,
+    disablePadding: false,
+    label: 'Owner ID',
+    filterType: 'search',
+    formatter: id => <>
+      {id.startsWith('v-') && '(no account)'}
+      {!id.startsWith('v-') && <a target='_blank' href={`https://keycloak.prod.equal.vote/admin/master/console/#/Prod/users/${id}/settings`}>{limit(id, 6)}</a>}
+    </>
+  },
+  votes: {
+    id: 'votes',
+    numeric: true,
+    disablePadding: false,
+    label: 'Votes',
+    filterType: 'search',
+    formatter: (_, election, __, voteCounts) => Number(voteCounts[election.election_id] ?? 0)
+  },
 }
-
 
 interface EnhancedTableProps {
   title: string,
   headKeys: HeadKey[]
   data: any[] // we'll use a formatter to convert it to TableData
+  voteCounts?: NumberObject,
   defaultSortBy: Extract<keyof TableData, string>
   handleOnClick: Function
   isPending: boolean
@@ -456,8 +475,6 @@ function EnhancedTableHead(props: EnhancedTableHeadProps) {
   );
 }
 
-
-
 function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
   const { numSelected } = props;
 
@@ -534,12 +551,12 @@ export default function EnhancedTable(props: EnhancedTableProps) {
   //   setDense(event.target.checked);
   // };
 
-  const formatTableData = (headKeys, data) => {
+  const formatTableData = (headKeys, data, voteCounts) => {
     const fData = data.map(item => {
       const fItem = {};
       // include voter_id as a hack so that it will be available in the callback
       ['voter_id', ...headKeys].forEach(key => {
-        fItem[key] = key in headCellPool ? headCellPool[key].formatter(item[key], item, t) : item[key];
+        fItem[key] = key in headCellPool ? headCellPool[key].formatter(item[key], item, t, voteCounts) : item[key];
       });
       fItem['raw'] = item;
       return fItem;
@@ -550,7 +567,7 @@ export default function EnhancedTable(props: EnhancedTableProps) {
   const filteredRows = useMemo(
     () => {
       setPage(0);
-      return filterData(formatTableData(props.headKeys, props.data), headCells, filters);
+      return filterData(formatTableData(props.headKeys, props.data, props.voteCounts ?? {}), headCells, filters);
     },
     [filters, props.data],
   );
@@ -643,7 +660,7 @@ export default function EnhancedTable(props: EnhancedTableProps) {
             </Table>
           </TableContainer>
           <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
+            rowsPerPageOptions={[5, 10, 25, 100]}
             component="div"
             count={filteredRows.length}
             rowsPerPage={rowsPerPage}

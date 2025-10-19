@@ -35,7 +35,7 @@ export const getAnonymizedBallotsByElectionID = async (req: IElectionRequest, re
             }
       
     });
-    Logger.debug(req, "ballots = ", ballots);
+    Logger.debug(req, "ballots = ", anonymizedBallots);
     res.json({ ballots: anonymizedBallots })
 }
 

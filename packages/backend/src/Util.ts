@@ -59,7 +59,7 @@ export async function getMetaTags(req: any) : Promise<TagObject>  {
   let election:Election|null;
 
   // list copied from App.tsx
-  if(['', 'About', 'ElectionInvitations', 'ElectionsYouManage', 'ElectionsYouVotedIn', 'OpenElections', 'Sandbox'].includes(parts[1].split('?')[0])){
+  if(['', 'about', 'invitations', 'manage', 'vote_history', 'browse', 'sandbox'].includes(parts[1].split('?')[0])){
     election = null;
   }else{
     const electionID = (parts[1] == 'Election' ? parts[2] : parts[1])

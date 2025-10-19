@@ -12,6 +12,8 @@ const rBold = /\*\*(.*?)\*\*/;
 const rTip = / !tip\((.*)\)/;
 
 export type StringObject = {[key: string]: string};
+export type NumberObject = {[key: string]: number};
+
 //I don't know how to fix this, but eslint doesn't like namespace
 // eslint-disable-next-line @typescript-eslint/no-namespace
 declare namespace Intl {

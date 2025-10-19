@@ -80,7 +80,10 @@ export default function GenericBallotView({
 
           <Grid item xs={8} sx={{ pb:1, px:4 }} className="instructions">
             <Typography align='left' sx={{ typography: { sm: 'body1', xs: 'body2' } }}>
-              {t('ballot.this_election_uses', {voting_method: methodName, count: ballotContext.race.num_winners, spelled_count: spelledNumWinners})}
+              {election.settings.draggable_ballot && ballotContext.race.voting_method === 'IRV'
+                ? t('ballot.this_election_uses_draggable', {voting_method: methodName, count: ballotContext.race.num_winners, spelled_count: spelledNumWinners})
+                : t('ballot.this_election_uses', {voting_method: methodName, count: ballotContext.race.num_winners, spelled_count: spelledNumWinners})
+              }
             </Typography>
 
             {t(`ballot.methods.${methodKey}.instruction_bullets`).map((bullet, bulletIndex) => 

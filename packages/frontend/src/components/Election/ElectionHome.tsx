@@ -14,6 +14,8 @@ const ElectionHome = () => {
 
   const {t} = useSubstitutedTranslation(election.settings.term_type, {time_zone: election.settings.time_zone});
 
+  const canUpdateBallot = (voterAuth.has_voted == true && election.settings.ballot_updates);
+
   return (
     <>
       <DraftWarning/>
@@ -69,12 +71,13 @@ const ElectionHome = () => {
                 </Typography>
               </Box>}
             {
-              voterAuth.has_voted == false && voterAuth.authorized_voter && !voterAuth.required &&
+              (voterAuth.has_voted == false || canUpdateBallot) && voterAuth.authorized_voter && !voterAuth.required &&
 
               <Box display='flex' flexDirection='column' alignItems='center' gap={5} sx={{ p: 1}}>
                 <PrimaryButton fullWidth href={`/${String(election?.election_id)}/vote`} name='vote' >
                   <Typography align='center' variant="h3" component="h3" fontWeight='bold' sx={{ p: 2 }}>
-                    {t('election_home.vote')}
+                    {/*display edit ballot or vote text conditionally*/}
+                    {voterAuth.has_voted ? t('editable_ballots.edit_vote') : t('election_home.vote')}
                   </Typography>
                 </PrimaryButton>
                 {election.settings.public_results === true &&
@@ -109,7 +112,7 @@ const ElectionHome = () => {
               </Typography>
             </Box>
           }
-          {voterAuth.has_voted == true &&
+          {voterAuth.has_voted == true && !canUpdateBallot &&
             <Box display='flex' flexDirection='column' alignItems='center' gap={5} sx={{ p: 1}}>
               <Typography align='center' variant="h6" component="h6">
                 {t('election_home.ballot_submitted')}
@@ -118,7 +121,7 @@ const ElectionHome = () => {
           }
           {/* Show results button only if public_results enabled and voter has voted or election is closed */}
           {(election.settings.public_results === true &&
-            (election.state === 'open' && voterAuth.has_voted) || election.state === 'closed') &&
+            (election.state === 'open' && voterAuth.has_voted && !canUpdateBallot) || election.state === 'closed') &&
             <SecondaryButton href={`/${String(election?.election_id)}/results`} sx={{mx: 'auto', width: '90%', p:3}}>
               {t('election_home.view_results')}
             </SecondaryButton>

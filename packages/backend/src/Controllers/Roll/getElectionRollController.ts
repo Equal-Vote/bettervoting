@@ -17,7 +17,7 @@ const getRollsByElectionID = async (req: IElectionRequest, res: Response, next: 
     }
     const electionId = req.election.election_id;
     Logger.info(req, `${className}.getRollsByElectionID ${electionId}`);
-    //requires election data in req, adds entire election roll 
+    //requires election data in req, adds entire election roll
 
     const electionRoll = await ElectionRollModel.getRollsByElectionID(electionId, req);
     if (!electionRoll) {
@@ -26,9 +26,16 @@ const getRollsByElectionID = async (req: IElectionRequest, res: Response, next: 
         throw new BadRequest(msg)
     }
 
+    // Scrub ballot_id to prevent linking voters to ballots
+    const scrubbedRoll = electionRoll.map(roll => ({
+        ...roll,
+        ballot_id: undefined,
+        ip_hash: undefined
+    }));
+
     Logger.debug(req, `Got Election: ${req.params.id}`);
     Logger.info(req, `${className}.returnRolls ${req.params.id}`);
-    res.json({ election: req.election, electionRoll: electionRoll });
+    res.json({ election: req.election, electionRoll: scrubbedRoll });
 }
 
 const getByVoterID = async (req: IElectionRequest, res: Response, next: NextFunction) => {
@@ -40,7 +47,15 @@ const getByVoterID = async (req: IElectionRequest, res: Response, next: NextFunc
         Logger.info(req, msg);
         throw new BadRequest(msg)
     }
-    res.json({ electionRollEntry: electionRollEntry })
+
+    // Scrub ballot_id to prevent linking voters to ballots
+    const scrubbedEntry = {
+        ...electionRollEntry,
+        ballot_id: undefined,
+        ip_hash: undefined
+    };
+
+    res.json({ electionRollEntry: scrubbedEntry })
     next()
 }
 

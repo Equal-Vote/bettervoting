@@ -85,6 +85,7 @@ const QuickPoll = () => {
             public_results: true,
             random_candidate_order: false,
             require_instruction_confirmation: true,
+            draggable_ballot: false,
             term_type: 'poll',
         }
     }

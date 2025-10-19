@@ -18,12 +18,21 @@ election_home:
 # Ballot (ex. https://bettervoting.com/j87vqp/vote)
 ballot:
   this_election_uses: This {{election}} will use {{voting_method}} to elect {{spelled_count}} $t(winner.winner).
+  this_election_uses_draggable: This {{election}} will use {{voting_method}} with draggable ballots to elect {{spelled_count}} $t(winner.winner).
   instructions_checkbox: I have read the instructions
   learn_more: Learn more about {{voting_method}}
   previous: Previous
   next: Next
   submit_ballot: Submit
   submitting: Submitting...
+
+  # Draggable IRV UI strings
+  available: Available Candidates
+  yourRankings: Your Rankings
+  drop_here: Drop candidates here to rank them
+  no_available: No available candidates
+  instructions: Drag candidates from the left to the right list. Candidates on the right are your ranked order; left means unranked.
+  instructions_rcv_draggable: Drag candidates left → right. Rank 1 is your top choice. Unranked means no preference.
 
   dialog_submit_title: Submit {{capital_ballot}}?
   dialog_send_receipt: Send Ballot Receipt Email?
@@ -353,15 +362,15 @@ keyword:
 
 # Nav Bar
 nav:
-  about: About 
+  about: About Us
   help: Help 
-  public_elections: Browse Elections
-  new_election: New Election
+  public_elections: Vote in a Poll
+  new_election: Create Election
   greeting: Hello, {{name}}
   feedback: Feedback?
   your_account: Your Account
   my_elections: My Elections & Polls
-  past_elections: Past Elections
+  past_elections: Election Vote History
   logout: Logout
   sign_in: Sign In
   better_voting: Learn More
@@ -524,6 +533,22 @@ landing_page:
         
         Email [elections@equal.vote](mailto)
 
+  other_tools:
+    title: Other tools we love
+    items:
+      - name: STAR Fit (starbestfit.com)
+        description: Use STAR Voting to find the best time for your meetings
+        icon_url: https://starbestfit.com/_next/static/media/logo.4a868e2a.svg
+        url: https://starbestfit.com/
+      - name: STAR Voting on Google Forms
+        description: Use our Google Forms plugin to let tabulate votes cast on Google Forms
+        icon_url: https://www.gstatic.com/images/branding/product/2x/forms_2020q4_48dp.png
+        url: https://docs.bettervoting.com/other_tools/google_forms.html
+      - name: STAR Voting on Google Sheets
+        description: Use our Google Sheets plugin to tally STAR Voting Elections
+        icon_url: https://www.gstatic.com/images/branding/product/2x/sheets_2020q4_48dp.png
+        url: https://docs.bettervoting.com/other_tools/google_sheets.html
+
 #######################################
 #### PRIORITY 3 : Extended Results ####
 #######################################
@@ -660,6 +685,10 @@ tabulation_logs:
 #### PRIORITY 4 : Info Bubbles ####
 #######################################
 
+disabled_msgs:
+    ballot_updates: not supported with preliminary results
+    public_results: not supported with vote editing
+
 # Info bubbles
 tips:
   public_archive: 
@@ -709,6 +738,10 @@ tips:
   require_instruction_confirmation:
     title: Confirm That Voter Read Instructions
     description: Requires voters to confirm that they have read the ballot instructions before voting.
+
+  draggable_ballot:
+    title: Use Draggable Ballots for IRV
+    description: Enable a drag-and-drop interface for IRV (Instant Runoff Voting) ballots, allowing voters to rank candidates by dragging them into order.
 
   publicly_searchable:
     title: Make {{capital_election}} Publicly Searchable
@@ -795,6 +828,15 @@ draft_warning:
     DO NOT SHARE PUBLICLY! This {{election}} is still being drafted.
     All ballots will be counted as test votes and
     shall be reset prior to the final {{election}}.
+
+archived_warning:
+  title: Election is Archived
+  description: >
+    Unable to cast ballot: This {{election}} has been archived and is no longer accepting votes.
+    Please contact your Election Administrator if you need assistance.
+
+editable_ballots:
+  edit_vote: Update Vote
 
 # Landing Page -> New Election Dialog
 election_creation:
@@ -1082,6 +1124,8 @@ election_settings:
 
   require_instruction_confirmation: Confirm That Voter Read Instructions !tip(require_instruction_confirmation)
 
+  draggable_ballot: Use Draggable Ballots for IRV !tip(draggable_ballot)
+
   publicly_searchable: Make {{capital_election}} Publicly Searchable !tip(publicly_searchable)
 
   max_rankings: Set Number Of Rankings Allowed !tip(max_rankings)
@@ -1160,7 +1204,10 @@ emails:
       This link is unique to you, be careful not to share this email with others
   blank:
     subject: An update from {{title}}
-    body: __ELECTION_HOME_BUTTON__
+    body: >
+      __ELECTION_HOME_BUTTON__ ⬅️ Use this to share the election
+
+      __VOTE_BUTTON__ ⬅️ Use this to provide voters their unique link to vote
 
 # Upload Election Tool
 upload_elections:

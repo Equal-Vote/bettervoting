@@ -29,7 +29,7 @@ export interface ElectionSettings {
     reminders?:           boolean; //   Send reminders to voters who haven't voted? Requires voter_access='closed'
     ballot_updates?:	    boolean; //		allows voters to update their ballots before election ends
     public_results?:	    boolean; //		allows public to view results
-    time_zone?:           TimeZone; // Time zone for displaying election start/end times 
+    time_zone?:           TimeZone; // Time zone for displaying election start/end times
     random_candidate_order?: boolean; // Randomize order of candidates on the ballot
     require_instruction_confirmation?: boolean; // Require voter to confirm that they've read the instructions in order to vote
     break_ties_randomly?: boolean; // whether true ties should be broken randomly
@@ -38,6 +38,7 @@ export interface ElectionSettings {
     email_campaign_count?: number;
     contact_email?: string; // Public contact email for voters to reach out to
     exhaust_on_N_repeated_skipped_marks?: number; // number of skipped ranks before exhausting
+    draggable_ballot?: boolean; // Use draggable interface for IRV ballots
 }
 function authenticationValidation(obj:authentication): string | null {
   if (!obj){
@@ -87,7 +88,7 @@ export function electionSettingsValidation(obj:ElectionSettings): string | null 
   if (obj.reminders && typeof obj.reminders !== 'boolean'){
     return "Invalid Reminders";
   }
-  if (obj.ballot_updates && typeof obj.ballot_updates !== 'boolean'){
+  if (obj.ballot_updates && typeof obj.ballot_updates !== 'boolean') {
     return "Invalid Ballot Updates";
   }
   if (obj.public_results && typeof obj.public_results !== 'boolean'){
@@ -113,6 +114,9 @@ export function electionSettingsValidation(obj:ElectionSettings): string | null 
   // NOTE: temporarily disabling because this broke the ability to set the max rankings from the frontend
   if (obj.max_rankings && (typeof obj.max_rankings !== 'number' || obj.max_rankings < 0)){
    return "Invalid Max Rankings";
+  }
+  if (obj.draggable_ballot && typeof obj.draggable_ballot !== 'boolean'){
+    return "Invalid Draggable Ballot";
   }
   return null;
 }

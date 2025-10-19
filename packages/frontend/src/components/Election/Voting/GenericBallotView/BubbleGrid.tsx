@@ -66,7 +66,7 @@ const BubbleGrid: React.FC<BubbleGridProps> = ({ ballotContext, columnValues, co
             //*2 offsets grid to account for the two rows per candidate
             //For Columns:
             //+2 offsets grid to account for header column (candidate name)
-            gridArea: makeArea(numHeaderRows + 1 + 1 + (2 * candidateIndex), 2 + columnIndex),
+            gridArea: makeArea(numHeaderRows + 1 + 1 + (3 * candidateIndex) + 1, 2 + columnIndex),
           }}
         >
           <Typography variant='body1' sx={{ ...fontSX }}>

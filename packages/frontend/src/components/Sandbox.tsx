@@ -59,7 +59,6 @@ const Sandbox = () => {
             num_winners: nWinners,
             votingMethod: votingMethod,
         })
-
     }
 
     useEffect(() => {

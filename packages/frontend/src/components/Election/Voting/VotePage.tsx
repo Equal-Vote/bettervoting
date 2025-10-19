@@ -17,6 +17,7 @@ import { Race, VotingMethod } from "@equal-vote/star-vote-shared/domain_model/Ra
 import { useSubstitutedTranslation } from "~/components/util";
 import DraftWarning from "../DraftWarning";
 import SupportBlurb from "../SupportBlurb";
+import ElectionStateWarning from "../ElectionStateWarning"
 
 // I'm using the icon codes instead of an import because there was padding I couldn't get rid of
 // https://stackoverflow.com/questions/65721218/remove-material-ui-icon-margin
@@ -142,10 +143,19 @@ const VotePage = () => {
 
   const { isPending, makeRequest: postBallot } = usePostBallot(election.election_id)
   const onUpdate = (pageIndex, newRaceScores) => {
-    const newPages = [...pages]
-    newPages[pageIndex].candidates.forEach((candidate, candidateIndex) => candidate.score = newRaceScores[candidateIndex])
-    // newPages[pageIndex].scores = newRaceScores
-    setPages(newPages)
+    setPages(prevPages => {
+      const nextPages = [...prevPages];
+      const prevPage = prevPages[pageIndex];
+      const nextCandidates = prevPage.candidates.map((candidate, idx) => ({
+        ...candidate,
+        score: newRaceScores[idx]
+      }));
+      nextPages[pageIndex] = {
+        ...prevPage,
+        candidates: nextCandidates
+      };
+      return nextPages;
+    });
   }
   const submit = async () => {
     const candidateScores = pages.map((p) => p.candidates)
@@ -192,9 +202,15 @@ const VotePage = () => {
     return page.candidates.every(c => c.score === (allEqualIsAbstention(page) ? page.candidates[0].score : null));
   }
 
+  const isLastPage = (currentPage === pages.length-1)
+
   return (
     <Container disableGutters={true} maxWidth="sm">
       <DraftWarning/>
+      <ElectionStateWarning
+        state="archived"
+        title="archived_warning.title"
+        description="archived_warning.description"/>
       <BallotContext.Provider value={{
         instructionsRead: pages[currentPage].instructionsRead,
         setInstructionsRead: setInstructionsRead,
@@ -247,9 +263,11 @@ const VotePage = () => {
           </Stepper>
         }
         <PrimaryButton
-          onClick={() => (currentPage === pages.length-1)? setIsOpen(true) : setCurrentPageAndScroll(count => count + 1)}
-          sx={{ marginLeft: {xs: '10px', md: '40px'}}}>
-            {t((currentPage === pages.length-1)? 'ballot.submit_ballot' : 'ballot.next')}
+          onClick={() => isLastPage? setIsOpen(true) : setCurrentPageAndScroll(count => count + 1)}
+          sx={{ marginLeft: {xs: '10px', md: '40px'}}}
+          disabled={isLastPage && (election.state === "archived")}
+          >
+            {t(isLastPage? 'ballot.submit_ballot' : 'ballot.next')}
         </PrimaryButton>
       </Box>
       <SupportBlurb/>
@@ -323,4 +341,3 @@ const VotePage = () => {
 }
 
 export default VotePage
-

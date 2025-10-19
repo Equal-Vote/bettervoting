@@ -156,7 +156,7 @@ This will allow you to:
 
 If you do run into issues, first perform a web search for your issue and see if it has already been answered. If you cannot find a solution, please search our [GitHub issues](https://github.com/Equal-Vote/bettervoting/issues) page for a solution and report the issue if it has not yet been reported.
 
-And as always, feel free to ask questions on the [#_software-dev slack channel](https://starvoting.slack.com/archives/C01EBAT283H).
+And as always, feel free to ask questions on the [#_bettervoting slack channel](https://starvoting.slack.com/archives/C01EBAT283H).
 
 > If you haven't joined the STAR Voting slack yet, you can [sign up with STAR Voting](https://starvoting.org/join) to received an invite link
 
@@ -554,7 +554,7 @@ For now we've been fixing the issue by clearing the dev database periodically. P
 
 ## Getting Help
 
-If you are stuck and need help, feel free to ask questions on the [#_software-dev slack channel](https://starvoting.slack.com/archives/C01EBAT283H).
+If you are stuck and need help, feel free to ask questions on the [#_bettervoting slack channel](https://starvoting.slack.com/archives/C01EBAT283H).
 
 > If you haven't joined the STAR Voting slack yet, you can follow the instructions [here](https://www.starvoting.us/get_involved) to get added
 

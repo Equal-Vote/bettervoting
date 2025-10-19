@@ -6,6 +6,8 @@ export const sharedConfig = {
         '7tcryp': 3000, // DSA-LA 2025 Local Officer Election
         'j87vqp': 5000, // DSA-LA 2025 Local Officer Election #2
         'g3mvqw': 5000, // DSA-LA 2025 Subgroup Officer Election
+        'x36qt9': 400, // Thijs Kleinpaste, Bike farm
+        't7dyvf': 400, // Thijs Kleinpaste, Bike farm #2
     },
     CLASSIC_DOMAIN: 'https://classic.star.vote',
     FF_ELECTION_ROLES: 'false',
@@ -16,4 +18,5 @@ export const sharedConfig = {
     FF_PRECINCTS: 'false',
     FF_THEMES: 'false',
     FF_ALL_STATS: 'false',
+    FF_BALLOT_UPDATES: 'false',
 };

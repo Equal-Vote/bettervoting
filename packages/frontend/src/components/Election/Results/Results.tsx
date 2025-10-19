@@ -145,7 +145,7 @@ function IRVResultsViewer() {
   const tabulationRows = results.summaryData.candidates.map(c => ([c.name,...c.hareScores]));
   tabulationRows.unshift([
     t('results.rcv.tabulation_candidate_column'),
-    ...(Array(tabulationRows[0].length-1).keys().map(i => t('results.rcv.round_column', {n: i+1})))
+    ...(Array.from(Array(tabulationRows[0].length-1).keys()).map(i => t('results.rcv.round_column', {n: i+1})))
   ])
   tabulationRows.push([t('results.rcv.exhausted'), ...results.exhaustedVoteCounts.map(i => ''+i)])
 

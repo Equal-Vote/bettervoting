@@ -73,7 +73,7 @@ const LandingPageCarousel = () => {
 
     const fadeMs = 300;
     const autoCycleMs = 5000;
-    const resetAutoCycleMs = 12000;
+    const resetAutoCycleMs = 120000000;
     const nextMethod = (offset, allowCycle=false) => {
         if(allowCycle){
             setMethodIndex(m => {
@@ -136,7 +136,8 @@ const LandingPageCarousel = () => {
                 alignItems: 'center',
                 margin: 'auto',
                 flexDirection: {xs: 'column', md: 'row'},
-                height: {xs: '400px', md: '300px'}
+                // height must be hard coded so that there isn't resizing when cycling between slides
+                height: {xs: '500px', md: '300px'}
             }}
         >
             <Box sx={{textAlign: {xs: 'center', md: 'left'}}}>

@@ -4,6 +4,8 @@ import { BadRequest } from "@curveball/http-errors";
 import { IElectionRequest, IRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
 import { Election, removeHiddenFields } from '@equal-vote/star-vote-shared/domain_model/Election';
+import { expectPermission } from '../controllerUtils';
+import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 
 
 var ElectionsModel = ServiceLocator.electionsDb();
@@ -65,6 +67,21 @@ const getElections = async (req: IElectionRequest, res: Response, next: NextFunc
     });
 }
 
+const queryElections = async (req: IElectionRequest, res: Response, next: NextFunction) => {
+    Logger.info(req, `queryElections`);
+
+    // TODO: https://github.com/Equal-Vote/bettervoting/issues/976
+    //expectPermission(req.user_auth.roles, permissions.canQueryElections);
+
+    /////////// ELECTIONS WE OWN ////////////////
+    res.json({
+        open_elections: await ElectionsModel.getElectionsCreatedInRange(req, req.body.start_time, req.body.end_time),
+        closed_elections: [],
+        popular_elections: [],
+        vote_counts: await ElectionsModel.getBallotCountsForAllElections(req),
+    });
+}
+
 const innerGetGlobalElectionStats = async (req: IRequest) => {
     Logger.info(req, `getGlobalElectionStats `);
 
@@ -101,4 +118,5 @@ export {
     getElections,
     innerGetGlobalElectionStats,
     getGlobalElectionStats,
+    queryElections,
 }

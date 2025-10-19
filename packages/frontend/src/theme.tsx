@@ -166,20 +166,20 @@ const brandTypography: TypographyOptions = {
   // fontFamily: 'Montserrat',
   fontFamily: 'Verdana, sans-serif',
   button:{
-    fontFamily: 'Montserrat, Verdana, sans-serif',
+    fontFamily: '\'Montserrat\', Verdana, sans-serif',
   },
   h1: {
-    fontFamily: 'Montserrat, Verdana, sans-serif',
+    fontFamily: '\'Montserrat\', Verdana, sans-serif',
     marginTop: '1rem',
     marginBottom: '1rem',
   },
   h2: {
-    fontFamily: 'Montserrat, Verdana, sans-serif',
+    fontFamily: '\'Montserrat\', Verdana, sans-serif',
     marginTop: '1rem',
     marginBottom: '1rem',
   },
   h3: {
-    fontFamily: 'Montserrat, Verdana, sans-serif',
+    fontFamily: '\'Montserrat\', Verdana, sans-serif',
     marginTop: '1rem',
     marginBottom: '1rem',
     // display: 'inline',
@@ -187,17 +187,17 @@ const brandTypography: TypographyOptions = {
     margin: 'auto'
   },
   h4: {
-    fontFamily: 'Montserrat, Verdana, sans-serif',
+    fontFamily: '\'Montserrat\', Verdana, sans-serif',
     marginTop: '1rem',
     marginBottom: '1rem',
   },
   h5: {
-    fontFamily: 'Montserrat, Verdana, sans-serif',
+    fontFamily: '\'Montserrat\', Verdana, sans-serif',
     marginTop: '1rem',
     marginBottom: '1rem',
   },
   h6: {
-    fontFamily: 'Montserrat, Verdana, sans-serif',
+    fontFamily: '\'Montserrat\', Verdana, sans-serif',
     marginTop: '1rem',
     marginBottom: '1rem',
   },

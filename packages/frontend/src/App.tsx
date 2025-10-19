@@ -1,5 +1,5 @@
-import { useContext } from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { useContext, useEffect } from 'react'
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
 import { ThemeContextProvider } from './theme'
 import Header from './components/Header'
 import Election from './components/Election/Election'
@@ -28,6 +28,7 @@ import NameMatchingTester from './components/NameMatchingTester'
 import StyleGuide from './components/StyleGuide'
 import { PrimaryButton } from './components/styles'
 import ScrollToTop from './hooks/scrollToTop'
+import QueryTool from './components/Elections/QueryTool'
 
 const App = () => {
   const {t} = useSubstitutedTranslation();
@@ -44,6 +45,7 @@ const App = () => {
       <ReturnToClassicDialog/>
     </>
   }
+
   return (
     <Router>
       <ScrollToTop/>
@@ -70,21 +72,44 @@ const App = () => {
             }}>
             <Routes>
               <Route path='/' element={<LandingPage />} />
-              <Route path='/Feedback' element={<LandingPage />} />   {/*creating a new route for feedback page while still loading the landing page*/}
-              <Route path='/About' element={<About />} />
-              <Route path='/ElectionInvitations' element={<ElectionInvitations />} />
-              <Route path='/ElectionsYouManage' element={<ElectionsYouManage />} />
-              <Route path='/ElectionsYouVotedIn' element={<ElectionsYouVotedIn />} />
-              <Route path='/UploadElections' element={<UploadElections />} />
-              <Route path='/OpenElections' element={<OpenElections />} />
-              <Route path='/PublicArchive' element={<PublicArchive />} />
+              {/*creating a new route for feedback page while still loading the landing page*/}
+              <Route path='/new_election' element={<LandingPage />} /> 
+                <Route path='/new-election' element={<Redirect href='/new_election'/>} /> 
+                <Route path='/newelection' element={<Redirect href='/new_election'/>} /> 
+              <Route path='/feedback' element={<LandingPage />} />   
+              <Route path='/about' element={<About />} />
+              <Route path='/invitations' element={<ElectionInvitations />} />
+              <Route path='/manage' element={<ElectionsYouManage />} />
+              <Route path='/vote_history' element={<ElectionsYouVotedIn />} />
+                <Route path='/vote-history' element={<Redirect href='/vote_history'/>} /> 
+                <Route path='/votehistory' element={<Redirect href='/vote_history'/>} /> 
+              <Route path='/upload_elections' element={<UploadElections />} />
+                <Route path='/upload-elections' element={<Redirect href='/upload_elections'/>} /> 
+                <Route path='/uploadelections' element={<Redirect href='/upload_elections'/>} /> 
+              <Route path='/browse' element={<OpenElections />} />
+              <Route path='/public_archive' element={<PublicArchive />} />
+                <Route path='/public-archive' element={<Redirect href='/public_archive'/>} /> 
+                <Route path='/publicarchive' element={<Redirect href='/public_archive'/>} /> 
               {/*Keeping old path for legacy reasons, although we can probably remove it once the domain moves from dev.star.vote*/}
-              <Route path='/Election/:id/*' element={<Election />} /> 
+              <Route path='/election/:id/*' element={<Election />} /> 
               <Route path='/:id/*' element={<Election />} />
-              <Route path='/Sandbox' element={<Sandbox />} />
-              <Route path='/Volunteer' element={<Redirect href={'https://docs.bettervoting.com/contributions/0_contribution_guide.html'}/>} />
-              <Route path='/NameMatchTesting' element={<NameMatchingTester />} />
-              <Route path='/StyleGuide' element={<StyleGuide/>} />
+              <Route path='/sandbox' element={<Sandbox />} />
+              <Route path='/volunteer' element={<Redirect href={'https://docs.bettervoting.com/contributions/0_contribution_guide.html'}/>} />
+              {/*Redirects*/}
+              <Route path='/paper_ballots' element={<Redirect href={'https://docs.bettervoting.com/help/paper_ballots.html'}/>} />
+                <Route path='/paper-ballots' element={<Redirect href='/paper_ballots'/>} /> 
+                <Route path='/paperballots' element={<Redirect href='/paper_ballots'/>} /> 
+              <Route path='/hand_count' element={<Redirect href={'https://docs.bettervoting.com/help/hand_count.html'}/>} />
+              {/*Testing / Internal*/}
+              <Route path='/name_match_testing' element={<NameMatchingTester />} />
+                <Route path='/name-match-testing' element={<Redirect href='/name_match_testing'/>} /> 
+                <Route path='/namematchtesting' element={<Redirect href='/name_match_testing'/>} /> 
+              <Route path='/style_guide' element={<StyleGuide/>} />
+                <Route path='/style-guide' element={<Redirect href='/style_guide'/>} /> 
+                <Route path='/styleguide' element={<Redirect href='/style_guide'/>} /> 
+              <Route path='/query_tool' element={<QueryTool />} />
+                <Route path='/query-tool' element={<Redirect href='/query_tool'/>} /> 
+                <Route path='/querytool' element={<Redirect href='/query_tool'/>} /> 
             </Routes>
           </Box>
           <Footer />
