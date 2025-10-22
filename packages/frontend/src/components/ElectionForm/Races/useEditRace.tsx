@@ -39,10 +39,7 @@ export const useEditRace = (
     race: iRace | null,
     race_index: number,
 ) => {
-    const { election, refreshElection, updateElection } = useElection()
-    const { setSnack } = useSnackbar()
-    //const { makeRequest: deleteAllBallots } = useDeleteAllBallots(election.election_id);
-    const confirm = useConfirm();
+    const { election } = useElection()
     
     const [editedRace, setEditedRace] = useState(race !== null ? race : makeDefaultRace())
 
@@ -68,6 +65,8 @@ export const useEditRace = (
         updateFunc(raceCopy)
         setEditedRace(raceCopy)
     };
+
+    const resetRace = () => setEditedRace(makeDefaultRace())
 
     const validateRace = () => {
         let isValid = true
@@ -126,44 +125,5 @@ export const useEditRace = (
         return isValid
     }
 
-    // TODO: Add these where they're needed
-    //const onDuplicateRace = async () => {
-    //    if (!validateRace()) return false
-    //    let success = await updateElection(election => {
-    //        election.races.push({
-    //            ...editedRace,
-    //            title: 'Copy Of ' + editedRace.title,
-    //            race_id: makeID(ID_PREFIXES.RACE, ID_LENGTHS.RACE)
-    //        })
-    //    })
-    //    success = success && await deleteAllBallots()
-    //    if (!success) return false
-    //    await refreshElection()
-    //    return true
-    //}
-
-    //const onSaveRace = async () => {
-    //    if (!validateRace()) return false
-    //    let success = await updateElection(election => {
-    //        election.races[race_index] = editedRace
-    //    })
-    //    success = success && await deleteAllBallots()
-    //    if (!success) return false
-    //    await refreshElection()
-    //    return true
-    //}
-
-    //const onDeleteRace = async () => {
-    //    const confirmed = await confirm({ title: 'Confirm', message: 'Are you sure?' })
-    //    if (!confirmed) return false
-    //    let success = await updateElection(election => {
-    //        election.races.splice(race_index, 1)
-    //    })
-    //    success = success && await deleteAllBallots()
-    //    if (!success) return false
-    //    await refreshElection()
-    //    return true
-    //}
-
-    return { editedRace, setEditedRace, errors, setErrors, applyRaceUpdate, /*onSaveRace, onDeleteRace, onDuplicateRace,*/ validateRace }
+    return { editedRace, resetRace, errors, setErrors, applyRaceUpdate, validateRace }
 }

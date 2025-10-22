@@ -13,32 +13,16 @@ export default function AddRace() {
     const { makeRequest: deleteAllBallots } = useDeleteAllBallots(election.election_id);
 
     const [open, setOpen] = useState(false);
-    const handleOpen = () => setOpen(true);
-    const handleClose = () => setOpen(false);
 
-    const [activeStep, setActiveStep] = useState(0);
-    const resetStep = () => setActiveStep(0);
-
-    //const { editedRace, setEditedRace, errors, setErrors, applyRaceUpdate, validateRace } = useEditRace(null, election.races.length)
-
-    const onAdd = async () => {
-        const success = await onAddRace()
-        if (!success) return
-        handleClose()
-    }
-
-    const onAddRace = async () => {
-        if (!validateRace()) return false
+    const onAddRace = async (editedRace) => {
         let success = await updateElection(election => {
             election.races.push({
                 ...editedRace,
                 race_id: makeID(ID_PREFIXES.RACE, ID_LENGTHS.RACE)
             })
-        })
-        success = success && await deleteAllBallots()
+        }) && await deleteAllBallots();
         if (!success) return false
         await refreshElection()
-        setEditedRace(makeDefaultRace())
         return true
     }
 
@@ -48,26 +32,17 @@ export default function AddRace() {
             flexDirection: 'row'
         }}>
             <PrimaryButton
-                onClick={handleOpen}
+                onClick={() => setOpen(true)}
                 disabled={election.state!=='draft'}>
                 Add Race
             </PrimaryButton>
-            <RaceDialog
-              onSaveRace={onAdd}
-              open={open}
-              handleClose={handleClose}
-              resetStep={resetStep}
-            >
-                <RaceForm
-                    raceIndex={election.races.length}
-                    //editedRace={editedRace}
-                    //errors={errors}
-                    //setErrors={setErrors}
-                    //applyRaceUpdate={applyRaceUpdate}
-                    //activeStep={activeStep}
-                    //setActiveStep={setActiveStep}
-                />
-            </RaceDialog>
+            <RaceForm
+                raceIndex={0}
+                onCancel={() => setOpen(false)}
+                onConfirm={async (editedRace) => (await onAddRace(editedRace) && setOpen(false))}
+                dialogOpen={open}
+                styling='Dialog'
+            />
         </Box>
     )
 }

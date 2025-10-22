@@ -250,6 +250,7 @@ const QuickPoll = () => {
                         raceIndex={0}
                         onCancel={() => setPage(pg => pg+1)}
                         onConfirm={onNext}
+                        styling='QuickPoll'
                     />
                 </Box>
                 <Box sx={{...pageSX, textAlign: 'left'}}>

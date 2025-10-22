@@ -1,4 +1,4 @@
-import React, { MouseEventHandler, useCallback, useMemo, useRef, useState } from 'react';
+import React, { MouseEventHandler, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import CandidateForm from "../Candidates/CandidateForm";
 import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
@@ -8,16 +8,19 @@ import { useSubstitutedTranslation } from '../../util';
 import useConfirm from '../../ConfirmationDialogProvider';
 import useFeatureFlags from '../../FeatureFlagContextProvider';
 import { SortableList } from '~/components/DragAndDrop';
-import { RaceErrors, useEditRace } from './useEditRace';
+import { makeDefaultRace, RaceErrors, useEditRace } from './useEditRace';
 import { makeUniqueIDSync, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
 import VotingMethodSelector from './VotingMethodSelector';
 import useElection from '~/components/ElectionContextProvider';
 import { SecondaryButton, PrimaryButton } from '~/components/styles';
+import RaceDialog from './RaceDialog';
 
 interface RaceFormProps {
     raceIndex?: number,
+    styling: 'QuickPoll' | 'Dialog',
     onConfirm?: Function,
     onCancel?: Function,
+    dialogOpen?: boolean,
 }
 
 const TitleAndDescription = ({isDisabled, election, setErrors, errors, editedRace, applyRaceUpdate}) => {
@@ -83,17 +86,20 @@ const TitleAndDescription = ({isDisabled, election, setErrors, errors, editedRac
 
 export default function RaceForm({
     raceIndex=undefined,
+    styling,
     onConfirm=() => {},
     onCancel=() => {},
+    dialogOpen=undefined,
 }: RaceFormProps) {
     const flags = useFeatureFlags();
     const { election } = useElection()
     const { t } = useSubstitutedTranslation();
     const isDisabled = election.state !== 'draft';
-    const { editedRace, errors, setErrors, applyRaceUpdate, validateRace} = useEditRace(
+    const { editedRace, resetRace, errors, setErrors, applyRaceUpdate, validateRace} = useEditRace(
         raceIndex == undefined ? null : election.races[raceIndex],
         0,
     )
+    const [] = useState(false);
 
     const confirm = useConfirm();
     const inputRefs = useRef([]);
@@ -114,6 +120,10 @@ export default function RaceForm({
             candidate_name: ''
         }];
     }, [editedRace.candidates]);
+
+    useEffect(() => {
+        if(!dialogOpen) resetRace()
+    }, [dialogOpen])
 
     const onEditCandidate = useCallback((candidate, index) => {
         applyRaceUpdate(race => {
@@ -203,54 +213,69 @@ export default function RaceForm({
         </Grid>
     </>
 
+    const FormComponents = () => <>
+        <Grid container sx={{ m: 0, p: 1 }} >
+            <TitleAndDescription isDisabled={isDisabled} election={election} setErrors={setErrors} errors={errors} editedRace={editedRace} applyRaceUpdate={applyRaceUpdate} />
+            {flags.isSet('PRECINCTS') && election.settings.voter_access !== 'open' && <Precincts/>}
+        </Grid>
+
+        <Grid container sx={{ m: 0, p: 1 }} >
+            <VotingMethodSelector election={election} editedRace={editedRace} isDisabled={isDisabled} setErrors={setErrors} errors={errors} applyRaceUpdate={applyRaceUpdate} />
+        </Grid>
+
+        <Grid container sx={{ m: 0, p: 1 }} >
+            <Grid item xs={12} sx={{ m: 0, p: 1 }}>
+                <Typography gutterBottom variant="h6" component="h6">
+                    Candidates
+                </Typography>
+                <FormHelperText error sx={{ pl: 1, mt: -1 }}>
+                    {errors.candidates}
+                </FormHelperText>
+            </Grid>
+        </Grid>
+        <Stack spacing={2}>
+            {
+                <SortableList
+                    items={election.state === 'draft' ? ephemeralCandidates : editedRace.candidates}
+                    identifierKey="candidate_id"
+                    onChange={handleChangeCandidates}
+                    renderItem={(candidate, index) => (
+                        <SortableList.Item id={candidate.candidate_id}>
+                            <CandidateForm
+                                key={candidate.candidate_id}
+                                onEditCandidate={(newCandidate) => onEditCandidate(newCandidate, index)}
+                                candidate={candidate}
+                                index={index}
+                                onDeleteCandidate={() => onDeleteCandidate(index)}
+                                disabled={ephemeralCandidates.length - 1 === index || election.state !== 'draft'}
+                                inputRef={(el: React.MutableRefObject<HTMLInputElement[]>) => inputRefs.current[index] = el}
+                                onKeyDown={(event: React.KeyboardEvent<HTMLInputElement>) => handleKeyDown(event, index)}
+                                electionState={election.state} />
+                        </SortableList.Item>
+                    )}
+                />
+            }
+        </Stack>
+    </>
+
     return (
         <>
-            <Grid container sx={{ m: 0, p: 1 }} >
-                <TitleAndDescription isDisabled={isDisabled} election={election} setErrors={setErrors} errors={errors} editedRace={editedRace} applyRaceUpdate={applyRaceUpdate} />
-                {flags.isSet('PRECINCTS') && election.settings.voter_access !== 'open' && <Precincts/>}
-            </Grid>
-
-            <Grid container sx={{ m: 0, p: 1 }} >
-                <VotingMethodSelector election={election} editedRace={editedRace} isDisabled={isDisabled} setErrors={setErrors} errors={errors} applyRaceUpdate={applyRaceUpdate} />
-            </Grid>
-
-            <Grid container sx={{ m: 0, p: 1 }} >
-                <Grid item xs={12} sx={{ m: 0, p: 1 }}>
-                    <Typography gutterBottom variant="h6" component="h6">
-                        Candidates
-                    </Typography>
-                    <FormHelperText error sx={{ pl: 1, mt: -1 }}>
-                        {errors.candidates}
-                    </FormHelperText>
-                </Grid>
-            </Grid>
-            <Stack spacing={2}>
-                {
-                    <SortableList
-                        items={election.state === 'draft' ? ephemeralCandidates : editedRace.candidates}
-                        identifierKey="candidate_id"
-                        onChange={handleChangeCandidates}
-                        renderItem={(candidate, index) => (
-                            <SortableList.Item id={candidate.candidate_id}>
-                                <CandidateForm
-                                    key={candidate.candidate_id}
-                                    onEditCandidate={(newCandidate) => onEditCandidate(newCandidate, index)}
-                                    candidate={candidate}
-                                    index={index}
-                                    onDeleteCandidate={() => onDeleteCandidate(index)}
-                                    disabled={ephemeralCandidates.length - 1 === index || isDisabled}
-                                    inputRef={(el: React.MutableRefObject<HTMLInputElement[]>) => inputRefs.current[index] = el}
-                                    onKeyDown={(event: React.KeyboardEvent<HTMLInputElement>) => handleKeyDown(event, index)}
-                                    electionState={election.state} />
-                            </SortableList.Item>
-                        )}
-                    />
-                }
-            </Stack>
-            <Box display='flex' flexDirection='row' justifyContent='flex-end' gap={1} sx={{mt: 3}}>
-                <SecondaryButton onClick={() => onCancel()}>Skip for now</SecondaryButton>
-                <PrimaryButton onClick={() => validateRace() && onConfirm()}>Next</PrimaryButton>
-            </Box>
+            {styling == 'Dialog' &&
+                <RaceDialog
+                    onSaveRace={() => validateRace() && onConfirm(editedRace)}
+                    open={dialogOpen}
+                    handleClose={() => onCancel()}
+                >
+                    <FormComponents/>
+                </RaceDialog>
+            }
+            {styling == 'QuickPoll' && <>
+                <FormComponents/>
+                <Box display='flex' flexDirection='row' justifyContent='flex-end' gap={1} sx={{mt: 3}}>
+                    <SecondaryButton onClick={() => onCancel()}>Skip for now</SecondaryButton>
+                    <PrimaryButton onClick={() => validateRace() && onConfirm(editedRace)}>Next</PrimaryButton>
+                </Box>
+            </>}
         </>
     )
 }
