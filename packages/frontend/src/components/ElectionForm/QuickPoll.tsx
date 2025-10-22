@@ -246,14 +246,14 @@ const QuickPoll = () => {
                 <Box sx={pageSX}>
                     <Typography variant='h5' color={'lightShade.contrastText'}>{t('landing_page.quick_poll.title')}</Typography>
                     <QuickPollBasics/>
-                    <RaceForm raceIndex={0}/>
-                    <Box display='flex' flexDirection='row' justifyContent='flex-end' gap={1} sx={{mt: 3}}>
-                        <SecondaryButton onClick={() => setPage(pg => pg+1)}>Skip for now</SecondaryButton>
-                        <PrimaryButton onClick={onNext}>Next</PrimaryButton>
-                    </Box>
+                    <RaceForm
+                        raceIndex={0}
+                        onCancel={() => setPage(pg => pg+1)}
+                        onConfirm={onNext}
+                    />
                 </Box>
                 <Box sx={{...pageSX, textAlign: 'left'}}>
-                <QuickPollExtra election={election} setElection={setElection} onBack={() => setPage(pg => pg-1)}/>
+                    <QuickPollExtra election={election} setElection={setElection} onBack={() => setPage(pg => pg-1)}/>
                 </Box>
             </Box>
         </Paper>

@@ -16,8 +16,8 @@ import { Election, NewElection } from '@equal-vote/star-vote-shared/domain_model
 export interface RaceErrors {
     raceTitle?: string,
     raceDescription?: string,
-    raceNumWinners?: string,
     candidates?: string
+    votingMethod?: string,
 }
 
 export const makeDefaultRace = () => ({
@@ -49,8 +49,8 @@ export const useEditRace = (
     const [errors, setErrors] = useState({
         raceTitle: '',
         raceDescription: '',
-        raceNumWinners: '',
-        candidates: ''
+        candidates: '',
+        votingMethod: '',
     } as RaceErrors)
 
     useEffect(() => {
@@ -58,8 +58,8 @@ export const useEditRace = (
         setErrors({
             raceTitle: '',
             raceDescription: '',
-            raceNumWinners: '',
-            candidates: ''
+            candidates: '',
+            votingMethod: '',
         })
     }, [race, race_index])
 
@@ -74,15 +74,15 @@ export const useEditRace = (
         const newErrors: RaceErrors = {}
 
         if (!editedRace.title) {
-            newErrors.raceTitle = 'Race title required';
+            newErrors.raceTitle = 'Title required';
             isValid = false;
         }
         else if (editedRace.title.length < 3 || editedRace.title.length > 256) {
-            newErrors.raceTitle = 'Race title must be between 3 and 256 characters';
+            newErrors.raceTitle = 'Title must be between 3 and 256 characters';
             isValid = false;
         }
         if (editedRace.description && editedRace.description.length > 1000) {
-            newErrors.raceDescription = 'Race title must be less than 1000 characters';
+            newErrors.raceDescription = 'Description must be less than 1000 characters';
             isValid = false;
         }
         if (election.races.some(race => {
@@ -97,44 +97,27 @@ export const useEditRace = (
             isValid = false;
         }
         
-        if (editedRace.num_winners < 1) {
-            setSnack({
-                message: 'Must have at least one winner',
-                severity: 'warning',
-                open: true,
-                autoHideDuration: 6000,
-            })
+        if (editedRace.voting_method === undefined) {
+            newErrors.votingMethod = 'Must select a voting method'
             isValid = false;
-        }
+        }        
 
-        // if (editedRace.voting_method == '') {
-        //     setSnack({
-        //         message: 'Must select a voting method',
-        //         severity: 'warning',
-        //         open: true,
-        //         autoHideDuration: 6000,
-        //     })
-        //     isValid = false;
-        // }
         const numCandidates = editedRace.candidates.filter(candidate => candidate.candidate_name !== '').length
-        if (editedRace.num_winners > numCandidates) {
-            newErrors.raceNumWinners = 'Cannot have more winners than candidates';
-            isValid = false;
-        }
+        const uniqueCandidates = new Set(editedRace.candidates.filter(candidate => candidate.candidate_name !== '').map(candidate => candidate.candidate_name))
         if (numCandidates < 2) {
             newErrors.candidates = 'Must have at least 2 candidates';
             isValid = false;
-        }
-        const uniqueCandidates = new Set(editedRace.candidates.filter(candidate => candidate.candidate_name !== '').map(candidate => candidate.candidate_name))
-        if (numCandidates !== uniqueCandidates.size) {
+        }else if (editedRace.num_winners > numCandidates) {
+            newErrors.candidates = 'Cannot have more winners than candidates';
+            isValid = false;
+        }else if (numCandidates !== uniqueCandidates.size) {
             newErrors.candidates = 'Candidates must have unique names';
             isValid = false;
-        }
-        // Check if any candidates are empty
-        if (editedRace.candidates.some(candidate => candidate.candidate_name === '')) {
+        }else if (editedRace.candidates.some(candidate => candidate.candidate_name === '')) {
             newErrors.candidates = 'Candidates must have names';
             isValid = false;
         }
+
         setErrors(errors => ({ ...errors, ...newErrors }))
 
         // NOTE: I'm passing the element as a function so that we can delay the query until the elements have been updated

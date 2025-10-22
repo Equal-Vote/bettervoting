@@ -19,7 +19,7 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
     const PR_METHODS = ['STV', 'STAR_PR'];
     const [methodStep, innerStepMethodStep] = useState<MethodStep>(editedRace.voting_method == undefined? 'unset' : 'done');
     // I have to have a non-undefined default to avoid warnings that slow down the UI
-    const [inputtedWinners, setInputtedWinners] = useState(String(editedRace.num_winners) ?? 1);
+    const [inputtedWinners, setInputtedWinners] = useState(String(editedRace.num_winners) ?? '1');
     const [showAllMethods, setShowAllMethods] = useState(false)
     const [methodFamily, setMethodFamily] = useState(
         editedRace.voting_method == undefined ? 
@@ -37,6 +37,7 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
     )
 
     const setMethodStep = (step: MethodStep) => {
+        setErrors({...errors, votingMethod: ''})
         applyRaceUpdate(race => {
             if(step == 'unset' || step == 'family'){
                 race.num_winners = undefined;
@@ -53,7 +54,7 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
 
     const MethodBullet = ({ value, disabled }: { value: string, disabled: boolean }) => <>
         <FormControlLabel value={value} disabled={disabled} control={
-            <Radio onClick={() => setMethodStep('done') }/>
+            <Radio onClick={() => setMethodStep('done')}/>
         } label={t(`edit_race.methods.${methodValueToTextKey[value]}.title`)} sx={{ mb: 0, pb: 0 }} />
         <FormHelperText sx={{ pl: 4, mt: -1 }}>
             {t(`edit_race.methods.${methodValueToTextKey[value]}.description`)}
@@ -133,23 +134,26 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
                     p: 0,
                     boxShadow: 2,
                     width: '100px',
+                    my: 1,
                 }}
                 onChange={(e) => {
-                    setErrors({ ...errors, raceNumWinners: '' })
                     setInputtedWinners(e.target.value);
+
+                    if(e.target.value == '' || parseInt(e.target.value) < 1){
+                        return;
+                    }
 
                     if(e.target.value != '') applyRaceUpdate(race => { race.num_winners =  parseInt(e.target.value) });
                 }}
             />
         </Box>
-        <FormHelperText error sx={{ pl: 1, pt: 0 }}>
-            {errors.raceNumWinners}
-        </FormHelperText>
         <Box display='flex' flexDirection='row' justifyContent='flex-end' gap={1}>
             <SecondaryButton onClick={() => {
                 setMethodStep('family')
             }}>Back</SecondaryButton>
-            <PrimaryButton onClick={() => setMethodStep('method')}>Next</PrimaryButton>
+            <PrimaryButton disabled={inputtedWinners == '' || parseInt(inputtedWinners) < 1} onClick={() => {
+                setMethodStep('method')
+            }}>Next</PrimaryButton>
         </Box>
     </>
 
@@ -222,12 +226,13 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
 
     const pad = 30;
 
+    const errorSx = () => errors.votingMethod ? { borderColor: 'red !important', color: 'red !important'} : {}
     // <Typography gutterBottom variant="h6" component="h6">Choose Voting Method</Typography>
-    return <>
+    return <Box display='flex' flexDirection='column' sx={{width: '100%'}}>
         <Button
             variant='outlined'
             // it's hacky, but opacity 0.8 does helps take the edge off the bold a bit
-            sx={{ margin: 'auto', textTransform: 'none', opacity: 0.8}}
+            sx={{ margin: 'auto', textTransform: 'none', opacity: 0.8, ...errorSx()}}
             disabled={methodStep != 'unset' && methodStep != 'done'}
             onClick={() => setMethodStep('family')}
         >
@@ -241,6 +246,9 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
             </>}
             <EditIcon sx={{ml: 1}}/>
         </Button>
+        <FormHelperText error sx={{ pl: 1}}>
+            {errors.votingMethod}
+        </FormHelperText>
 
         <Box sx={{
             position: 'relative',
@@ -253,5 +261,9 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
             <Box sx={makeMethodStepSX('num_winners')}> <NumWinnersPage/> </Box>
             <Box sx={makeMethodStepSX('method')}> <VotingMethodPage/> </Box>
         </Box>
-    </>
+
+        <FormHelperText error sx={{ pl: 1, pt: 0 }}>
+            {errors.raceNumWinners}
+        </FormHelperText>
+    </Box>
 }

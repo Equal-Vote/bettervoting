@@ -19,7 +19,7 @@ export default function AddRace() {
     const [activeStep, setActiveStep] = useState(0);
     const resetStep = () => setActiveStep(0);
 
-    const { editedRace, setEditedRace, errors, setErrors, applyRaceUpdate, validateRace } = useEditRace(election, null, election.races.length)
+    //const { editedRace, setEditedRace, errors, setErrors, applyRaceUpdate, validateRace } = useEditRace(null, election.races.length)
 
     const onAdd = async () => {
         const success = await onAddRace()
@@ -59,13 +59,13 @@ export default function AddRace() {
               resetStep={resetStep}
             >
                 <RaceForm
-                    race_index={election.races.length}
-                    editedRace={editedRace}
-                    errors={errors}
-                    setErrors={setErrors}
-                    applyRaceUpdate={applyRaceUpdate}
-                    activeStep={activeStep}
-                    setActiveStep={setActiveStep}
+                    raceIndex={election.races.length}
+                    //editedRace={editedRace}
+                    //errors={errors}
+                    //setErrors={setErrors}
+                    //applyRaceUpdate={applyRaceUpdate}
+                    //activeStep={activeStep}
+                    //setActiveStep={setActiveStep}
                 />
             </RaceDialog>
         </Box>

@@ -4,7 +4,7 @@ import React from 'react'
 import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
 import Typography from '@mui/material/Typography';
-import { Box, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Paper } from '@mui/material';
+import { Box, Dialog, DialogActions, DialogContent, DialogTitle, FormHelperText, IconButton, Paper } from '@mui/material';
 import Cropper from 'react-easy-crop';
 import getCroppedImg from './PhotoCropper';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -276,9 +276,7 @@ const CandidateDialog = ({ onEditCandidate, candidate, open, handleClose }: Cand
                             </Box>
                         </Grid>
                     </>}
-
                 </Grid>
-
             </DialogContent>
 
             <DialogActions>
@@ -315,11 +313,12 @@ const LinkDialog = ({ onEditCandidate, candidate, open, handleClose }) => {
             keepMounted>
             <DialogTitle> Update Hyperlink </DialogTitle>
             <DialogContent>
-                <Box sx={{width: 300, height: 90}}>
+                <Box sx={{width: 300, height: 80}}>
                     <TextField
                         id="candidate url"
                         label="Candidate URL"
                         type="url"
+                        error={error!=''}
                         fullWidth
                         value={linkInput}
                         sx={{
@@ -332,7 +331,9 @@ const LinkDialog = ({ onEditCandidate, candidate, open, handleClose }) => {
                             setError('')
                         }}
                     />
-                    <Typography sx={{color: 'var(--brand-red)', fontWeight: 'bold', textAlign: 'end'}}>{error}</Typography>
+                    <FormHelperText error sx={{ pl: 1, pt: 0 }}>
+                        {error}
+                    </FormHelperText>
                 </Box>
             </DialogContent>
 

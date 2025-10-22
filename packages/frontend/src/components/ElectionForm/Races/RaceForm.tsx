@@ -1,22 +1,23 @@
-import React, { Dispatch, useCallback, useMemo, useRef, useState } from 'react';
+import React, { MouseEventHandler, useCallback, useMemo, useRef, useState } from 'react';
 import CandidateForm from "../Candidates/CandidateForm";
 import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
 import Typography from '@mui/material/Typography';
-import { Button, FormHelperText, Stack } from "@mui/material";
+import { Box, Button, FormHelperText, Stack } from "@mui/material";
 import { useSubstitutedTranslation } from '../../util';
 import useConfirm from '../../ConfirmationDialogProvider';
 import useFeatureFlags from '../../FeatureFlagContextProvider';
 import { SortableList } from '~/components/DragAndDrop';
-import { NewRace } from './Race';
 import { RaceErrors, useEditRace } from './useEditRace';
 import { makeUniqueIDSync, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
-import { Election, NewElection } from '@equal-vote/star-vote-shared/domain_model/Election';
 import VotingMethodSelector from './VotingMethodSelector';
 import useElection from '~/components/ElectionContextProvider';
+import { SecondaryButton, PrimaryButton } from '~/components/styles';
 
 interface RaceFormProps {
     raceIndex?: number,
+    onConfirm?: Function,
+    onCancel?: Function,
 }
 
 const TitleAndDescription = ({isDisabled, election, setErrors, errors, editedRace, applyRaceUpdate}) => {
@@ -37,7 +38,7 @@ const TitleAndDescription = ({isDisabled, election, setErrors, errors, editedRac
                 }}
                 fullWidth
                 onChange={(e) => {
-                    //setErrors({ ...errors, raceTitle: '' })
+                    setErrors({ ...errors, raceTitle: '' })
                     applyRaceUpdate(race => { race.title = e.target.value })
                 }}
             />
@@ -82,12 +83,14 @@ const TitleAndDescription = ({isDisabled, election, setErrors, errors, editedRac
 
 export default function RaceForm({
     raceIndex=undefined,
+    onConfirm=() => {},
+    onCancel=() => {},
 }: RaceFormProps) {
     const flags = useFeatureFlags();
     const { election } = useElection()
     const { t } = useSubstitutedTranslation();
     const isDisabled = election.state !== 'draft';
-    const { editedRace, errors, setErrors, applyRaceUpdate} = useEditRace(
+    const { editedRace, errors, setErrors, applyRaceUpdate, validateRace} = useEditRace(
         raceIndex == undefined ? null : election.races[raceIndex],
         0,
     )
@@ -121,7 +124,7 @@ export default function RaceForm({
             }
         });
 
-        setErrors((prev: RaceErrors) => ({ ...prev, candidates: '', raceNumWinners: '' }));
+        setErrors((prev: RaceErrors) => ({ ...prev, candidates: ''}));
     }, [applyRaceUpdate, setErrors]);
 
     
@@ -174,8 +177,7 @@ export default function RaceForm({
             //this makes it so the candidate is deleted without the "are you sure?" dialog when backspacing on an empty candidate
             applyRaceUpdate(race => {
                 race.candidates.splice(index, 1);
-            }
-            )
+            })
         }
     }, [ephemeralCandidates.length, applyRaceUpdate]);
 
@@ -208,7 +210,9 @@ export default function RaceForm({
                 {flags.isSet('PRECINCTS') && election.settings.voter_access !== 'open' && <Precincts/>}
             </Grid>
 
-            <VotingMethodSelector election={election} editedRace={editedRace} isDisabled={isDisabled} setErrors={setErrors} errors={errors} applyRaceUpdate={applyRaceUpdate} />
+            <Grid container sx={{ m: 0, p: 1 }} >
+                <VotingMethodSelector election={election} editedRace={editedRace} isDisabled={isDisabled} setErrors={setErrors} errors={errors} applyRaceUpdate={applyRaceUpdate} />
+            </Grid>
 
             <Grid container sx={{ m: 0, p: 1 }} >
                 <Grid item xs={12} sx={{ m: 0, p: 1 }}>
@@ -243,6 +247,10 @@ export default function RaceForm({
                     />
                 }
             </Stack>
+            <Box display='flex' flexDirection='row' justifyContent='flex-end' gap={1} sx={{mt: 3}}>
+                <SecondaryButton onClick={() => onCancel()}>Skip for now</SecondaryButton>
+                <PrimaryButton onClick={() => validateRace() && onConfirm()}>Next</PrimaryButton>
+            </Box>
         </>
     )
 }
