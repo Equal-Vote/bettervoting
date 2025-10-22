@@ -66,7 +66,9 @@ export const useEditRace = (
         setEditedRace(raceCopy)
     };
 
-    const resetRace = () => setEditedRace(makeDefaultRace())
+    const resetRace = () => setEditedRace(
+        makeDefaultRace()
+    )
 
     const validateRace = () => {
         let isValid = true

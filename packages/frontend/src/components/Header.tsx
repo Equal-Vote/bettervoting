@@ -119,6 +119,7 @@ const Header = () => {
                                 component={item.items ? undefined : Link}
                                 href={item.href}
                                 target={item.target}
+                                sx={{textTransform: 'none'}}
                             >
                                 {!item.items && item.text }
                                 {item.items && <Accordion

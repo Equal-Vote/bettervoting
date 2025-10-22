@@ -37,7 +37,7 @@ export default function AddRace() {
                 Add Race
             </PrimaryButton>
             <RaceForm
-                raceIndex={0}
+                raceIndex={undefined}
                 onCancel={() => setOpen(false)}
                 onConfirm={async (editedRace) => (await onAddRace(editedRace) && setOpen(false))}
                 dialogOpen={open}

@@ -36,9 +36,9 @@ export default function RaceForm({
         0,
     )
 
-    useEffect(() => {
-        if(!dialogOpen) editRace.resetRace()
-    }, [dialogOpen])
+    //useEffect(() => {
+    //    if(!dialogOpen) editRace.resetRace()
+    //}, [dialogOpen])
 
     return (
         <>

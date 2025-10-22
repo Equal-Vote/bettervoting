@@ -31,11 +31,8 @@ export default function Race({ race, race_index }: RaceProps) {
 
     const onSave = async (editedRace) => {
         let success = await updateElection(election => {
-            election.races.push({
-                ...editedRace,
-                race_id: makeID(ID_PREFIXES.RACE, ID_LENGTHS.RACE)
-            })
-        }) && await deleteAllBallots();
+            election.races[race_index] = editedRace
+        }) && await deleteAllBallots()
         if (!success) return false
         await refreshElection()
         return true
