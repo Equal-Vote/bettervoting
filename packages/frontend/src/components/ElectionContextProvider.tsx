@@ -1,6 +1,6 @@
 import { ReactNode, useContext, useEffect } from 'react'
 import { createContext } from 'react'
-import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
+import { Election, NewElection } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { useEditElection, useGetElection } from '../hooks/useAPI';
 import { Election as IElection } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { VoterAuth } from '@equal-vote/star-vote-shared/domain_model/VoterAuth';
@@ -9,7 +9,7 @@ import { useSubstitutedTranslation } from './util';
 
 
 export interface IElectionContext {
-    election: Election;
+    election: Election | NewElection;
     precinctFilteredElection: Election;
     voterAuth: VoterAuth;
     refreshElection: (data?: undefined) => Promise<false | {
@@ -36,7 +36,7 @@ export const ElectionContext = createContext<IElectionContext>({
     t: () => undefined
 })
 
-export const ElectionContextProvider = ({ id, children }: { id: string, children: ReactNode}) => {
+export const ElectionContextProvider = ({ id, localElection=undefined, setLocalElection=undefined, children }: { id: string, localElection?: Election, setLocalElection?: (election: Election) => void, children: ReactNode}) => {
     const { data, makeRequest: fetchData } = useGetElection(id)
     const { makeRequest: editElection } = useEditElection(id)
 
@@ -45,6 +45,12 @@ export const ElectionContextProvider = ({ id, children }: { id: string, children
     }, [id])
 
     const applyElectionUpdate = async (updateFunc: (election: IElection) => void) => {
+        if(id === undefined && localElection !== undefined){
+            const electionCopy: IElection = structuredClone(localElection)
+            updateFunc(electionCopy);
+            setLocalElection(electionCopy)
+            return
+        }
         if (!data.election) return
         const electionCopy: IElection = structuredClone(data.election)
         updateFunc(electionCopy)
@@ -52,11 +58,11 @@ export const ElectionContextProvider = ({ id, children }: { id: string, children
     };
 
     // This should use local timezone by default, consumers will have to call it directly if they want it to use the election timezone
-    const {t} = useSubstitutedTranslation(data?.election?.settings?.term_type ?? 'election');
+    const {t} = useSubstitutedTranslation(localElection === undefined ? (data?.election?.settings?.term_type ?? 'election') : localElection.settings.term_type);
 
     return (<ElectionContext.Provider
         value={{
-            election: data?.election,
+            election: id == undefined ? localElection : data?.election,
             precinctFilteredElection: data?.precinctFilteredElection,
             voterAuth: data?.voterAuth,
             refreshElection: fetchData,

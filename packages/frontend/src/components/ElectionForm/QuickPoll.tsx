@@ -21,6 +21,7 @@ import useConfirm from '../ConfirmationDialogProvider.js';
 import QuickPollExtra from './QuickPollExtra.js';
 import { el } from 'date-fns/locale';
 import { ElectionContextProvider } from '../ElectionContextProvider.js';
+import QuickPollBasics from './Races/QuickPollBasics.js';
 
 const makeDefaultElection = () => {
     const ids = [];
@@ -225,9 +226,7 @@ const QuickPoll = () => {
         minWidth: {xs: '0px', md: '400px'}
     }
 
-    return (
-
-        <ElectionContextProvider id={undefined}>
+    return <ElectionContextProvider id={undefined} localElection={election} setLocalElection={setElection}>
         <Paper elevation={5} sx={{
             //maxWidth: '613px',
             width: width,
@@ -246,25 +245,8 @@ const QuickPoll = () => {
             >
                 <Box sx={pageSX}>
                     <Typography variant='h5' color={'lightShade.contrastText'}>{t('landing_page.quick_poll.title')}</Typography>
-                    <Box display='flex' flexDirection='column' justifyContent='center' alignItems='left'>
-                        <Typography>
-                            {t('election_creation.term_question')}
-                            <Tip name='polls_vs_elections' />
-                        </Typography>
-                        <RadioGroup row sx={{mx: 'auto'}}>
-                            {['poll', 'election'].map((type, i) =>
-                                <FormControlLabel
-                                    key={i}
-                                    value={capitalize(t(`keyword.${type}.election`))}
-                                    control={<Radio />}
-                                    label={capitalize(t(`keyword.${type}.election`))}
-                                    onClick={() => applyElectionUpdate(e => { e.settings.term_type = type as TermType })}
-                                    checked={election.settings.term_type === type}
-                                />
-                            )}
-                        </RadioGroup>
-                    </Box>
-                    <RaceForm
+                    <QuickPollBasics/>
+                    {/*<RaceForm
                         election={election}
                         raceIndex={0}
                         updateElection={(updateFunc) => {
@@ -273,19 +255,18 @@ const QuickPoll = () => {
                             setElection(electionCopy)
                         }}
                         draftMode={false}
-                    />
+                    />*/}
                     <Box display='flex' flexDirection='row' justifyContent='flex-end' gap={1} sx={{mt: 3}}>
                         <SecondaryButton onClick={() => setPage(pg => pg+1)}>Skip for now</SecondaryButton>
                         <PrimaryButton onClick={onNext}>Next</PrimaryButton>
                     </Box>
                 </Box>
                 <Box sx={{...pageSX, textAlign: 'left'}}>
-                   <QuickPollExtra election={election} setElection={setElection} onBack={() => setPage(pg => pg-1)}/>
+                <QuickPollExtra election={election} setElection={setElection} onBack={() => setPage(pg => pg-1)}/>
                 </Box>
             </Box>
         </Paper>
-        </ElectionContextProvider>
-    )
+    </ElectionContextProvider>
 }
 
 export default QuickPoll

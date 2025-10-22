@@ -13,6 +13,7 @@ import { RaceErrors, useEditRace } from './useEditRace';
 import { makeUniqueIDSync, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
 import { Election, NewElection } from '@equal-vote/star-vote-shared/domain_model/Election';
 import VotingMethodSelector from './VotingMethodSelector';
+import useElection from '~/components/ElectionContextProvider';
 
 interface RaceFormProps {
     election: Election | NewElection,
@@ -83,20 +84,15 @@ const TitleAndDescription = ({isDisabled, election, setErrors, errors, editedRac
 }
 
 export default function RaceForm({
-    election,
-    updateElection,
     raceIndex=undefined,
-    draftMode=true,
 }: RaceFormProps) {
-    const { t } = useSubstitutedTranslation(election?.settings?.term_type ?? 'election');
     const flags = useFeatureFlags();
+    const { election } = useElection()
+    const { t } = useSubstitutedTranslation();
     const isDisabled = election.state !== 'draft';
     const { editedRace, errors, setErrors, applyRaceUpdate} = useEditRace(
-        election,
         raceIndex == undefined ? null : election.races[raceIndex],
         0,
-        updateElection,
-        draftMode, // TODO: think more on how to handle non-draft mode without slowing the text fields
     )
     
     const confirm = useConfirm();
