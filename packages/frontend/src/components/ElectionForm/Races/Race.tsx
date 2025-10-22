@@ -24,7 +24,6 @@ interface RaceProps {
 }
 
 export default function Race({ race, race_index }: RaceProps) {
-
     const { election, updateElection, refreshElection } = useElection()
     const { makeRequest: deleteAllBallots } = useDeleteAllBallots(election.election_id);
     const confirm = useConfirm();

@@ -1,9 +1,10 @@
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
 import { Box, Button, FormControlLabel, FormHelperText, IconButton, Radio, RadioGroup, TextField, Typography } from "@mui/material"
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PrimaryButton, SecondaryButton } from "~/components/styles";
 import { methodValueToTextKey, useSubstitutedTranslation } from "~/components/util"
 import EditIcon from '@mui/icons-material/Edit';
+import { flushSync } from "react-dom";
 
 type MethodStep = 'unset' | 'family' | 'num_winners' | 'method' | 'done';
 const stepIndex = {
@@ -17,9 +18,9 @@ const stepIndex = {
 export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceUpdate}) => {
     const { t } = useSubstitutedTranslation();
     const PR_METHODS = ['STV', 'STAR_PR'];
-    const [methodStep, innerStepMethodStep] = useState<MethodStep>(editedRace.voting_method == undefined? 'unset' : 'done');
+    const [methodStep, innerSetMethodStep] = useState<MethodStep>(editedRace.voting_method == undefined? 'unset' : 'done');
     // I have to have a non-undefined default to avoid warnings that slow down the UI
-    const [inputtedWinners, setInputtedWinners] = useState(String(editedRace.num_winners) ?? '1');
+    const [inputtedWinners, setInputtedWinners] = useState(String(editedRace.num_winners ?? 1));
     const [showAllMethods, setShowAllMethods] = useState(false)
     const [methodFamily, setMethodFamily] = useState(
         editedRace.voting_method == undefined ? 
@@ -49,7 +50,9 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
                 setShowAllMethods(false);
             }
         });
-        setTimeout(() => innerStepMethodStep(step), 100);
+        setTimeout(() => {
+            innerSetMethodStep(step)
+        }, 100);
     }
 
     const MethodBullet = ({ value, disabled }: { value: string, disabled: boolean }) => <>

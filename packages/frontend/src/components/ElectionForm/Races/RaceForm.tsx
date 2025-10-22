@@ -23,67 +23,6 @@ interface RaceFormProps {
     dialogOpen?: boolean,
 }
 
-const TitleAndDescription = ({isDisabled, election, setErrors, errors, editedRace, applyRaceUpdate}) => {
-    const [showDescription, setShowDescription] = useState(false);
-    return <>
-        <Grid item xs={12} sx={{ m: 0, p: 1 }}>
-            <TextField
-                id={`race-title`}
-                disabled={isDisabled}
-                name="title"
-                label={election.settings.term_type == 'poll' ? 'Poll Question' : 'Elected Office Title'}
-                type="text"
-                error={errors.raceTitle !== ''}
-                value={editedRace.title}
-                sx={{
-                    m: 0,
-                    boxShadow: 2,
-                }}
-                fullWidth
-                onChange={(e) => {
-                    setErrors({ ...errors, raceTitle: '' })
-                    applyRaceUpdate(race => { race.title = e.target.value })
-                }}
-            />
-            <FormHelperText error sx={{ pl: 1, pt: 0 }}>
-                {errors.raceTitle}
-            </FormHelperText>
-        </Grid>
-
-        {showDescription && <Grid item xs={12} sx={{ m: 0, p: 1 }}>
-            <TextField
-                id={`race-description`}
-                name="description"
-                label="Description"
-                disabled={isDisabled}
-                multiline
-                fullWidth
-                type="text"
-                error={errors.raceDescription !== ''}
-                value={editedRace.description}
-                minRows={3}
-                sx={{
-                    m: 0,
-                    boxShadow: 2,
-                }}
-                onChange={(e) => {
-                    setErrors({ ...errors, raceDescription: '' })
-                    applyRaceUpdate(race => { race.description = e.target.value })
-                }}
-            />
-            <FormHelperText error sx={{ pl: 1, pt: 0 }}>
-                {errors.raceDescription}
-            </FormHelperText>
-        </Grid>}
-        <Button
-            sx={{textDecoration: 'none', color: 'gray'}}
-            onClick={() => setShowDescription(d => !d)}
-        >
-            {showDescription? 'Hide Description' : '+ Add Description'}
-        </Button>
-    </>
-}
-
 export default function RaceForm({
     raceIndex=undefined,
     styling,
@@ -91,14 +30,44 @@ export default function RaceForm({
     onCancel=() => {},
     dialogOpen=undefined,
 }: RaceFormProps) {
-    const flags = useFeatureFlags();
-    const { election } = useElection()
-    const { t } = useSubstitutedTranslation();
-    const isDisabled = election.state !== 'draft';
-    const { editedRace, resetRace, errors, setErrors, applyRaceUpdate, validateRace} = useEditRace(
+    const {election} = useElection();
+    const editRace = useEditRace(
         raceIndex == undefined ? null : election.races[raceIndex],
         0,
     )
+
+    useEffect(() => {
+        if(!dialogOpen) editRace.resetRace()
+    }, [dialogOpen])
+
+    return (
+        <>
+            {styling == 'Dialog' &&
+                <RaceDialog
+                    onSaveRace={() => editRace.validateRace() && onConfirm(editRace.editedRace)}
+                    open={dialogOpen}
+                    handleClose={() => onCancel()}
+                >
+                    {/* I can't absorb it into FormComponent because of Component Identity Instability*/}
+                    <InnerRaceForm {...editRace}/>
+                </RaceDialog>
+            }
+            {styling == 'QuickPoll' && <>
+                <InnerRaceForm {...editRace}/>
+                <Box display='flex' flexDirection='row' justifyContent='flex-end' gap={1} sx={{mt: 3}}>
+                    <SecondaryButton onClick={() => onCancel()}>Skip for now</SecondaryButton>
+                    <PrimaryButton onClick={() => editRace.validateRace() && onConfirm(editRace.editedRace)}>Next</PrimaryButton>
+                </Box>
+            </>}
+        </>
+    )
+}
+
+const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate}) => {
+    const flags = useFeatureFlags();
+    const { t } = useSubstitutedTranslation();
+    const { election } = useElection()
+    const isDisabled = election.state !== 'draft';
     const [] = useState(false);
 
     const confirm = useConfirm();
@@ -121,9 +90,7 @@ export default function RaceForm({
         }];
     }, [editedRace.candidates]);
 
-    useEffect(() => {
-        if(!dialogOpen) resetRace()
-    }, [dialogOpen])
+
 
     const onEditCandidate = useCallback((candidate, index) => {
         applyRaceUpdate(race => {
@@ -213,9 +180,12 @@ export default function RaceForm({
         </Grid>
     </>
 
-    const FormComponents = () => <>
+    return <>
+        <Grid container sx={{ m: 0, p: 1 }}>
+            <TitleAndDescription setErrors={setErrors} errors={errors} editedRace={editedRace} applyRaceUpdate={applyRaceUpdate} />
+        </Grid>
+
         <Grid container sx={{ m: 0, p: 1 }} >
-            <TitleAndDescription isDisabled={isDisabled} election={election} setErrors={setErrors} errors={errors} editedRace={editedRace} applyRaceUpdate={applyRaceUpdate} />
             {flags.isSet('PRECINCTS') && election.settings.voter_access !== 'open' && <Precincts/>}
         </Grid>
 
@@ -257,25 +227,67 @@ export default function RaceForm({
             }
         </Stack>
     </>
+}
 
-    return (
-        <>
-            {styling == 'Dialog' &&
-                <RaceDialog
-                    onSaveRace={() => validateRace() && onConfirm(editedRace)}
-                    open={dialogOpen}
-                    handleClose={() => onCancel()}
-                >
-                    <FormComponents/>
-                </RaceDialog>
-            }
-            {styling == 'QuickPoll' && <>
-                <FormComponents/>
-                <Box display='flex' flexDirection='row' justifyContent='flex-end' gap={1} sx={{mt: 3}}>
-                    <SecondaryButton onClick={() => onCancel()}>Skip for now</SecondaryButton>
-                    <PrimaryButton onClick={() => validateRace() && onConfirm(editedRace)}>Next</PrimaryButton>
-                </Box>
-            </>}
-        </>
-    )
+const TitleAndDescription = ({setErrors, errors, editedRace, applyRaceUpdate}) => {
+    const [showDescription, setShowDescription] = useState(false);
+    const { election } = useElection()
+    const isDisabled = election.state !== 'draft';
+    return <>
+        <Grid item xs={12} sx={{ m: 0, p: 1 }}>
+            <TextField
+                id={`race-title`}
+                disabled={isDisabled}
+                name="title"
+                label={election.settings.term_type == 'poll' ? 'Poll Question' : 'Elected Office Title'}
+                type="text"
+                error={errors.raceTitle !== ''}
+                value={editedRace.title}
+                sx={{
+                    m: 0,
+                    boxShadow: 2,
+                }}
+                fullWidth
+                onChange={(e) => {
+                    setErrors({ ...errors, raceTitle: '' })
+                    applyRaceUpdate(race => { race.title = e.target.value })
+                }}
+            />
+            <FormHelperText error sx={{ pl: 1, pt: 0 }}>
+                {errors.raceTitle}
+            </FormHelperText>
+        </Grid>
+
+        {showDescription && <Grid item xs={12} sx={{ m: 0, p: 1 }}>
+            <TextField
+                id={`race-description`}
+                name="description"
+                label="Description"
+                disabled={isDisabled}
+                multiline
+                fullWidth
+                type="text"
+                error={errors.raceDescription !== ''}
+                value={editedRace.description}
+                minRows={3}
+                sx={{
+                    m: 0,
+                    boxShadow: 2,
+                }}
+                onChange={(e) => {
+                    setErrors({ ...errors, raceDescription: '' })
+                    applyRaceUpdate(race => { race.description = e.target.value })
+                }}
+            />
+            <FormHelperText error sx={{ pl: 1, pt: 0 }}>
+                {errors.raceDescription}
+            </FormHelperText>
+        </Grid>}
+        <Button
+            sx={{textDecoration: 'none', color: 'gray'}}
+            onClick={() => setShowDescription(d => !d)}
+        >
+            {showDescription? 'Hide Description' : '+ Add Description'}
+        </Button>
+    </>
 }
