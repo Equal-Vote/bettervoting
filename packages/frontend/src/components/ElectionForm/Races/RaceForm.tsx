@@ -96,7 +96,7 @@ export default function RaceForm({
         raceIndex == undefined ? null : election.races[raceIndex],
         0,
         updateElection,
-        draftMode,
+        draftMode, // TODO: think more on how to handle non-draft mode without slowing the text fields
     )
     
     const confirm = useConfirm();

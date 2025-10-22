@@ -17,7 +17,7 @@ const stepIndex = {
 export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceUpdate}) => {
     const { t } = useSubstitutedTranslation();
     const PR_METHODS = ['STV', 'STAR_PR'];
-    const [methodStep, innerStepMethodStep] = useState<MethodStep>(editedRace.voting_method == undefined? 'family' : 'done');
+    const [methodStep, innerStepMethodStep] = useState<MethodStep>(editedRace.voting_method == undefined? 'unset' : 'done');
     const [inputtedWinners, setInputtedWinners] = useState(String(editedRace.num_winners));
     const [showAllMethods, setShowAllMethods] = useState(false)
     const [methodFamily, setMethodFamily] = useState(
@@ -223,23 +223,10 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
 
     // <Typography gutterBottom variant="h6" component="h6">Choose Voting Method</Typography>
     return <>
-
-               
-        <Box sx={{
-            position: 'relative',
-            height: `${[0, 180, 122, showAllMethods? 407 : 287, -pad][stepIndex[methodStep]]+pad}px`,
-            transition: 'height 0.5s',
-            display: 'flex',
-            justifyContent: 'flex-start'
-        }}>
-            <Box sx={makeMethodStepSX('family')}> <FamilyPage/> </Box>
-            <Box sx={makeMethodStepSX('num_winners')}> <NumWinnersPage/> </Box>
-            <Box sx={makeMethodStepSX('method')}> <VotingMethodPage/> </Box>
-        </Box>
-        
         <Button
             variant='outlined'
-            sx={{ margin: 'auto', textTransform: 'none'}}
+            // it's hacky, but opacity 0.8 does helps take the edge off the bold a bit
+            sx={{ margin: 'auto', textTransform: 'none', opacity: 0.8}}
             disabled={methodStep != 'unset' && methodStep != 'done'}
             onClick={() => setMethodStep('family')}
         >
@@ -251,7 +238,19 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
                 {methodFamily == undefined || methodFamily == 'single_winner' ? '' : <>{t(`edit_race.${methodFamily}_adj`)}&nbsp;</>}
                 {methodFamily == 'single_winner'? 'winner' : 'winners'}
             </>}
-            <EditIcon/>
+            <EditIcon sx={{ml: 1}}/>
         </Button>
+
+        <Box sx={{
+            position: 'relative',
+            height: `${[0, 180, 122, showAllMethods? 407 : 287, -pad][stepIndex[methodStep]]+pad}px`,
+            transition: 'height 0.5s',
+            display: 'flex',
+            justifyContent: 'flex-start'
+        }}>
+            <Box sx={makeMethodStepSX('family')}> <FamilyPage/> </Box>
+            <Box sx={makeMethodStepSX('num_winners')}> <NumWinnersPage/> </Box>
+            <Box sx={makeMethodStepSX('method')}> <VotingMethodPage/> </Box>
+        </Box>
     </>
 }

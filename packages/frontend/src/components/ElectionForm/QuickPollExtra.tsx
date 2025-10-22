@@ -50,7 +50,7 @@ const templateMappers = {
     }),
 }
 
-export default ({election, setElection}) => {
+export default ({election, setElection, onBack}) => {
     const [stepperStep, setStepperStep] = useState(0);
     const authSession = useAuthSession();
     const { makeRequest: postElection } = usePostElection()
@@ -59,14 +59,12 @@ export default ({election, setElection}) => {
     const [titleMatchesRace, setTitleMatchesRace] = useState(true);
 
     const StepButtons = ({ activeStep, setActiveStep, canContinue }: { activeStep: number, setActiveStep: React.Dispatch<React.SetStateAction<number>>, canContinue: boolean }) => <>
-        {activeStep > 0 &&
-            <SecondaryButton
-                onClick={() => setActiveStep(i => i - 1)}
-                sx={{ mt: 1, mr: 1 }}
-            >
-                Back
-            </SecondaryButton>
-        }
+        <SecondaryButton
+            onClick={() => activeStep == 0 ? onBack() : setActiveStep(i => i - 1)}
+            sx={{ mt: 1, mr: 1 }}
+        >
+            Back
+        </SecondaryButton>
         {activeStep < 2 && // hard coding this for now
             <PrimaryButton
                 fullWidth={false}
@@ -99,7 +97,7 @@ export default ({election, setElection}) => {
                     <Typography>{t('election_creation.title_question')}</Typography>
                     <FormControlLabel control={<Checkbox checked={titleMatchesRace} />} label="same as poll question" onClick={() => {
                         let newMatchesRace = !titleMatchesRace;
-                        setTitleMatchesRace(newMatchesRace );
+                        setTitleMatchesRace(newMatchesRace);
                         if(newMatchesRace){
                             setElection({
                                 ...election,

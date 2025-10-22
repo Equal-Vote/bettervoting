@@ -300,6 +300,12 @@ const LinkDialog = ({ onEditCandidate, candidate, open, handleClose }) => {
     }
 
     const [linkInput, setLinkInput] = useState(candidate.candidate_url);
+    const [error, setError] = useState('');
+
+    useEffect(() => {
+        setLinkInput(candidate.candidate_url)
+        setError('')
+    }, [candidate])
 
     return (
         <Dialog
@@ -309,7 +315,7 @@ const LinkDialog = ({ onEditCandidate, candidate, open, handleClose }) => {
             keepMounted>
             <DialogTitle> Update Hyperlink </DialogTitle>
             <DialogContent>
-                <Box sx={{width: 300, height: 70}}>
+                <Box sx={{width: 300, height: 90}}>
                     <TextField
                         id="candidate url"
                         label="Candidate URL"
@@ -321,8 +327,12 @@ const LinkDialog = ({ onEditCandidate, candidate, open, handleClose }) => {
                             p: 0,
                             boxShadow: 2,
                         }}
-                        onChange={(e) => setLinkInput(e.target.value)}
+                        onChange={(e) => {
+                            setLinkInput(e.target.value)
+                            setError('')
+                        }}
                     />
+                    <Typography sx={{color: 'var(--brand-red)', fontWeight: 'bold', textAlign: 'end'}}>{error}</Typography>
                 </Box>
             </DialogContent>
 
@@ -330,12 +340,28 @@ const LinkDialog = ({ onEditCandidate, candidate, open, handleClose }) => {
                 <SecondaryButton
                     type='button'
                     onClick={() => {
-                        onApplyEditCandidate((candidate) => { candidate.candidate_url = linkInput })
+                        onApplyEditCandidate((candidate) => { candidate.candidate_url = '' })
+                        handleClose()
+                    }}
+                >
+                    Remove
+                </SecondaryButton>
+                <PrimaryButton
+                    type='button'
+                    onClick={() => {
+                        const url = URL.parse(linkInput) ?? URL.parse('https://'+linkInput);
+                        if(linkInput != '' && url === null){
+                            setError('Invalid URL');
+                            return;
+                        }
+                        onApplyEditCandidate((candidate) => {
+                            candidate.candidate_url = linkInput == '' ? '' : url.href;
+                        })
                         handleClose()
                     }}
                 >
                     Apply
-                </SecondaryButton>
+                </PrimaryButton>
             </DialogActions>
         </Dialog>
     )

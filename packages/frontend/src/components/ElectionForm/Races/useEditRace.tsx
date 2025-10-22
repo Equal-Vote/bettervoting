@@ -36,13 +36,11 @@ export const makeDefaultRace = () => ({
 } as iRace);
 
 export const useEditRace = (
-    election: Election | NewElection,
     race: iRace | null,
     race_index: number,
-    updateElection: (updateFunc: (election: Election | NewElection) => void) => void,
     draftMode=true,
 ) => {
-    //const { election, refreshElection, updateElection } = useElection()
+    const { election, refreshElection, updateElection } = useElection()
     const { setSnack } = useSnackbar()
     //const { makeRequest: deleteAllBallots } = useDeleteAllBallots(election.election_id);
     const confirm = useConfirm();

@@ -20,6 +20,7 @@ import { TermType } from '@equal-vote/star-vote-shared/domain_model/ElectionSett
 import useConfirm from '../ConfirmationDialogProvider.js';
 import QuickPollExtra from './QuickPollExtra.js';
 import { el } from 'date-fns/locale';
+import { ElectionContextProvider } from '../ElectionContextProvider.js';
 
 const makeDefaultElection = () => {
     const ids = [];
@@ -225,6 +226,8 @@ const QuickPoll = () => {
     }
 
     return (
+
+        <ElectionContextProvider id={undefined}>
         <Paper elevation={5} sx={{
             //maxWidth: '613px',
             width: width,
@@ -277,10 +280,11 @@ const QuickPoll = () => {
                     </Box>
                 </Box>
                 <Box sx={{...pageSX, textAlign: 'left'}}>
-                   <QuickPollExtra election={election} setElection={setElection}/>
+                   <QuickPollExtra election={election} setElection={setElection} onBack={() => setPage(pg => pg-1)}/>
                 </Box>
             </Box>
         </Paper>
+        </ElectionContextProvider>
     )
 }
 
