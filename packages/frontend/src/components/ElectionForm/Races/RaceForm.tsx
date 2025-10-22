@@ -16,10 +16,7 @@ import VotingMethodSelector from './VotingMethodSelector';
 import useElection from '~/components/ElectionContextProvider';
 
 interface RaceFormProps {
-    election: Election | NewElection,
-    updateElection: (updateFunc: (election: Election | NewElection) => void) => void,
     raceIndex?: number,
-    draftMode?: boolean,
 }
 
 const TitleAndDescription = ({isDisabled, election, setErrors, errors, editedRace, applyRaceUpdate}) => {
@@ -94,7 +91,7 @@ export default function RaceForm({
         raceIndex == undefined ? null : election.races[raceIndex],
         0,
     )
-    
+
     const confirm = useConfirm();
     const inputRefs = useRef([]);
     const ephemeralCandidates = useMemo(() => {

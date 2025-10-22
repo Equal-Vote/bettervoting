@@ -5,7 +5,6 @@ import { Tip } from "~/components/styles"
 
 export default () => {
     const {election, updateElection, t} = useElection();
-    console.log(election)
     return <Box display='flex' flexDirection='column' justifyContent='center' alignItems='left'>
         <Typography>
             {t('election_creation.term_question')}

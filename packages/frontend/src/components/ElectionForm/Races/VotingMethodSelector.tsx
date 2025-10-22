@@ -18,7 +18,8 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
     const { t } = useSubstitutedTranslation();
     const PR_METHODS = ['STV', 'STAR_PR'];
     const [methodStep, innerStepMethodStep] = useState<MethodStep>(editedRace.voting_method == undefined? 'unset' : 'done');
-    const [inputtedWinners, setInputtedWinners] = useState(String(editedRace.num_winners));
+    // I have to have a non-undefined default to avoid warnings that slow down the UI
+    const [inputtedWinners, setInputtedWinners] = useState(String(editedRace.num_winners) ?? 1);
     const [showAllMethods, setShowAllMethods] = useState(false)
     const [methodFamily, setMethodFamily] = useState(
         editedRace.voting_method == undefined ? 

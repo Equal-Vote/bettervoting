@@ -38,7 +38,6 @@ export const makeDefaultRace = () => ({
 export const useEditRace = (
     race: iRace | null,
     race_index: number,
-    draftMode=true,
 ) => {
     const { election, refreshElection, updateElection } = useElection()
     const { setSnack } = useSnackbar()
@@ -68,14 +67,6 @@ export const useEditRace = (
         const raceCopy: iRace = structuredClone(editedRace)
         updateFunc(raceCopy)
         setEditedRace(raceCopy)
-        if(!draftMode){
-            updateElection(election => {
-                if (race_index !== undefined) {
-                    election.races[race_index] = raceCopy
-                }
-            });
-            //TODO: make sure this works, we want the "same as previous title" checkbox to work
-        }
     };
 
     const validateRace = () => {

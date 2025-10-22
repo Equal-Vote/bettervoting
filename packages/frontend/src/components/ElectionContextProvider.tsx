@@ -36,7 +36,7 @@ export const ElectionContext = createContext<IElectionContext>({
     t: () => undefined
 })
 
-export const ElectionContextProvider = ({ id, localElection=undefined, setLocalElection=undefined, children }: { id: string, localElection?: Election, setLocalElection?: (election: Election) => void, children: ReactNode}) => {
+export const ElectionContextProvider = ({ id, localElection=undefined, setLocalElection=undefined, children }: { id: string, localElection?: Election | NewElection, setLocalElection?: (election: Election | NewElection) => void, children: ReactNode}) => {
     const { data, makeRequest: fetchData } = useGetElection(id)
     const { makeRequest: editElection } = useEditElection(id)
 
