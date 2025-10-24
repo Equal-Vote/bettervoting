@@ -136,6 +136,7 @@ export function electionSettingsValidation(obj:ElectionSettings, electionState?:
   if (obj.draggable_ballot && typeof obj.draggable_ballot !== 'boolean'){
     return "Invalid Draggable Ballot";
   }
+
   const compatibilityError = settingsCompatiblityValidation(obj, electionState);
   if (compatibilityError) {
     return compatibilityError;

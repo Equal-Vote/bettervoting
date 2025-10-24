@@ -91,8 +91,10 @@ export default function ElectionSettings() {
     const onChangeBallotUpdates = async(e) => {
          setBallotUpdates(e.target.checked);
          setPublicResultsDisabled(e.target.checked);
-         setPublicResultsDisabledMsg(e.target.checked);  
-         applySettingsUpdate(settings => { settings.ballot_updates = e.target.checked; });
+         setPublicResultsDisabledMsg(e.target.checked);
+         applySettingsUpdate(settings => {
+             settings.ballot_updates = e.target.checked;
+         });
     };
     const onChangePublicResults = async(e) => {
          setPublicResults(e.target.checked);

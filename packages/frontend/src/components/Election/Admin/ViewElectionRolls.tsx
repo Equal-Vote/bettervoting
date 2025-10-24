@@ -28,9 +28,11 @@ const ViewElectionRolls = () => {
     const location = useLocation();
     const [dialogOpen, setDialogOpen] = useState(false);
 
+    const usesVoterIdAuthentication = !!election.settings.voter_authentication?.voter_id;
+
     const onOpen = (voter) => {
         setIsEditing(true)
-        setEditedRoll(data.electionRoll.find(roll => roll.voter_id === voter.voter_id))
+        setEditedRoll(voter?.raw ?? null)
         navigate(`${location.pathname}?editing=true`, { replace: false });
     }
     const onClose = () => {
@@ -65,7 +67,17 @@ const ViewElectionRolls = () => {
     const onUpdate = async () => {
         const results = await fetchRolls()
         if (!results) return
-        setEditedRoll(currentRoll => results.electionRoll.find(roll => roll.voter_id === currentRoll.voter_id))
+        setEditedRoll(currentRoll => {
+            if (!currentRoll) return null;
+            // When voter IDs are redacted (email list elections), always match by email
+            const voterIdsAreRedacted = election.settings.invitation === 'email';
+            const useEmail = voterIdsAreRedacted || !usesVoterIdAuthentication;
+            const identifier = useEmail ? currentRoll.email : currentRoll.voter_id;
+            if (!identifier) return null;
+            return results.electionRoll.find(roll =>
+                useEmail ? roll.email === identifier : roll.voter_id === identifier
+            ) ?? null;
+        })
     }
 
     const headKeys:HeadKey[] = (election.settings.invitation === 'email')?

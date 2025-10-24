@@ -8,7 +8,8 @@ import {
     approveElectionRoll,
     flagElectionRoll,
     invalidateElectionRoll,
-    uninvalidateElectionRoll
+    uninvalidateElectionRoll,
+    revealVoterIdByEmail
 } from '../Controllers/Roll';
 import {
     getElectionByID,
@@ -323,6 +324,53 @@ rollRouter.put('/Election/:id/rolls/', asyncHandler(editElectionRoll))
  *       404:
  *         description: Election not found */
 rollRouter.post('/Election/:id/rolls/unflag', asyncHandler(uninvalidateElectionRoll))
+
+/**
+ * @swagger
+ * /Election/{id}/rolls/revealVoterId:
+ *   post:
+ *     summary: 🚨 EMERGENCY BREAK GLASS - Reveal voter ID by email address
+ *     description: This endpoint should only be used in emergency situations. It reveals the voter_id for a given email and creates a prominent audit log entry.
+ *     tags: [Rolls]
+ *     security:
+ *      - ApiKeyAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The election ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 description: Email address of the voter
+ *             required:
+ *               - email
+ *     responses:
+ *       200:
+ *         description: Voter ID revealed (action logged)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 voter_id:
+ *                   type: string
+ *                 email:
+ *                   type: string
+ *                 warning:
+ *                   type: string
+ *       404:
+ *         description: Voter not found
+ */
+rollRouter.post('/Election/:id/rolls/revealVoterId', asyncHandler(revealVoterIdByEmail))
 
 rollRouter.param('id', asyncHandler(getElectionByID))
 rollRouter.param('id', asyncHandler(electionSpecificAuth))
