@@ -473,7 +473,7 @@ landing_page:
     publish_confirm:
       title: Publish?
       message: Would you like to publish your simple poll now or continue to customize further? !tip(full_editor)
-      cancel: 'Continue with full editor'
+      cancel: 'See more options'
       submit: 'Publish Now'
 
   # Election Stats Section
@@ -815,7 +815,7 @@ tips:
   election_title:
     title: Title
     description: >
-      This is the {{election}} title, not the title for each {{race}}, each {{race}} will have it's own separate title that you will create later.
+      This is the {{election}} title. This could be the same as the {{race}} title, or it could be different.
 
   polls_vs_elections:
     title: Elections versus Polls

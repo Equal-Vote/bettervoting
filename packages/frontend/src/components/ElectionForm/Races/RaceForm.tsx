@@ -65,8 +65,7 @@ export default function RaceForm({
 
 const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate}) => {
     const flags = useFeatureFlags();
-    const { t } = useSubstitutedTranslation();
-    const { election } = useElection()
+    const { election, t } = useElection()
     const isDisabled = election.state !== 'draft';
     const [] = useState(false);
 
@@ -90,8 +89,6 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate}) => {
         }];
     }, [editedRace.candidates]);
 
-
-
     const onEditCandidate = useCallback((candidate, index) => {
         applyRaceUpdate(race => {
             if (race.candidates[index]) {
@@ -103,7 +100,6 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate}) => {
 
         setErrors((prev: RaceErrors) => ({ ...prev, candidates: ''}));
     }, [applyRaceUpdate, setErrors]);
-
     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleChangeCandidates = useCallback((newCandidateList: any[]) => {

@@ -14,12 +14,9 @@ import { makeID, makeUniqueIDSync, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/s
 import { methodTextKeyToValue, RowButtonWithArrow, useSubstitutedTranslation } from '../util.jsx';
 import useAuthSession from '../AuthSessionContextProvider.js';
 import RaceForm from './Races/RaceForm.js';
-import { useEditRace } from './Races/useEditRace.js';
 import { VotingMethod } from '@equal-vote/star-vote-shared/domain_model/Race';
-import { TermType } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
 import useConfirm from '../ConfirmationDialogProvider.js';
 import QuickPollExtra from './QuickPollExtra.js';
-import { el } from 'date-fns/locale';
 import { ElectionContextProvider } from '../ElectionContextProvider.js';
 import QuickPollBasics from './Races/QuickPollBasics.js';
 
@@ -94,6 +91,7 @@ const QuickPoll = () => {
         setElection(makeDefaultElection())
         navigate(`/${newElection.election.election_id}`)
     }
+
     const applyElectionUpdate = (updateFunc) => {
         const electionCopy = structuredClone(election)
         updateFunc(electionCopy)
@@ -101,32 +99,6 @@ const QuickPoll = () => {
     };
 
     const createElectionContext = useContext(CreateElectionContext);
-
-    //const validateForm = (e) => {
-    //    e.preventDefault()
-
-    //    if (!election.title) {
-    //        setSnack({
-    //            message: 'Must specify poll title',
-    //            severity: 'warning',
-    //            open: true,
-    //            autoHideDuration: 6000,
-    //        });
-    //        return false;
-    //    }
-
-    //    if(election.races[0].candidates.filter(c => c.candidate_name != '').length < 2){
-    //        setSnack({
-    //            message: 'Must provide at least 2 options',
-    //            severity: 'warning',
-    //            open: true,
-    //            autoHideDuration: 6000,
-    //        });
-    //        return false;
-    //    }
-
-    //    return true;
-    //}
 
     const onSubmit = (e) => {
         //if(!validateForm(e)) return;
@@ -201,14 +173,15 @@ const QuickPoll = () => {
 
     const width = '500px';
 
-    const onNext = async () => {
+    const onNext = async (editedRace) => {
         const confirmed = await confirm(t('landing_page.quick_poll.publish_confirm'));
         if (confirmed) {
             navigate(`/pet`)
         }else{
             setElection({
                 ...election,
-                title: election.races[0].title,
+                races: [editedRace],
+                title: editedRace.title,
             })
             setPage(1);
         }
@@ -254,7 +227,7 @@ const QuickPoll = () => {
                     />
                 </Box>
                 <Box sx={{...pageSX, textAlign: 'left'}}>
-                    <QuickPollExtra election={election} setElection={setElection} onBack={() => setPage(pg => pg-1)}/>
+                    <QuickPollExtra onBack={() => setPage(pg => pg-1)}/>
                 </Box>
             </Box>
         </Paper>

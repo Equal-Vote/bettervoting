@@ -1,5 +1,4 @@
 import { Typography, Stepper, Step, StepLabel, StepContent, FormControlLabel, Checkbox, TextField, FormHelperText, RadioGroup, Radio, Box } from "@mui/material";
-import { t } from "i18next";
 import { RowButtonWithArrow, useSubstitutedTranslation } from "../util";
 import { useState } from "react";
 import { PrimaryButton, SecondaryButton } from "../styles";
@@ -7,7 +6,7 @@ import { NewElection } from "@equal-vote/star-vote-shared/domain_model/Election"
 import useAuthSession from "../AuthSessionContextProvider";
 import { usePostElection } from "~/hooks/useAPI";
 import { useNavigate } from "react-router";
-import { title } from "process";
+import useElection from "../ElectionContextProvider";
 
 const templateMappers = {
     'demo': (election: NewElection): NewElection => ({
@@ -50,17 +49,24 @@ const templateMappers = {
     }),
 }
 
-export default ({election, setElection, onBack}) => {
+export default ({onBack}) => {
     const [stepperStep, setStepperStep] = useState(0);
     const authSession = useAuthSession();
+    const {t, election, updateElection} = useElection()
     const { makeRequest: postElection } = usePostElection()
     const navigate = useNavigate();
-    const {t} = useSubstitutedTranslation(election.settings.term_type);
     const [titleMatchesRace, setTitleMatchesRace] = useState(true);
 
     const StepButtons = ({ activeStep, setActiveStep, canContinue }: { activeStep: number, setActiveStep: React.Dispatch<React.SetStateAction<number>>, canContinue: boolean }) => <>
         <SecondaryButton
-            onClick={() => activeStep == 0 ? onBack() : setActiveStep(i => i - 1)}
+            onClick={() => {
+                if(activeStep == 0){
+                    onBack()
+                    setTitleMatchesRace(true);
+                }else{
+                    setActiveStep(i => i - 1)
+                }
+            }}
             sx={{ mt: 1, mr: 1 }}
         >
             Back
@@ -95,14 +101,11 @@ export default ({election, setElection, onBack}) => {
                 <StepLabel>{t('election_creation.title_title')} <strong>{election.title && election.title}</strong></StepLabel>
                 <StepContent>
                     <Typography>{t('election_creation.title_question')}</Typography>
-                    <FormControlLabel control={<Checkbox checked={titleMatchesRace} />} label="same as poll question" onClick={() => {
+                    <FormControlLabel control={<Checkbox checked={titleMatchesRace} />} label="Same as poll question" onClick={() => {
                         let newMatchesRace = !titleMatchesRace;
                         setTitleMatchesRace(newMatchesRace);
                         if(newMatchesRace){
-                            setElection({
-                                ...election,
-                                title: election.races[0].title,
-                            })
+                            updateElection((e) => e.title = e.races[0].title)
                         }
                     }}/>
                     <TextField
@@ -120,7 +123,7 @@ export default ({election, setElection, onBack}) => {
                             boxShadow: 2,
                         }}
                         fullWidth
-                        onChange={(e) => setElection({...election, title: e.target.value})}
+                        onChange={(e) => updateElection((election) => election.title = e.target.value)}
                     />
                     <FormHelperText error sx={{ pl: 1, pt: 0 }}>
                         {/* TODO: Add errors */}
