@@ -37,7 +37,7 @@ export const tabToCandidate = (c, raceCandidates) => ({
 
 export const commaListFormatter = new Intl.ListFormat(i18n.languages[0], { style: 'long', type: 'conjunction' });
 
-export const capitalize = (str) => str[0].toUpperCase() + str.slice(1);
+export const capitalize = (str) => str.split(' ').map(s => s[0].toUpperCase() + s.slice(1)).join(' ');
 
 // Note: it feels weird to have the same util function on both frontend and backend instead of using shared, but they need to use different libraries
 export function hashString(inputString: string) {

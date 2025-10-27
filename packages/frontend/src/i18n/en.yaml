@@ -341,6 +341,7 @@ keyword:
     candidate: candidate
     candidates: candidates
     race: race
+    race_title: elected office title
     ballot: ballot
     vote: vote
 
@@ -350,6 +351,7 @@ keyword:
     candidate: option
     candidates: options
     race: question
+    race_title: question title
     ballot: response
     vote: response
 
@@ -469,6 +471,7 @@ landing_page:
     continue_with_editor: Continue with Full Editor
     sign_in: Sign in for more options
     clear_all: Clear All
+    title_label: '{{capital_race_title}}'
 
     publish_confirm:
       title: Publish?
@@ -815,7 +818,7 @@ tips:
   election_title:
     title: Title
     description: >
-      This is the {{election}} title. This could be the same as the {{race}} title, or it could be different.
+      This is the {{election}} title. This could be the same as the {{race_title}}, or it could be different.
 
   polls_vs_elections:
     title: Elections versus Polls

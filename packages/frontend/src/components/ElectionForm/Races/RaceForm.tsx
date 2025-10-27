@@ -227,7 +227,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate}) => {
 
 const TitleAndDescription = ({setErrors, errors, editedRace, applyRaceUpdate}) => {
     const [showDescription, setShowDescription] = useState(false);
-    const { election } = useElection()
+    const { election, t } = useElection()
     const isDisabled = election.state !== 'draft';
     return <>
         <Grid item xs={12} sx={{ m: 0, p: 1 }}>
@@ -235,7 +235,7 @@ const TitleAndDescription = ({setErrors, errors, editedRace, applyRaceUpdate}) =
                 id={`race-title`}
                 disabled={isDisabled}
                 name="title"
-                label={election.settings.term_type == 'poll' ? 'Poll Question' : 'Elected Office Title'}
+                label={t('landing_page.quick_poll.title_label')}
                 type="text"
                 error={errors.raceTitle !== ''}
                 value={editedRace.title}
