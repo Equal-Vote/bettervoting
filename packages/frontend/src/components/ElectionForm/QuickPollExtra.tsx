@@ -148,14 +148,15 @@ export default ({onBack}) => {
                                 control={<Radio />}
                                 label={t(`keyword.${restricted ? 'yes' : 'no'}`)}
                                 onClick={() => {
-                                    setElection({
-                                        ...election, settings: {
-                                            ...election.settings,
-                                            voter_access: restricted ? 'closed' : 'open',
-                                            contact_email: restricted ? (
+                                    updateElection((e) => {
+                                        if(restricted){
+                                            e.settings.voter_access = 'closed';
+                                            e.settings.contact_email = 
                                                 (election.settings.contact_email != undefined && election.settings.contact_email != '') ?
-                                                    election.settings.contact_email : authSession.getIdField('email')
-                                            ) : ''
+                                                election.settings.contact_email : authSession.getIdField('email')
+                                        }else{
+                                            e.settings.voter_access = 'open';
+                                            e.settings.contact_email = '';
                                         }
                                     })
                                 }}
@@ -180,14 +181,7 @@ export default ({onBack}) => {
                                 id='contact_email'
                                 name='contact_email'
                                 value={election.settings.contact_email}
-                                onChange={(e) => 
-                                    setElection({
-                                        ...election, settings: {
-                                            ...election.settings,
-                                            contact_email: e.target.value
-                                        }
-                                    })
-                                }
+                                onChange={(e) => updateElection(el => el.settings.contact_email = e.target.value)}
                                 variant='standard'
                                 fullWidth
                                 sx={{ mt: -1, display: 'block' }}
