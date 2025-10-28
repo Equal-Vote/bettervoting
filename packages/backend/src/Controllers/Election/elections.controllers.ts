@@ -10,7 +10,6 @@ import { ElectionRoll } from '@equal-vote/star-vote-shared/domain_model/Election
 import { sharedConfig } from '@equal-vote/star-vote-shared/config';
 import { hashString } from '../controllerUtils';
 
-
 var ElectionsModel =  ServiceLocator.electionsDb();
 var accountService = ServiceLocator.accountService();
 const className="Elections.Controllers";
