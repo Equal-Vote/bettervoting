@@ -182,46 +182,15 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate}) => {
         </Grid>
 
         <Grid container sx={{ m: 0, p: 1 }} >
-            {flags.isSet('PRECINCTS') && election.settings.voter_access !== 'open' && <Precincts/>}
-        </Grid>
-
-        <Grid container sx={{ m: 0, p: 1 }} >
             <VotingMethodSelector election={election} editedRace={editedRace} isDisabled={isDisabled} setErrors={setErrors} errors={errors} applyRaceUpdate={applyRaceUpdate} />
         </Grid>
 
         <Grid container sx={{ m: 0, p: 1 }} >
-            <Grid item xs={12} sx={{ m: 0, p: 1 }}>
-                <Typography gutterBottom variant="h6" component="h6">
-                    Candidates
-                </Typography>
-                <FormHelperText error sx={{ pl: 1, mt: -1 }}>
-                    {errors.candidates}
-                </FormHelperText>
-            </Grid>
+            <Button
+                // it's hacky, but opacity 0.8 does helps take the edge off the bold a bit
+                sx={{mr: "auto", textDecoration: 'none', textTransform: 'none', color: 'black', fontSize: '1.125rem', opacity: 0.86}}
+            >+ Add Candidates</Button>
         </Grid>
-        <Stack spacing={2}>
-            {
-                <SortableList
-                    items={election.state === 'draft' ? ephemeralCandidates : editedRace.candidates}
-                    identifierKey="candidate_id"
-                    onChange={handleChangeCandidates}
-                    renderItem={(candidate, index) => (
-                        <SortableList.Item id={candidate.candidate_id}>
-                            <CandidateForm
-                                key={candidate.candidate_id}
-                                onEditCandidate={(newCandidate) => onEditCandidate(newCandidate, index)}
-                                candidate={candidate}
-                                index={index}
-                                onDeleteCandidate={() => onDeleteCandidate(index)}
-                                disabled={ephemeralCandidates.length - 1 === index || election.state !== 'draft'}
-                                inputRef={(el: React.MutableRefObject<HTMLInputElement[]>) => inputRefs.current[index] = el}
-                                onKeyDown={(event: React.KeyboardEvent<HTMLInputElement>) => handleKeyDown(event, index)}
-                                electionState={election.state} />
-                        </SortableList.Item>
-                    )}
-                />
-            }
-        </Stack>
     </>
 }
 
@@ -280,10 +249,10 @@ const TitleAndDescription = ({setErrors, errors, editedRace, applyRaceUpdate}) =
             </FormHelperText>
         </Grid>}
         <Button
-            sx={{textDecoration: 'none', color: 'gray'}}
+            sx={{textDecoration: 'none', textTransform: 'none', color: 'black', fontSize: '1.125rem', opacity: 0.86}}
             onClick={() => setShowDescription(d => !d)}
         >
-            {showDescription? 'Hide Description' : '+ Add Description'}
+            {showDescription? 'Hide Description' : '+ Add Description (Optional)'}
         </Button>
     </>
 }

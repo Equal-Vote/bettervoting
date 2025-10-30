@@ -1,4 +1,4 @@
-import { ExpandLess, ExpandMore } from "@mui/icons-material";
+import { Edit, ExpandLess, ExpandMore } from "@mui/icons-material";
 import { Box, Button, FormControlLabel, FormHelperText, IconButton, Radio, RadioGroup, TextField, Typography } from "@mui/material"
 import { useEffect, useState } from "react";
 import { PrimaryButton, SecondaryButton } from "~/components/styles";
@@ -233,21 +233,20 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
     // <Typography gutterBottom variant="h6" component="h6">Choose Voting Method</Typography>
     return <Box display='flex' flexDirection='column' sx={{width: '100%'}}>
         <Button
-            variant='outlined'
             // it's hacky, but opacity 0.8 does helps take the edge off the bold a bit
-            sx={{ margin: 'auto', textTransform: 'none', opacity: 0.8, ...errorSx()}}
+            sx={{mr: "auto", textDecoration: 'none', textTransform: 'none', color: 'black', fontSize: '1.125rem', opacity: 0.86}}
             disabled={methodStep != 'unset' && methodStep != 'done'}
             onClick={() => setMethodStep('family')}
         >
-            {methodStep == 'unset' ? <>
-               {'<select voting method>'}
+            {methodStep != 'done' ? <>
+                + Choose Voting Method
             </> : <>
                 {editedRace.voting_method == undefined ? '___' : t(`methods.${methodValueToTextKey[editedRace.voting_method]}.full_name`)} with&nbsp;
                 {editedRace.num_winners == undefined ? '___' : editedRace.num_winners}&nbsp;
                 {methodFamily == undefined || methodFamily == 'single_winner' ? '' : <>{t(`edit_race.${methodFamily}_adj`)}&nbsp;</>}
                 {methodFamily == 'single_winner'? 'winner' : 'winners'}
             </>}
-            <EditIcon sx={{ml: 1}}/>
+            {methodStep == 'done' && <EditIcon sx={{ml: 1}}/>}
         </Button>
         <FormHelperText error sx={{ pl: 1}}>
             {errors.votingMethod}

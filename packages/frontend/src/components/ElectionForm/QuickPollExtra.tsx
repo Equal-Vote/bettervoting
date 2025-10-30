@@ -7,6 +7,7 @@ import useAuthSession from "../AuthSessionContextProvider";
 import { usePostElection } from "~/hooks/useAPI";
 import { useNavigate } from "react-router";
 import useElection from "../ElectionContextProvider";
+import { useCookie } from "~/hooks/useCookie";
 
 const templateMappers = {
     'demo': (election: NewElection): NewElection => ({
@@ -56,6 +57,7 @@ export default ({onBack}) => {
     const { makeRequest: postElection } = usePostElection()
     const navigate = useNavigate();
     const [titleMatchesRace, setTitleMatchesRace] = useState(true);
+    const [tempID] = useCookie('temp_id', '0')
 
     const StepButtons = ({ activeStep, setActiveStep, canContinue }: { activeStep: number, setActiveStep: React.Dispatch<React.SetStateAction<number>>, canContinue: boolean }) => <>
         <SecondaryButton
@@ -85,8 +87,7 @@ export default ({onBack}) => {
     </>
 
     const onAddElection = async (election) => {
-        // calls post election api, throws error if response not ok
-        election.owner_id = authSession.getIdField('sub');
+        election.owner_id = authSession.isLoggedIn() ? authSession.getIdField('sub') : tempID;
 
         const newElection = await postElection({Election: election})
         if (!newElection) throw Error("Error submitting election");
