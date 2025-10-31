@@ -21,7 +21,7 @@ test.describe('Add Voters', () => {
             data: {
                 "Election": {
                     "title": "Playwright Test Election",
-                    //TODO: owner_id probably shouldn't be hardcoded, but would need to add some jwt 
+                    //TODO: owner_id probably shouldn't be hardcoded, but would need to add some jwt
                     //decoding and connecting to keycloak to fix it
                     "owner_id": sub,
                     "description": "",
@@ -135,7 +135,7 @@ test.describe('Add Voters', () => {
     });
 
     test('add voters', async ({page}) => {
-    
+
         await page.goto(`/${electionId}/admin/voters`);
         await page.getByRole('button', {name: 'Add Voters'}).click();
         await page.getByLabel('Voter Data').fill(voterIds.join('\n'));
@@ -196,7 +196,7 @@ test.describe('Add Voters', () => {
         await expect(page.getByRole('textbox', { name: 'Description' })).toBeDisabled();
         await expect(page.getByRole('button', { name: 'Save' })).toBeDisabled();
         await page.getByRole('button', { name: 'Cancel' }).click();
-        await expect(page.getByRole('heading', { name: '(no description)' })).toBeVisible();
+        await expect(page.getByText('(no description)')).toBeVisible();
         await expect(page.getByText('(start and end times disabled)')).toBeVisible();
         await expect(page.getByRole('link', { name: 'View Results' })).toBeVisible();
         await expect(page.getByRole('button', { name: 'Share Election' })).toBeVisible();
@@ -269,7 +269,7 @@ test.describe('Add Voters', () => {
 
     });
 
-        
+
     test.afterEach(async ({ page }) => {
         //delete election when finished
         if (electionId) {

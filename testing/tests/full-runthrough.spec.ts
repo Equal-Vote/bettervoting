@@ -5,9 +5,8 @@ let electionId = '';
 
 test('full runthrough', async ({ page }) => {
 	await page.goto('/');
-	await page.getByRole('button', { name: 'New Election' }).click();
+	await page.getByRole('link', { name: 'Create Election' }).click();
 	await page.getByLabel('Election', { exact: true }).click();
-	await page.getByRole('button', { name: 'Continue' }).click();
 	await page.locator('#election-title').fill('Playwright Test Election');
 	//wait until there is only one continue button
 	while (
@@ -23,8 +22,8 @@ test('full runthrough', async ({ page }) => {
 	await page.getByLabel('No').click();
 	await page.getByRole('button', { name: 'Continue' }).click();
 	await page.getByRole('button', { name: 'Allows multiple votes per' }).click();
-	await expect(page.getByText('draft')).toBeVisible();
-	expect(await page.getByLabel('no limit')).toBeChecked();
+	await expect(page.getByText('draft')).toBeVisible({ timeout: 2000 });
+	await expect(page.getByLabel('no limit')).toBeChecked();
 	const url = await page.url();
 	const urlArray = url.split('/');
 	electionId = urlArray[urlArray.length - 2];
