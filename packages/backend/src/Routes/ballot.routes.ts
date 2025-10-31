@@ -2,6 +2,7 @@ import {
     getBallotsByElectionID,
     deleteAllBallotsForElectionID,
     getBallotByBallotID,
+    getBallotByVoterID,
     castVoteController,
     getAnonymizedBallotsByElectionID,
     uploadBallotsController
@@ -148,6 +149,41 @@ ballotRouter.delete('/Election/:id/ballots', asyncHandler(deleteAllBallotsForEle
  *        description: Ballot not found 
 */
 ballotRouter.get('/Election/:id/ballot/:ballot_id', asyncHandler(getBallotByBallotID))
+
+/**
+ * @swagger
+ * /Election/{id}/voter/{voter_id}/ballot:
+ *   get:
+ *     summary: Get ballot by voter ID
+ *     tags: [Ballots]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The election ID
+ *       - in: path
+ *         name: voter_id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The voter ID
+ *     responses:
+ *       200:
+ *         description: Ballot details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ballot:
+ *                   type: object
+ *                   $ref: '#/components/schemas/Ballot'
+ *       204:
+ *        description: Ballot not found
+*/
+ballotRouter.get('/Election/:id/voter/:voter_id/ballot', asyncHandler(getBallotByVoterID));
 
 /** 
  * @swagger

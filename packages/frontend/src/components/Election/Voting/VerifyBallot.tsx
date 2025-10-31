@@ -4,38 +4,30 @@ import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { Box, Divider, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
 import { useParams } from "react-router";
-import { useGetBallot } from "../../../hooks/useAPI";
+import { useGetBallotByVoterId } from "../../../hooks/useAPI";
 import useElection from "../../ElectionContextProvider";
-import { SecondaryButton } from "~/components/styles";
+import { PrimaryButton, SecondaryButton } from "~/components/styles";
 import ShareButton from "../ShareButton";
-import { Ballot } from "@equal-vote/star-vote-shared/domain_model/Ballot";
 import { useSubstitutedTranslation } from "../../util";
 
 
-interface ViewBallotProps {
-    ballot: Ballot | null,
-    onClose?: () => void
-}
-const ViewBallot = ({ ballot, onClose }: ViewBallotProps) => {
-    // ViewBallot doesn't iterate over races but it does referene them by index so we use the filtered version
+const VerifyBallot = () => {
     const { election } = useElection()
-    const { ballot_id } = useParams();
+    const { voter_id } = useParams();
     const { t } = useSubstitutedTranslation(election.settings.term_type);
 
-    const { data, isPending, makeRequest: fetchBallots } = useGetBallot(election.election_id, ballot_id)
-
+    const { data, isPending, makeRequest: fetchBallot } = useGetBallotByVoterId(election.election_id, voter_id)
+    console.log(`voterId: ${voter_id} electionId: ${election.election_id}`);
     useEffect(() => {
-        if (ballot_id) {
-            fetchBallots()
+        if (election.election_id && voter_id ) {
+            fetchBallot();
         }
-    }, [ballot_id])
-
-    const myballot = ballot === null ? data?.ballot : ballot;
+    }, [election, voter_id])
 
     return (
         <Container>
             {isPending && <div> Loading Data... </div>}
-            {myballot &&
+            {data?.ballot &&
                 <>
                 <Box display='flex' flexDirection='column' alignItems='center' sx={{maxWidth: '800px', margin: 'auto'}}>
                     <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', flexDirection: { xs: 'column', sm: 'row' } }} >
@@ -62,24 +54,19 @@ const ViewBallot = ({ ballot, onClose }: ViewBallotProps) => {
                 <Divider sx={{my: 4}}/>
 
                 <Grid container direction="column" >
-                    <Grid item sm={12}>
-                        <Typography align='left' variant="h6" component="h6">
-                            {`Ballot ID: ${myballot.ballot_id}`}
-                        </Typography>
-                    </Grid>
-                    {myballot.precinct &&
+                    {data?.ballot.precinct &&
                         <Grid item sm={12}>
                             <Typography align='left' variant="h6" component="h6">
-                                {`Precinct: ${myballot.precinct}`}
+                                {`Precinct: ${data?.ballot.precinct}`}
                             </Typography>
                         </Grid>
                     }
                     <Grid item sm={12}>
                         <Typography align='left' variant="h6" component="h6">
-                            {`Status: ${myballot.status}`}
+                            {`Status: ${data?.ballot.status}`}
                         </Typography>
                     </Grid>
-                    {myballot.votes.map((vote, v) => (
+                    {data?.ballot.votes.map((vote, v) => (
                         <>
 
                             <Typography align='left' variant="h6" component="h6">
@@ -113,9 +100,23 @@ const ViewBallot = ({ ballot, onClose }: ViewBallotProps) => {
                             </TableContainer>
                         </>
                     ))}
-                    {onClose &&
-                        <Grid item sm={4}>
-                            <SecondaryButton onClick={() => { onClose() }} > Close </SecondaryButton>
+                    { election.state === 'open' && election.settings.ballot_updates && data.ballot &&
+                        <Grid item sm={4} >
+                            <Box sx={{
+                                  display: "flex",
+                                  justifyContent: "center",
+                                  alignItems: "center",
+                                  size: "grow",
+                                  minHeight: "10vh",
+                                }}
+                            >
+                                <PrimaryButton
+                                    type='button'
+                                    sx={{ marginLeft: {xs: '10px', md: '40px'}}}
+                                    href={`/${election.election_id}/vote`} >
+                                    {t('ballot_submitted.edit')}
+                                </PrimaryButton>
+                            </Box>
                         </Grid>
                     }
                 </Grid>
@@ -124,4 +125,4 @@ const ViewBallot = ({ ballot, onClose }: ViewBallotProps) => {
     )
 }
 
-export default ViewBallot 
+export default VerifyBallot; 

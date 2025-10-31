@@ -1,14 +1,11 @@
-import { useEffect, useState } from "react"
-import { useLocation, useNavigate } from "react-router";
+import { useEffect } from "react"
 import Container from '@mui/material/Container';
 import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
-import ViewBallot from "./ViewBallot";
 import { useGetBallots } from "../../../hooks/useAPI";
 import useElection from "../../ElectionContextProvider";
 import useFeatureFlags from "../../FeatureFlagContextProvider";
 import DraftWarning from "../DraftWarning";
 import { BallotDataExport } from "../Results/BallotDataExport";
-import { SecondaryButton } from "~/components/styles";
 
 const ViewBallots = () => {
     // some ballots will have different subsets of the races, but we need the full list anyway
@@ -18,31 +15,8 @@ const ViewBallots = () => {
 
     const flags = useFeatureFlags();
     useEffect(() => { fetchBallots() }, [])
-    const [isViewing, setIsViewing] = useState(false)
-    const [addRollPage, setAddRollPage] = useState(false)
-    const [selectedBallot, setSelectedBallot] = useState(null)
-    const navigate = useNavigate();
-    const location = useLocation();
 
 
-    const onOpen = (ballot) => {
-        setIsViewing(true);
-        setSelectedBallot({ ...ballot })
-        navigate(`${location.pathname}?viewing=true`, { replace: false });
-    }
-    const onClose = () => {
-        setIsViewing(false)
-        setAddRollPage(false)
-        setSelectedBallot(null)
-        fetchBallots()
-        navigate(location.pathname, { replace: false });
-    }
-    useEffect(() => {
-        if (!location.search.includes('viewing=true') && isViewing) {
-            onClose();
-        }
-    }, [location.search])
-    
     return (
         <Container>
             <DraftWarning />
@@ -53,7 +27,7 @@ const ViewBallots = () => {
                 View Ballots
             </Typography>
             {isPending && <div> Loading Data... </div>}
-            {data && data.ballots && !isViewing && !addRollPage &&
+            {data?.ballots &&
                 <>
                     <TableContainer component={Paper}>
                         <Table style={{ width: '100%' }} aria-label="simple table">
@@ -81,7 +55,6 @@ const ViewBallots = () => {
                                         </TableCell>
                                     ))
                                 ))}
-                                <TableCell> View </TableCell>
                             </TableHead>
                             <TableBody>
                                 {data.ballots.map((ballot) => (
@@ -95,7 +68,6 @@ const ViewBallots = () => {
                                             vote.scores.map((score) => (
                                                 <TableCell key={score.candidate_id}>{score.score || ''}</TableCell>
                                             ))))}
-                                        <TableCell ><SecondaryButton onClick={() => onOpen(ballot)} > View </SecondaryButton></TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -104,9 +76,6 @@ const ViewBallots = () => {
 
                     <BallotDataExport election={election}/>
                 </>
-            }
-            {isViewing && selectedBallot &&
-                <ViewBallot ballot={selectedBallot} onClose={onClose} />
             }
         </Container>
     )

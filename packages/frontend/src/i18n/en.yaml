@@ -187,6 +187,7 @@ ballot_submitted:
   results: Results
   donate: Donate to Equal Vote to support open source voting software
   end_time: '{{capital_election}} ends {{date}} at {{time}}'
+  edit: Edit Ballot
 
 # Localisation for numbers
 number:

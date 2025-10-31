@@ -8,7 +8,7 @@ import { Routes, Route } from 'react-router-dom'
 import Sidebar from "./Sidebar";
 import { Box } from "@mui/material";
 import Thanks from "./Voting/Thanks";
-import ViewBallot from "./Admin/ViewBallot";
+import VerifyBallot from  "./Voting/VerifyBallot";
 import { ElectionContextProvider } from "../ElectionContextProvider";
 import { useElectionExists } from "../../hooks/useAPI";
 import { sharedConfig } from "@equal-vote/star-vote-shared/config";
@@ -39,8 +39,8 @@ const Election = () => {
               <Route path='/thanks' element={<Thanks />} />
               <Route path='/results' element={<ViewElectionResults />} />
               <Route path='/admin/*' element={<Admin />} />
-              <Route path='/ballot/:ballot_id' element={<ViewBallot ballot={null} onClose={null} />} />
               <Route path='/id/:voter_id' element={<ElectionHome />} />
+              <Route path='/id/:voter_id/ballot' element={<VerifyBallot />} />
             </Routes>
           </Box>
         </Box>

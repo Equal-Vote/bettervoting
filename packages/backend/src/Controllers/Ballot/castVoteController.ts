@@ -65,7 +65,7 @@ async function makeBallotEvent(req: IElectionRequest, targetElection: Election, 
         }
         const validationErr = ballotValidation(targetElection, inputBallot);
         if (validationErr){
-            const errMsg = "Invalid Ballot: "+ validationErr
+            const errMsg = `Invalid Ballot: ${validationErr}`;
             Logger.info(req, errMsg);
             throw new BadRequest(errMsg);
         }
@@ -80,7 +80,13 @@ async function makeBallotEvent(req: IElectionRequest, targetElection: Election, 
     // preserve the ballot id if it's already provided from prior election
     let updatableBallot;
     if (targetElection.settings.ballot_updates) {
-        updatableBallot = await BallotModel.getBallotByVoterID(roll!.voter_id, inputBallot.election_id, req);
+        try {
+            updatableBallot = await BallotModel.getBallotByVoterID(roll!.voter_id, inputBallot.election_id, req);
+        } catch(e: any) {
+            const msg = "Error searching for prior ballot";
+            Logger.error(req, msg, e);
+            throw new InternalServerError(msg);
+        }
     }
     if (updatableBallot) {
         inputBallot.ballot_id = updatableBallot.ballot_id;
@@ -274,7 +280,7 @@ async function handleCastVoteEvent(job: { id: string; data: CastVoteEvent; }):Pr
             throw new InternalServerError("Target Election null: " + ctx.contextId);
         }
         const url = ServiceLocator.globalData().mainUrl;
-        const receipt = Receipt(targetElection, event.userEmail, savedBallot, url, event.roll)
+        const receipt = Receipt(targetElection, event.userEmail, url, event.roll)
         await EmailService.sendEmails([receipt])
     }
 }

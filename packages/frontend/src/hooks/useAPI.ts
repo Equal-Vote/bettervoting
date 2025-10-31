@@ -138,6 +138,10 @@ export const useGetBallot = (election_id: string, ballot_id: string | undefined)
     return useFetch<undefined, { ballot: Ballot }>(`/API/Election/${election_id}/ballot/${ballot_id}`, 'get')
 }
 
+export const useGetBallotByVoterId = (election_id: string, voter_id: string | undefined) => {
+    return useFetch<undefined, { ballot: Ballot }>(`/API/Election/${election_id}/voter/${voter_id}/ballot`, 'get')
+}
+
 export const useGetBallots = (election_id: string | undefined) => {
     return useFetch<undefined, { election: Election, ballots: Ballot[] }>(`/API/Election/${election_id}/ballots`, 'get')
 }

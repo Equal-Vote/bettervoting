@@ -35,12 +35,12 @@ export default class BallotsDB implements IBallotStore {
         return Promise.resolve(resBallots);
     }
 
-    getBallotByVoterID(voter_id: string, election_id: string, ctx:ILoggingContext): Promise<Ballot | null> {
+    getBallotByVoterID(voter_id: string, election_id: string, ctx:ILoggingContext): Promise<Ballot | undefined> {
         const ballots = this.ballots.filter(
             (ballot) => ballot.user_id === voter_id
         );
         if (!ballots) {
-            return Promise.resolve(null);
+            return Promise.resolve(undefined);
         }
         var resBallots = JSON.parse(JSON.stringify(ballots));
         return Promise.resolve(resBallots);

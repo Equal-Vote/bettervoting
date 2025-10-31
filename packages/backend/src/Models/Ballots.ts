@@ -78,7 +78,7 @@ export default class BallotsDB implements IBallotStore {
         }
     }
 
-    getBallotByID(ballot_id: string, ctx: ILoggingContext, voter_id?:string,
+    getBallotByID(ballot_id: string, ctx: ILoggingContext,
                   db: Kysely<Database> | Transaction<Database> = this._postgresClient): Promise<Ballot | null> {
         Logger.debug(ctx, `${tableName}.getBallotByID ${ballot_id}`);
 
@@ -105,20 +105,21 @@ export default class BallotsDB implements IBallotStore {
             .execute();
     }
 
-    getBallotByVoterID(voter_id: string, election_id: string, ctx: ILoggingContext): Promise<Ballot | null> {
+    getBallotByVoterID(voter_id: string, election_id: string, ctx: ILoggingContext): Promise<Ballot | undefined> {
         Logger.debug(ctx, `${tableName}.getBallotByVoterID ${voter_id} ${election_id}`);
 
         return this._postgresClient
             .selectFrom(tableName)
-            .innerJoin(electionRollTableName, `${tableName}.ballot_id`, `${electionRollTableName}.ballot_id`)
+            .innerJoin(electionRollTableName,
+                (join) => join
+                    .onRef(`${tableName}.ballot_id`, '=', `${electionRollTableName}.ballot_id`)
+                    .onRef(`${tableName}.election_id`, '=', `${electionRollTableName}.election_id`)
+            )
             .selectAll(tableName)
             .where(`${electionRollTableName}.voter_id`, '=', voter_id)
+            .where(`${tableName}.election_id`, '=', election_id)
             .where(`${tableName}.head`, '=', true)
-            .executeTakeFirstOrThrow()
-            .catch((reason: any) => {
-                Logger.debug(ctx, `${tableName}.get null`, reason);
-                return null;
-            });
+            .executeTakeFirst();
     }
 
     deleteAllBallotsForElectionID(election_id: string, ctx: ILoggingContext): Promise<boolean> {

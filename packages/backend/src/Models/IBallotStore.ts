@@ -8,7 +8,7 @@ export interface IBallotStore {
     bulkSubmitBallots: (ballots: Ballot[], ctx:ILoggingContext, reason:string) => Promise<Ballot[]>;
     getBallotByID: (ballot_id: string, ctx:ILoggingContext) => Promise<Ballot | null>;
     getBallotsByElectionID: (election_id: string,  ctx:ILoggingContext) => Promise<Ballot[] | null>;
-    getBallotByVoterID: (voter_id: string, election_id: string,  ctx:ILoggingContext) => Promise<Ballot | null>;
+    getBallotByVoterID: (voter_id: string, election_id: string,  ctx:ILoggingContext) => Promise<Ballot | undefined>;
     delete(ballot_id: Uid,  ctx:ILoggingContext, reason:string): Promise<boolean>;
     deleteAllBallotsForElectionID: (election_id: string,  ctx:ILoggingContext) => Promise<boolean>;
 }
