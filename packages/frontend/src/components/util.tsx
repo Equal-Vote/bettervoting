@@ -6,6 +6,7 @@ import i18n from "~/i18n/i18n";
 import useSnackbar from "./SnackbarContext";
 import { ArrowForwardIos } from "@mui/icons-material";
 import { getEntry } from "@equal-vote/star-vote-shared/domain_model/Util";
+import { createHash } from "crypto-browserify";
 
 const rLink = /\[(.*?)\]\((.*?)\)/;
 const rBold = /\*\*(.*?)\*\*/;
@@ -37,6 +38,11 @@ export const tabToCandidate = (c, raceCandidates) => ({
 export const commaListFormatter = new Intl.ListFormat(i18n.languages[0], { style: 'long', type: 'conjunction' });
 
 export const capitalize = (str) => str[0].toUpperCase() + str.slice(1);
+
+// Note: it feels weird to have the same util function on both frontend and backend instead of using shared, but they need to use different libraries
+export function hashString(inputString: string) {
+    return createHash('sha256').update(inputString).digest('hex')
+}
 
 // mapping from method frontend version to backend version
 // TODO: we need make these consistent
@@ -162,8 +168,12 @@ export const useSubstitutedTranslation = (electionTermType = 'election', v = {})
   const { t, i18n } = useTranslation()
 
   const values = processValues({
+    // Ignoring "error TS2698: Spread types may only be created from object types." since we know they'll return objects
+    // @ts-ignore
     ...t('keyword'),
+    // @ts-ignore
     ...t(`keyword.${electionTermType}`),
+    // @ts-ignore
     ...t(`keyword.${v['methodKey'] ?? 'star'}`),
     ...v, formatParams: {
       datetime: dt,

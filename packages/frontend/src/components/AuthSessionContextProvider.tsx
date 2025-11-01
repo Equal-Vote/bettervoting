@@ -42,14 +42,18 @@ export function AuthSessionContextProvider({ children }: { children: React.React
     const [refreshToken, setRefreshToken] = useCookie('refresh_token', null, 24 * 5)
 
     const isLoggedIn = () => {
-        return accessToken !== null
+        // the backend uses the idToken to determine if the user is logged in, so it's a more accurate reference point
+        return idToken !== null
     }
 
     const openLogin = () => {
         const queryString = [
             `client_id=${authConfig.clientId}`,
             `response_type=${authConfig.responseType}`,
-            `redirect_uri=${authConfig.redirectUri}`,
+            // redirecting users to manage so they can immediately see the elections assigned to their account
+            // TODO: Once the logged in dashboard has been implemented we can remove the /manage
+            // https://github.com/Equal-Vote/bettervoting/issues/889
+            `redirect_uri=${authConfig.redirectUri.replace(/\/$/, '/manage')}`,
             `scope=openid`,
         ].join('&');
 
@@ -57,11 +61,12 @@ export function AuthSessionContextProvider({ children }: { children: React.React
     }
 
     const openLogout = () => {
+        let redirect = authConfig.redirectUri.replace(/\/$/, '/')
         const queryString = [
             `client_id=${authConfig.clientId}`,
-            `logout_uri=${authConfig.redirectUri}`,
+            `logout_uri=${redirect}`,
             `id_token_hint=${idToken}`,
-            `post_logout_redirect_uri=${authConfig.redirectUri}`,
+            `post_logout_redirect_uri=${redirect}`,
         ].join('&');
 
         setAccessToken(null)

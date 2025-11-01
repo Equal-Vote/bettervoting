@@ -295,17 +295,13 @@ const QuickPoll = () => {
                     
                 <SecondaryButton
                     onClick={(e) => {
-                        if(authSession.isLoggedIn()){
-                            if(validateForm(e)){
-                                createElectionContext.openDialog(election)
-                            }
-                        }else{
-                            authSession.openLogin()
-                        } 
+                        if(validateForm(e)){
+                            createElectionContext.openDialog(election)
+                        }
                     }}
                     disabled={isPending}
                 >
-                    {authSession.isLoggedIn() ? t('landing_page.quick_poll.continue_with_editor') : t('landing_page.quick_poll.sign_in')}
+                    {t('landing_page.quick_poll.continue_with_editor')}
                 </SecondaryButton>
             </Box>
         </form >

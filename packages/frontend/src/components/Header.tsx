@@ -1,9 +1,7 @@
-import { useContext, useState } from 'react';
+import { useContext } from 'react';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import { Accordion, AccordionDetails, AccordionSummary, Box, IconButton, Link, Menu, MenuItem } from '@mui/material';
+import { Accordion, AccordionDetails, AccordionSummary, Box, IconButton, Link, MenuItem } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import useAuthSession from './AuthSessionContextProvider';
@@ -11,7 +9,6 @@ import { useThemeSelector } from '../theme';
 import useFeatureFlags from './FeatureFlagContextProvider';
 import { CreateElectionContext } from './ElectionForm/CreateElectionDialog';
 import { openFeedback, useSubstitutedTranslation } from './util';
-import KeyboardArrowDownRoundedIcon from '@mui/icons-material/KeyboardArrowDownRounded';
 import { makeID, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
 
 import { ReturnToClassicContext } from './ReturnToClassicDialog';
@@ -26,8 +23,8 @@ const Header = () => {
     const authSession = useAuthSession()
     // this is important for setting the default value
     useCookie('temp_id', makeID(ID_PREFIXES.VOTER, ID_LENGTHS.VOTER))
-    const [openedMenu, setOpenedMenu] = useState(null);
     const {t} = useSubstitutedTranslation();
+    
 
     const createElectionContext = useContext(CreateElectionContext);
 

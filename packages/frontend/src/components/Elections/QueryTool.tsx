@@ -20,7 +20,6 @@ export default () => {
 
     const openElectionsData = useMemo(
         () => {
-            console.log(data)
             return data?.open_elections ? [...data.open_elections] : []
         },
         [data]

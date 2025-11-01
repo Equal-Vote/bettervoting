@@ -23,12 +23,10 @@ import {
     setPublicResults,
     sendEmailsController,
     queryElections,
+    claimElection,
 } from '../Controllers/Election';
 import {upload, uploadImageController} from '../Controllers/uploadImageController';
 import asyncHandler from 'express-async-handler';
-
-
-
 
 /**
  * @swagger
@@ -56,7 +54,6 @@ import asyncHandler from 'express-async-handler';
 */
 
 electionsRouter.get('/Election/:id', asyncHandler(returnElection));
-
 
 /** 
  * @swagger
@@ -86,6 +83,46 @@ electionsRouter.get('/Election/:id', asyncHandler(returnElection));
  *         description: Election not found
  */
 electionsRouter.get('/Election/:_id/exists', asyncHandler(electionExistsByID))
+
+/** 
+ * @swagger
+ * /Election/{id}/claim:
+ *   get:
+ *     summary: Claims a election that was created without an account
+ *     tags: [Elections]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The election ID
+ * 
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               claim_key:
+ *                 type: string
+ * 
+ *     responses:
+ *       200:
+ *         description: If claim was successful
+ *         content: 
+ *          application/json:
+ *           schema:
+ *            type: object
+ *            properties:
+ *             success:
+ *              type: boolean
+ * 
+ *       404:
+ *         description: Election not found
+ */
+electionsRouter.post('/Election/:id/claim', asyncHandler(claimElection))
 
 /**
  * @swagger
@@ -696,11 +733,6 @@ electionsRouter.post('/Election/:id/sendInvite/:voter_id', asyncHandler(sendInvi
 electionsRouter.post('/images',upload.single("file"), asyncHandler(uploadImageController))
 
 
-  
-
-
-
-//router.param('id', asyncHandler(electionController.getElectionByID))
 electionsRouter.param('id', asyncHandler(getElectionByID))
 electionsRouter.param('id', asyncHandler(electionSpecificAuth))
 electionsRouter.param('id', asyncHandler(electionPostAuthMiddleware))

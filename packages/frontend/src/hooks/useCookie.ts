@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-function setCookie(name: string ,value: string, hours: number | null =null) {
+export function setCookie(name: string ,value: string, hours: number | null =null) {
     let expires = "";
     if (hours) {
         const date = new Date();

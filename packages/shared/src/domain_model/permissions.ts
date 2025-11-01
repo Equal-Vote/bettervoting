@@ -23,6 +23,7 @@ export const permissions = {
   canFlagBallot:             [roles.system_admin, roles.owner, roles.admin, roles.auditor],
   canInvalidateBallot:       [roles.system_admin, roles.owner],
   canEditElectionState:      [roles.system_admin, roles.owner],
+  canClaimElection:          [roles.system_admin, roles.owner],
   canViewPreliminaryResults: [roles.system_admin, roles.owner, roles.admin, roles.auditor],
   canSendEmails:             [roles.system_admin, roles.owner, roles.admin],
   canUpdatePublicArchive:    [roles.system_admin],
