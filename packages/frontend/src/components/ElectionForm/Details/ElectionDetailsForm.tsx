@@ -189,7 +189,7 @@ export default function ElectionDetailsForm({editedElection, applyUpdate, errors
                             />
                             <FormHelperText error={!!errors.startTime} sx={{ pl: 0, mt: 0 }}>
                                 {errors.startTime || (editedElection.start_time && timeZone !== DateTime.now().zone.name &&
-                                    `${DateTime.now().zone.name}: ${DateTime.fromJSDate(editedElection.start_time).setZone(DateTime.now().zone.name).toLocaleString(DateTime.DATETIME_SHORT)}`
+                                    `${DateTime.now().zone.name}: ${DateTime.fromJSDate(new Date(editedElection.start_time)).setZone(DateTime.now().zone.name).toLocaleString(DateTime.DATETIME_SHORT)}`
                                 )}
                             </FormHelperText>
                         </FormControl>
@@ -215,7 +215,7 @@ export default function ElectionDetailsForm({editedElection, applyUpdate, errors
                             />
                             <FormHelperText error={!!errors.endTime} sx={{ pl: 0, mt: 0 }}>
                                 {errors.endTime || (editedElection.end_time && timeZone !== DateTime.now().zone.name &&
-                                    `${DateTime.now().zone.name}: ${DateTime.fromJSDate(editedElection.end_time).setZone(DateTime.now().zone.name).toLocaleString(DateTime.DATETIME_SHORT)}`
+                                    `${DateTime.now().zone.name}: ${DateTime.fromJSDate(new Date(editedElection.end_time)).setZone(DateTime.now().zone.name).toLocaleString(DateTime.DATETIME_SHORT)}`
                                 )}
                             </FormHelperText>
                         </FormControl>
