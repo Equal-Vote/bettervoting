@@ -11,7 +11,7 @@ import { CreateElectionContext } from './CreateElectionDialog.js';
 import useSnackbar from '../SnackbarContext.js';
 import { makeID, makeUniqueIDSync, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
 
-import { methodTextKeyToValue, RowButtonWithArrow, useSubstitutedTranslation } from '../util.jsx';
+import { methodTextKeyToValue, RowButtonWithArrow, TransitionBox, useSubstitutedTranslation } from '../util.jsx';
 import useAuthSession from '../AuthSessionContextProvider.js';
 import RaceForm from './Races/RaceForm.js';
 import { VotingMethod } from '@equal-vote/star-vote-shared/domain_model/Race';
@@ -60,7 +60,7 @@ const makeDefaultElection = () => {
             random_candidate_order: false,
             require_instruction_confirmation: true,
             draggable_ballot: false,
-            term_type: 'poll',
+            term_type: undefined,
         }
     } as NewElection;
 }
@@ -74,6 +74,7 @@ const QuickPoll = () => {
     const { isPending, makeRequest: postElection } = usePostElection()
     const { setSnack} = useSnackbar();
     const [election, setElection] = useState<NewElection>(makeDefaultElection())
+    const [multiRace, setMultiRace] = useState(undefined);
 
     const confirm = useConfirm();
 
@@ -174,7 +175,7 @@ const QuickPoll = () => {
     const width = '500px';
 
     const onNext = async (editedRace) => {
-        const confirmed = await confirm(t('landing_page.quick_poll.publish_confirm'));
+        const confirmed = await confirm(t('election_creation.publish_confirm'));
         if (confirmed) {
             navigate(`/pet`)
         }else{
@@ -217,14 +218,21 @@ const QuickPoll = () => {
                 }}
             >
                 <Box sx={pageSX}>
-                    <Typography variant='h5' color={'lightShade.contrastText'}>{t('landing_page.quick_poll.title')}</Typography>
-                    <QuickPollBasics/>
-                    <RaceForm
-                        raceIndex={0}
-                        onCancel={() => setPage(pg => pg+1)}
-                        onConfirm={onNext}
-                        styling='QuickPoll'
-                    />
+                    <Typography variant='h5' color={'lightShade.contrastText'}>{t('election_creation.title')}</Typography>
+                    <QuickPollBasics multiRace={multiRace} setMultiRace={setMultiRace}/>
+                    <Box sx={{position: 'relative'}}>
+                        <TransitionBox absolute enabled={multiRace === true} sx={{textAlign: 'left', pl: 2}}>
+                            Races will be added later
+                        </TransitionBox>
+                    </Box>
+                    <TransitionBox enabled={multiRace === false}>
+                        <RaceForm
+                            raceIndex={0}
+                            onCancel={() => setPage(pg => pg+1)}
+                            onConfirm={onNext}
+                            styling='QuickPoll'
+                        />
+                    </TransitionBox>
                 </Box>
                 <Box sx={{...pageSX, textAlign: 'left'}}>
                     <QuickPollExtra onBack={() => setPage(pg => pg-1)}/>

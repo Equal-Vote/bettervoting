@@ -4,13 +4,17 @@ import { useTranslation } from "react-i18next";
 import { SecondaryButton, Tip } from "./styles";
 import i18n from "~/i18n/i18n";
 import useSnackbar from "./SnackbarContext";
-import { ArrowForwardIos } from "@mui/icons-material";
+import { AddCircleOutlineRounded, ArrowForwardIos } from "@mui/icons-material";
 import { getEntry } from "@equal-vote/star-vote-shared/domain_model/Util";
 import { createHash } from "crypto-browserify";
+import RemoveCircleOutlineRoundedIcon from '@mui/icons-material/RemoveCircleOutlineRounded';
 
 const rLink = /\[(.*?)\]\((.*?)\)/;
 const rBold = /\*\*(.*?)\*\*/;
 const rTip = / !tip\((.*)\)/;
+
+export const AddIcon = ({prefix=false}) => <AddCircleOutlineRounded sx={{mr: (prefix? 1 : 0)}}/>
+export const MinusIcon = ({prefix=false}) => <RemoveCircleOutlineRoundedIcon sx={{mr: (prefix? 1 : 0)}}/>
 
 export type StringObject = {[key: string]: string};
 export type NumberObject = {[key: string]: number};
@@ -27,6 +31,18 @@ declare namespace Intl {
     public format: (item: DateTime) => string;
   }
 }
+
+export const TransitionBox = ({enabled, sx={}, isPrevious=false, absolute=false, children}) => <Box sx={{
+  opacity: enabled ? 1 : 0,
+  top: enabled ? 0 : (isPrevious ? -20 : 20),
+  pointerEvents: enabled ? 'auto' : 'none',
+  transition: 'opacity 0.2s, top 0.2s',
+  position: absolute? 'absolute' : 'relative',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 1,
+  ...sx,
+}}> {children} </Box>
 
 // converts the candiate from ITabulator.ts to (capital C) Candidate
 // this will eventually be unnecessary (see #878)
@@ -174,6 +190,7 @@ export const useSubstitutedTranslation = (electionTermType = 'election', v = {})
     year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric',
     timeZoneName: 'short', timeZone: v['time_zone'] ?? undefined
   }
+
 
   const { t, i18n } = useTranslation()
 

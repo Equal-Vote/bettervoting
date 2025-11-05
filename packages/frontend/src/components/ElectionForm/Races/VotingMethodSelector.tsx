@@ -2,9 +2,8 @@ import { Edit, ExpandLess, ExpandMore } from "@mui/icons-material";
 import { Box, Button, FormControlLabel, FormHelperText, IconButton, Radio, RadioGroup, TextField, Typography } from "@mui/material"
 import { useEffect, useState } from "react";
 import { PrimaryButton, SecondaryButton } from "~/components/styles";
-import { methodValueToTextKey, useSubstitutedTranslation } from "~/components/util"
+import { AddIcon, methodValueToTextKey, TransitionBox, useSubstitutedTranslation } from "~/components/util"
 import EditIcon from '@mui/icons-material/Edit';
-import { flushSync } from "react-dom";
 
 type MethodStep = 'unset' | 'family' | 'num_winners' | 'method' | 'done';
 const stepIndex = {
@@ -238,15 +237,15 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
             disabled={methodStep != 'unset' && methodStep != 'done'}
             onClick={() => setMethodStep('family')}
         >
+            {methodStep == 'done' && <EditIcon sx={{scale: 1, mr: 1}}/>}
             {methodStep != 'done' ? <>
-                + Choose Voting Method
+                <AddIcon prefix/> Choose Voting Method
             </> : <>
                 {editedRace.voting_method == undefined ? '___' : t(`methods.${methodValueToTextKey[editedRace.voting_method]}.full_name`)} with&nbsp;
                 {editedRace.num_winners == undefined ? '___' : editedRace.num_winners}&nbsp;
                 {methodFamily == undefined || methodFamily == 'single_winner' ? '' : <>{t(`edit_race.${methodFamily}_adj`)}&nbsp;</>}
                 {methodFamily == 'single_winner'? 'winner' : 'winners'}
             </>}
-            {methodStep == 'done' && <EditIcon sx={{ml: 1}}/>}
         </Button>
         <FormHelperText error sx={{ pl: 1}}>
             {errors.votingMethod}
@@ -259,9 +258,15 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
             display: 'flex',
             justifyContent: 'flex-start'
         }}>
-            <Box sx={makeMethodStepSX('family')}> <FamilyPage/> </Box>
-            <Box sx={makeMethodStepSX('num_winners')}> <NumWinnersPage/> </Box>
-            <Box sx={makeMethodStepSX('method')}> <VotingMethodPage/> </Box>
+            <TransitionBox absolute enabled={methodStep == 'family'} isPrevious={stepIndex[methodStep] > stepIndex['family']}>
+                <FamilyPage/>
+            </TransitionBox>
+            <TransitionBox absolute enabled={methodStep == 'num_winners'} isPrevious={stepIndex[methodStep] > stepIndex['num_winners']}>
+                <NumWinnersPage/>
+            </TransitionBox>
+            <TransitionBox absolute enabled={methodStep == 'method'} isPrevious={stepIndex[methodStep] > stepIndex['method']}>
+                <VotingMethodPage/>
+            </TransitionBox>
         </Box>
 
         <FormHelperText error sx={{ pl: 1, pt: 0 }}>

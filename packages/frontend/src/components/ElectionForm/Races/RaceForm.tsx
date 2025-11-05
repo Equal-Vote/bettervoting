@@ -4,7 +4,7 @@ import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
 import Typography from '@mui/material/Typography';
 import { Box, Button, FormHelperText, Stack } from "@mui/material";
-import { useSubstitutedTranslation } from '../../util';
+import { AddIcon, MinusIcon, useSubstitutedTranslation } from '../../util';
 import useConfirm from '../../ConfirmationDialogProvider';
 import useFeatureFlags from '../../FeatureFlagContextProvider';
 import { SortableList } from '~/components/DragAndDrop';
@@ -189,7 +189,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate}) => {
             <Button
                 // it's hacky, but opacity 0.8 does helps take the edge off the bold a bit
                 sx={{mr: "auto", textDecoration: 'none', textTransform: 'none', color: 'black', fontSize: '1.125rem', opacity: 0.86}}
-            >+ Add Candidates</Button>
+            ><AddIcon prefix/> Add Candidates</Button>
         </Grid>
     </>
 }
@@ -252,7 +252,7 @@ const TitleAndDescription = ({setErrors, errors, editedRace, applyRaceUpdate}) =
             sx={{textDecoration: 'none', textTransform: 'none', color: 'black', fontSize: '1.125rem', opacity: 0.86}}
             onClick={() => setShowDescription(d => !d)}
         >
-            {showDescription? 'Hide Description' : '+ Add Description (Optional)'}
+            {showDescription? <><MinusIcon prefix/> Hide Description</> : <><AddIcon prefix/> Add Description (Optional)</>}
         </Button>
     </>
 }

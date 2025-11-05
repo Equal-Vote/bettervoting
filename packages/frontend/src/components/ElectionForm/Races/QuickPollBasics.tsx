@@ -1,17 +1,18 @@
 import { TermType } from "@equal-vote/star-vote-shared/domain_model/ElectionSettings"
-import { Box, Typography, RadioGroup, FormControlLabel, capitalize, Radio } from "@mui/material"
+import { Box, Typography, RadioGroup, FormControlLabel, capitalize, Radio, Divider } from "@mui/material"
 import useElection from "~/components/ElectionContextProvider";
 import { Tip } from "~/components/styles"
+import { TransitionBox } from "~/components/util";
 
-export default () => {
+export default ({multiRace, setMultiRace}) => {
     const {election, updateElection, t} = useElection();
-    return <Box display='flex' flexDirection='column' justifyContent='center' alignItems='left'>
-        <Typography>
+    return <Box display='flex' flexDirection='column' justifyContent='flexStart' alignItems='left' sx={{ m: 0, p: 2 }}>
+        <Typography sx={{textAlign: 'left'}}>
             {t('election_creation.term_question')}
             <Tip name='polls_vs_elections' />
         </Typography>
-        <RadioGroup row sx={{mx: 'auto'}}>
-            {['poll', 'election'].map((type, i) =>
+        <RadioGroup row>
+            {['election', 'poll'].map((type, i) =>
                 <FormControlLabel
                     key={i}
                     value={capitalize(t(`keyword.${type}.election`))}
@@ -22,5 +23,23 @@ export default () => {
                 />
             )}
         </RadioGroup>
+
+        <TransitionBox enabled={election.settings.term_type !== undefined}>
+            <Typography sx={{textAlign: 'left', mt: 2}}>
+                {t('election_creation.multi_race_question')}
+            </Typography>
+            <RadioGroup row>
+                {['single_race', 'multi_race'].map((type, i) =>
+                    <FormControlLabel
+                        key={i}
+                        value={capitalize(t(`election_creation.${type}`))}
+                        control={<Radio />}
+                        label={capitalize(t(`election_creation.${type}`))}
+                        onClick={() => setMultiRace(type === 'multi_race')}
+                        checked={(type === 'multi_race') === multiRace}
+                    />
+                )}
+            </RadioGroup>
+        </TransitionBox>
     </Box>
 }

@@ -341,6 +341,7 @@ keyword:
     candidate: candidate
     candidates: candidates
     race: race
+    races: races
     race_title: elected office title
     ballot: ballot
     vote: vote
@@ -351,6 +352,7 @@ keyword:
     candidate: option
     candidates: options
     race: question
+    races: questions
     race_title: question title
     ballot: response
     vote: response
@@ -464,7 +466,6 @@ landing_page:
 
   # Quick Poll Section
   quick_poll:
-    title: Create Election
     question_prompt: What is your poll question?
     option_prompt: Option {{number}}
     create: Create Quick Poll
@@ -473,11 +474,7 @@ landing_page:
     clear_all: Clear All
     title_label: '{{capital_race_title}}'
 
-    publish_confirm:
-      title: Publish?
-      message: Would you like to publish your simple poll now or continue to customize further? !tip(full_editor)
-      cancel: 'See more options'
-      submit: 'Publish Now'
+    
 
   # Election Stats Section
   election_stats:
@@ -870,10 +867,13 @@ editable_ballots:
 
 # Landing Page -> New Election Dialog
 election_creation:
-  dialog_title: Create an Election or Poll
+  title: Create an Election or Poll
 
-  term_title: Poll or Election?
   term_question: Which term best describes your situation?
+
+  multi_race_question: How many {{races}} will your {{election}} include?
+  single_race: Just one
+  multi_race: More than one
 
   title_title: Title?
   title_question: What's the title for your {{election}}? !tip(election_title) # TERM will be replaced with election or poll
@@ -898,6 +898,12 @@ election_creation:
 
   id_list_title: ID List
   id_list_description: Provide a list of IDs for your voters. Voters will authenticate themselves using their ID before voting
+
+  publish_confirm:
+      title: Publish?
+      message: Would you like to publish your simple poll now or continue to customize further? !tip(full_editor)
+      cancel: 'See more options'
+      submit: 'Publish Now'
 
 # Landing Page -> Return to Classic Dialog
 return_to_classic:
