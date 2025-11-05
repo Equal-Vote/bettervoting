@@ -6,26 +6,28 @@ import { TransitionBox } from "~/components/util";
 
 export default ({multiRace, setMultiRace}) => {
     const {election, updateElection, t} = useElection();
-    return <Box display='flex' flexDirection='column' justifyContent='flexStart' alignItems='left' sx={{ m: 0, p: 2 }}>
-        <Typography sx={{textAlign: 'left'}}>
-            {t('election_creation.term_question')}
-            <Tip name='polls_vs_elections' />
-        </Typography>
-        <RadioGroup row>
-            {['election', 'poll'].map((type, i) =>
-                <FormControlLabel
-                    key={i}
-                    value={capitalize(t(`keyword.${type}.election`))}
-                    control={<Radio />}
-                    label={capitalize(t(`keyword.${type}.election`))}
-                    onClick={() => updateElection(e => { e.settings.term_type = type as TermType })}
-                    checked={election.settings.term_type === type}
-                />
-            )}
-        </RadioGroup>
+    return <Box display='flex' flexDirection='column' justifyContent='flexStart' alignItems='left' sx={{ m: 0, p: 2, mb: 10 }} gap={10}>
+        <Box>
+            <Typography sx={{textAlign: 'left'}}>
+                {t('election_creation.term_question')}
+                <Tip name='polls_vs_elections' />
+            </Typography>
+            <RadioGroup row>
+                {['election', 'poll'].map((type, i) =>
+                    <FormControlLabel
+                        key={i}
+                        value={capitalize(t(`keyword.${type}.election`))}
+                        control={<Radio />}
+                        label={capitalize(t(`keyword.${type}.election`))}
+                        onClick={() => updateElection(e => { e.settings.term_type = type as TermType })}
+                        checked={election.settings.term_type === type}
+                    />
+                )}
+            </RadioGroup>
+        </Box>
 
         <TransitionBox enabled={election.settings.term_type !== undefined}>
-            <Typography sx={{textAlign: 'left', mt: 2}}>
+            <Typography sx={{textAlign: 'left'}}>
                 {t('election_creation.multi_race_question')}
             </Typography>
             <RadioGroup row>

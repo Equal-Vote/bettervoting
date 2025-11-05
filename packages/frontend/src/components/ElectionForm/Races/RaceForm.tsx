@@ -1,10 +1,9 @@
 import React, { MouseEventHandler, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import CandidateForm from "../Candidates/CandidateForm";
-import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
 import Typography from '@mui/material/Typography';
 import { Box, Button, FormHelperText, Stack } from "@mui/material";
-import { AddIcon, MinusIcon, useSubstitutedTranslation } from '../../util';
+import { AddIcon, MinusIcon, TransitionBox, useSubstitutedTranslation } from '../../util';
 import useConfirm from '../../ConfirmationDialogProvider';
 import useFeatureFlags from '../../FeatureFlagContextProvider';
 import { SortableList } from '~/components/DragAndDrop';
@@ -155,43 +154,35 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate}) => {
     }, [ephemeralCandidates.length, applyRaceUpdate]);
 
     const Precincts = () => <>
-        <Grid item xs={12}>
-            <TextField
-                id={`race-precincts`}
-                name="precincts"
-                label="Precincts"
-                disabled={isDisabled}
-                fullWidth
-                multiline
-                type="text"
-                value={editedRace.precincts ? editedRace.precincts.join('\n') : ''}
-                sx={{
-                    m: 1,
-                    boxShadow: 2,
-                }}
-                onChange={(e) => applyRaceUpdate(race => {
-                    race.precincts = e.target.value ? e.target.value.split('\n') : undefined;
-                })}
-            />
-        </Grid>
+        <TextField
+            id={`race-precincts`}
+            name="precincts"
+            label="Precincts"
+            disabled={isDisabled}
+            fullWidth
+            multiline
+            type="text"
+            value={editedRace.precincts ? editedRace.precincts.join('\n') : ''}
+            sx={{
+                m: 1,
+                boxShadow: 2,
+            }}
+            onChange={(e) => applyRaceUpdate(race => {
+                race.precincts = e.target.value ? e.target.value.split('\n') : undefined;
+            })}
+        />
     </>
 
-    return <>
-        <Grid container sx={{ m: 0, p: 1 }}>
-            <TitleAndDescription setErrors={setErrors} errors={errors} editedRace={editedRace} applyRaceUpdate={applyRaceUpdate} />
-        </Grid>
+    return <Box display='flex' flexDirection='column' alignItems='stretch' gap={10} sx={{textAlign: 'left'}}>
+        <TitleAndDescription setErrors={setErrors} errors={errors} editedRace={editedRace} applyRaceUpdate={applyRaceUpdate} />
 
-        <Grid container sx={{ m: 0, p: 1 }} >
-            <VotingMethodSelector election={election} editedRace={editedRace} isDisabled={isDisabled} setErrors={setErrors} errors={errors} applyRaceUpdate={applyRaceUpdate} />
-        </Grid>
+        <VotingMethodSelector election={election} editedRace={editedRace} isDisabled={isDisabled} setErrors={setErrors} errors={errors} applyRaceUpdate={applyRaceUpdate} />
 
-        <Grid container sx={{ m: 0, p: 1 }} >
-            <Button
-                // it's hacky, but opacity 0.8 does helps take the edge off the bold a bit
-                sx={{mr: "auto", textDecoration: 'none', textTransform: 'none', color: 'black', fontSize: '1.125rem', opacity: 0.86}}
-            ><AddIcon prefix/> Add Candidates</Button>
-        </Grid>
-    </>
+        <Button
+            // it's hacky, but opacity 0.8 does helps take the edge off the bold a bit
+            sx={{mr: "auto", textDecoration: 'none', textTransform: 'none', color: 'black', fontSize: '1.125rem', opacity: 0.86}}
+        ><AddIcon prefix/> Add Candidates</Button>
+    </Box>
 }
 
 const TitleAndDescription = ({setErrors, errors, editedRace, applyRaceUpdate}) => {
@@ -199,7 +190,7 @@ const TitleAndDescription = ({setErrors, errors, editedRace, applyRaceUpdate}) =
     const { election, t } = useElection()
     const isDisabled = election.state !== 'draft';
     return <>
-        <Grid item xs={12} sx={{ m: 0, p: 1 }}>
+        <Box>
             <TextField
                 id={`race-title`}
                 disabled={isDisabled}
@@ -221,38 +212,40 @@ const TitleAndDescription = ({setErrors, errors, editedRace, applyRaceUpdate}) =
             <FormHelperText error sx={{ pl: 1, pt: 0 }}>
                 {errors.raceTitle}
             </FormHelperText>
-        </Grid>
+        </Box>
 
-        {showDescription && <Grid item xs={12} sx={{ m: 0, p: 1 }}>
-            <TextField
-                id={`race-description`}
-                name="description"
-                label="Description"
-                disabled={isDisabled}
-                multiline
-                fullWidth
-                type="text"
-                error={errors.raceDescription !== ''}
-                value={editedRace.description}
-                minRows={3}
-                sx={{
-                    m: 0,
-                    boxShadow: 2,
-                }}
-                onChange={(e) => {
-                    setErrors({ ...errors, raceDescription: '' })
-                    applyRaceUpdate(race => { race.description = e.target.value })
-                }}
-            />
-            <FormHelperText error sx={{ pl: 1, pt: 0 }}>
-                {errors.raceDescription}
-            </FormHelperText>
-        </Grid>}
-        <Button
-            sx={{textDecoration: 'none', textTransform: 'none', color: 'black', fontSize: '1.125rem', opacity: 0.86}}
-            onClick={() => setShowDescription(d => !d)}
-        >
-            {showDescription? <><MinusIcon prefix/> Hide Description</> : <><AddIcon prefix/> Add Description (Optional)</>}
-        </Button>
+        <Box>
+            {showDescription && <>
+                <TextField
+                    id={`race-description`}
+                    name="description"
+                    label="Description"
+                    disabled={isDisabled}
+                    multiline
+                    fullWidth
+                    type="text"
+                    error={errors.raceDescription !== ''}
+                    value={editedRace.description}
+                    minRows={3}
+                    sx={{
+                        m: 0,
+                        boxShadow: 2,
+                    }}
+                    onChange={(e) => {
+                        setErrors({ ...errors, raceDescription: '' })
+                        applyRaceUpdate(race => { race.description = e.target.value })
+                    }}
+                />
+                <FormHelperText error sx={{ pl: 1, pt: 0 }}>
+                    {errors.raceDescription}
+                </FormHelperText>
+            </>}
+            <Button
+                sx={{textDecoration: 'none', textTransform: 'none', color: 'black', fontSize: '1.125rem', opacity: 0.86}}
+                onClick={() => setShowDescription(d => !d)}
+            >
+                {showDescription? <><MinusIcon prefix/> Hide Description</> : <><AddIcon prefix/> Add Description (Optional)</>}
+            </Button>
+        </Box>
     </>
 }

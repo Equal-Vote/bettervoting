@@ -75,7 +75,7 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
     })
 
     const FamilyPage = () => <>
-        <Typography id="num-winners-label" gutterBottom component="p" sx={{ marginTop: 2 }}>
+        <Typography id="num-winners-label" gutterBottom component="p">
             Single-Winner or Multi-Winner?
         </Typography>
         <RadioGroup
@@ -117,7 +117,7 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
     </>
 
     const NumWinnersPage = () => <>
-        <Box display='flex' flexDirection='row' gap={3}>
+        <Box display='flex' flexDirection='row' gap={3} sx={{width: '100%'}}>
             <Typography id="num-winners-label" gutterBottom component="p" sx={{ marginTop: 2 }}>
                 {t('edit_race.number_of_winners')}:
             </Typography>
@@ -149,7 +149,7 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
                 }}
             />
         </Box>
-        <Box display='flex' flexDirection='row' justifyContent='flex-end' gap={1}>
+        <Box display='flex' flexDirection='row' justifyContent='flex-end' gap={1} sx={{width: '100%'}}>
             <SecondaryButton onClick={() => {
                 setMethodStep('family')
             }}>Back</SecondaryButton>
@@ -228,9 +228,7 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
 
     const pad = 30;
 
-    const errorSx = () => errors.votingMethod ? { borderColor: 'red !important', color: 'red !important'} : {}
-    // <Typography gutterBottom variant="h6" component="h6">Choose Voting Method</Typography>
-    return <Box display='flex' flexDirection='column' sx={{width: '100%'}}>
+    return <Box>
         <Button
             // it's hacky, but opacity 0.8 does helps take the edge off the bold a bit
             sx={{mr: "auto", textDecoration: 'none', textTransform: 'none', color: 'black', fontSize: '1.125rem', opacity: 0.86}}
@@ -255,8 +253,6 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
             position: 'relative',
             height: `${[0, 180, 122, showAllMethods? 407 : 287, -pad][stepIndex[methodStep]]+pad}px`,
             transition: 'height 0.5s',
-            display: 'flex',
-            justifyContent: 'flex-start'
         }}>
             <TransitionBox absolute enabled={methodStep == 'family'} isPrevious={stepIndex[methodStep] > stepIndex['family']}>
                 <FamilyPage/>

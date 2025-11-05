@@ -38,9 +38,7 @@ export const TransitionBox = ({enabled, sx={}, isPrevious=false, absolute=false,
   pointerEvents: enabled ? 'auto' : 'none',
   transition: 'opacity 0.2s, top 0.2s',
   position: absolute? 'absolute' : 'relative',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 1,
+  width: '100%',
   ...sx,
 }}> {children} </Box>
 
