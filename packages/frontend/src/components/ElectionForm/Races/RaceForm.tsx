@@ -13,6 +13,7 @@ import VotingMethodSelector from './VotingMethodSelector';
 import useElection from '~/components/ElectionContextProvider';
 import { SecondaryButton, PrimaryButton } from '~/components/styles';
 import RaceDialog from './RaceDialog';
+import { QUICK_POLL_GAP } from '../QuickPoll';
 
 interface RaceFormProps {
     raceIndex?: number,
@@ -67,6 +68,8 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate}) => {
     const { election, t } = useElection()
     const isDisabled = election.state !== 'draft';
     const [] = useState(false);
+
+    const [candidatesExpaneded, setCandidatesExpanded] = useState(false);
 
     const confirm = useConfirm();
     const inputRefs = useRef([]);
@@ -173,7 +176,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate}) => {
         />
     </>
 
-    return <Box display='flex' flexDirection='column' alignItems='stretch' gap={10} sx={{textAlign: 'left'}}>
+    return <Box display='flex' flexDirection='column' alignItems='stretch' gap={QUICK_POLL_GAP} sx={{textAlign: 'left'}}>
         <TitleAndDescription setErrors={setErrors} errors={errors} editedRace={editedRace} applyRaceUpdate={applyRaceUpdate} />
 
         <VotingMethodSelector election={election} editedRace={editedRace} isDisabled={isDisabled} setErrors={setErrors} errors={errors} applyRaceUpdate={applyRaceUpdate} />
@@ -181,7 +184,33 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate}) => {
         <Button
             // it's hacky, but opacity 0.8 does helps take the edge off the bold a bit
             sx={{mr: "auto", textDecoration: 'none', textTransform: 'none', color: 'black', fontSize: '1.125rem', opacity: 0.86}}
-        ><AddIcon prefix/> Add Candidates</Button>
+            onClick={() => setCandidatesExpanded((e) => !e)}
+        >
+            {candidatesExpaneded? <MinusIcon prefix/> :<AddIcon prefix/>} Add Candidates
+        </Button>
+        <TransitionBox enabled={candidatesExpaneded}>
+            <Stack spacing={2}>
+                <SortableList
+                    items={election.state === 'draft' ? ephemeralCandidates : editedRace.candidates}
+                    identifierKey="candidate_id"
+                    onChange={handleChangeCandidates}
+                    renderItem={(candidate, index) => (
+                        <SortableList.Item id={candidate.candidate_id}>
+                            <CandidateForm
+                                key={candidate.candidate_id}
+                                onEditCandidate={(newCandidate) => onEditCandidate(newCandidate, index)}
+                                candidate={candidate}
+                                index={index}
+                                onDeleteCandidate={() => onDeleteCandidate(index)}
+                                disabled={ephemeralCandidates.length - 1 === index || election.state !== 'draft'}
+                                inputRef={(el: React.MutableRefObject<HTMLInputElement[]>) => inputRefs.current[index] = el}
+                                onKeyDown={(event: React.KeyboardEvent<HTMLInputElement>) => handleKeyDown(event, index)}
+                                electionState={election.state} />
+                        </SortableList.Item>
+                    )}
+                />
+            </Stack>
+        </TransitionBox>
     </Box>
 }
 

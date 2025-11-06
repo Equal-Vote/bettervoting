@@ -226,7 +226,7 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
         </Box>
     </>
 
-    const pad = 30;
+    const pad = 0; // 30 // may add this back later
 
     return <Box>
         <Button
@@ -254,13 +254,13 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
             height: `${[0, 180, 122, showAllMethods? 407 : 287, -pad][stepIndex[methodStep]]+pad}px`,
             transition: 'height 0.5s',
         }}>
-            <TransitionBox absolute enabled={methodStep == 'family'} isPrevious={stepIndex[methodStep] > stepIndex['family']}>
+            <TransitionBox absolute enabled={methodStep == 'family'} isExiting={stepIndex[methodStep] > stepIndex['family']}>
                 <FamilyPage/>
             </TransitionBox>
-            <TransitionBox absolute enabled={methodStep == 'num_winners'} isPrevious={stepIndex[methodStep] > stepIndex['num_winners']}>
+            <TransitionBox absolute enabled={methodStep == 'num_winners'} isExiting={stepIndex[methodStep] > stepIndex['num_winners']}>
                 <NumWinnersPage/>
             </TransitionBox>
-            <TransitionBox absolute enabled={methodStep == 'method'} isPrevious={stepIndex[methodStep] > stepIndex['method']}>
+            <TransitionBox absolute enabled={methodStep == 'method'} isExiting={stepIndex[methodStep] > stepIndex['method']}>
                 <VotingMethodPage/>
             </TransitionBox>
         </Box>

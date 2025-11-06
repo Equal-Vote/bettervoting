@@ -57,13 +57,15 @@ const makeDefaultElection = () => {
             },
             ballot_updates: false,
             public_results: true,
-            random_candidate_order: false,
+            random_candidate_order: true,
             require_instruction_confirmation: true,
             draggable_ballot: false,
             term_type: undefined,
         }
     } as NewElection;
 }
+
+export const QUICK_POLL_GAP = 2;
 
 const QuickPoll = () => {
     const authSession = useAuthSession();

@@ -8,6 +8,7 @@ import { AddCircleOutlineRounded, ArrowForwardIos } from "@mui/icons-material";
 import { getEntry } from "@equal-vote/star-vote-shared/domain_model/Util";
 import { createHash } from "crypto-browserify";
 import RemoveCircleOutlineRoundedIcon from '@mui/icons-material/RemoveCircleOutlineRounded';
+import { useEffect, useState } from "react";
 
 const rLink = /\[(.*?)\]\((.*?)\)/;
 const rBold = /\*\*(.*?)\*\*/;
@@ -32,15 +33,25 @@ declare namespace Intl {
   }
 }
 
-export const TransitionBox = ({enabled, sx={}, isPrevious=false, absolute=false, children}) => <Box sx={{
-  opacity: enabled ? 1 : 0,
-  top: enabled ? 0 : (isPrevious ? -20 : 20),
-  pointerEvents: enabled ? 'auto' : 'none',
-  transition: 'opacity 0.2s, top 0.2s',
-  position: absolute? 'absolute' : 'relative',
-  width: '100%',
-  ...sx,
-}}> {children} </Box>
+export const TransitionBox = ({enabled, sx={}, isExiting=false, absolute=false, children}) => {
+  const [e, setE] = useState(false);
+
+  useEffect(() => {
+    if(enabled) return
+
+    setE(true)
+    setTimeout(() => setE(false), 400);
+  }, enabled)
+  return <Box sx={{
+    opacity: enabled ? 1 : 0,
+    top: enabled ? 0 : (e ? -20 : 20),
+    pointerEvents: enabled ? 'auto' : 'none',
+    transition: 'opacity 0.2s, top 0.2s',
+    position: absolute? 'absolute' : 'relative',
+    width: '100%',
+    ...sx,
+  }}> {children} </Box>
+}
 
 // converts the candiate from ITabulator.ts to (capital C) Candidate
 // this will eventually be unnecessary (see #878)

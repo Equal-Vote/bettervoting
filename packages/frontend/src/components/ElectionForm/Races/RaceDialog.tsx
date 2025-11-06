@@ -15,8 +15,7 @@ interface RaceDialogProps {
 export default function RaceDialog({
   onSaveRace, open, handleClose, children
 }: RaceDialogProps) {
-    const {t} = useSubstitutedTranslation();
-    const { election } = useElection()
+    const { election, t } = useElection()
     const handleSave = () => onSaveRace()
 
     const onClose = (event, reason) => {
@@ -60,9 +59,15 @@ export default function RaceDialog({
                         </PrimaryButton>
                     </>
                 :
+<<<<<<< HEAD
                         <PrimaryButton onClick={handleClose}>
                            {t('keyword.close')}
                         </PrimaryButton >
+=======
+                    <PrimaryButton onClick={handleClose}>
+                        {t('keyword.close')}
+                    </PrimaryButton >
+>>>>>>> 6de31e49 (wip)
                 }
             </DialogActions>
         </Dialog>

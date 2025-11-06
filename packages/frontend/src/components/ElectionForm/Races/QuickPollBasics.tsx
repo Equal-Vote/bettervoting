@@ -2,20 +2,21 @@ import { TermType } from "@equal-vote/star-vote-shared/domain_model/ElectionSett
 import { Box, Typography, RadioGroup, FormControlLabel, capitalize, Radio, Divider } from "@mui/material"
 import useElection from "~/components/ElectionContextProvider";
 import { Tip } from "~/components/styles"
+import { QUICK_POLL_GAP } from "../QuickPoll";
 import { TransitionBox } from "~/components/util";
 
 export default ({multiRace, setMultiRace}) => {
     const {election, updateElection, t} = useElection();
-    return <Box display='flex' flexDirection='column' justifyContent='flexStart' alignItems='left' sx={{ m: 0, p: 2, mb: 10 }} gap={10}>
+    return <Box display='flex' flexDirection='column' justifyContent='flexStart' alignItems='left' sx={{ m: 0, p: 1, mb: QUICK_POLL_GAP }} gap={QUICK_POLL_GAP}>
         <Box>
             <Typography sx={{textAlign: 'left'}}>
                 {t('election_creation.term_question')}
                 <Tip name='polls_vs_elections' />
             </Typography>
             <RadioGroup row>
-                {['election', 'poll'].map((type, i) =>
+                {['election', 'poll'].map((type) =>
                     <FormControlLabel
-                        key={i}
+                        key={type}
                         value={capitalize(t(`keyword.${type}.election`))}
                         control={<Radio />}
                         label={capitalize(t(`keyword.${type}.election`))}

@@ -142,9 +142,9 @@ export default ({onBack}) => {
                     </Typography>
 
                     <RadioGroup row>
-                        {[true, false].map((restricted, i) =>
+                        {[true, false].map((restricted) =>
                             <FormControlLabel
-                                key={i}
+                                key={`${restricted}`}
                                 value={restricted}
                                 control={<Radio />}
                                 label={t(`keyword.${restricted ? 'yes' : 'no'}`)}
