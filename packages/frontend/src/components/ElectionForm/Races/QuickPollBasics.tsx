@@ -3,7 +3,7 @@ import { Box, Typography, RadioGroup, FormControlLabel, capitalize, Radio, Divid
 import useElection from "~/components/ElectionContextProvider";
 import { Tip } from "~/components/styles"
 import { QUICK_POLL_GAP } from "../QuickPoll";
-import { TransitionBox } from "~/components/util";
+import { scrollToElement, TransitionBox } from "~/components/util";
 
 export default ({multiRace, setMultiRace}) => {
     const {election, updateElection, t} = useElection();
@@ -20,7 +20,10 @@ export default ({multiRace, setMultiRace}) => {
                         value={capitalize(t(`keyword.${type}.election`))}
                         control={<Radio />}
                         label={capitalize(t(`keyword.${type}.election`))}
-                        onClick={() => updateElection(e => { e.settings.term_type = type as TermType })}
+                        onClick={() => {
+                            scrollToElement(document.querySelector(`.electionCreationWidget`));
+                            updateElection(e => { e.settings.term_type = type as TermType })
+                        }}
                         checked={election.settings.term_type === type}
                     />
                 )}

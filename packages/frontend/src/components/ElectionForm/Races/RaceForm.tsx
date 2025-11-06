@@ -55,7 +55,6 @@ export default function RaceForm({
             {styling == 'QuickPoll' && <>
                 <InnerRaceForm {...editRace}/>
                 <Box display='flex' flexDirection='row' justifyContent='flex-end' gap={1} sx={{mt: 3}}>
-                    <SecondaryButton onClick={() => onCancel()}>Skip for now</SecondaryButton>
                     <PrimaryButton onClick={() => editRace.validateRace() && onConfirm(editRace.editedRace)}>Next</PrimaryButton>
                 </Box>
             </>}
@@ -176,41 +175,55 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate}) => {
         />
     </>
 
+    let candidateItems = election.state === 'draft' ? ephemeralCandidates : editedRace.candidates;
+
     return <Box display='flex' flexDirection='column' alignItems='stretch' gap={QUICK_POLL_GAP} sx={{textAlign: 'left'}}>
         <TitleAndDescription setErrors={setErrors} errors={errors} editedRace={editedRace} applyRaceUpdate={applyRaceUpdate} />
 
         <VotingMethodSelector election={election} editedRace={editedRace} isDisabled={isDisabled} setErrors={setErrors} errors={errors} applyRaceUpdate={applyRaceUpdate} />
 
-        <Button
-            // it's hacky, but opacity 0.8 does helps take the edge off the bold a bit
-            sx={{mr: "auto", textDecoration: 'none', textTransform: 'none', color: 'black', fontSize: '1.125rem', opacity: 0.86}}
-            onClick={() => setCandidatesExpanded((e) => !e)}
-        >
-            {candidatesExpaneded? <MinusIcon prefix/> :<AddIcon prefix/>} Add Candidates
-        </Button>
-        <TransitionBox enabled={candidatesExpaneded}>
-            <Stack spacing={2}>
-                <SortableList
-                    items={election.state === 'draft' ? ephemeralCandidates : editedRace.candidates}
-                    identifierKey="candidate_id"
-                    onChange={handleChangeCandidates}
-                    renderItem={(candidate, index) => (
-                        <SortableList.Item id={candidate.candidate_id}>
-                            <CandidateForm
-                                key={candidate.candidate_id}
-                                onEditCandidate={(newCandidate) => onEditCandidate(newCandidate, index)}
-                                candidate={candidate}
-                                index={index}
-                                onDeleteCandidate={() => onDeleteCandidate(index)}
-                                disabled={ephemeralCandidates.length - 1 === index || election.state !== 'draft'}
-                                inputRef={(el: React.MutableRefObject<HTMLInputElement[]>) => inputRefs.current[index] = el}
-                                onKeyDown={(event: React.KeyboardEvent<HTMLInputElement>) => handleKeyDown(event, index)}
-                                electionState={election.state} />
-                        </SortableList.Item>
-                    )}
-                />
-            </Stack>
-        </TransitionBox>
+        <Box>
+            <Button
+                // it's hacky, but opacity 0.8 does helps take the edge off the bold a bit
+                sx={{mr: "auto", textDecoration: 'none', textTransform: 'none', color: 'black', fontSize: '1.125rem', opacity: 0.86}}
+                onClick={() => setCandidatesExpanded((e) => !e)}
+            >
+                {candidatesExpaneded? <MinusIcon prefix/> :<AddIcon prefix/>} Add Candidates
+            </Button>
+            <FormHelperText error sx={{ pl: 1, pt: 0 }}>
+                {errors.candidates}
+            </FormHelperText>
+
+            <Box sx={{
+                position: 'relative',
+                height: candidatesExpaneded? `${candidateItems.length*66 - 11}px` : 0,
+                transition: 'height 0.5s',
+            }}>
+                <TransitionBox absolute enabled={candidatesExpaneded}>
+                    <Stack spacing={2}>
+                        <SortableList
+                            items={candidateItems}
+                            identifierKey="candidate_id"
+                            onChange={handleChangeCandidates}
+                            renderItem={(candidate, index) => (
+                                <SortableList.Item id={candidate.candidate_id}>
+                                    <CandidateForm
+                                        key={candidate.candidate_id}
+                                        onEditCandidate={(newCandidate) => onEditCandidate(newCandidate, index)}
+                                        candidate={candidate}
+                                        index={index}
+                                        onDeleteCandidate={() => onDeleteCandidate(index)}
+                                        disabled={ephemeralCandidates.length - 1 === index || election.state !== 'draft'}
+                                        inputRef={(el: React.MutableRefObject<HTMLInputElement[]>) => inputRefs.current[index] = el}
+                                        onKeyDown={(event: React.KeyboardEvent<HTMLInputElement>) => handleKeyDown(event, index)}
+                                        electionState={election.state} />
+                                </SortableList.Item>
+                            )}
+                        />
+                    </Stack>
+                </TransitionBox>
+            </Box>
+        </Box>
     </Box>
 }
 
@@ -244,6 +257,12 @@ const TitleAndDescription = ({setErrors, errors, editedRace, applyRaceUpdate}) =
         </Box>
 
         <Box>
+            <Button
+                sx={{textDecoration: 'none', textTransform: 'none', color: 'black', fontSize: '1.125rem', opacity: 0.86}}
+                onClick={() => setShowDescription(d => !d)}
+            >
+                {showDescription? <MinusIcon prefix/> : <AddIcon prefix/>} Add Description (Optional)
+            </Button>
             {showDescription && <>
                 <TextField
                     id={`race-description`}
@@ -269,12 +288,6 @@ const TitleAndDescription = ({setErrors, errors, editedRace, applyRaceUpdate}) =
                     {errors.raceDescription}
                 </FormHelperText>
             </>}
-            <Button
-                sx={{textDecoration: 'none', textTransform: 'none', color: 'black', fontSize: '1.125rem', opacity: 0.86}}
-                onClick={() => setShowDescription(d => !d)}
-            >
-                {showDescription? <><MinusIcon prefix/> Hide Description</> : <><AddIcon prefix/> Add Description (Optional)</>}
-            </Button>
         </Box>
     </>
 }

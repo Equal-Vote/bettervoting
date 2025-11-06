@@ -203,7 +203,7 @@ const QuickPoll = () => {
     }
 
     return <ElectionContextProvider id={undefined} localElection={election} setLocalElection={setElection}>
-        <Paper elevation={5} sx={{
+        <Paper className='electionCreationWidget' elevation={5} sx={{
             //maxWidth: '613px',
             width: width,
             margin: 'auto',
@@ -225,12 +225,14 @@ const QuickPoll = () => {
                     <Box sx={{position: 'relative'}}>
                         <TransitionBox absolute enabled={multiRace === true} sx={{textAlign: 'left', pl: 2}}>
                             Races will be added later
+                            <Box display='flex' flexDirection='row' justifyContent='flex-end' gap={1} sx={{mt: 3}}>
+                                <PrimaryButton onClick={() => setPage(1)}>Next</PrimaryButton>
+                            </Box>
                         </TransitionBox>
                     </Box>
                     <TransitionBox enabled={multiRace === false}>
                         <RaceForm
                             raceIndex={0}
-                            onCancel={() => setPage(pg => pg+1)}
                             onConfirm={onNext}
                             styling='QuickPoll'
                         />

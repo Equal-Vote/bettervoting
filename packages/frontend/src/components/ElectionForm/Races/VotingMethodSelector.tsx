@@ -264,9 +264,5 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
                 <VotingMethodPage/>
             </TransitionBox>
         </Box>
-
-        <FormHelperText error sx={{ pl: 1, pt: 0 }}>
-            {errors.raceNumWinners}
-        </FormHelperText>
     </Box>
 }
