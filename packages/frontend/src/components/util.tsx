@@ -41,7 +41,7 @@ export const TransitionBox = ({enabled, sx={}, isExiting=false, absolute=false, 
 
     setE(true)
     setTimeout(() => setE(false), 400);
-  }, enabled)
+  }, [enabled])
   return <Box sx={{
     opacity: enabled ? 1 : 0,
     top: enabled ? 0 : (e ? -20 : 20),

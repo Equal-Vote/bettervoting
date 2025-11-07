@@ -63,17 +63,6 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
         </FormHelperText>
     </>
 
-    const makeMethodStepSX = (step: MethodStep) => ({
-        opacity: methodStep == step ? 1 : 0,
-        top: methodStep == step ? 0 : ((stepIndex[methodStep] < stepIndex[step]) ? 20 : -20),
-        pointerEvents: methodStep == step ? 'auto' : 'none',
-        transition: 'opacity 0.2s, top 0.2s',
-        position: 'absolute',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 1
-    })
-
     const FamilyPage = () => <>
         <Typography id="num-winners-label" gutterBottom component="p">
             Single-Winner or Multi-Winner?
@@ -237,7 +226,7 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
         >
             {methodStep == 'done' && <EditIcon sx={{scale: 1, mr: 1}}/>}
             {methodStep != 'done' ? <>
-                <AddIcon prefix/> Choose Voting Method
+                <AddIcon prefix/> Voting Method
             </> : <>
                 {editedRace.voting_method == undefined ? '___' : t(`methods.${methodValueToTextKey[editedRace.voting_method]}.full_name`)} with&nbsp;
                 {editedRace.num_winners == undefined ? '___' : editedRace.num_winners}&nbsp;

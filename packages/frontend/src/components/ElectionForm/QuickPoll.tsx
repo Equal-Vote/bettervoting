@@ -20,6 +20,7 @@ import QuickPollExtra from './QuickPollExtra.js';
 import { ElectionContextProvider } from '../ElectionContextProvider.js';
 import QuickPollBasics from './Races/QuickPollBasics.js';
 
+
 const makeDefaultElection = () => {
     const ids = [];
     for(let i = 0; i < 1; i++){
@@ -37,19 +38,17 @@ const makeDefaultElection = () => {
         owner_id: '0',
         is_public: false,
         ballot_source: 'live_election',
-        races: [
-            {   
-                title: '',
-                race_id: '0',
-                num_winners: undefined,
-                voting_method: undefined,
-                candidates: ids.map(id => ({
-                    candidate_id: id,
-                    candidate_name: ''
-                })),
-                precincts: undefined,
-            }
-        ],
+        races: [ {   
+            title: '',
+            race_id: '0',
+            num_winners: undefined,
+            voting_method: undefined,
+            candidates: ids.map(id => ({
+                candidate_id: id,
+                candidate_name: ''
+            })),
+            precincts: undefined,
+        } ],
         settings: {
             voter_access: 'open',
             voter_authentication: {
@@ -62,10 +61,8 @@ const makeDefaultElection = () => {
             draggable_ballot: false,
             term_type: undefined,
         }
-    } as NewElection;
-}
-
-export const QUICK_POLL_GAP = 2;
+    } as NewElection
+};
 
 const QuickPoll = () => {
     const authSession = useAuthSession();
@@ -100,8 +97,6 @@ const QuickPoll = () => {
         updateFunc(electionCopy)
         setElection(electionCopy)
     };
-
-    const createElectionContext = useContext(CreateElectionContext);
 
     const onSubmit = (e) => {
         //if(!validateForm(e)) return;
@@ -174,18 +169,28 @@ const QuickPoll = () => {
         event.preventDefault();
     }
 
+    const onAddElection = async (election) => {
+        election.owner_id = authSession.isLoggedIn() ? authSession.getIdField('sub') : tempID;
+
+        const newElection = await postElection({Election: election})
+        if (!newElection) throw Error("Error submitting election");
+
+        navigate(`/${newElection.election.election_id}/admin`)
+    }
+
     const width = '500px';
 
     const onNext = async (editedRace) => {
+        const updatedElection = {
+            ...election,
+            races: [editedRace],
+            title: editedRace.title,
+        }
         const confirmed = await confirm(t('election_creation.publish_confirm'));
         if (confirmed) {
-            navigate(`/pet`)
+            onAddElection(updatedElection)
         }else{
-            setElection({
-                ...election,
-                races: [editedRace],
-                title: editedRace.title,
-            })
+            setElection(updatedElection)
             setPage(1);
         }
     }
@@ -223,8 +228,8 @@ const QuickPoll = () => {
                     <Typography variant='h5' color={'lightShade.contrastText'}>{t('election_creation.title')}</Typography>
                     <QuickPollBasics multiRace={multiRace} setMultiRace={setMultiRace}/>
                     <Box sx={{position: 'relative'}}>
-                        <TransitionBox absolute enabled={multiRace === true} sx={{textAlign: 'left', pl: 2}}>
-                            Races will be added later
+                        <TransitionBox absolute enabled={multiRace === true} sx={{textAlign: 'left', pl: 1}}>
+                            {t('election_creation.add_races_later')}
                             <Box display='flex' flexDirection='row' justifyContent='flex-end' gap={1} sx={{mt: 3}}>
                                 <PrimaryButton onClick={() => setPage(1)}>Next</PrimaryButton>
                             </Box>
@@ -239,7 +244,7 @@ const QuickPoll = () => {
                     </TransitionBox>
                 </Box>
                 <Box sx={{...pageSX, textAlign: 'left'}}>
-                    <QuickPollExtra onBack={() => setPage(pg => pg-1)}/>
+                    <QuickPollExtra onBack={() => setPage(pg => pg-1)} multiRace={multiRace} onAddElection={onAddElection}/>
                 </Box>
             </Box>
         </Paper>

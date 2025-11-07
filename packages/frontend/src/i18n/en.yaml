@@ -865,6 +865,9 @@ archived_warning:
 editable_ballots:
   edit_vote: Update Vote
 
+race_form:
+  candidates_title: 'Candidates'
+
 # Landing Page -> New Election Dialog
 election_creation:
   title: Create an Election or Poll
@@ -874,6 +877,8 @@ election_creation:
   multi_race_question: How many {{races}} will your {{election}} include?
   single_race: Just one
   multi_race: More than one
+
+  title_label: '{{capital_race_title}}'
 
   title_title: Title?
   title_question: What's the title for your {{election}}? !tip(election_title) # TERM will be replaced with election or poll
@@ -898,6 +903,8 @@ election_creation:
 
   id_list_title: ID List
   id_list_description: Provide a list of IDs for your voters. Voters will authenticate themselves using their ID before voting
+
+  add_races_later: '{{capital_races}} will be added later'
 
   publish_confirm:
       title: Publish?

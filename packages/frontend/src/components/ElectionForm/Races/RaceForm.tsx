@@ -13,7 +13,6 @@ import VotingMethodSelector from './VotingMethodSelector';
 import useElection from '~/components/ElectionContextProvider';
 import { SecondaryButton, PrimaryButton } from '~/components/styles';
 import RaceDialog from './RaceDialog';
-import { QUICK_POLL_GAP } from '../QuickPoll';
 
 interface RaceFormProps {
     raceIndex?: number,
@@ -22,6 +21,8 @@ interface RaceFormProps {
     onCancel?: Function,
     dialogOpen?: boolean,
 }
+
+export const RACE_FORM_GAP = 2;
 
 export default function RaceForm({
     raceIndex=undefined,
@@ -35,10 +36,6 @@ export default function RaceForm({
         raceIndex == undefined ? null : election.races[raceIndex],
         0,
     )
-
-    //useEffect(() => {
-    //    if(!dialogOpen) editRace.resetRace()
-    //}, [dialogOpen])
 
     return (
         <>
@@ -177,7 +174,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate}) => {
 
     let candidateItems = election.state === 'draft' ? ephemeralCandidates : editedRace.candidates;
 
-    return <Box display='flex' flexDirection='column' alignItems='stretch' gap={QUICK_POLL_GAP} sx={{textAlign: 'left'}}>
+    return <Box display='flex' flexDirection='column' alignItems='stretch' gap={RACE_FORM_GAP} sx={{textAlign: 'left'}}>
         <TitleAndDescription setErrors={setErrors} errors={errors} editedRace={editedRace} applyRaceUpdate={applyRaceUpdate} />
 
         <VotingMethodSelector election={election} editedRace={editedRace} isDisabled={isDisabled} setErrors={setErrors} errors={errors} applyRaceUpdate={applyRaceUpdate} />
@@ -188,7 +185,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate}) => {
                 sx={{mr: "auto", textDecoration: 'none', textTransform: 'none', color: 'black', fontSize: '1.125rem', opacity: 0.86}}
                 onClick={() => setCandidatesExpanded((e) => !e)}
             >
-                {candidatesExpaneded? <MinusIcon prefix/> :<AddIcon prefix/>} Add Candidates
+                {candidatesExpaneded? <MinusIcon prefix/> :<AddIcon prefix/>} {t('race_form.candidates_title')}
             </Button>
             <FormHelperText error sx={{ pl: 1, pt: 0 }}>
                 {errors.candidates}
@@ -237,7 +234,7 @@ const TitleAndDescription = ({setErrors, errors, editedRace, applyRaceUpdate}) =
                 id={`race-title`}
                 disabled={isDisabled}
                 name="title"
-                label={t('landing_page.quick_poll.title_label')}
+                label={t('election_creation.title_label')}
                 type="text"
                 error={errors.raceTitle !== ''}
                 value={editedRace.title}
@@ -261,7 +258,7 @@ const TitleAndDescription = ({setErrors, errors, editedRace, applyRaceUpdate}) =
                 sx={{textDecoration: 'none', textTransform: 'none', color: 'black', fontSize: '1.125rem', opacity: 0.86}}
                 onClick={() => setShowDescription(d => !d)}
             >
-                {showDescription? <MinusIcon prefix/> : <AddIcon prefix/>} Add Description (Optional)
+                {showDescription? <MinusIcon prefix/> : <AddIcon prefix/>} Description (Optional)
             </Button>
             {showDescription && <>
                 <TextField

@@ -50,21 +50,20 @@ const templateMappers = {
     }),
 }
 
-export default ({onBack}) => {
-    const [stepperStep, setStepperStep] = useState(0);
+export default ({onBack, multiRace, onAddElection}) => {
     const authSession = useAuthSession();
     const {t, election, updateElection} = useElection()
+    const [stepperStep, setStepperStep] = useState(0);
     const { makeRequest: postElection } = usePostElection()
     const navigate = useNavigate();
-    const [titleMatchesRace, setTitleMatchesRace] = useState(true);
     const [tempID] = useCookie('temp_id', '0')
 
     const StepButtons = ({ activeStep, setActiveStep, canContinue }: { activeStep: number, setActiveStep: React.Dispatch<React.SetStateAction<number>>, canContinue: boolean }) => <>
         <SecondaryButton
             onClick={() => {
+                console.log(activeStep);
                 if(activeStep == 0){
                     onBack()
-                    setTitleMatchesRace(true);
                 }else{
                     setActiveStep(i => i - 1)
                 }
@@ -86,34 +85,18 @@ export default ({onBack}) => {
         }
     </>
 
-    const onAddElection = async (election) => {
-        election.owner_id = authSession.isLoggedIn() ? authSession.getIdField('sub') : tempID;
-
-        const newElection = await postElection({Election: election})
-        if (!newElection) throw Error("Error submitting election");
-
-        navigate(`/${newElection.election.election_id}/admin`)
-    }
-
     return <>
         <Typography variant='h5' color={'lightShade.contrastText'}>Just a few more questions...</Typography>
         <Stepper activeStep={stepperStep} orientation="vertical">
+            {multiRace &&
             <Step>
                 <StepLabel>{t('election_creation.title_title')} <strong>{election.title && election.title}</strong></StepLabel>
                 <StepContent>
                     <Typography>{t('election_creation.title_question')}</Typography>
-                    <FormControlLabel control={<Checkbox checked={titleMatchesRace} />} label="Same as poll question" onClick={() => {
-                        let newMatchesRace = !titleMatchesRace;
-                        setTitleMatchesRace(newMatchesRace);
-                        if(newMatchesRace){
-                            updateElection((e) => e.title = e.races[0].title)
-                        }
-                    }}/>
                     <TextField
                         inputProps={{ "aria-label": "Title" }}
                         error={false}
                         required
-                        disabled={titleMatchesRace}
                         id="election-title"
                         label={t('election_details.title')}
                         type="text"
@@ -129,9 +112,10 @@ export default ({onBack}) => {
                     <FormHelperText error sx={{ pl: 1, pt: 0 }}>
                         {/* TODO: Add errors */}
                     </FormHelperText>
-                    <StepButtons activeStep={0} setActiveStep={setStepperStep} canContinue={true}/> {/*canContinue={/^[^\s][a-zA-Z0-9\s]{3,49}$/.test(election.title) /*&& errors.title == ''} />*/}
+                    <StepButtons activeStep={0} setActiveStep={setStepperStep} canContinue={election.title.length >= 3}/> {/*canContinue={/^[^\s][a-zA-Z0-9\s]{3,49}$/.test(election.title) /*&& errors.title == ''} />*/}
                 </StepContent>
             </Step>
+            }
             <Step>
                 <StepLabel>{t('election_creation.restricted_title')} <strong>
                     {election.settings.voter_access !== undefined && t(`keyword.${election.settings.voter_access === 'closed' ? 'yes' : 'no'}`)}
@@ -195,7 +179,7 @@ export default ({onBack}) => {
                         />
                     </Box>
 
-                    <StepButtons activeStep={1} setActiveStep={setStepperStep} canContinue={election.settings.voter_access !== undefined} />
+                    <StepButtons activeStep={multiRace? 1 : 0} setActiveStep={setStepperStep} canContinue={election.settings.voter_access !== undefined} />
                 </StepContent>
             </Step>
             <Step>
@@ -215,7 +199,7 @@ export default ({onBack}) => {
                         />
                     )}
 
-                    <StepButtons activeStep={2} setActiveStep={setStepperStep} canContinue={false} />
+                    <StepButtons activeStep={multiRace ? 2 : 1} setActiveStep={setStepperStep} canContinue={false} />
                 </StepContent>
             </Step>
         </Stepper>

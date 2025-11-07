@@ -2,12 +2,12 @@ import { TermType } from "@equal-vote/star-vote-shared/domain_model/ElectionSett
 import { Box, Typography, RadioGroup, FormControlLabel, capitalize, Radio, Divider } from "@mui/material"
 import useElection from "~/components/ElectionContextProvider";
 import { Tip } from "~/components/styles"
-import { QUICK_POLL_GAP } from "../QuickPoll";
 import { scrollToElement, TransitionBox } from "~/components/util";
+import { RACE_FORM_GAP } from "./RaceForm";
 
 export default ({multiRace, setMultiRace}) => {
     const {election, updateElection, t} = useElection();
-    return <Box display='flex' flexDirection='column' justifyContent='flexStart' alignItems='left' sx={{ m: 0, p: 1, mb: QUICK_POLL_GAP }} gap={QUICK_POLL_GAP}>
+    return <Box display='flex' flexDirection='column' justifyContent='flexStart' alignItems='left' sx={{ m: 0, p: 1, mb: RACE_FORM_GAP}} gap={RACE_FORM_GAP}>
         <Box>
             <Typography sx={{textAlign: 'left'}}>
                 {t('election_creation.term_question')}
