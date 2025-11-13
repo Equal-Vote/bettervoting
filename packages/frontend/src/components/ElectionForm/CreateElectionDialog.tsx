@@ -10,6 +10,8 @@ import { usePostElection } from "~/hooks/useAPI";
 import { TermType } from "@equal-vote/star-vote-shared/domain_model/ElectionSettings";
 import { useNavigate } from "react-router";
 import { TimeZone } from "@equal-vote/star-vote-shared/domain_model/Util";
+import { showErrorDialog } from "../ErrorDialog";
+
 
 /////// PROVIDER SETUP /////
 export interface ICreateElectionContext {
@@ -189,10 +191,9 @@ const CreateElectionDialog = () => {
     const onAddElection = async (election) => {
         // calls post election api, throws error if response not ok
         election.owner_id = authSession.getIdField('sub');
-        if (!election.owner_id || election.owner_id.owner_id == null) {
-            alert("You must log in to create an election or a poll")
+        if (election.owner_id == null) {
+            showErrorDialog("Error", "You must log in to create an election or a poll.");
         }
-
         else {
             const newElection = await postElection({
                 Election: election,
