@@ -187,15 +187,10 @@ test.describe('Add Voters', () => {
         await page.getByRole('button', { name: 'Edit Race: Race 1' }).click();
         await expect(page.getByRole('button', { name: 'Delete Candidate Number 6' })).toBeDisabled();
         await expect(page.getByRole('button', { name: 'Drag Candidate Number 6' })).toBeDisabled();
-
         await expect(page.getByRole('textbox', {name: "Candidate 7 Name"})).not.toBeVisible();
-        await expect(page.getByRole('radio', { name: 'Single-Winner' })).toBeDisabled();
-        await page.getByRole('button', { name: 'Voting Method' }).click();
-        await expect(page.getByRole('radio', { name: 'STAR Voting' })).toBeDisabled();
         await expect(page.getByRole('textbox', { name: 'Title' })).toBeDisabled();
         await expect(page.getByRole('textbox', { name: 'Description' })).toBeDisabled();
-        await expect(page.getByRole('button', { name: 'Save' })).toBeDisabled();
-        await page.getByRole('button', { name: 'Cancel' }).click();
+        await page.getByRole('button', { name: 'Close' }).click();
         await expect(page.getByText('(no description)')).toBeVisible();
         await expect(page.getByText('(start and end times disabled)')).toBeVisible();
         await expect(page.getByRole('link', { name: 'View Results' })).toBeVisible();
@@ -220,7 +215,6 @@ test.describe('Add Voters', () => {
             await page.getByRole('button', { name: `Rank ${vote.candidateName} ${vote.value}` }).click();
         }
         await submitButton.click();
-        await page.getByLabel('Send Ballot Receipt Email?').click();
         let reponsePromise = page.waitForResponse((response) => response.url().includes(`${electionId}/vote`) && response.status() === 200);
         await page.getByRole('button', { name: 'Submit' }).click();
         let voteResponse = await reponsePromise;
@@ -248,7 +242,6 @@ test.describe('Add Voters', () => {
             await page.getByRole('button', { name: `Rank ${vote.candidateName} ${vote.value}` }).click();
         }
         await submitButton.click();
-        await page.getByLabel('Send Ballot Receipt Email?').click();
         //waiting for response from server before checking ballots so we don't navigate to that page too soon
         reponsePromise = page.waitForResponse((response) => response.url().includes(`${electionId}/vote`) && response.status() === 200);
         await page.getByRole('button', { name: 'Submit' }).click();

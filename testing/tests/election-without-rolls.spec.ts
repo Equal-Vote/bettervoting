@@ -157,7 +157,6 @@ test('vote in election restricted by account', async ({page}) => {
     await page.getByRole('button', { name: 'Rank Candidate 3 6' }).click();
     await page.getByRole('button', { name: 'Rank Candidate 7 4' }).click();
     await page.getByRole('button', { name: 'Submit' }).click();
-    await page.getByLabel('Send Ballot Receipt Email?').uncheck();
     await page.getByRole('button', { name: 'Submit' }).click();
     await expect(page.getByRole('heading', { name: 'Ballot Submitted' })).toBeVisible();
     await page.waitForTimeout(1000);
@@ -192,15 +191,14 @@ test('vote in election restricted by account', async ({page}) => {
     await page.getByRole('button', { name: 'Next' }).click();
     await page.getByLabel('I have read the instructions').check();
     await page.getByRole('button', { name: 'Submit' }).click();
-    await page.getByLabel('Send Ballot Receipt Email?').uncheck();
     await page.getByRole('button', { name: 'Submit' }).click();
     await expect(page.getByRole('heading', { name: 'Thank you for voting!' })).toBeVisible();
 });
 // test('clean up all elections', async ({page}) => {
 //     page.goto('/ElectionsYouManage');
-//     let moreElections = true;  
+//     let moreElections = true;
 //     while (moreElections) {
-        
+
 //         await page.locator(`#enhanced-table-checkbox-0`).click();
 //         const currentElectionId = await page.url().split('/')[3];
 //         await page.request.delete(`${API_BASE_URL}/election/${currentElectionId}`);
