@@ -189,13 +189,19 @@ const CreateElectionDialog = () => {
     const onAddElection = async (election) => {
         // calls post election api, throws error if response not ok
         election.owner_id = authSession.getIdField('sub');
+        if (!election.owner_id || election.owner_id.owner_id == null) {
+            alert("You must log in to create an election or a poll")
+        }
 
-        const newElection = await postElection({
-            Election: election,
-        })
-        if (!newElection) throw Error("Error submitting election");
+        else {
+            const newElection = await postElection({
+                Election: election,
+            })
+            if (!newElection) throw Error("Error submitting election");
+            navigate(`/${newElection.election.election_id}/admin`)
 
-        navigate(`/${newElection.election.election_id}/admin`)
+        }
+
         onClose()
     }
 
