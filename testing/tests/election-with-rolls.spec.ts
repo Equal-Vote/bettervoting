@@ -224,8 +224,8 @@ test.describe('Add Voters', () => {
         await page.getByLabel('Voter ID').fill(voterIds[0]);
         await page.getByRole('button', { name: 'Submit' }).click();
         await expect(page.getByRole('link', { name: 'Vote', exact: true })).not.toBeVisible();
-        expect(page.getByRole('heading', { name: 'Ballot Submitted' })).toBeVisible();
-        expect(page.getByRole('link', { name: 'View Results' })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Ballot Submitted' })).toBeVisible();
+        await expect(page.getByRole('link', { name: 'View Results' })).toBeVisible();
         await page.getByRole('button', { name: 'Clear' }).click();
         await page.getByLabel('Voter ID').fill(voterIds[1]);
         await page.getByRole('button', { name: 'Submit' }).click();
@@ -254,8 +254,8 @@ test.describe('Add Voters', () => {
         await page.getByRole('option', { name: 'Not Voted', exact: true }).getByRole('checkbox').click();
         await page.locator('#menu- > .MuiBackdrop-root').click();
         await expect(page.getByText('1–2 of 2')).toBeVisible();
-        expect(page.getByRole('rowheader', { name: '1' })).toBeVisible();
-        expect(page.getByRole('rowheader', { name: '2' })).toBeVisible();
+        await expect(page.getByRole('rowheader', { name: '1' })).toBeVisible();
+        await expect(page.getByRole('rowheader', { name: '2' })).toBeVisible();
 
 
 
