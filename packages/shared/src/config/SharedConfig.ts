@@ -9,6 +9,7 @@ export const sharedConfig = {
         'x36qt9': 400, // Thijs Kleinpaste, Bike farm
         't7dyvf': 400, // Thijs Kleinpaste, Bike farm #2
     },
+    TEMPORARY_ACCESS_HOURS: 10,
     CLASSIC_DOMAIN: 'https://classic.star.vote',
     FF_ELECTION_ROLES: 'false',
     FF_CANDIDATE_DETAILS: 'false',

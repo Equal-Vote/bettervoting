@@ -103,11 +103,15 @@ export const useSetPublicResults = (election_id: string) => {
 }
 
 export const useDeleteAllBallots = (election_id: string) => {
-    return useFetch<{ public_results: boolean }, { election: Election }>(`/API/Election/${election_id}/ballots`, 'delete')
+    return useFetch<undefined, { election: Election }>(`/API/Election/${election_id}/ballots`, 'delete')
 }
 
 export const useFinalizeElection = (election_id: string) => {
     return useFetch<undefined, { election: Election }>(`/API/Election/${election_id}/finalize`, 'post')
+}
+
+export const useClaimElection = (election_id: string) => {
+    return useFetch<{ claim_key: string }, undefined >(`/API/Election/${election_id}/claim`, 'post')
 }
 
 export const useArchiveEleciton = (election_id: string) => {

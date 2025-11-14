@@ -2,7 +2,7 @@ import { Box, capitalize, Dialog, DialogActions, DialogContent, DialogTitle, For
 import { PrimaryButton, SecondaryButton, Tip } from "../styles";
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { ElectionTitleField } from "./Details/ElectionDetailsForm";
-import { RowButtonWithArrow, useSubstitutedTranslation } from "../util";
+import { hashString, RowButtonWithArrow, useSubstitutedTranslation } from "../util";
 import { NewElection } from "@equal-vote/star-vote-shared/domain_model/Election";
 import { DateTime } from "luxon";
 import useAuthSession from "../AuthSessionContextProvider";
@@ -10,6 +10,7 @@ import { usePostElection } from "~/hooks/useAPI";
 import { TermType } from "@equal-vote/star-vote-shared/domain_model/ElectionSettings";
 import { useNavigate } from "react-router";
 import { TimeZone } from "@equal-vote/star-vote-shared/domain_model/Util";
+import { setCookie, useCookie } from "~/hooks/useCookie";
 
 /////// PROVIDER SETUP /////
 export interface ICreateElectionContext {
@@ -140,6 +141,8 @@ const StepButtons = ({ activeStep, setActiveStep, canContinue }: { activeStep: n
 const CreateElectionDialog = () => {
     const createElectionContext = useContext(CreateElectionContext);
 
+    const [tempID] = useCookie('temp_id', '0')
+
     const [activeStep, setActiveStep] = useState(0);
 
     const onClose = () => {
@@ -181,12 +184,18 @@ const CreateElectionDialog = () => {
 
     const onAddElection = async (election) => {
         // calls post election api, throws error if response not ok
-        election.owner_id = authSession.getIdField('sub');
+        election.owner_id = authSession.isLoggedIn() ? authSession.getIdField('sub') : tempID;
+
+        const claimKey = crypto.randomUUID();
+        election.claim_key_hash = hashString(claimKey);
 
         const newElection = await postElection({
             Election: election,
         })
         if (!newElection) throw Error("Error submitting election");
+
+        // The useCookie pattern won't work since I don't know election_id until now
+        setCookie(`${newElection.election.election_id}_claim_key`, claimKey, null)
 
         navigate(`/${newElection.election.election_id}/admin`)
         onClose()

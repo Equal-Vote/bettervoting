@@ -19,7 +19,6 @@ const ElectionsYouVotedIn = () => {
         title='Elections You Voted In'
         headKeys={['title', 'update_date', 'election_state', 'start_time', 'end_time', 'description']}
         handleOnClick={(election) => {
-            console.log(election)
             return navigate(`/${String(election.raw.election_id)}`)
         }}
         isPending={isPending}

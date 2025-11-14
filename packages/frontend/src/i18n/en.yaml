@@ -838,6 +838,14 @@ draft_warning:
     All ballots will be counted as test votes and
     shall be reset prior to the final {{election}}.
 
+temporary_access_warning:
+  title: Unlock more with a free bettervoting account!
+  description: >
+    Your edit access to this {{election}} is **temporary**. Creating a free account lets you do more:
+     - Unlock permanent access
+     - Finalize and manage elections
+     - and more!
+
 archived_warning:
   title: Election is Archived
   description: >

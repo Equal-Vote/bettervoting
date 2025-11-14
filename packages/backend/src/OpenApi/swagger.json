@@ -1457,6 +1457,7 @@
               "enum": [
                 "canAddToElectionRoll",
                 "canApproveElectionRoll",
+                "canClaimElection",
                 "canDeleteAllBallots",
                 "canDeleteElection",
                 "canDeleteElectionRoll",
@@ -3476,6 +3477,60 @@
                   "type": "object",
                   "properties": {
                     "exists": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Election not found"
+          }
+        }
+      }
+    },
+    "/Election/{id}/claim": {
+      "get": {
+        "summary": "Claims a election that was created without an account",
+        "tags": [
+          "Elections"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "The election ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "claim_key": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "If claim was successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
                       "type": "boolean"
                     }
                   }

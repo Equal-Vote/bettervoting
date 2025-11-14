@@ -13,6 +13,7 @@
     "@mui/icons-material": "^5.15.12",
     "@mui/material": "^5.15.12",
     "@ungap/structured-clone": "0.3.4",
+    "crypto-browserify": "^3.12.1",
     "date-fns": "^2.28.0",
     "fast-levenshtein": "^3.0.0",
     "i18next": "^23.10.1",

@@ -7,6 +7,8 @@ import { roles } from "@equal-vote/star-vote-shared/domain_model/roles"
 import { getPermissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { getOrCreateElectionRoll, checkForMissingAuthenticationData, getVoterAuthorization } from "../Roll/voterRollUtils"
 import { ElectionRoll } from '@equal-vote/star-vote-shared/domain_model/ElectionRoll';
+import { sharedConfig } from '@equal-vote/star-vote-shared/config';
+import { hashString } from '../controllerUtils';
 
 
 var ElectionsModel =  ServiceLocator.electionsDb();
@@ -68,8 +70,21 @@ const electionPostAuthMiddleware = async (req: IElectionRequest, res: any, next:
             roles: [],
             permissions: []
         }
-        if (req.user && req.election && req.user.typ != 'TEMP_ID'){
-          if (req.user.sub === req.election.owner_id){
+        // HACK: The convention is the only way we can tell if an election is owned by a temp_id or a logged in user
+        // temp_id follows v-abc123, whereas keycloak is a uuid
+        // we should only allow temporary edit permissions on elections that follow the temp_id convention
+        // this alleviates any concerns that someone could gain edit access by tweaking their local temp_id cookie
+        const ownerIsTempUser = req.election.owner_id.startsWith('v-');
+        const hoursSinceCreate = (new Date().getTime() - new Date(election.create_date).getTime()) / (1000 * 60 * 60)
+        const tempUserAuth =
+            ownerIsTempUser && 
+            req.election.owner_id == req.cookies.temp_id &&
+            hoursSinceCreate < sharedConfig.TEMPORARY_ACCESS_HOURS &&
+            hashString(req.cookies[`${req.election.election_id}_claim_key`]) === req.election.claim_key_hash;
+
+        // NOTE: req.user.typ doesn't apply here, since a user can have temp ownership of an election, while also being logged in
+        if (req.user && req.election){
+          if(req.election.owner_id == req.user.sub || tempUserAuth){
             req.user_auth.roles.push(roles.owner)
           }
           if (req.election.admin_ids && req.election.admin_ids.includes(req.user.email)){

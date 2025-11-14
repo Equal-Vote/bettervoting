@@ -20,7 +20,7 @@ const getElections = async (req: IElectionRequest, res: Response, next: NextFunc
 
     /////////// ELECTIONS WE OWN ////////////////
     var elections_as_official = null;
-    if(email !== '' || id !== ''){ 
+    if((email !== '' || id !== '') && req.user.typ != 'TEMP_ID'){ 
         elections_as_official = await ElectionsModel.getElections(id, email, req);
         if (!elections_as_official) {
             var msg = "Election does not exist";

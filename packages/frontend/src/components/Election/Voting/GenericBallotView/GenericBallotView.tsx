@@ -144,7 +144,6 @@ export default function GenericBallotView({
               marginBottom:'.4cm', 
               padding: '.2cm',
               }}>
-              {/* <Typography>⚠️</Typography> */}
               <Typography style={{paddingLeft:'30px'}}>{message}</Typography>
             </Alert>
           )}

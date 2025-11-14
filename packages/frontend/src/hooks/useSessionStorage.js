@@ -6,14 +6,10 @@ export const useSessionStorage = (key, defaultValue, updateRate = null) => {
     // The optional input updateRate allows for periodic checking to see if the value in session storage has changed
     // to allow multiple components using the same key to be updated
     const getStoredValue = (key, defaultValue) => {
-        // getting stored value
-        const saved = sessionStorage.getItem(key);
-        const initial = JSON.parse(saved);
-        if (!initial) {
-            sessionStorage.setItem(key, JSON.stringify(defaultValue));
-            return defaultValue
-        }
-        return initial;
+        const initial = sessionStorage.getItem(key);
+        if(initial) return initial;
+        sessionStorage.setItem(key, initial);
+        return defaultValue;
     }
     
     const [value, setStoredValue] = useState(() => {
@@ -22,7 +18,7 @@ export const useSessionStorage = (key, defaultValue, updateRate = null) => {
     
 
     const setValue = (newValue) => {
-        sessionStorage.setItem(key, JSON.stringify(newValue));
+        sessionStorage.setItem(key, newValue);
         setStoredValue(newValue)
     }
 
