@@ -281,7 +281,7 @@ const AdminHome = () => {
                     {t('admin_home.header_ended_time', {datetime: election.end_time})}
                 </Typography>
             }
-        </>
+        </Box>
     }
 
     const FinalizeSection = () => <Box sx={{maxWidth: 800}}>

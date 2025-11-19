@@ -59,15 +59,9 @@ export default function RaceDialog({
                         </PrimaryButton>
                     </>
                 :
-<<<<<<< HEAD
-                        <PrimaryButton onClick={handleClose}>
-                           {t('keyword.close')}
-                        </PrimaryButton >
-=======
                     <PrimaryButton onClick={handleClose}>
                         {t('keyword.close')}
                     </PrimaryButton >
->>>>>>> 6de31e49 (wip)
                 }
             </DialogActions>
         </Dialog>
