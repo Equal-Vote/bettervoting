@@ -21,7 +21,7 @@ export default ({multiRace, setMultiRace}) => {
                         control={<Radio />}
                         label={capitalize(t(`keyword.${type}.election`))}
                         onClick={() => {
-                            scrollToElement(document.querySelector(`.electionCreationWidget`));
+                            scrollToElement(document.querySelector(`.wizard`));
                             updateElection(e => { e.settings.term_type = type as TermType })
                         }}
                         checked={election.settings.term_type === type}

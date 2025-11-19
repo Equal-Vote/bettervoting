@@ -19,8 +19,7 @@ import WizardExtra from './WizardExtra.js';
 import { ElectionContextProvider } from '../../ElectionContextProvider.js';
 import WizardBasics from './WizardBasics.js';
 
-
-const makeDefaultElection = () => {
+export const makeDefaultElection = () => {
     const ids = [];
     for(let i = 0; i < 1; i++){
         ids.push(makeUniqueIDSync(
@@ -207,7 +206,7 @@ const Wizard = () => {
     }
 
     return <ElectionContextProvider id={undefined} localElection={election} setLocalElection={setElection}>
-        <Paper className='electionCreationWidget' elevation={5} sx={{
+        <Paper className='wizard' elevation={5} sx={{
             //maxWidth: '613px',
             width: width,
             margin: 'auto',

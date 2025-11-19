@@ -6,13 +6,13 @@ import { rankColumnCSV } from "./cvrParsers";
 import { makeID, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
 import Papa from 'papaparse';
 import useAuthSession from "./AuthSessionContextProvider";
-import { defaultElection } from "./ElectionForm/CreateElectionDialog";
 import { Candidate } from "@equal-vote/star-vote-shared/domain_model/Candidate";
 import { Election, NewElection } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { useGetElections } from "~/hooks/useAPI";
 import { OrderedNewBallot, RaceCandidateOrder } from "@equal-vote/star-vote-shared/domain_model/Ballot";
 import { inferElectionSettings } from "./ElectionSettingInference";
 import { PrimaryButton, SecondaryButton } from "./styles";
+import { makeDefaultElection } from "./ElectionForm/Wizard/Wizard";
 
 const UploadElections = () => {
     const [addToPublicArchive, setAddToPublicArchive] = useState(true)
@@ -70,6 +70,7 @@ const UploadElections = () => {
                     }))
                     return
                 }
+                const defaultElection = makeDefaultElection();
                 const newElection: NewElection = {
                     ...defaultElection,
                     title: cvr.name.split('.')[0],

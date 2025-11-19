@@ -8,8 +8,7 @@ import StarBallotView from '../Election/Voting/StarBallotView'
 import { VotingMethod } from '@equal-vote/star-vote-shared/domain_model/Race'
 import ApprovalBallotView from '../Election/Voting/ApprovalBallotView'
 import RankedBallotView from '../Election/Voting/RankedBallotView'
-import { useSubstitutedTranslation } from '../util'
-import { CreateElectionContext } from '../ElectionForm/CreateElectionDialog'
+import { scrollToElement, useSubstitutedTranslation } from '../util'
 import { ArrowBack, ArrowForward } from '@mui/icons-material'
 
 const LandingPageCarousel = () => {
@@ -20,8 +19,6 @@ const LandingPageCarousel = () => {
     const [methodIndex, setMethodIndex] = useState(0);
     const timeouts = useRef([])
     const autoCycleTimeout = useRef(null);
-    
-    const createElectionContext = useContext(CreateElectionContext);
     
     const {t} = useSubstitutedTranslation('election');
 
@@ -166,25 +163,13 @@ const LandingPageCarousel = () => {
                         }`)}.
                     </Typography>
                     <br/>
-                    {authSession.isLoggedIn() &&
-                        <PrimaryButton
-                            fullWidth
-                            onClick={() => createElectionContext.openDialog()}
-                        >
-                            Use Full Editor
-                        </PrimaryButton>
-                    }
-                    {!authSession.isLoggedIn() &&
-                        <PrimaryButton
-                            type='submit'
-                            onClick={() => authSession.openLogin()}
-                            sx={{
-                                width: '75%'
-                            }}
-                        >
-                            {t('landing_page.hero.methods.more_methods.sign_in')}
-                        </PrimaryButton>
-                    }
+                    <PrimaryButton
+                        fullWidth
+                        onClick={() => scrollToElement(document.querySelector(`.wizard`))}
+                    >
+                        Create Election
+
+                    </PrimaryButton>
                 </Box>}
             </Box>
         </Box>

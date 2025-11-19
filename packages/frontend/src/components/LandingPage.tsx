@@ -8,18 +8,16 @@ import LandingPagePricing from './LandingPage/LandingPagePricing';
 import useFeatureFlags from './FeatureFlagContextProvider';
 import LandingPageStats from './LandingPage/LandingPageStats';
 import{useLocation} from 'react-router-dom';
-import { openFeedback, useSubstitutedTranslation } from './util';
+import { openFeedback, scrollToElement, useSubstitutedTranslation } from './util';
 import Wizard from './ElectionForm/Wizard/Wizard';
 import LandingPageSupport from './LandingPage/LandingPageSupport';
 import LandingPageCarousel from './LandingPage/LandingPageCarousel';
 import LandingPageFeaturedElections from './LandingPage/LandingPageFeaturedElections';
 import LandingPageOtherTools from './LandingPage/LandingPageOtherTools';
-import { CreateElectionContext } from './ElectionForm/CreateElectionDialog';
 
 const LandingPage = () => {
 
     const checkUrl = useLocation();
-    const createElectionContext = useContext(CreateElectionContext);
     useEffect(() =>{
         if(checkUrl.pathname === "/feedback")
         {
@@ -28,7 +26,7 @@ const LandingPage = () => {
 
         if(checkUrl.pathname === "/new_election")
         {
-            createElectionContext.openDialog()
+            scrollToElement(document.querySelector(`.wizard`))
         }
     }, [checkUrl]);
 

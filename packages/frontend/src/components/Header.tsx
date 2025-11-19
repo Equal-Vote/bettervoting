@@ -7,7 +7,6 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import useAuthSession from './AuthSessionContextProvider';
 import { useThemeSelector } from '../theme';
 import useFeatureFlags from './FeatureFlagContextProvider';
-import { CreateElectionContext } from './ElectionForm/CreateElectionDialog';
 import { openFeedback, scrollToElement, useSubstitutedTranslation } from './util';
 import { makeID, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
 
@@ -24,9 +23,6 @@ const Header = () => {
     useCookie('temp_id', makeID(ID_PREFIXES.VOTER, ID_LENGTHS.VOTER))
     const {t} = useSubstitutedTranslation();
     
-
-    const createElectionContext = useContext(CreateElectionContext);
-
     const navItems = [
         {
             text: t('nav.about'),
@@ -73,7 +69,7 @@ const Header = () => {
             items: [
                 {
                     text: 'E-Voting w/ Paper Receipts',
-                    onClick: () => scrollToElement(document.querySelector(`.electionCreationWidget`)),
+                    onClick: () => scrollToElement(document.querySelector(`.wizard`)),
                 },
                 {
                     text: 'Print Ballots',
@@ -99,7 +95,7 @@ const Header = () => {
         },
         {
             text: 'Create Election' ,
-            onClick: () => scrollToElement(document.querySelector(`.electionCreationWidget`)),
+            onClick: () => scrollToElement(document.querySelector(`.wizard`)),
         },
     ];
 
@@ -191,7 +187,7 @@ const Header = () => {
                             <MenuItem component={Link} href={authSession.accountUrl} target='_blank'>
                                 {t('nav.your_account')}
                             </MenuItem>
-                            <MenuItem component={Link} onClick={() => scrollToElement(document.querySelector(`.electionCreationWidget`))}>
+                            <MenuItem component={Link} onClick={() => scrollToElement(document.querySelector(`.wizard`))}>
                                 {t('nav.new_election')}
                             </MenuItem>
                             <MenuItem component={Link} href='/manage'>
