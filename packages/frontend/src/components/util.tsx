@@ -33,18 +33,19 @@ declare namespace Intl {
   }
 }
 
-export const TransitionBox = ({enabled, sx={}, isExiting=false, absolute=false, children}) => {
-  const [e, setE] = useState(false);
+export const TransitionBox = ({enabled, sx={}, absolute=false, children}) => {
+  const [exiting, setExiting] = useState(false);
 
   useEffect(() => {
     if(enabled) return
 
-    setE(true)
-    setTimeout(() => setE(false), 400);
+    setExiting(true)
+    setTimeout(() => setExiting(false), 400);
   }, [enabled])
+
   return <Box sx={{
     opacity: enabled ? 1 : 0,
-    top: enabled ? 0 : (e ? -20 : 20),
+    top: enabled ? 0 : (exiting ? -20 : 20),
     pointerEvents: enabled ? 'auto' : 'none',
     transition: 'opacity 0.2s, top 0.2s',
     position: absolute? 'absolute' : 'relative',
@@ -80,16 +81,6 @@ export const methodValueToTextKey = {
     Plurality: 'choose_one',
     IRV: 'rcv',
 };
-
-export const methodTextKeyToValue = Object.fromEntries(Object.entries(methodValueToTextKey).map(([k, v]) => [v, k]))
-
-const dbKeys = {
-        'star': 'STAR',
-        'approval': 'Approval',
-        'ranked_robin': 'RankedRobin',
-        'rcv': 'IRV',
-        'choose_one': 'Plurality',
-    }
 
 export const formatPercent = (f: number): string => {
   if(0 < f && f < .01) return '<1%';

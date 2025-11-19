@@ -46,11 +46,13 @@ export default function RaceForm({
                     handleClose={() => onCancel()}
                 >
                     {/* I can't absorb it into FormComponent because of Component Identity Instability*/}
-                    <InnerRaceForm {...editRace}/>
+                    <Box sx={{width: '500px', padding: 1, minHeight: '500px'}}>
+                        <InnerRaceForm {...editRace} styling={styling}/>
+                    </Box>
                 </RaceDialog>
             }
             {styling == 'Wizard' && <>
-                <InnerRaceForm {...editRace}/>
+                <InnerRaceForm {...editRace} styling={styling}/>
                 <Box display='flex' flexDirection='row' justifyContent='flex-end' gap={1} sx={{mt: 3}}>
                     <PrimaryButton onClick={() => editRace.validateRace() && onConfirm(editRace.editedRace)}>Next</PrimaryButton>
                 </Box>
@@ -59,13 +61,14 @@ export default function RaceForm({
     )
 }
 
-const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate}) => {
+const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, styling}) => {
     const flags = useFeatureFlags();
     const { election, t } = useElection()
     const isDisabled = election.state !== 'draft';
     const [] = useState(false);
 
-    const [candidatesExpaneded, setCandidatesExpanded] = useState(false);
+    // Dialog should default to candidates being expanded, Wizard should not
+    const [candidatesExpaneded, setCandidatesExpanded] = useState(editedRace.candidates.length > 0);
 
     const confirm = useConfirm();
     const inputRefs = useRef([]);
@@ -98,6 +101,10 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate}) => {
 
         setErrors((prev: RaceErrors) => ({ ...prev, candidates: ''}));
     }, [applyRaceUpdate, setErrors]);
+
+    useEffect(() => {
+        setCandidatesExpanded(editedRace.candidates.length > 0)
+    }, [editedRace])
     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleChangeCandidates = useCallback((newCandidateList: any[]) => {
@@ -225,9 +232,14 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate}) => {
 }
 
 const TitleAndDescription = ({setErrors, errors, editedRace, applyRaceUpdate}) => {
-    const [showDescription, setShowDescription] = useState(false);
+    const [showDescription, setShowDescription] = useState(editedRace.description != '');
     const { election, t } = useElection()
     const isDisabled = election.state !== 'draft';
+
+    useEffect(() => {
+        setShowDescription(editedRace.description == '')
+    }, [editedRace])
+
     return <>
         <Box>
             <TextField

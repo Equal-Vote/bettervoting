@@ -290,6 +290,17 @@ const CandidateDialog = ({ onEditCandidate, candidate, open, handleClose }: Cand
     )
 }
 
+interface CandidateFormProps {
+    onEditCandidate: (newCandidate: Candidate) => void,
+    candidate: Candidate,
+    index: number,
+    onDeleteCandidate: () => void,
+    disabled: boolean,
+    inputRef: (el: React.MutableRefObject<HTMLInputElement[]>) => React.MutableRefObject<HTMLInputElement[]>,
+    onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void,
+    electionState: string
+}
+
 const LinkDialog = ({ onEditCandidate, candidate, open, handleClose }) => {
     const onApplyEditCandidate = (updateFunc) => {
         const newCandidate = { ...candidate }
@@ -367,16 +378,7 @@ const LinkDialog = ({ onEditCandidate, candidate, open, handleClose }) => {
         </Dialog>
     )
 }
-interface CandidateFormProps {
-    onEditCandidate: (newCandidate: Candidate) => void,
-    candidate: Candidate,
-    index: number,
-    onDeleteCandidate: () => void,
-    disabled: boolean,
-    inputRef: (el: React.MutableRefObject<HTMLInputElement[]>) => React.MutableRefObject<HTMLInputElement[]>,
-    onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void,
-    electionState: string
-}
+
 export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled, inputRef, onKeyDown, electionState}: CandidateFormProps) => {
 
     const [open, setOpen] = React.useState(false);

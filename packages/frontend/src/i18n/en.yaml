@@ -463,18 +463,6 @@ landing_page:
         sign_in_description: Sign in for multi-winner methods
         sign_in: Sign In
 
-  # Quick Poll Section
-  quick_poll:
-    question_prompt: What is your poll question?
-    option_prompt: Option {{number}}
-    create: Create Quick Poll
-    continue_with_editor: Continue with Full Editor
-    sign_in: Sign in for more options
-    clear_all: Clear All
-    title_label: '{{capital_race_title}}'
-
-    
-
   # Election Stats Section
   election_stats:
     elections_created: Elections & Polls Created
