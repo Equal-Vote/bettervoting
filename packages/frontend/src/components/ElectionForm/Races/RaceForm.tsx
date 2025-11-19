@@ -234,7 +234,7 @@ const TitleAndDescription = ({setErrors, errors, editedRace, applyRaceUpdate}) =
                 id={`race-title`}
                 disabled={isDisabled}
                 name="title"
-                label={t('election_creation.title_label')}
+                label={t('wizard.title_label')}
                 type="text"
                 error={errors.raceTitle !== ''}
                 value={editedRace.title}

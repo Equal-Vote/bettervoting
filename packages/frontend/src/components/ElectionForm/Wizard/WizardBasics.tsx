@@ -10,7 +10,7 @@ export default ({multiRace, setMultiRace}) => {
     return <Box display='flex' flexDirection='column' justifyContent='flexStart' alignItems='left' sx={{ m: 0, p: 1, mb: RACE_FORM_GAP}} gap={RACE_FORM_GAP}>
         <Box>
             <Typography sx={{textAlign: 'left'}}>
-                {t('election_creation.term_question')}
+                {t('wizard.term_question')}
                 <Tip name='polls_vs_elections' />
             </Typography>
             <RadioGroup row>
@@ -32,15 +32,15 @@ export default ({multiRace, setMultiRace}) => {
 
         <TransitionBox enabled={election.settings.term_type !== undefined}>
             <Typography sx={{textAlign: 'left'}}>
-                {t('election_creation.multi_race_question')}
+                {t('wizard.multi_race_question')}
             </Typography>
             <RadioGroup row>
                 {['single_race', 'multi_race'].map((type, i) =>
                     <FormControlLabel
                         key={i}
-                        value={capitalize(t(`election_creation.${type}`))}
+                        value={capitalize(t(`wizard.${type}`))}
                         control={<Radio />}
-                        label={capitalize(t(`election_creation.${type}`))}
+                        label={capitalize(t(`wizard.${type}`))}
                         onClick={() => setMultiRace(type === 'multi_race')}
                         checked={(type === 'multi_race') === multiRace}
                     />

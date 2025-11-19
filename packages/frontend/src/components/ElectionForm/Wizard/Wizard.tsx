@@ -184,7 +184,7 @@ const Wizard = () => {
             races: [editedRace],
             title: editedRace.title,
         }
-        const confirmed = await confirm(t('election_creation.publish_confirm'));
+        const confirmed = await confirm(t('wizard.publish_confirm'));
         if (confirmed) {
             onAddElection(updatedElection, '/')
         }else{
@@ -223,11 +223,11 @@ const Wizard = () => {
                 }}
             >
                 <Box sx={pageSX}>
-                    <Typography variant='h5' color={'lightShade.contrastText'}>{t('election_creation.title')}</Typography>
+                    <Typography variant='h5' color={'lightShade.contrastText'}>{t('wizard.title')}</Typography>
                     <WizardBasics multiRace={multiRace} setMultiRace={setMultiRace}/>
                     <Box sx={{position: 'relative'}}>
                         <TransitionBox absolute enabled={multiRace === true} sx={{textAlign: 'left', pl: 1}}>
-                            {t('election_creation.add_races_later')}
+                            {t('wizard.add_races_later')}
                             <Box display='flex' flexDirection='row' justifyContent='flex-end' gap={1} sx={{mt: 3}}>
                                 <PrimaryButton onClick={() => setPage(1)}>Next</PrimaryButton>
                             </Box>

@@ -460,7 +460,6 @@ landing_page:
           - 1
       more_methods:
         title: and more
-        full_editor_description: Use full editor for multi-winner methods
         sign_in_description: Sign in for multi-winner methods
         sign_in: Sign In
 
@@ -868,8 +867,8 @@ editable_ballots:
 race_form:
   candidates_title: 'Candidates'
 
-# Landing Page -> New Election Dialog
-election_creation:
+# Landing Page -> New Election Wizard
+wizard:
   title: Create an Election or Poll
 
   term_question: Which term best describes your situation?

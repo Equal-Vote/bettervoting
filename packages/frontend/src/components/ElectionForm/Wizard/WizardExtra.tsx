@@ -90,9 +90,9 @@ export default ({onBack, multiRace, onAddElection}) => {
         <Stepper activeStep={stepperStep} orientation="vertical">
             {multiRace &&
             <Step>
-                <StepLabel>{t('election_creation.title_title')} <strong>{election.title && election.title}</strong></StepLabel>
+                <StepLabel>{t('wizard.title_title')} <strong>{election.title && election.title}</strong></StepLabel>
                 <StepContent>
-                    <Typography>{t('election_creation.title_question')}</Typography>
+                    <Typography>{t('wizard.title_question')}</Typography>
                     <TextField
                         inputProps={{ "aria-label": "Title" }}
                         error={false}
@@ -117,12 +117,12 @@ export default ({onBack, multiRace, onAddElection}) => {
             </Step>
             }
             <Step>
-                <StepLabel>{t('election_creation.restricted_title')} <strong>
+                <StepLabel>{t('wizard.restricted_title')} <strong>
                     {election.settings.voter_access !== undefined && t(`keyword.${election.settings.voter_access === 'closed' ? 'yes' : 'no'}`)}
                 </strong></StepLabel>
                 <StepContent>
                     <Typography>
-                        {t('election_creation.restricted_question')}
+                        {t('wizard.restricted_question')}
                     </Typography>
 
                     <RadioGroup row>
@@ -183,19 +183,19 @@ export default ({onBack, multiRace, onAddElection}) => {
                 </StepContent>
             </Step>
             <Step>
-                <StepLabel>{t('election_creation.template_title')}</StepLabel>
+                <StepLabel>{t('wizard.template_title')}</StepLabel>
                 <StepContent>
                     <Typography>
-                        {t('election_creation.template_prompt')}
+                        {t('wizard.template_prompt')}
                     </Typography>
                     <Box style={{ height: '10px' }} /> {/*hacky padding*/}
                     {(election.settings.voter_access === 'closed' ? ['email_list', 'id_list'] : ['demo', 'unlisted']).map((name) =>
                         <RowButtonWithArrow
-                            title={t(`election_creation.${name}_title`)}
-                            description={t(`election_creation.${name}_description`)}
+                            title={t(`wizard.${name}_title`)}
+                            description={t(`wizard.${name}_description`)}
                             key={name}
                             onClick={() => onAddElection(templateMappers[name](election), '/admin')}
-                            ariaLabel={t(`election_creation.${name}_title`)}
+                            ariaLabel={t(`wizard.${name}_title`)}
                         />
                     )}
 

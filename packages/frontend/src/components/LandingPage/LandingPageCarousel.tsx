@@ -12,8 +12,6 @@ import { scrollToElement, useSubstitutedTranslation } from '../util'
 import { ArrowBack, ArrowForward } from '@mui/icons-material'
 
 const LandingPageCarousel = () => {
-    const authSession = useAuthSession();
-
     const [transitionStep, setTransitionStep] = useState(1);
     const [prevMethodIndex, setPrevMethodIndex] = useState(0);
     const [methodIndex, setMethodIndex] = useState(0);
@@ -157,12 +155,6 @@ const LandingPageCarousel = () => {
                         </BallotContext.Provider>}
                     </Box>
                 </>:<Box sx={{maxWidth: '450px', margin: 'auto'}}>
-                    <Typography color={'lightShade.contrastText'}>
-                        {t(`landing_page.hero.methods.more_methods.${
-                            authSession.isLoggedIn()? 'full_editor_description' : 'sign_in_description'
-                        }`)}.
-                    </Typography>
-                    <br/>
                     <PrimaryButton
                         fullWidth
                         onClick={() => scrollToElement(document.querySelector(`.wizard`))}
