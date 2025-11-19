@@ -1,12 +1,12 @@
 import { Typography, Stepper, Step, StepLabel, StepContent, FormControlLabel, Checkbox, TextField, FormHelperText, RadioGroup, Radio, Box } from "@mui/material";
-import { RowButtonWithArrow, useSubstitutedTranslation } from "../util";
+import { RowButtonWithArrow, useSubstitutedTranslation } from "../../util";
 import { useState } from "react";
-import { PrimaryButton, SecondaryButton } from "../styles";
+import { PrimaryButton, SecondaryButton } from "../../styles";
 import { NewElection } from "@equal-vote/star-vote-shared/domain_model/Election";
-import useAuthSession from "../AuthSessionContextProvider";
+import useAuthSession from "../../AuthSessionContextProvider";
 import { usePostElection } from "~/hooks/useAPI";
 import { useNavigate } from "react-router";
-import useElection from "../ElectionContextProvider";
+import useElection from "../../ElectionContextProvider";
 import { useCookie } from "~/hooks/useCookie";
 
 const templateMappers = {

@@ -9,7 +9,7 @@ import useFeatureFlags from './FeatureFlagContextProvider';
 import LandingPageStats from './LandingPage/LandingPageStats';
 import{useLocation} from 'react-router-dom';
 import { openFeedback, useSubstitutedTranslation } from './util';
-import QuickPoll from './ElectionForm/QuickPoll';
+import Wizard from './ElectionForm/Wizard/Wizard';
 import LandingPageSupport from './LandingPage/LandingPageSupport';
 import LandingPageCarousel from './LandingPage/LandingPageCarousel';
 import LandingPageFeaturedElections from './LandingPage/LandingPageFeaturedElections';
@@ -65,7 +65,7 @@ const LandingPage = () => {
                 </Typography>
             </Box>
             <LandingPageStats/>
-            <QuickPoll/>
+            <Wizard/>
             {featuredElectionIds.length > 0 && <LandingPageFeaturedElections electionIds={featuredElectionIds}/>}
             <LandingPageFeatures/>
             <LandingPageSignUpBar />

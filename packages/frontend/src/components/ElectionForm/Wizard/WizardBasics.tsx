@@ -3,7 +3,7 @@ import { Box, Typography, RadioGroup, FormControlLabel, capitalize, Radio, Divid
 import useElection from "~/components/ElectionContextProvider";
 import { Tip } from "~/components/styles"
 import { scrollToElement, TransitionBox } from "~/components/util";
-import { RACE_FORM_GAP } from "./RaceForm";
+import { RACE_FORM_GAP } from "../Races/RaceForm";
 
 export default ({multiRace, setMultiRace}) => {
     const {election, updateElection, t} = useElection();

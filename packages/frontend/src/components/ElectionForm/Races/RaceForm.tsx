@@ -16,7 +16,7 @@ import RaceDialog from './RaceDialog';
 
 interface RaceFormProps {
     raceIndex?: number,
-    styling: 'QuickPoll' | 'Dialog',
+    styling: 'Wizard' | 'Dialog',
     onConfirm?: Function,
     onCancel?: Function,
     dialogOpen?: boolean,
@@ -49,7 +49,7 @@ export default function RaceForm({
                     <InnerRaceForm {...editRace}/>
                 </RaceDialog>
             }
-            {styling == 'QuickPoll' && <>
+            {styling == 'Wizard' && <>
                 <InnerRaceForm {...editRace}/>
                 <Box display='flex' flexDirection='row' justifyContent='flex-end' gap={1} sx={{mt: 3}}>
                     <PrimaryButton onClick={() => editRace.validateRace() && onConfirm(editRace.editedRace)}>Next</PrimaryButton>

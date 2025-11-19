@@ -2,23 +2,22 @@ import { useContext, useState } from 'react';
 import { useNavigate } from "react-router";
 import structuredClone from '@ungap/structured-clone';
 import { Election as IElection } from '@equal-vote/star-vote-shared/domain_model/Election';
-import { PrimaryButton, SecondaryButton, Tip } from '../styles.js';
+import { PrimaryButton, SecondaryButton, Tip } from '../../styles.js';
 import { Box, capitalize, Checkbox, FormControlLabel, FormHelperText, IconButton, MenuItem, Paper, Radio, RadioGroup, Select, SelectChangeEvent, Step, StepContent, StepLabel, Stepper, TextField, Typography } from '@mui/material';
-import { usePostElection } from '../../hooks/useAPI';
-import { useCookie } from '../../hooks/useCookie';
+import { usePostElection } from '~/hooks/useAPI';
+import { useCookie } from '~/hooks/useCookie';
 import { NewElection } from '@equal-vote/star-vote-shared/domain_model/Election';
-import { CreateElectionContext } from './CreateElectionDialog.js';
-import useSnackbar from '../SnackbarContext.js';
+import useSnackbar from '../../SnackbarContext.js';
 import { makeID, makeUniqueIDSync, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
 
-import { methodTextKeyToValue, RowButtonWithArrow, TransitionBox, useSubstitutedTranslation } from '../util.jsx';
-import useAuthSession from '../AuthSessionContextProvider.js';
-import RaceForm from './Races/RaceForm.js';
+import { methodTextKeyToValue, RowButtonWithArrow, TransitionBox, useSubstitutedTranslation } from '../../util.js';
+import useAuthSession from '../../AuthSessionContextProvider.js';
+import RaceForm from '../Races/RaceForm.js';
 import { VotingMethod } from '@equal-vote/star-vote-shared/domain_model/Race';
-import useConfirm from '../ConfirmationDialogProvider.js';
-import QuickPollExtra from './QuickPollExtra.js';
-import { ElectionContextProvider } from '../ElectionContextProvider.js';
-import QuickPollBasics from './Races/QuickPollBasics.js';
+import useConfirm from '../../ConfirmationDialogProvider.js';
+import WizardExtra from './WizardExtra.js';
+import { ElectionContextProvider } from '../../ElectionContextProvider.js';
+import WizardBasics from './WizardBasics.js';
 
 
 const makeDefaultElection = () => {
@@ -64,7 +63,7 @@ const makeDefaultElection = () => {
     } as NewElection
 };
 
-const QuickPoll = () => {
+const Wizard = () => {
     const authSession = useAuthSession();
     const [tempID] = useCookie('temp_id', '0')
     const navigate = useNavigate()
@@ -226,7 +225,7 @@ const QuickPoll = () => {
             >
                 <Box sx={pageSX}>
                     <Typography variant='h5' color={'lightShade.contrastText'}>{t('election_creation.title')}</Typography>
-                    <QuickPollBasics multiRace={multiRace} setMultiRace={setMultiRace}/>
+                    <WizardBasics multiRace={multiRace} setMultiRace={setMultiRace}/>
                     <Box sx={{position: 'relative'}}>
                         <TransitionBox absolute enabled={multiRace === true} sx={{textAlign: 'left', pl: 1}}>
                             {t('election_creation.add_races_later')}
@@ -239,16 +238,16 @@ const QuickPoll = () => {
                         <RaceForm
                             raceIndex={0}
                             onConfirm={onNext}
-                            styling='QuickPoll'
+                            styling='Wizard'
                         />
                     </TransitionBox>
                 </Box>
                 <Box sx={{...pageSX, textAlign: 'left'}}>
-                    <QuickPollExtra onBack={() => setPage(pg => pg-1)} multiRace={multiRace} onAddElection={onAddElection}/>
+                    <WizardExtra onBack={() => setPage(pg => pg-1)} multiRace={multiRace} onAddElection={onAddElection}/>
                 </Box>
             </Box>
         </Paper>
     </ElectionContextProvider>
 }
 
-export default QuickPoll
+export default Wizard

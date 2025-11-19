@@ -15,8 +15,8 @@ import { setCookie, useCookie } from "~/hooks/useCookie";
 /////// PROVIDER SETUP /////
 export interface ICreateElectionContext {
     open: boolean
-    quickPoll: NewElection
-    openDialog: (quickPoll?: NewElection) => void
+    Wizard: NewElection
+    openDialog: (Wizard?: NewElection) => void
     closeDialog: () => void
 }
 
@@ -24,20 +24,20 @@ export const CreateElectionContext = createContext<ICreateElectionContext>(null)
 
 export const CreateElectionContextProvider = ({ children }: { children: ReactNode }) => {
     const [open, setOpen] = useState(false);
-    const [quickPoll, setQuickPoll] = useState(undefined);
+    const [Wizard, setWizard] = useState(undefined);
 
-    const openDialog = (quickPoll: NewElection = undefined) => {
-        setQuickPoll(quickPoll);
+    const openDialog = (Wizard: NewElection = undefined) => {
+        setWizard(Wizard);
         setOpen(true);
     }
 
     const closeDialog = () => {
-        setQuickPoll(undefined);
+        setWizard(undefined);
         setOpen(false);
     }
 
     return <CreateElectionContext.Provider
-        value={{ open, quickPoll, openDialog, closeDialog }}
+        value={{ open, Wizard, openDialog, closeDialog }}
     >
         {children}
     </CreateElectionContext.Provider>
@@ -165,8 +165,8 @@ const CreateElectionDialog = () => {
     const navigate = useNavigate()
 
     useEffect(() => {
-        const q = createElectionContext.quickPoll;
-        if (!createElectionContext.quickPoll) return;
+        const q = createElectionContext.Wizard;
+        if (!createElectionContext.Wizard) return;
 
         // quick poll also specifies a number of other settings but we're not keeping those, we're only keeping the information that the user specified
         setElection({
@@ -180,7 +180,7 @@ const CreateElectionDialog = () => {
                 }
             ]
         })
-    }, [createElectionContext.quickPoll])
+    }, [createElectionContext.Wizard])
 
     const onAddElection = async (election) => {
         // calls post election api, throws error if response not ok
