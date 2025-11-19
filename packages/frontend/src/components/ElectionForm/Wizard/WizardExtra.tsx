@@ -54,9 +54,6 @@ export default ({onBack, multiRace, onAddElection}) => {
     const authSession = useAuthSession();
     const {t, election, updateElection} = useElection()
     const [stepperStep, setStepperStep] = useState(0);
-    const { makeRequest: postElection } = usePostElection()
-    const navigate = useNavigate();
-    const [tempID] = useCookie('temp_id', '0')
 
     const StepButtons = ({ activeStep, setActiveStep, canContinue }: { activeStep: number, setActiveStep: React.Dispatch<React.SetStateAction<number>>, canContinue: boolean }) => <>
         <SecondaryButton

@@ -1,19 +1,16 @@
-import { useContext, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from "react-router";
-import structuredClone from '@ungap/structured-clone';
-import { Election as IElection } from '@equal-vote/star-vote-shared/domain_model/Election';
-import { PrimaryButton, SecondaryButton, Tip } from '../../styles.js';
-import { Box, capitalize, Checkbox, FormControlLabel, FormHelperText, IconButton, MenuItem, Paper, Radio, RadioGroup, Select, SelectChangeEvent, Step, StepContent, StepLabel, Stepper, TextField, Typography } from '@mui/material';
+import { PrimaryButton } from '../../styles.js';
+import { Box, Paper, Typography } from '@mui/material';
 import { usePostElection } from '~/hooks/useAPI';
 import { useCookie } from '~/hooks/useCookie';
 import { NewElection } from '@equal-vote/star-vote-shared/domain_model/Election';
 import useSnackbar from '../../SnackbarContext.js';
-import { makeID, makeUniqueIDSync, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
+import { makeUniqueIDSync, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
 
-import { methodTextKeyToValue, RowButtonWithArrow, TransitionBox, useSubstitutedTranslation } from '../../util.js';
+import { TransitionBox, useSubstitutedTranslation } from '../../util.js';
 import useAuthSession from '../../AuthSessionContextProvider.js';
 import RaceForm from '../Races/RaceForm.js';
-import { VotingMethod } from '@equal-vote/star-vote-shared/domain_model/Race';
 import useConfirm from '../../ConfirmationDialogProvider.js';
 import WizardExtra from './WizardExtra.js';
 import { ElectionContextProvider } from '../../ElectionContextProvider.js';
@@ -66,106 +63,14 @@ const Wizard = () => {
     const authSession = useAuthSession();
     const [tempID] = useCookie('temp_id', '0')
     const navigate = useNavigate()
-    //const [methodKey, setMethodKey] = useState('star');
     const [page, setPage] = useState(0);
     const { isPending, makeRequest: postElection } = usePostElection()
-    const { setSnack} = useSnackbar();
     const [election, setElection] = useState<NewElection>(makeDefaultElection())
     const [multiRace, setMultiRace] = useState(undefined);
 
     const confirm = useConfirm();
 
     const {t} = useSubstitutedTranslation(election.settings.term_type);
-
-    const onSubmitElection = async (election) => {
-        // calls post election api, throws error if response not ok
-        const newElection = await postElection(
-            {
-                Election: election,
-            })
-        if ((!newElection)) {
-            throw Error("Error submitting election");
-        }
-        setElection(makeDefaultElection())
-        navigate(`/${newElection.election.election_id}`)
-    }
-
-    const applyElectionUpdate = (updateFunc) => {
-        const electionCopy = structuredClone(election)
-        updateFunc(electionCopy)
-        setElection(electionCopy)
-    };
-
-    const onSubmit = (e) => {
-        //if(!validateForm(e)) return;
-
-        // This assigns only the new fields, but otherwise keeps the existing election fields
-        const newElection = {
-            ...election,
-            frontend_url: '', // base URL for the frontend
-            owner_id: authSession.isLoggedIn() ? authSession.getIdField('sub') : tempID,
-            state: 'open',
-        }
-        if (newElection.races.length === 1) {
-            // If only one race, use main eleciton title and description
-            newElection.races[0].title = newElection.title
-            newElection.races[0].description = newElection.description
-            newElection.races[0].voting_method = methodTextKeyToValue[methodKey] as VotingMethod;
-        }
-
-        const newCandidates = []
-        const existingIds = new Set<string>();
-
-        newElection.races[0].candidates.forEach(candidate => {
-            if (candidate.candidate_name !== '') {
-                const hasCollision = (id: string) => existingIds.has(id);
-                const newId = makeUniqueIDSync(
-                    ID_PREFIXES.CANDIDATE, 
-                    ID_LENGTHS.CANDIDATE,
-                    hasCollision
-                );
-                existingIds.add(newId);
-                
-                newCandidates.push({
-                    candidate_id: newId,
-                    candidate_name: candidate.candidate_name
-                })
-            }
-        });
-        newElection.races[0].candidates = newCandidates
-        try {
-            onSubmitElection(newElection)
-        } catch (error) {
-            console.error(error)
-        }
-    }
-
-    const onUpdateCandidate = (index: number, name: string) => {
-        const updatedElection = structuredClone(election)
-        const candidates = updatedElection.races[0].candidates
-        candidates[index].candidate_name = name
-        if (index === candidates.length - 1) {
-            // If last form entry is updated, add another entry to form
-            candidates.push({
-                candidate_id: makeID(ID_PREFIXES.CANDIDATE, ID_LENGTHS.CANDIDATE),
-                candidate_name: '',
-            })
-        }
-        else if (candidates.length > 3 && index === candidates.length - 2 && name === '' && candidates[candidates.length - 1].candidate_name === '') {
-            // If last two entries are empty, remove last entry
-            // Keep at least 3
-            candidates.splice(candidates.length - 1, 1)
-        }
-        setElection(updatedElection)
-    }
-
-    const handleEnter = (event) => {
-        // Go to next entry instead of submitting form
-        const form = event.target.form;
-        const index = Array.prototype.indexOf.call(form, event.target);
-        form.elements[index + 2].focus();
-        event.preventDefault();
-    }
 
     const onAddElection = async (election, subPage) => {
         election.owner_id = authSession.isLoggedIn() ? authSession.getIdField('sub') : tempID;

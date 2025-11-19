@@ -818,7 +818,7 @@ tips:
 
   polls_vs_elections:
     title: Elections versus Polls
-    description: A poll will use terms like “option” and “question”. An election will use terms like “candidate” and “race”.
+    description: There's no functional difference, only terminology. A poll will use terms like “option” and “question”. An election will use terms like “candidate” and “race”.
 
   restricted:
     title: Restricted {{capital_election}}
@@ -865,7 +865,7 @@ editable_ballots:
   edit_vote: Update Vote
 
 race_form:
-  candidates_title: 'Candidates'
+  candidates_title: '{{capital_candidates}}'
 
 # Landing Page -> New Election Wizard
 wizard:
