@@ -194,7 +194,7 @@ export default ({onBack, multiRace, onAddElection}) => {
                             title={t(`election_creation.${name}_title`)}
                             description={t(`election_creation.${name}_description`)}
                             key={name}
-                            onClick={() => onAddElection(templateMappers[name](election))}
+                            onClick={() => onAddElection(templateMappers[name](election), '/admin')}
                             ariaLabel={t(`election_creation.${name}_title`)}
                         />
                     )}

@@ -8,7 +8,7 @@ import useAuthSession from './AuthSessionContextProvider';
 import { useThemeSelector } from '../theme';
 import useFeatureFlags from './FeatureFlagContextProvider';
 import { CreateElectionContext } from './ElectionForm/CreateElectionDialog';
-import { openFeedback, useSubstitutedTranslation } from './util';
+import { openFeedback, scrollToElement, useSubstitutedTranslation } from './util';
 import { makeID, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
 
 import { ReturnToClassicContext } from './ReturnToClassicDialog';
@@ -73,8 +73,7 @@ const Header = () => {
             items: [
                 {
                     text: 'E-Voting w/ Paper Receipts',
-                    href: '/new_election',
-                    target: '_self',
+                    onClick: () => scrollToElement(document.querySelector(`.electionCreationWidget`)),
                 },
                 {
                     text: 'Print Ballots',
@@ -100,8 +99,7 @@ const Header = () => {
         },
         {
             text: 'Create Election' ,
-            href: '/new_election',
-            target: '_self',
+            onClick: () => scrollToElement(document.querySelector(`.electionCreationWidget`)),
         },
     ];
 
@@ -120,6 +118,7 @@ const Header = () => {
                                 href={item.href}
                                 target={item.target}
                                 sx={{textTransform: 'none'}}
+                                onClick={item.onClick ?? (() => {})}
                             >
                                 {!item.items && item.text }
                                 {item.items && <Accordion
@@ -169,7 +168,8 @@ const Header = () => {
                 <Box
                     sx={{ flexGrow: 100, flexWrap: 'wrap', display: { xs: 'none', md: 'flex' }, gap: 4, rowGap: 0, position: 'relative', justifyContent: 'center' }}>
                     {navItems.map((item, i) => 
-                        <NavMenu name={`desktop-nav-${i}`} key={`desktop-nav-${i}`} desktopText={item.text} href={item.href} target={item.target}>
+                        <NavMenu name={`desktop-nav-${i}`} key={`desktop-nav-${i}`} desktopText={item.text} href={item.href} target={item.target} onClick={item.onClick}>
+                                
                             {item.items && item.items.map((subitem, j) => 
                                 <MenuItem
                                     key={`desktop-subnav-${i}-${j}`}
@@ -191,7 +191,7 @@ const Header = () => {
                             <MenuItem component={Link} href={authSession.accountUrl} target='_blank'>
                                 {t('nav.your_account')}
                             </MenuItem>
-                            <MenuItem component={Link} onClick={() => createElectionContext.openDialog()}>
+                            <MenuItem component={Link} onClick={() => scrollToElement(document.querySelector(`.electionCreationWidget`))}>
                                 {t('nav.new_election')}
                             </MenuItem>
                             <MenuItem component={Link} href='/manage'>

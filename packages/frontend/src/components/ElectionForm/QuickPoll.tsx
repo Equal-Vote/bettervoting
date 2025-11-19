@@ -169,13 +169,13 @@ const QuickPoll = () => {
         event.preventDefault();
     }
 
-    const onAddElection = async (election) => {
+    const onAddElection = async (election, subPage) => {
         election.owner_id = authSession.isLoggedIn() ? authSession.getIdField('sub') : tempID;
 
         const newElection = await postElection({Election: election})
         if (!newElection) throw Error("Error submitting election");
 
-        navigate(`/${newElection.election.election_id}/admin`)
+        navigate(`/${newElection.election.election_id}${subPage}`)
     }
 
     const width = '500px';
@@ -188,7 +188,7 @@ const QuickPoll = () => {
         }
         const confirmed = await confirm(t('election_creation.publish_confirm'));
         if (confirmed) {
-            onAddElection(updatedElection)
+            onAddElection(updatedElection, '/')
         }else{
             setElection(updatedElection)
             setPage(1);
