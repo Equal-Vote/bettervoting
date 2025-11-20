@@ -1,20 +1,21 @@
 import { useState } from 'react';
 import { useNavigate } from "react-router";
 import { PrimaryButton } from '../../styles.js';
-import { Box, Paper, Typography } from '@mui/material';
+import { Box, Breakpoint, Paper, Typography, useMediaQuery } from '@mui/material';
 import { usePostElection } from '~/hooks/useAPI';
 import { useCookie } from '~/hooks/useCookie';
 import { NewElection } from '@equal-vote/star-vote-shared/domain_model/Election';
 import useSnackbar from '../../SnackbarContext.js';
 import { makeUniqueIDSync, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
 
-import { TransitionBox, useSubstitutedTranslation } from '../../util.js';
+import { StringObject, TransitionBox, useSubstitutedTranslation } from '../../util.js';
 import useAuthSession from '../../AuthSessionContextProvider.js';
 import RaceForm from '../Races/RaceForm.js';
 import useConfirm from '../../ConfirmationDialogProvider.js';
 import WizardExtra from './WizardExtra.js';
 import { ElectionContextProvider } from '../../ElectionContextProvider.js';
 import WizardBasics from './WizardBasics.js';
+import { useTheme } from '@mui/material';
 
 export const makeDefaultElection = () => {
     const ids = [];
@@ -81,7 +82,16 @@ const Wizard = () => {
         navigate(`/${newElection.election.election_id}${subPage}`)
     }
 
-    const width = '500px';
+
+    const theme = useTheme(); 
+
+    const width: StringObject = {xs: '250px', sm: '500px'};
+    const getWidth = () => {
+        const keys: Breakpoint[] = ['sm', 'xs']; // biggest to smallest, must match width keys
+        // NOTE: I'm precomputing ups so that we don't get an error for variable number of hooks
+        const ups = keys.map(key => useMediaQuery(theme.breakpoints.up(key), {noSsr: true}));
+        return Number(width[keys.find((_, i) => ups[i])].replace('px', ''));
+    }
 
     const onNext = async (editedRace) => {
         const updatedElection = {
@@ -120,8 +130,8 @@ const Wizard = () => {
             <Box
                 sx={{
                     position: 'relative',
-                    width: '1000px',
-                    left: `-${page*500}px`,
+                    width: `${getWidth()*2}px`,
+                    left: `-${page*getWidth()}px`,
                     transition: 'left 1s',
                     display: 'flex',
                     flexDirection: 'row',

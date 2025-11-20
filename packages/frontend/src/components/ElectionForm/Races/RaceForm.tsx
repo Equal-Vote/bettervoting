@@ -46,7 +46,7 @@ export default function RaceForm({
                     handleClose={() => onCancel()}
                 >
                     {/* I can't absorb it into FormComponent because of Component Identity Instability*/}
-                    <Box sx={{width: '500px', padding: 1, minHeight: '500px'}}>
+                    <Box sx={{width: '100%', maxWidth: '500px', padding: 1, minHeight: '500px'}}>
                         <InnerRaceForm {...editRace} styling={styling}/>
                     </Box>
                 </RaceDialog>
@@ -103,7 +103,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, styling}
     }, [applyRaceUpdate, setErrors]);
 
     useEffect(() => {
-        setCandidatesExpanded(editedRace.candidates.length > 0)
+        setCandidatesExpanded(editedRace.candidates.length > 1)
     }, [editedRace])
     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
