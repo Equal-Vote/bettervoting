@@ -46,13 +46,13 @@ export default function RaceForm({
                     handleClose={() => onCancel()}
                 >
                     {/* I can't absorb it into FormComponent because of Component Identity Instability*/}
-                    <Box sx={{width: '100%', maxWidth: '500px', padding: 1, minHeight: '500px'}}>
-                        <InnerRaceForm {...editRace} styling={styling}/>
+                    <Box sx={{width: {xs: '250px', sm: '500px'}, padding: 1, minHeight: '500px'}}>
+                        <InnerRaceForm {...editRace} open={dialogOpen}/>
                     </Box>
                 </RaceDialog>
             }
             {styling == 'Wizard' && <>
-                <InnerRaceForm {...editRace} styling={styling}/>
+                <InnerRaceForm {...editRace}/>
                 <Box display='flex' flexDirection='row' justifyContent='flex-end' gap={1} sx={{mt: 3}}>
                     <PrimaryButton onClick={() => editRace.validateRace() && onConfirm(editRace.editedRace)}>Next</PrimaryButton>
                 </Box>
@@ -61,7 +61,7 @@ export default function RaceForm({
     )
 }
 
-const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, styling}) => {
+const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=true}) => {
     const flags = useFeatureFlags();
     const { election, t } = useElection()
     const isDisabled = election.state !== 'draft';
@@ -104,7 +104,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, styling}
 
     useEffect(() => {
         setCandidatesExpanded(editedRace.candidates.length > 1)
-    }, [editedRace])
+    }, [open])
     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleChangeCandidates = useCallback((newCandidateList: any[]) => {
