@@ -432,15 +432,7 @@ export default function Results({ race, results }: {race: Race, results: Electio
   const removeTieBreakFromTitle = (election?.settings.break_ties_randomly ?? false) && results.tieBreakType == 'random';
 
   const {t} = useSubstitutedTranslation(election?.settings?.term_type ?? 'election', {
-    methodKey: {
-      'STAR': 'star',
-      'Approval': 'approval',
-      'Plurality': 'choose_one',
-      'IRV': 'rcv',
-      'STV': 'stv',
-      'STAR_PR': 'star_pr',
-      'RankedRobin': 'ranked_robin',
-    }[results.votingMethod]
+    methodKey: methodValueToTextKey[results.votingMethod]
   });
 
     const {i18n} = useSubstitutedTranslation();

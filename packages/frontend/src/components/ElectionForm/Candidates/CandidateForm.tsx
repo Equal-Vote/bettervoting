@@ -4,7 +4,7 @@ import React from 'react'
 import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
 import Typography from '@mui/material/Typography';
-import { Box, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Paper } from '@mui/material';
+import { Box, Dialog, DialogActions, DialogContent, DialogTitle, FormHelperText, IconButton, Paper } from '@mui/material';
 import Cropper from 'react-easy-crop';
 import getCroppedImg from './PhotoCropper';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -17,12 +17,11 @@ import LinkIcon from '@mui/icons-material/Link';
 interface CandidateDialogProps {
     onEditCandidate: (newCandidate: Candidate) => void,
     candidate: Candidate,
-    onSave: () => void,
     open: boolean,
     handleClose: () => void
 }
 
-const CandidateDialog = ({ onEditCandidate, candidate, onSave, open, handleClose }: CandidateDialogProps) => {
+const CandidateDialog = ({ onEditCandidate, candidate, open, handleClose }: CandidateDialogProps) => {
     const flags = useFeatureFlags();
 
     const onApplyEditCandidate = (updateFunc) => {
@@ -277,21 +276,20 @@ const CandidateDialog = ({ onEditCandidate, candidate, onSave, open, handleClose
                             </Box>
                         </Grid>
                     </>}
-
                 </Grid>
-
             </DialogContent>
 
             <DialogActions>
                 <SecondaryButton
                     type='button'
-                    onClick={() => onSave()}>
+                    onClick={() => handleClose()}>
                     Apply
                 </SecondaryButton>
             </DialogActions>
         </Dialog>
     )
 }
+
 interface CandidateFormProps {
     onEditCandidate: (newCandidate: Candidate) => void,
     candidate: Candidate,
@@ -326,11 +324,12 @@ const LinkDialog = ({ onEditCandidate, candidate, open, handleClose }) => {
             keepMounted>
             <DialogTitle> Update Hyperlink </DialogTitle>
             <DialogContent>
-                <Box sx={{width: 300, height: 90}}>
+                <Box sx={{width: 300, height: 80}}>
                     <TextField
                         id="candidate url"
                         label="Candidate URL"
                         type="url"
+                        error={error!=''}
                         fullWidth
                         value={linkInput}
                         sx={{
@@ -343,7 +342,9 @@ const LinkDialog = ({ onEditCandidate, candidate, open, handleClose }) => {
                             setError('')
                         }}
                     />
-                    <Typography sx={{color: 'var(--brand-red)', fontWeight: 'bold', textAlign: 'end'}}>{error}</Typography>
+                    <FormHelperText error sx={{ pl: 1, pt: 0 }}>
+                        {error}
+                    </FormHelperText>
                 </Box>
             </DialogContent>
 
@@ -378,14 +379,11 @@ const LinkDialog = ({ onEditCandidate, candidate, open, handleClose }) => {
     )
 }
 
-export const CandidateForm = ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled, inputRef, onKeyDown, electionState}: CandidateFormProps) => {
+export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled, inputRef, onKeyDown, electionState}: CandidateFormProps) => {
 
     const [open, setOpen] = React.useState(false);
-    const handleOpen = () => setOpen(true);
-    const handleClose = () => setOpen(false);
-    const flags = useFeatureFlags();
-    const onSave = () => { handleClose() }
     const [linkOpen, setLinkOpen] = React.useState(false);
+    const flags = useFeatureFlags();
 
     return (
         <Paper elevation={4} sx={{ width: '100%' }} aria-label={`Candidate ${index + 1} Form`}>
@@ -408,6 +406,7 @@ export const CandidateForm = ({ onEditCandidate, candidate, index, onDeleteCandi
                         onChange={(e) => onEditCandidate({ ...candidate, candidate_name: e.target.value })}
                         inputRef={inputRef}
                         onKeyDown={onKeyDown}
+                        multiline
                         disabled={electionState !== 'draft'}
                     />
                 </Box>                    
@@ -415,7 +414,7 @@ export const CandidateForm = ({ onEditCandidate, candidate, index, onDeleteCandi
                 {flags.isSet('CANDIDATE_DETAILS') &&
                     <IconButton
                         aria-label={`Edit Candidate ${index + 1} Details`}
-                        onClick={handleOpen}
+                        onClick={() => setOpen(true)}
                         disabled={disabled}>
                         <EditIcon />
                     </IconButton>
@@ -435,54 +434,8 @@ export const CandidateForm = ({ onEditCandidate, candidate, index, onDeleteCandi
                     <DeleteIcon />
                 </IconButton>
             </Box>
-            <CandidateDialog onEditCandidate={onEditCandidate} candidate={candidate} onSave={onSave} open={open} handleClose={handleClose} />
-
+            <CandidateDialog onEditCandidate={onEditCandidate} candidate={candidate} open={open} handleClose={() => setOpen(false)} />
             <LinkDialog onEditCandidate={onEditCandidate} candidate={candidate} open={linkOpen} handleClose={() => setLinkOpen(false)} />
         </Paper >
     )
 }
-
-const AddCandidate = ({ onAddNewCandidate }: { onAddNewCandidate: (candidateName: string) => void }) => {
-
-    const handleEnter = (e) => {
-        saveNewCandidate()
-        e.preventDefault();
-    }
-    const saveNewCandidate = () => {
-        if (newCandidateName.length > 0) {
-            onAddNewCandidate(newCandidateName)
-            setNewCandidateName('')
-        }
-    }
-
-    const [newCandidateName, setNewCandidateName] = useState('')
-
-    return (
-
-        <Box
-            sx={{ display: 'flex', bgcolor: 'background.paper', borderRadius: 10 }}
-            alignItems={'center'}
-        >
-            <TextField
-                id={'candidate-name'}
-                label={"Add Candidate"}
-                type="text"
-                value={newCandidateName}
-                fullWidth
-                sx={{
-                    px: 0,
-                    boxShadow: 2,
-                }}
-                onChange={(e) => setNewCandidateName(e.target.value)}
-                onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                        handleEnter(e)
-                    }
-                }}
-            />
-        </Box>
-    )
-}
-
-export default AddCandidate
-

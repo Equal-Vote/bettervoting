@@ -4,13 +4,18 @@ import { useTranslation } from "react-i18next";
 import { SecondaryButton, Tip } from "./styles";
 import i18n from "~/i18n/i18n";
 import useSnackbar from "./SnackbarContext";
-import { ArrowForwardIos } from "@mui/icons-material";
+import { AddCircleOutlineRounded, ArrowForwardIos } from "@mui/icons-material";
 import { getEntry } from "@equal-vote/star-vote-shared/domain_model/Util";
 import { createHash } from "crypto-browserify";
+import RemoveCircleOutlineRoundedIcon from '@mui/icons-material/RemoveCircleOutlineRounded';
+import { useEffect, useState } from "react";
 
 const rLink = /\[(.*?)\]\((.*?)\)/;
 const rBold = /\*\*(.*?)\*\*/;
 const rTip = / !tip\((.*)\)/;
+
+export const AddIcon = ({prefix=false}) => <AddCircleOutlineRounded sx={{mr: (prefix? 1 : 0)}}/>
+export const MinusIcon = ({prefix=false}) => <RemoveCircleOutlineRoundedIcon sx={{mr: (prefix? 1 : 0)}}/>
 
 export type StringObject = {[key: string]: string};
 export type NumberObject = {[key: string]: number};
@@ -28,6 +33,27 @@ declare namespace Intl {
   }
 }
 
+export const TransitionBox = ({enabled, sx={}, absolute=false, children}) => {
+  const [exiting, setExiting] = useState(false);
+
+  useEffect(() => {
+    if(enabled) return
+
+    setExiting(true)
+    setTimeout(() => setExiting(false), 400);
+  }, [enabled])
+
+  return <Box sx={{
+    opacity: enabled ? 1 : 0,
+    top: enabled ? 0 : (exiting ? -20 : 20),
+    pointerEvents: enabled ? 'auto' : 'none',
+    transition: 'opacity 0.2s, top 0.2s',
+    position: absolute? 'absolute' : 'relative',
+    width: '100%',
+    ...sx,
+  }}> {children} </Box>
+}
+
 // converts the candiate from ITabulator.ts to (capital C) Candidate
 // this will eventually be unnecessary (see #878)
 export const tabToCandidate = (c, raceCandidates) => ({
@@ -37,7 +63,7 @@ export const tabToCandidate = (c, raceCandidates) => ({
 
 export const commaListFormatter = new Intl.ListFormat(i18n.languages[0], { style: 'long', type: 'conjunction' });
 
-export const capitalize = (str) => str[0].toUpperCase() + str.slice(1);
+export const capitalize = (str) => str.split(' ').map(s => s[0].toUpperCase() + s.slice(1)).join(' ');
 
 // Note: it feels weird to have the same util function on both frontend and backend instead of using shared, but they need to use different libraries
 export function hashString(inputString: string) {
@@ -164,6 +190,7 @@ export const useSubstitutedTranslation = (electionTermType = 'election', v = {})
     year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric',
     timeZoneName: 'short', timeZone: v['time_zone'] ?? undefined
   }
+
 
   const { t, i18n } = useTranslation()
 

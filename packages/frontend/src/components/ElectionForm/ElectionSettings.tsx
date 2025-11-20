@@ -164,7 +164,7 @@ export default function ElectionSettings() {
 
                                 <Box sx={{mt: 3, mb: 2}}>
                                     <FormLabel>
-                                        {t('election_creation.term_question')}
+                                        {t('wizard.term_question')}
                                         <Tip name='polls_vs_elections'/>
                                     </FormLabel>
                                     <RadioGroup row>
