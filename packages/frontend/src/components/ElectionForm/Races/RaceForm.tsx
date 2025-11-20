@@ -183,7 +183,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
     let candidateItems = election.state === 'draft' ? ephemeralCandidates : editedRace.candidates;
 
     return <Box display='flex' flexDirection='column' alignItems='stretch' gap={RACE_FORM_GAP} sx={{textAlign: 'left'}}>
-        <TitleAndDescription setErrors={setErrors} errors={errors} editedRace={editedRace} applyRaceUpdate={applyRaceUpdate} />
+        <TitleAndDescription setErrors={setErrors} errors={errors} editedRace={editedRace} applyRaceUpdate={applyRaceUpdate} open={open}/>
 
         <VotingMethodSelector election={election} editedRace={editedRace} isDisabled={isDisabled} setErrors={setErrors} errors={errors} applyRaceUpdate={applyRaceUpdate} />
 
@@ -232,14 +232,14 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
     </Box>
 }
 
-const TitleAndDescription = ({setErrors, errors, editedRace, applyRaceUpdate}) => {
+const TitleAndDescription = ({setErrors, errors, editedRace, applyRaceUpdate, open}) => {
     const [showDescription, setShowDescription] = useState(editedRace.description != '');
     const { election, t } = useElection()
     const isDisabled = election.state !== 'draft';
 
     useEffect(() => {
         setShowDescription(editedRace.description == '')
-    }, [editedRace])
+    }, [open])
 
     return <>
         <Box>
