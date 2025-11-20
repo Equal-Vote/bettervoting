@@ -38,11 +38,11 @@ export const makeDefaultRace = () => ({
 export const useEditRace = (
     race: iRace | null,
     race_index: number,
+    open=false,
 ) => {
     const { election } = useElection()
     
     const [editedRace, setEditedRace] = useState(race !== null ? race : makeDefaultRace())
-
     const [errors, setErrors] = useState({
         raceTitle: '',
         raceDescription: '',
@@ -58,7 +58,7 @@ export const useEditRace = (
             candidates: '',
             votingMethod: '',
         })
-    }, [race, race_index])
+    }, [race, race_index, open])
 
     const applyRaceUpdate = (updateFunc: (race: iRace) => void) => {
         const raceCopy: iRace = structuredClone(editedRace)

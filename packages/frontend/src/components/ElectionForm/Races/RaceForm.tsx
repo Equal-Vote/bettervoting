@@ -35,6 +35,7 @@ export default function RaceForm({
     const editRace = useEditRace(
         raceIndex == undefined ? null : election.races[raceIndex],
         0,
+        dialogOpen,
     )
 
     return (
