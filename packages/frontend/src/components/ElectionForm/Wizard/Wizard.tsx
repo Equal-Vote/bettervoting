@@ -8,7 +8,7 @@ import { NewElection } from '@equal-vote/star-vote-shared/domain_model/Election'
 import useSnackbar from '../../SnackbarContext.js';
 import { makeUniqueIDSync, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
 
-import { StringObject, TransitionBox, useSubstitutedTranslation } from '../../util.js';
+import { scrollToElement, StringObject, TransitionBox, useSubstitutedTranslation } from '../../util.js';
 import useAuthSession from '../../AuthSessionContextProvider.js';
 import RaceForm from '../Races/RaceForm.js';
 import useConfirm from '../../ConfirmationDialogProvider.js';
@@ -46,7 +46,7 @@ export const makeDefaultElection = () => {
             precincts: undefined,
         } ],
         settings: {
-            voter_access: 'open',
+            voter_access: undefined, // the wizard is responsible for setting this one
             voter_authentication: {
                 voter_id: true,
             },
@@ -76,6 +76,8 @@ const Wizard = () => {
     const onAddElection = async (election, subPage) => {
         election.owner_id = authSession.isLoggedIn() ? authSession.getIdField('sub') : tempID;
 
+        if(multiRace) election.races = [];
+
         const newElection = await postElection({Election: election})
         if (!newElection) throw Error("Error submitting election");
 
@@ -101,8 +103,9 @@ const Wizard = () => {
         }
         const confirmed = await confirm(t('wizard.publish_confirm'));
         if (confirmed) {
-            onAddElection({...updatedElection, state: 'finalized'}, '/')
+            onAddElection({...updatedElection, state: 'finalized', settings: {...updatedElection.settings, voter_access: 'open'}}, '/')
         }else{
+            scrollToElement(document.querySelector('.wizard'));
             setElection(updatedElection)
             setPage(1);
         }

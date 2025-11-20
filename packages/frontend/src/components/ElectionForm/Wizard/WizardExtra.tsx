@@ -1,6 +1,6 @@
 import { Typography, Stepper, Step, StepLabel, StepContent, FormControlLabel, Checkbox, TextField, FormHelperText, RadioGroup, Radio, Box } from "@mui/material";
 import { RowButtonWithArrow, useSubstitutedTranslation } from "../../util";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PrimaryButton, SecondaryButton } from "../../styles";
 import { NewElection } from "@equal-vote/star-vote-shared/domain_model/Election";
 import useAuthSession from "../../AuthSessionContextProvider";
@@ -55,10 +55,10 @@ export default ({onBack, multiRace, onAddElection}) => {
     const {t, election, updateElection} = useElection()
     const [stepperStep, setStepperStep] = useState(0);
 
-    const StepButtons = ({ activeStep, setActiveStep, canContinue }: { activeStep: number, setActiveStep: React.Dispatch<React.SetStateAction<number>>, canContinue: boolean }) => <>
+    const StepButtons = ({ activeStep, setActiveStep, canContinue, stepperBack }: { activeStep: number, setActiveStep: React.Dispatch<React.SetStateAction<number>>, canContinue: boolean, stepperBack: Function }) => <>
         <SecondaryButton
             onClick={() => {
-                console.log(activeStep);
+                stepperBack();
                 if(activeStep == 0){
                     onBack()
                 }else{
@@ -69,7 +69,7 @@ export default ({onBack, multiRace, onAddElection}) => {
         >
             Back
         </SecondaryButton>
-        {activeStep < 2 && // hard coding this for now
+        {activeStep < (multiRace ? 2 : 1) && // hard coding this for now
             <PrimaryButton
                 fullWidth={false}
                 variant="contained"
@@ -109,7 +109,7 @@ export default ({onBack, multiRace, onAddElection}) => {
                     <FormHelperText error sx={{ pl: 1, pt: 0 }}>
                         {/* TODO: Add errors */}
                     </FormHelperText>
-                    <StepButtons activeStep={0} setActiveStep={setStepperStep} canContinue={election.title.length >= 3}/> {/*canContinue={/^[^\s][a-zA-Z0-9\s]{3,49}$/.test(election.title) /*&& errors.title == ''} />*/}
+                    <StepButtons activeStep={0} setActiveStep={setStepperStep} canContinue={election.title.length >= 3} stepperBack={() => updateElection(e => e.title = '')}/>
                 </StepContent>
             </Step>
             }
@@ -176,7 +176,7 @@ export default ({onBack, multiRace, onAddElection}) => {
                         />
                     </Box>
 
-                    <StepButtons activeStep={multiRace? 1 : 0} setActiveStep={setStepperStep} canContinue={election.settings.voter_access !== undefined} />
+                    <StepButtons activeStep={multiRace? 1 : 0} setActiveStep={setStepperStep} canContinue={election.settings.voter_access !== undefined} stepperBack={() => updateElection(e => e.settings.voter_access = undefined)}/>
                 </StepContent>
             </Step>
             <Step>
@@ -196,7 +196,7 @@ export default ({onBack, multiRace, onAddElection}) => {
                         />
                     )}
 
-                    <StepButtons activeStep={multiRace ? 2 : 1} setActiveStep={setStepperStep} canContinue={false} />
+                    <StepButtons activeStep={multiRace ? 2 : 1} setActiveStep={setStepperStep} canContinue={false} stepperBack={() => {}}/>
                 </StepContent>
             </Step>
         </Stepper>
