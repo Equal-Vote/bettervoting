@@ -220,7 +220,7 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
     return <Box>
         <Button
             // it's hacky, but opacity 0.8 does helps take the edge off the bold a bit
-            sx={{mr: "auto", textDecoration: 'none', textTransform: 'none', color: 'black', fontSize: '1.125rem', opacity: 0.86}}
+            sx={{mr: "auto", textDecoration: 'none', textTransform: 'none', color: 'black', fontSize: '1.125rem', opacity: 0.86, textAlign: 'left'}}
             disabled={methodStep != 'unset' && methodStep != 'done'}
             onClick={() => setMethodStep('family')}
         >
@@ -243,13 +243,13 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
             height: `${[0, 180, 122, showAllMethods? 407 : 287, -pad][stepIndex[methodStep]]+pad}px`,
             transition: 'height 0.5s',
         }}>
-            <TransitionBox absolute enabled={methodStep == 'family'} isExiting={stepIndex[methodStep] > stepIndex['family']}>
+            <TransitionBox absolute enabled={methodStep == 'family'}>
                 <FamilyPage/>
             </TransitionBox>
-            <TransitionBox absolute enabled={methodStep == 'num_winners'} isExiting={stepIndex[methodStep] > stepIndex['num_winners']}>
+            <TransitionBox absolute enabled={methodStep == 'num_winners'}>
                 <NumWinnersPage/>
             </TransitionBox>
-            <TransitionBox absolute enabled={methodStep == 'method'} isExiting={stepIndex[methodStep] > stepIndex['method']}>
+            <TransitionBox absolute enabled={methodStep == 'method'}>
                 <VotingMethodPage/>
             </TransitionBox>
         </Box>

@@ -101,7 +101,7 @@ const Wizard = () => {
         }
         const confirmed = await confirm(t('wizard.publish_confirm'));
         if (confirmed) {
-            onAddElection(updatedElection, '/')
+            onAddElection({...updatedElection, state: 'finalized'}, '/')
         }else{
             setElection(updatedElection)
             setPage(1);
