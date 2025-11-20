@@ -150,14 +150,14 @@ const Header = () => {
                 <IconButton
                     size="large"
                     href="/"
-                    sx={{display: 'flex', gap: 1, flexGrow: {xs: '1', md: '0'}, mr: {xs: 0, md: 5}, py: '12px', px: '8px'}}>
+                    sx={{display: 'flex', gap: 1, flexGrow: {xs: '1', md: '0'}, m: 'auto', mr: {xs: 'auto', md: 5}, py: '12px', px: '8px'}}>
                         {/* I don't remember what the margin right 5 was for, but I added xs since it was breaking mobile*/}
                         {
                             /* I thought the favicon looked a bit too busy */
                             /*<Avatar src='/favicon-local.png'/>*/
                         }
                         {/* top should be 18.8% of the height*/}
-                        <Box component="img" sx={{position: 'relative', height: '50px', top: '7px'}} src='/logo.png' alt='BetterVoting Beta Logo'/>
+                        <Box component="img" sx={{position: 'relative', height: {xs: '35px', sm: '50px'}, top: '7px'}} src='/logo.png' alt='BetterVoting Beta Logo'/>
                 </IconButton>
 
                 {/**** DESKTOP OPTIONS ****/}
@@ -181,7 +181,7 @@ const Header = () => {
                 </Box>
 
                 {/**** ACCOUNT OPTIONS ****/}
-                <Box sx={{ flexGrow: 0, ml: 5}}>
+                <Box sx={{ flexGrow: 0, ml: {xs: 0, sm: 5}}}>
                     {authSession.isLoggedIn() && <>
                         <NavMenu name='user' mobileIcon={<AccountCircleIcon/>} desktopText={t('nav.greeting', {name: authSession.getIdField('given_name')})}>
                             <MenuItem component={Link} href={authSession.accountUrl} target='_blank'>

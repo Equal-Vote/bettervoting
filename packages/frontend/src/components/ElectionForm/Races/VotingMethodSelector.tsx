@@ -199,7 +199,6 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
                     </FormHelperText>*/}
                 </Box>
 
-
                 {methodFamily == 'proportional_multi_winner' ?
                     <MethodBullet value='STV' disabled={isDisabled} />
                     : <>
@@ -240,7 +239,10 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
 
         <Box sx={{
             position: 'relative',
-            height: `${[0, 180, 122, showAllMethods? 407 : 287, -pad][stepIndex[methodStep]]+pad}px`,
+            height: {
+                xs: `${[0, 155, 120, showAllMethods? 472 : 331, -pad][stepIndex[methodStep]]+pad}px`,
+                sm: `${[0, 180, 122, showAllMethods? 407 : 287, -pad][stepIndex[methodStep]]+pad}px`,
+            },
             transition: 'height 0.5s',
         }}>
             <TransitionBox absolute enabled={methodStep == 'family'}>

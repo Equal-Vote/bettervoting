@@ -87,7 +87,7 @@ const Wizard = () => {
 
     const theme = useTheme(); 
 
-    const width: StringObject = {xs: '250px', sm: '500px'};
+    const width: StringObject = {xs: '300px', sm: '500px'};
     const getWidth = () => {
         const keys: Breakpoint[] = ['sm', 'xs']; // biggest to smallest, must match width keys
         // NOTE: I'm precomputing ups so that we don't get an error for variable number of hooks
@@ -120,7 +120,11 @@ const Wizard = () => {
         //backgroundColor: //'lightShade.main',
         padding: 3,
         borderRadius: '20px',
-        minWidth: {xs: '0px', md: '400px'}
+        minWidth: {xs: '0px', md: '400px'},
+        p: {
+            xs: 1,
+            sm: 3,
+        }
     }
 
     return <ElectionContextProvider id={undefined} localElection={election} setLocalElection={setElection}>
