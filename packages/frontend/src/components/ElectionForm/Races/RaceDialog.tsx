@@ -10,14 +10,12 @@ interface RaceDialogProps {
     open: boolean;
     handleClose: () => void;
     children: React.ReactNode;
-    resetStep: () => void;
 }
 
 export default function RaceDialog({
-  onSaveRace, open, handleClose, children, resetStep
+  onSaveRace, open, handleClose, children
 }: RaceDialogProps) {
-    const {t} = useSubstitutedTranslation();
-    const { election } = useElection()
+    const { election, t } = useElection()
     const handleSave = () => onSaveRace()
 
     const onClose = (event, reason) => {
@@ -25,10 +23,6 @@ export default function RaceDialog({
             return;
         handleClose();
     }
-
-    useEffect(() => {
-      if (! open) resetStep();
-    }, [open]);
 
     const dialogContentRef = useRef<HTMLDivElement>(null);
 
@@ -65,9 +59,9 @@ export default function RaceDialog({
                         </PrimaryButton>
                     </>
                 :
-                        <PrimaryButton onClick={handleClose}>
-                           {t('keyword.close')}
-                        </PrimaryButton >
+                    <PrimaryButton onClick={handleClose}>
+                        {t('keyword.close')}
+                    </PrimaryButton >
                 }
             </DialogActions>
         </Dialog>

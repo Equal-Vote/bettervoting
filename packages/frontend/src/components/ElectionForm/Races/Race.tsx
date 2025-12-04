@@ -11,6 +11,9 @@ import RaceForm from './RaceForm';
 import useElection from '../../ElectionContextProvider';
 import { ContentCopy } from '@mui/icons-material';
 import { Race as IRace } from "@equal-vote/star-vote-shared/domain_model/Race";
+import { ID_LENGTHS, ID_PREFIXES, makeID } from "@equal-vote/star-vote-shared/utils/makeID";
+import { useDeleteAllBallots } from "~/hooks/useAPI";
+import useConfirm from "~/components/ConfirmationDialogProvider";
 
 export interface NewRace extends Omit<IRace, 'voting_method'> {
     voting_method: "STAR" | "STAR_PR" | "Approval" | "RankedRobin" | "IRV" | "Plurality" | "STV" | ""
@@ -21,26 +24,44 @@ interface RaceProps {
 }
 
 export default function Race({ race, race_index }: RaceProps) {
-
-    const { election } = useElection()
-    const { editedRace, errors, setErrors, applyRaceUpdate, onSaveRace, onDeleteRace, onDuplicateRace } = useEditRace(race, race_index)
-
+    const { election, updateElection, refreshElection } = useElection()
+    const { makeRequest: deleteAllBallots } = useDeleteAllBallots(election.election_id);
+    const confirm = useConfirm();
     const [open, setOpen] = useState(false);
-    const handleOpen = () => setOpen(true);
-    const handleClose = () => setOpen(false);
 
-    const [activeStep, setActiveStep] = useState(0);
-    const resetStep = () => setActiveStep(0);
-
-    const onSave = async () => {
-        const success = await onSaveRace()
-        if (!success) return
-        handleClose()
+    const onSave = async (editedRace) => {
+        let success = await updateElection(election => {
+            election.races[race_index] = editedRace
+        }) && await deleteAllBallots()
+        if (!success) return false
+        await refreshElection()
+        return true
     }
 
-    const onCopy = async () => {
-        const success = await onDuplicateRace()
-        if (!success) return
+    const onDuplicate = async () => {
+        let race = election.races[race_index];
+        let success = await updateElection(election => {
+            election.races.push({
+                ...race,
+                title: 'Copy Of ' + race.title,
+                race_id: makeID(ID_PREFIXES.RACE, ID_LENGTHS.RACE)
+            })
+        }) && deleteAllBallots()
+        if (!success) return false
+        await refreshElection()
+        return true
+    }
+
+    const onDelete = async () => {
+        const confirmed = await confirm({ title: 'Confirm', message: 'Are you sure?' })
+        if (!confirmed) return false
+        let success = await updateElection(election => {
+            election.races.splice(race_index, 1)
+        })
+        success = success && await deleteAllBallots()
+        if (!success) return false
+        await refreshElection()
+        return true
     }
 
     return (
@@ -56,7 +77,7 @@ export default function Race({ race, race_index }: RaceProps) {
                     <Tooltip title='Duplicate'>
                         <IconButton
                             aria-label='Duplicate'
-                            onClick={onCopy}
+                            onClick={onDuplicate}
                             disabled={election.state !== 'draft'}>
                             <ContentCopy />
                         </IconButton>
@@ -66,7 +87,7 @@ export default function Race({ race, race_index }: RaceProps) {
                     <Tooltip title='Edit'>
                         <IconButton
                             aria-label={`Edit Race: ${race.title}`}
-                            onClick={handleOpen}>
+                            onClick={() => setOpen(true)}>
                             {election.state === 'draft' ? <EditIcon /> : <VisibilityIcon />}
                         </IconButton>
                     </Tooltip>
@@ -76,7 +97,7 @@ export default function Race({ race, race_index }: RaceProps) {
                         <IconButton
                             aria-label={`Delete Race: ${race.title}`}
                             color="error"
-                            onClick={onDeleteRace}
+                            onClick={onDelete}
                             disabled={election.state !== 'draft'}>
                             <DeleteIcon />
                         </IconButton>
@@ -84,22 +105,13 @@ export default function Race({ race, race_index }: RaceProps) {
                 </Box>
 
             </Box>
-            <RaceDialog
-              onSaveRace={onSave}
-              open={open}
-              handleClose={handleClose}
-              resetStep={resetStep}
-            >
-                <RaceForm
-                    race_index={race_index}
-                    editedRace={editedRace}
-                    errors={errors}
-                    setErrors={setErrors}
-                    applyRaceUpdate={applyRaceUpdate}
-                    activeStep={activeStep}
-                    setActiveStep={setActiveStep}
-                />
-            </RaceDialog>
+            <RaceForm
+                raceIndex={race_index}
+                onConfirm={async (editedRace) => (await onSave(editedRace) && setOpen(false))}
+                onCancel={() => setOpen(false)}
+                dialogOpen={open}
+                styling='Dialog'
+            />
         </Paper >
     )
 }

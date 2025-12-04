@@ -118,8 +118,6 @@ export default class ElectionsDB implements IElectionStore {
     async getElectionsCreatedInRange(ctx: ILoggingContext, startTime: Date, endTime: Date): Promise<Election[] | null> {
         Logger.debug(ctx, `${tableName}.getElectionsCreatedInRange`);
 
-        console.log('start/end', startTime, endTime);
-
         return await this._postgresClient
             .selectFrom(tableName)
             .where('head', '=', true)

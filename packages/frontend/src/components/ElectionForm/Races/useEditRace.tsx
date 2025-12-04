@@ -1,59 +1,64 @@
-import { useEffect } from 'react'
+import { Dispatch, useEffect } from 'react'
 import { useState } from "react"
 
 import { scrollToElement } from '../../util';
-import useElection from '../../ElectionContextProvider';
+import useElection, { IElectionContext } from '../../ElectionContextProvider';
 import { Race as iRace } from '@equal-vote/star-vote-shared/domain_model/Race';
 import structuredClone from '@ungap/structured-clone';
 import useConfirm from '../../ConfirmationDialogProvider';
+import { Election as IElection } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { makeID, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
 import { Candidate } from '@equal-vote/star-vote-shared/domain_model/Candidate';
 import { useDeleteAllBallots } from '~/hooks/useAPI';
 import useSnackbar from '~/components/SnackbarContext';
+import { Election, NewElection } from '@equal-vote/star-vote-shared/domain_model/Election';
 
 export interface RaceErrors {
     raceTitle?: string,
     raceDescription?: string,
-    raceNumWinners?: string,
     candidates?: string
+    votingMethod?: string,
 }
-export const useEditRace = (race: iRace | null, race_index: number) => {
-    const { election, refreshElection, updateElection } = useElection()
-    const { setSnack } = useSnackbar()
-    const { makeRequest: deleteAllBallots } = useDeleteAllBallots(election.election_id);
-    const confirm = useConfirm();
-    const defaultRace = {
-        title: '',
-        description: '',
-        race_id: '',
-        num_winners: 1,
-        voting_method: 'STAR',
-        candidates: [
-            { 
-                candidate_id: makeID(ID_PREFIXES.CANDIDATE, ID_LENGTHS.CANDIDATE),
-                candidate_name: ''
-            },
-        ] as Candidate[],
-        precincts: undefined,
-    } as iRace
-    const [editedRace, setEditedRace] = useState(race !== null ? race : defaultRace)
 
+export const makeDefaultRace = () => ({
+    title: '',
+    description: '',
+    race_id: '',
+    num_winners: undefined,
+    voting_method: undefined,
+    candidates: [
+        { 
+            candidate_id: makeID(ID_PREFIXES.CANDIDATE, ID_LENGTHS.CANDIDATE),
+            candidate_name: ''
+        },
+    ] as Candidate[],
+    precincts: undefined,
+} as iRace);
+
+export const useEditRace = (
+    race: iRace | null,
+    race_index: number,
+    open=false,
+) => {
+    const { election } = useElection()
+    
+    const [editedRace, setEditedRace] = useState(race !== null ? race : makeDefaultRace())
     const [errors, setErrors] = useState({
         raceTitle: '',
         raceDescription: '',
-        raceNumWinners: '',
-        candidates: ''
+        candidates: '',
+        votingMethod: '',
     } as RaceErrors)
 
     useEffect(() => {
-        setEditedRace(race !== null ? race : defaultRace)
+        setEditedRace(race !== null ? race : makeDefaultRace())
         setErrors({
             raceTitle: '',
             raceDescription: '',
-            raceNumWinners: '',
-            candidates: ''
+            candidates: '',
+            votingMethod: '',
         })
-    }, [race, race_index])
+    }, [race, race_index, open])
 
     const applyRaceUpdate = (updateFunc: (race: iRace) => void) => {
         const raceCopy: iRace = structuredClone(editedRace)
@@ -61,20 +66,24 @@ export const useEditRace = (race: iRace | null, race_index: number) => {
         setEditedRace(raceCopy)
     };
 
-    const validatePage = () => {
+    const resetRace = () => setEditedRace(
+        makeDefaultRace()
+    )
+
+    const validateRace = () => {
         let isValid = true
         const newErrors: RaceErrors = {}
 
         if (!editedRace.title) {
-            newErrors.raceTitle = 'Race title required';
+            newErrors.raceTitle = 'Title required';
             isValid = false;
         }
         else if (editedRace.title.length < 3 || editedRace.title.length > 256) {
-            newErrors.raceTitle = 'Race title must be between 3 and 256 characters';
+            newErrors.raceTitle = 'Title must be between 3 and 256 characters';
             isValid = false;
         }
         if (editedRace.description && editedRace.description.length > 1000) {
-            newErrors.raceDescription = 'Race title must be less than 1000 characters';
+            newErrors.raceDescription = 'Description must be less than 1000 characters';
             isValid = false;
         }
         if (election.races.some(race => {
@@ -89,44 +98,27 @@ export const useEditRace = (race: iRace | null, race_index: number) => {
             isValid = false;
         }
         
-        if (editedRace.num_winners < 1) {
-            setSnack({
-                message: 'Must have at least one winner',
-                severity: 'warning',
-                open: true,
-                autoHideDuration: 6000,
-            })
+        if (editedRace.voting_method === undefined) {
+            newErrors.votingMethod = 'Must select a voting method'
             isValid = false;
-        }
+        }        
 
-        // if (editedRace.voting_method == '') {
-        //     setSnack({
-        //         message: 'Must select a voting method',
-        //         severity: 'warning',
-        //         open: true,
-        //         autoHideDuration: 6000,
-        //     })
-        //     isValid = false;
-        // }
         const numCandidates = editedRace.candidates.filter(candidate => candidate.candidate_name !== '').length
-        if (editedRace.num_winners > numCandidates) {
-            newErrors.raceNumWinners = 'Cannot have more winners than candidates';
-            isValid = false;
-        }
+        const uniqueCandidates = new Set(editedRace.candidates.filter(candidate => candidate.candidate_name !== '').map(candidate => candidate.candidate_name))
         if (numCandidates < 2) {
             newErrors.candidates = 'Must have at least 2 candidates';
             isValid = false;
-        }
-        const uniqueCandidates = new Set(editedRace.candidates.filter(candidate => candidate.candidate_name !== '').map(candidate => candidate.candidate_name))
-        if (numCandidates !== uniqueCandidates.size) {
+        }else if (editedRace.num_winners > numCandidates) {
+            newErrors.candidates = 'Cannot have more winners than candidates';
+            isValid = false;
+        }else if (numCandidates !== uniqueCandidates.size) {
             newErrors.candidates = 'Candidates must have unique names';
             isValid = false;
-        }
-        // Check if any candidates are empty
-        if (editedRace.candidates.some(candidate => candidate.candidate_name === '')) {
+        }else if (editedRace.candidates.some(candidate => candidate.candidate_name === '')) {
             newErrors.candidates = 'Candidates must have names';
             isValid = false;
         }
+
         setErrors(errors => ({ ...errors, ...newErrors }))
 
         // NOTE: I'm passing the element as a function so that we can delay the query until the elements have been updated
@@ -135,59 +127,5 @@ export const useEditRace = (race: iRace | null, race_index: number) => {
         return isValid
     }
 
-    const onAddRace = async () => {
-        if (!validatePage()) return false
-        let success = await updateElection(election => {
-            election.races.push({
-                ...editedRace,
-                race_id: makeID(ID_PREFIXES.RACE, ID_LENGTHS.RACE)
-            })
-        })
-        success = success && await deleteAllBallots()
-        if (!success) return false
-        await refreshElection()
-        setEditedRace(defaultRace)
-        return true
-    }
-
-    const onDuplicateRace = async () => {
-        if (!validatePage()) return false
-        let success = await updateElection(election => {
-            election.races.push({
-                ...editedRace,
-                title: 'Copy Of ' + editedRace.title,
-                race_id: makeID(ID_PREFIXES.RACE, ID_LENGTHS.RACE)
-            })
-        })
-        success = success && await deleteAllBallots()
-        if (!success) return false
-        await refreshElection()
-        return true
-    }
-
-    const onSaveRace = async () => {
-        if (!validatePage()) return false
-        let success = await updateElection(election => {
-            election.races[race_index] = editedRace
-        })
-        success = success && await deleteAllBallots()
-        if (!success) return false
-        await refreshElection()
-        return true
-    }
-
-    const onDeleteRace = async () => {
-        const confirmed = await confirm({ title: 'Confirm', message: 'Are you sure?' })
-        if (!confirmed) return false
-        let success = await updateElection(election => {
-            election.races.splice(race_index, 1)
-        })
-        success = success && await deleteAllBallots()
-        if (!success) return false
-        await refreshElection()
-        return true
-    }
-
-    return { editedRace, errors, setErrors, applyRaceUpdate, onSaveRace, onDeleteRace, onAddRace, onDuplicateRace }
-
+    return { editedRace, resetRace, errors, setErrors, applyRaceUpdate, validateRace }
 }

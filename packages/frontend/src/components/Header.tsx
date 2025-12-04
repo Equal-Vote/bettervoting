@@ -7,8 +7,7 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import useAuthSession from './AuthSessionContextProvider';
 import { useThemeSelector } from '../theme';
 import useFeatureFlags from './FeatureFlagContextProvider';
-import { CreateElectionContext } from './ElectionForm/CreateElectionDialog';
-import { openFeedback, useSubstitutedTranslation } from './util';
+import { openFeedback, scrollToElement, useSubstitutedTranslation } from './util';
 import { makeID, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
 
 import { ReturnToClassicContext } from './ReturnToClassicDialog';
@@ -24,9 +23,6 @@ const Header = () => {
     useCookie('temp_id', makeID(ID_PREFIXES.VOTER, ID_LENGTHS.VOTER))
     const {t} = useSubstitutedTranslation();
     
-
-    const createElectionContext = useContext(CreateElectionContext);
-
     const navItems = [
         {
             text: t('nav.about'),
@@ -73,8 +69,7 @@ const Header = () => {
             items: [
                 {
                     text: 'E-Voting w/ Paper Receipts',
-                    href: '/new_election',
-                    target: '_self',
+                    onClick: () => scrollToElement(document.querySelector(`.wizard`)),
                 },
                 {
                     text: 'Print Ballots',
@@ -100,8 +95,7 @@ const Header = () => {
         },
         {
             text: 'Create Election' ,
-            href: '/new_election',
-            target: '_self',
+            onClick: () => scrollToElement(document.querySelector(`.wizard`)),
         },
     ];
 
@@ -119,6 +113,8 @@ const Header = () => {
                                 component={item.items ? undefined : Link}
                                 href={item.href}
                                 target={item.target}
+                                sx={{textTransform: 'none'}}
+                                onClick={item.onClick ?? (() => {})}
                             >
                                 {!item.items && item.text }
                                 {item.items && <Accordion
@@ -154,21 +150,22 @@ const Header = () => {
                 <IconButton
                     size="large"
                     href="/"
-                    sx={{display: 'flex', gap: 1, flexGrow: {xs: '1', md: '0'}, mr: {xs: 0, md: 5}, py: '12px', px: '8px'}}>
+                    sx={{display: 'flex', gap: 1, flexGrow: {xs: '1', md: '0'}, m: 'auto', mr: {xs: 'auto', md: 5}, py: '12px', px: '8px'}}>
                         {/* I don't remember what the margin right 5 was for, but I added xs since it was breaking mobile*/}
                         {
                             /* I thought the favicon looked a bit too busy */
                             /*<Avatar src='/favicon-local.png'/>*/
                         }
                         {/* top should be 18.8% of the height*/}
-                        <Box component="img" sx={{position: 'relative', height: '50px', top: '7px'}} src='/logo.png' alt='BetterVoting Beta Logo'/>
+                        <Box component="img" sx={{position: 'relative', height: {xs: '35px', sm: '50px'}, top: '7px'}} src='/logo.png' alt='BetterVoting Beta Logo'/>
                 </IconButton>
 
                 {/**** DESKTOP OPTIONS ****/}
                 <Box
                     sx={{ flexGrow: 100, flexWrap: 'wrap', display: { xs: 'none', md: 'flex' }, gap: 4, rowGap: 0, position: 'relative', justifyContent: 'center' }}>
                     {navItems.map((item, i) => 
-                        <NavMenu name={`desktop-nav-${i}`} key={`desktop-nav-${i}`} desktopText={item.text} href={item.href} target={item.target}>
+                        <NavMenu name={`desktop-nav-${i}`} key={`desktop-nav-${i}`} desktopText={item.text} href={item.href} target={item.target} onClick={item.onClick}>
+                                
                             {item.items && item.items.map((subitem, j) => 
                                 <MenuItem
                                     key={`desktop-subnav-${i}-${j}`}
@@ -184,13 +181,13 @@ const Header = () => {
                 </Box>
 
                 {/**** ACCOUNT OPTIONS ****/}
-                <Box sx={{ flexGrow: 0, ml: 5}}>
+                <Box sx={{ flexGrow: 0, ml: {xs: 0, sm: 5}}}>
                     {authSession.isLoggedIn() && <>
                         <NavMenu name='user' mobileIcon={<AccountCircleIcon/>} desktopText={t('nav.greeting', {name: authSession.getIdField('given_name')})}>
                             <MenuItem component={Link} href={authSession.accountUrl} target='_blank'>
                                 {t('nav.your_account')}
                             </MenuItem>
-                            <MenuItem component={Link} onClick={() => createElectionContext.openDialog()}>
+                            <MenuItem component={Link} onClick={() => scrollToElement(document.querySelector(`.wizard`))}>
                                 {t('nav.new_election')}
                             </MenuItem>
                             <MenuItem component={Link} href='/manage'>
