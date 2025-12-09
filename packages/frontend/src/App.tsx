@@ -16,7 +16,6 @@ import ElectionsYouManage from './components/Elections/ElectionsYouManage'
 import ElectionsYouVotedIn from './components/Elections/ElectionsYouVotedIn'
 import OpenElections from './components/Elections/OpenElections'
 import { FeatureFlagContextProvider } from './components/FeatureFlagContextProvider'
-import CreateElectionDialog, { CreateElectionContextProvider } from './components/ElectionForm/CreateElectionDialog'
 import ComposeContextProviders from './components/ComposeContextProviders'
 import './i18n/i18n'
 import ReturnToClassicDialog, { ReturnToClassicContext, ReturnToClassicContextProvider } from './components/ReturnToClassicDialog'
@@ -55,14 +54,12 @@ const App = () => {
         AuthSessionContextProvider,
         ConfirmDialogProvider,
         SnackbarContextProvider,
-        CreateElectionContextProvider,
         ReturnToClassicContextProvider,
       ]}>
         <CssBaseline />
         <Box display='flex' flexDirection='column' minHeight={'100vh'} sx={{backgroundColor:'white'}} >
           <ReturnToClassicLayer/>
           <Header />
-          <CreateElectionDialog/>
           <Typography sx={{textAlign:'center', padding: 2, opacity: 0.5}}>
             {t('nav.beta_warning')}
           </Typography>

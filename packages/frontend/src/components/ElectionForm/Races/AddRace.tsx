@@ -2,26 +2,26 @@ import { useState } from 'react'
 import { Box } from "@mui/material"
 import { PrimaryButton } from '../../styles';
 import useElection from '../../ElectionContextProvider';
-import RaceDialog from './RaceDialog';
 import RaceForm from './RaceForm';
-import { useEditRace } from './useEditRace';
+import { ID_LENGTHS, ID_PREFIXES, makeID } from '@equal-vote/star-vote-shared/utils/makeID';
+import { useDeleteAllBallots } from '~/hooks/useAPI';
 
 export default function AddRace() {
-    const { election } = useElection()
+    const { election, updateElection, refreshElection } = useElection()
+    const { makeRequest: deleteAllBallots } = useDeleteAllBallots(election.election_id);
 
     const [open, setOpen] = useState(false);
-    const handleOpen = () => setOpen(true);
-    const handleClose = () => setOpen(false);
 
-    const [activeStep, setActiveStep] = useState(0);
-    const resetStep = () => setActiveStep(0);
-
-    const { editedRace, errors, setErrors, applyRaceUpdate, onAddRace } = useEditRace(null, election.races.length)
-
-    const onAdd = async () => {
-        const success = await onAddRace()
-        if (!success) return
-        handleClose()
+    const onAddRace = async (editedRace) => {
+        let success = await updateElection(election => {
+            election.races.push({
+                ...editedRace,
+                race_id: makeID(ID_PREFIXES.RACE, ID_LENGTHS.RACE)
+            })
+        }) && await deleteAllBallots();
+        if (!success) return false
+        await refreshElection()
+        return true
     }
 
     return (
@@ -30,26 +30,17 @@ export default function AddRace() {
             flexDirection: 'row'
         }}>
             <PrimaryButton
-                onClick={handleOpen}
+                onClick={() => setOpen(true)}
                 disabled={election.state!=='draft'}>
                 Add Race
             </PrimaryButton>
-            <RaceDialog
-              onSaveRace={onAdd}
-              open={open}
-              handleClose={handleClose}
-              resetStep={resetStep}
-            >
-                <RaceForm
-                    race_index={election.races.length}
-                    editedRace={editedRace}
-                    errors={errors}
-                    setErrors={setErrors}
-                    applyRaceUpdate={applyRaceUpdate}
-                    activeStep={activeStep}
-                    setActiveStep={setActiveStep}
-                />
-            </RaceDialog>
+            <RaceForm
+                raceIndex={undefined}
+                onCancel={() => setOpen(false)}
+                onConfirm={async (editedRace) => (await onAddRace(editedRace) && setOpen(false))}
+                dialogOpen={open}
+                styling='Dialog'
+            />
         </Box>
     )
 }

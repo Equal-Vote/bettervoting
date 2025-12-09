@@ -152,7 +152,6 @@ export function electionValidation(obj:Election): string | null {
   if (obj.head && typeof obj.head !== 'boolean'){
     return "Invalid Head";
   }
-  
 
   //TODO... etc
   return null;
