@@ -25,6 +25,7 @@ type SectionProps = {
     includeDivider?: boolean
 }
 
+//TODO: Check for logged in here
 const AdminHome = () => {
     const authSession = useAuthSession()
     const { election, refreshElection: fetchElection, permissions } = useElection()
@@ -49,6 +50,13 @@ const AdminHome = () => {
     const hasPermission = (requiredPermission: string) => {
         return (permissions && permissions.includes(requiredPermission))
     }
+
+    const isLoggedIn = authSession.isLoggedIn()
+    if (!isLoggedIn) return <Box width='100%'>
+        <Typography align='center' variant="h5" sx={{ color: 'error.main', pl: 2 }}>
+            {t('admin_home.not_signed_in_error')}
+        </Typography>
+    </Box>
 
     const finalizeElection = async () => {
         const confirmed = await confirm(t('admin_home.finalize_confirm'));

@@ -1032,6 +1032,7 @@ admin_home:
   description_unset: (no description)
 
   permissions_error: You do not have the correct permissions for this action
+  not_signed_in_error: You need to sign in for this action
 
   roles:
     description: Add people to help run your {{election}}
