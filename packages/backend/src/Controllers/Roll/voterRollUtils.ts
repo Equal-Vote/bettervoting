@@ -114,12 +114,12 @@ export function checkForMissingAuthenticationData(req: IRequest, election: Elect
     // Checks that user has provided all data needed for authentication
     Logger.info(req, `checkForMissingAuthenticationData`)
     if ((election.settings.voter_authentication.voter_id && election.settings.voter_access == 'closed') && !(voter_id ?? req.cookies?.voter_id)) {
-        return 'Voter ID Required'
+        return 'Voter ID Required for closed elections'
     }
     // Arend's Note: I don't think 'User ID Required' is used anymore, might be a remnant of when we were thinking of custom authentication flows, but we don't have a clear story for that at the moment.
     // Arend's second note: This is still possible, this happens with "one vote per device" security settings and the cookies aren't set properly
     if ((election.settings.voter_authentication.voter_id && election.settings.voter_access == 'open') && !(req.user)) {
-        return 'User ID Required'
+        return "Temp ID is required for open elections with 'one vote per device' authentication"
     }
     if (election.settings.voter_authentication.email && !(req.user?.email)) {
         return 'Email Validation Required'
