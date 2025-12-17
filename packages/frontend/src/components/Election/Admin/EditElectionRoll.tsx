@@ -16,10 +16,9 @@ import { PrimaryButton, SecondaryButton } from "~/components/styles";
 
 type Props = {
     roll: ElectionRoll,
-    onClose: () => void,
     fetchRolls: () => Promise<void>,
   }
-const EditElectionRoll = ({ roll, onClose, fetchRolls }:Props) => {
+const EditElectionRoll = ({ roll, fetchRolls }:Props) => {
     const { t, election, permissions } = useElection()
     const flags = useFeatureFlags();
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -291,9 +290,6 @@ const EditElectionRoll = ({ roll, onClose, fetchRolls }:Props) => {
                         </Table>
                     </TableContainer>
                 }
-                <Grid item sm={4}>
-                    <SecondaryButton onClick={() => { onClose() }} > Close </SecondaryButton>
-                </Grid>
             </Grid>
             <SendEmailDialog
                 open={dialogOpen}

@@ -326,9 +326,6 @@ const AddElectionRoll = ({ onClose }: { onClose: () => void }) => {
                             </SecondaryButton>
                         </Box>
                     </Grid>
-                    <Grid item sm={4} sx={{ m: 1 }}>
-                        <SecondaryButton onClick={() => { onClose() }} > Close </SecondaryButton >
-                    </Grid>
                 </Grid>
             </Container >
 

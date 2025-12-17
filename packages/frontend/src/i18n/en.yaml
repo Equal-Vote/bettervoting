@@ -738,6 +738,14 @@ tips:
     title: Enable Voter Groups
     description: Allow different voter groups access to different races within a larger election (ex. districts within jurisdiction).
 
+  email_list:
+    title: $t(wizard.email_list_title)
+    description: $t(wizard.email_list_description) Recommended to maximize security.
+
+  id_list:
+    title: $t(wizard.id_list_title)
+    description: $t(wizard.id_list_description) Offers more flexibility than the email list option.
+
   custom_email_invite: 
     title: Customize Emails To Voters
     description: Customize the content for emails sent to your voters.
@@ -887,10 +895,12 @@ wizard:
   unlisted_description: '{{capital_election}} will be open to anyone who has been given the ballot link'
 
   email_list_title: Email List
-  email_list_description: Provide a list of emails for your voters. Personal links will be sent to each of these voters once the election starts
+  email_list_title_with_tip: $t(wizard.email_list_title) !tip(email_list)
+  email_list_description: Provide a list of emails for your voters. Personal links can be sent to each of these voters after the election starts.
 
   id_list_title: ID List
-  id_list_description: Provide a list of IDs for your voters. Voters will authenticate themselves using their ID before voting
+  id_list_title_with_tip: $t(wizard.id_list_title) !tip(id_list)
+  id_list_description: Provide a list of IDs for your voters. Voters will authenticate themselves using their ID before voting.
 
   add_races_later: '{{capital_races}} will be added later'
 
@@ -1115,6 +1125,10 @@ admin_home:
   finalize_confirm:
     title: Confirm Finalize Election
     message: Are you sure you want to finalize your election? Once finalized you won't be able to edit it.
+
+  add_first_voter_roll_confirm:
+    title: Confirm Adding First Voters
+    message: Once your first voters have been added, your voter list settings will be locked in for this election. Would you like to continue?
 
   finalize_email_confirm:
     title: Send Email Blast

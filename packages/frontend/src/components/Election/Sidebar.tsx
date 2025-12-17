@@ -38,8 +38,9 @@ export default function Sidebar() {
                     }}>
                     <Paper elevation={3} sx={{ width: 600 }} >
                         <Grid container direction="column">
-                            <ListItem text='Voting Page' link={`/${id}/`} />
                             <ListItem text='Admin Home' link={`/${id}/admin`} />
+                            <ListItem text='Ballot Builder' link={`/${id}/admin/ballot_builder`} />
+                            <ListItem text='Preview Ballot' link={`/${id}/`} />
                             {election.state === 'draft' &&
                                 <>
                                     {flags.isSet('ELECTION_ROLES') &&
@@ -48,23 +49,9 @@ export default function Sidebar() {
                                         </PermissionHandler>
                                     }
                                 </>}
-                            {election.settings.voter_access != 'open' && <PermissionHandler permissions={permissions} requiredPermission={'canViewElectionRoll'}>
-                                <ListItem text='Voters' link={`/${id}/admin/voters`} />
-                            </PermissionHandler>}
-                            {/*
-                            The "Ballots" choice on the left-hand menu is available only if
-                            public_results is true or the election is closed
-                            */}
-                            {
-                                (
-                                    election.settings.public_results ||
-                                    election.state === 'closed'
-                                ) && (
-                                    <PermissionHandler permissions={permissions} requiredPermission="canViewBallots">
-                                        <ListItem text="Ballots" link={`/${id}/admin/ballots`} />
-                                    </PermissionHandler>
-                                )}
-
+                            <PermissionHandler permissions={permissions} requiredPermission={'canViewElectionRoll'}>
+                                <ListItem text='Manage Voters' link={`/${id}/admin/voters`} />
+                            </PermissionHandler>
                         </Grid>
                     </Paper>
                 </Box>
