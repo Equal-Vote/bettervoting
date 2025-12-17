@@ -265,29 +265,16 @@ const AdminHome = () => {
         </>)}
     />
 
-    const HeaderSection = () => {
-        return <Box width='100%'>
-            {election.state === 'finalized' && election.start_time &&
-                <Typography align='center' gutterBottom variant="h6" component="h6" >
-                    {t('admin_home.header_start_time', {datetime: election.start_time})}
-                </Typography>
-            }
-            {election.state === 'open' && election.end_time &&
-                <Typography align='center' gutterBottom variant="h6" component="h6">
-                    {t('admin_home.header_end_time', {datetime: election.end_time})}
-                </Typography>
-            }
-            {election.state === 'closed' && election.end_time && 
-                <Typography align='center' gutterBottom variant="h6" component="h6">
-                    {t('admin_home.header_ended_time', {datetime: election.end_time})}
-                </Typography>
-            }
-            {election.state === 'archived' && election.end_time &&
-                <Typography align='center' gutterBottom variant="h6" component="h6">
-                    {t('admin_home.header_ended_time', {datetime: election.end_time})}
-                </Typography>
-            }
-        </Box>
+    const getTimingMessage = () => {
+        if(election.state === 'finalized' && election.start_time)
+            return t('admin_home.header_start_time', {datetime: election.start_time})
+        if(election.state === 'open' && election.end_time)
+            return t('admin_home.header_end_time', {datetime: election.end_time})
+        if(election.state === 'closed' && election.end_time)
+            return t('admin_home.header_ended_time', {datetime: election.end_time})
+        if(election.state === 'archived' && election.end_time)
+            return t('admin_home.header_ended_time', {datetime: election.end_time})
+        return undefined;
     }
 
     const FinalizeSection = () => <Box sx={{maxWidth: 800}}>
@@ -332,16 +319,8 @@ const AdminHome = () => {
     
     const flags = useFeatureFlags();
 
-    return <Box
-        display='flex'
-        justifyContent="center"
-        alignItems="center"
-        flexDirection='column'
-        gap={6}
-        sx={{ width: '100%', maxWidth: 800, margin: 'auto' }}
-    >
-        <TemporaryAccessWarning />
-        <HeaderSection />
+    return <>
+        {getTimingMessage() && <Box width={'100%'}><Typography align='center' gutterBottom variant="h6" component="h6"> {getTimingMessage()}</Typography></Box>}
         <ElectionDetailsInlineForm />
         {(election.state !== 'draft' && election.state !== 'finalized') && 
             <Box display='flex' sx={{flexDirection:{xs: 'column', sm: 'row'}}} alignItems='center' gap={2} justifyContent='space-evenly' width='100%'>
@@ -360,9 +339,7 @@ const AdminHome = () => {
                 }
             </Box>
         }
-        {(election.settings.voter_access === 'open') && <ElectionAuthForm />}
         <ElectionSettings />
-        <Races />
         <Box sx={{width: '100%'}}>
             {(election.state === 'draft') && <TestBallotSection /> }
             {!['draft', 'finalized'].includes(election.state) && !(election.state === 'open' && election.settings.ballot_updates) && <TogglePublicResultsSection/>}
@@ -374,7 +351,7 @@ const AdminHome = () => {
         </Box>
 
         {election.state === 'draft' && <FinalizeSection /> }
-    </Box>
+    </>
 }
 
 export default AdminHome

@@ -1,6 +1,6 @@
 import { useState } from "react"
 import Typography from '@mui/material/Typography';
-import { Box, Paper, Tooltip } from "@mui/material"
+import { Box, capitalize, Paper, Tooltip } from "@mui/material"
 import IconButton from '@mui/material/IconButton'
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -24,7 +24,7 @@ interface RaceProps {
 }
 
 export default function Race({ race, race_index }: RaceProps) {
-    const { election, updateElection, refreshElection } = useElection()
+    const { election, updateElection, refreshElection, t } = useElection()
     const { makeRequest: deleteAllBallots } = useDeleteAllBallots(election.election_id);
     const confirm = useConfirm();
     const navigate = useNavigate();
@@ -72,7 +72,7 @@ export default function Race({ race, race_index }: RaceProps) {
                 alignItems={'center'}
             >
                 <Box sx={{ width: '100%', pl: 2 }}>
-                    <Typography variant="h5" component="h5">{race.title}</Typography>
+                    <Typography variant="h5" component="h5">{`${capitalize(t('race'))} #${race_index+1}: ${race.title}`} </Typography>
                 </Box>
                 <Box sx={{ flexShrink: 1, p: 1 }}>
                     <Tooltip title='Duplicate'>
