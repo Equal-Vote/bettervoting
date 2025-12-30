@@ -105,6 +105,7 @@ const CandidatePhotoDialog = ({ onEditCandidate, candidate, open, handleClose }:
                 type='button'
                 onClick={() => {
                     onApplyEditCandidate((candidate) => { candidate.photo_filename = '' })
+                    setCandidatePhotoFile(null)
                     handleClose()
                 }}
             >
@@ -249,6 +250,7 @@ export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled
                 {flags.isSet('CANDIDATE_DETAILS') &&
                     <IconButton
                         aria-label={`Edit Candidate Photo ${index + 1}`}
+                        color={candidate.photo_filename ? 'info' : 'default'}
                         onClick={() => setOpen(true)}
                         disabled={disabled}>
                         <PhotoCameraIcon />
