@@ -79,37 +79,48 @@ const CandidatePhotoDialog = ({ onEditCandidate, candidate, open, handleClose }:
     return <Dialog open={open} onClose={handleClose} scroll={'paper'} keepMounted>
         <DialogTitle> Update Candidate Photo </DialogTitle>
         <DialogContent>
-            <Grid container>
-                <Grid item xs={12} sx={{ position: 'relative', display: 'flex', justifyContent: 'center', m: 0, p: 1 }}>
-                    <Box>
-                        {!candidatePhotoFile &&
-                            <Grid item className={candidate.photo_filename ? 'filledPhotoContainer' : 'emptyPhotoContainer'} sx={{ display: "flex", flexDirection: "column", alignItems: "center", m: 0, p: 1, gap: 1 }}>
-                                <Box display={'flex'} flexDirection={'column'} justifyContent={'center'} alignItems={'center'} height={'200px'} minWidth={'200px'} border={'4px dashed rgb(112,112,112)'} sx={{ m: 0 }} style={{ margin: '0 auto' }} onDragOver={handleDragOver} onDrop={handleOnDrop}>
-                                    {candidate.photo_filename && <img aria-labelledby='candidate-photo-caption' src={candidate.photo_filename} style={{ position: 'absolute', width: 200, height: 200 }} />}
-                                    <Typography id='candidate-photo-caption' variant="h6" component="h6" style={{ marginTop: 0 }}>Candidate Photo</Typography>
-                                    <Typography variant="h6" component="h6" sx={{ m: 0 }} style={candidate.photo_filename ? { marginTop: '50px' } : {}}>Drag and Drop</Typography>
-                                    <Typography variant="h6" component="h6" sx={{ m: 0 }}>Or</Typography>
-                                    <input type='file' onChange={(e) => setCandidatePhotoFile(URL.createObjectURL(e.target.files[0]))} hidden ref={inputRef} />
-                                    {!candidate.photo_filename && <SecondaryButton className='selectPhotoButton' onClick={() => inputRef.current.click()}>Select File</SecondaryButton>}
-                                </Box>
-                                {candidate.photo_filename && <SecondaryButton className='selectPhotoButton' onClick={() => inputRef.current.click()} sx={{ p: 1, margin: '0 auto', width: '150px' }}>Select File</SecondaryButton>}
-                            </Grid>
-                        }
-                        {candidatePhotoFile &&
-                            <Grid item xs={12} sx={{ m: 0, p: 1 }}>
-                                <Box position='relative' width={'100%'} height={'300px'}>
-                                    <Cropper image={candidatePhotoFile} zoom={zoom} crop={crop} onCropChange={onCropChange} onZoomChange={onZoomChange} onCropComplete={onCropComplete} aspect={1} />
-                                </Box>
-                                <SecondaryButton onClick={() => setCandidatePhotoFile(null)}>Cancel</SecondaryButton>
-                                <PrimaryButton onClick={() => saveImage()}>Save</PrimaryButton>
-                            </Grid>
-                        }
+            <Box>
+                {!candidatePhotoFile &&
+                    <Grid item className={candidate.photo_filename ? 'filledPhotoContainer' : 'emptyPhotoContainer'} sx={{ display: "flex", flexDirection: "column", alignItems: "center", m: 0, p: 1, gap: 1 }}>
+                        <Box display={'flex'} flexDirection={'column'} justifyContent={'center'} alignItems={'center'} height={'200px'} minWidth={'200px'} border={'4px dashed rgb(112,112,112)'} sx={{ m: 0 }} style={{ margin: '0 auto' }} onDragOver={handleDragOver} onDrop={handleOnDrop}>
+                            {candidate.photo_filename && <img aria-labelledby='candidate-photo-caption' src={candidate.photo_filename} style={{ position: 'absolute', width: 200, height: 200 }} />}
+                            <Typography id='candidate-photo-caption' variant="h6" component="h6" style={{ marginTop: 0 }}>Candidate Photo</Typography>
+                            <Typography variant="h6" component="h6" sx={{ m: 0 }} style={candidate.photo_filename ? { marginTop: '50px' } : {}}>Drag and Drop</Typography>
+                            <Typography variant="h6" component="h6" sx={{ m: 0 }}>Or</Typography>
+                            <input type='file' onChange={(e) => setCandidatePhotoFile(URL.createObjectURL(e.target.files[0]))} hidden ref={inputRef} />
+                            {!candidate.photo_filename && <SecondaryButton className='selectPhotoButton' onClick={() => inputRef.current.click()}>Select File</SecondaryButton>}
+                        </Box>
+                        {candidate.photo_filename && <SecondaryButton className='selectPhotoButton' onClick={() => inputRef.current.click()} sx={{ p: 1, margin: '0 auto', width: '150px' }}>Select File</SecondaryButton>}
+                    </Grid>
+                }
+                {candidatePhotoFile && 
+                    <Box position='relative' width={'100%'} height={'300px'}>
+                        <Cropper image={candidatePhotoFile} zoom={zoom} crop={crop} onCropChange={onCropChange} onZoomChange={onZoomChange} onCropComplete={onCropComplete} aspect={1} />
                     </Box>
-                </Grid>
-            </Grid>
+                }
+            </Box>
         </DialogContent>
         <DialogActions>
-            <SecondaryButton type='button' onClick={() => handleClose()}>Close</SecondaryButton>
+            <SecondaryButton
+                type='button'
+                onClick={() => {
+                    onApplyEditCandidate((candidate) => { candidate.photo_filename = '' })
+                    handleClose()
+                }}
+            >
+                Remove
+            </SecondaryButton>
+            <PrimaryButton
+                type='button'
+                onClick={async () => {
+                    if (candidatePhotoFile) {
+                        await saveImage()
+                    }
+                    handleClose()
+                }}
+            >
+                Apply
+            </PrimaryButton>
         </DialogActions>
     </Dialog>
 }
