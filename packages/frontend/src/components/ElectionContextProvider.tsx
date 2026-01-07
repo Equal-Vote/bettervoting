@@ -45,16 +45,18 @@ export const ElectionContextProvider = ({ id, localElection=undefined, setLocalE
     }, [id])
 
     const applyElectionUpdate = async (updateFunc: (election: IElection) => void) => {
+        // NOTE: I'm applying the function directly to local election instead of a copy so that anything referingg to 
         if(id === undefined && localElection !== undefined){
-            const electionCopy: IElection = structuredClone(localElection)
-            updateFunc(electionCopy);
-            setLocalElection(electionCopy)
+            updateFunc(localElection as IElection);
+            setLocalElection(localElection )
             return
         }
         if (!data.election) return
-        const electionCopy: IElection = structuredClone(data.election)
-        updateFunc(electionCopy)
-        return await editElection({ Election: electionCopy })
+        updateFunc(data.election)
+        return await editElection({ Election: data.election }).then(result => {
+            if(result === false) fetchData();
+            return result;
+        })
     };
 
     // This should use local timezone by default, consumers will have to call it directly if they want it to use the election timezone
