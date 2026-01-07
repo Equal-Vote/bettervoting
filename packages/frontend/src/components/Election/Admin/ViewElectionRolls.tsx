@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useLocation, useNavigate } from "react-router";
 import React from 'react'
 import EditElectionRoll from "./EditElectionRoll";
@@ -29,8 +29,18 @@ const ViewElectionRolls = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [dialogOpen, setDialogOpen] = useState(false);
-    const [voterAccess, setVoterAccess] = useState(election.settings.voter_access);
-    const [usesEmail, setUsesEmail] = useState(election.settings.invitation === 'email');
+    //const [voterAccess, sa] = useState(election.settings.voter_access);
+    //const setVoterAccess = (value) => {
+    //    // keeping the local election object in sync avoids consistency issues when navigating between pages
+    //    election.settings.voter_access = value;
+    //    sa(value);
+    //}
+    const [usesEmail, se] = useState(election.settings.invitation === 'email');
+    const setUsesEmail = (email) => {
+        // keeping the local election object in sync avoids consistency issues when navigating between pages
+        election.settings.invitation = email? 'email' : undefined;
+        se(email);
+    }
     const confirm = useConfirm();
 
     const usesVoterIdAuthentication = !!election.settings.voter_authentication?.voter_id;
@@ -41,12 +51,12 @@ const ViewElectionRolls = () => {
         navigate(`${location.pathname}?editing=true`, { replace: false });
     }
 
-    useEffect(() => {
-        setVoterAccess(election.settings.voter_access);
-        if(usesEmail != undefined){ // the radio button is allowed to be out of sync with the database if it's set to undefined
-            setUsesEmail(election.settings.invitation === 'email');
-        }
-    }, [election])
+    //useEffect(() => {
+    //    setVoterAccess(election.settings.voter_access);
+    //    if(usesEmail != undefined){ // the radio button is allowed to be out of sync with the database if it's set to undefined
+    //        setUsesEmail(election.settings.invitation === 'email');
+    //    }
+    //}, [election])
 
     const onSendEmails = ({
         subject,
@@ -115,17 +125,22 @@ const ViewElectionRolls = () => {
                                 if(newAccess === election.settings.voter_access) return;
 
                                 // update settings
-                                setVoterAccess(newAccess);
+                                //setVoterAccess(newAccess);
                                 setUsesEmail(undefined);
-                                await updateElection((e) => e.settings.voter_access = newAccess);
-                                await refreshElection();
+                                updateElection((e) => e.settings.voter_access = newAccess).then((result) => {
+                                    console.log(result)
+                                    if(result === false){
+                                        //setVoterAccess(election.settings.voter_access)
+                                        refreshElection()
+                                    }
+                                });
                             }}
-                            checked={voterAccess === (restricted ? 'closed' : 'open')}
+                            checked={election.settings.voter_access === (restricted ? 'closed' : 'open')}
                         />
                     )}
                 </RadioGroup>
             </Box>
-            {voterAccess == 'closed' && <Box>
+            {election.settings.voter_access == 'closed' && <Box>
                 <Typography>
                     How would you like to identify your voters?
                 </Typography>
@@ -142,23 +157,28 @@ const ViewElectionRolls = () => {
                                 if(electionRollData.length > 0) return; // not sure why disabled still allows me to do onclick
 
                                 // detect no-op
-                                if(usesEmail !== undefined && email == (election.settings.invitation === 'email')) return;
+                                if(usesEmail !== undefined && email === usesEmail) return;
 
                                 // update settings
-                                setUsesEmail(email);
-                                await updateElection((e) => e.settings.invitation = email ? 'email' : undefined);
-                                await refreshElection();
+                                //setUsesEmail(email);
+
+                                updateElection((e) => e.settings.invitation = email ? 'email' : undefined).then((result) => {
+                                    if(result === false){
+                                        setUsesEmail(election.settings.invitation === 'email');
+                                        refreshElection()
+                                    }
+                                });
                             }}
                             checked={usesEmail === email}
                         />
                     )}
                 </RadioGroup>
             </Box>}
-            {voterAccess == 'open' && <ElectionAuthForm />}
-            {voterAccess == 'closed' && usesEmail !== undefined && <>
+            {election.settings.voter_access == 'open' && <ElectionAuthForm />}
+            {election.settings.voter_access == 'closed' && usesEmail !== undefined && <>
                 {!inspectingVoter && !addRollPage &&
                     <Box>
-                        {voterAccess === 'closed' &&
+                        {election.settings.voter_access === 'closed' &&
                             <PermissionHandler permissions={permissions} requiredPermission={'canAddToElectionRoll'}>
                                 <SecondaryButton onClick={async () => {
                                     if(electionRollData.length > 0 || await confirm(t('admin_home.add_first_voter_roll_confirm'))){

@@ -4,7 +4,7 @@ import { Plurality } from "./Plurality";
 import { IRV, STV } from "./IRV";
 import { RankedRobin } from "./RankedRobin";
 import { AllocatedScore } from "./AllocatedScore";
-import { ElectionSettings, electionSettingsValidation } from "@equal-vote/star-vote-shared/domain_model/ElectionSettings";
+import { ElectionSettings} from "@equal-vote/star-vote-shared/domain_model/ElectionSettings";
 import { allocatedScoreCandidate, allocatedScoreResults, allocatedScoreSummaryData, approvalCandidate, approvalResults, approvalSummaryData, candidate, genericResults, genericSummaryData, irvCandidate, irvResults, irvSummaryData, pluralityCandidate, pluralityResults, pluralitySummaryData, rankedRobinCandidate, rankedRobinResults, rankedRobinRoundResults, rankedRobinSummaryData, rawVote, starCandidate, starResults, starSummaryData, vote } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
 
 type TabulatorFunction<

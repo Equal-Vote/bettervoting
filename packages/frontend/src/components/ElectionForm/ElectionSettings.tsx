@@ -26,98 +26,86 @@ export default function ElectionSettings() {
 
     const {t} = useSubstitutedTranslation(election.settings.term_type, {min_rankings, max_rankings});
 
-    const [editedElectionSettings, setEditedElectionSettings] = useState(election.settings);
-    const [publicResults, setPublicResults] = useState(election.settings.public_results);
-    const [ballotUpdates, setBallotUpdates] = useState(election.settings.ballot_updates);
+    const [editedElectionSettings, se] = useState(election.settings);
+    const setEditedElectionSettings = (value) => {
+        // keeping the local election object in sync avoids consistency issues when navigating between pages
+        election.settings = value;
+        se(value);
+    }
+    //const [publicResults, setPublicResults] = useState(election.settings.public_results);
+    //const [ballotUpdates, setBallotUpdates] = useState(election.settings.ballot_updates);
 
     // Enforce mutual exclusion of ballot updates feature and preliminary results
-    const [ballotUpdatesDisabled, setBallotUpdatesDisabled] = useState(!ballotUpdatesConditionsMet || election.settings.public_results);
-    const [publicResultsDisabled, setPublicResultsDisabled] = useState(election.settings.ballot_updates);
-    const [ballotUpdatesDisabledMsg, setBallotUpdatesDisabledMsg] = useState(ballotUpdatesConditionsMet && election.settings.public_results);
+    //const [publicResultsDisabled, setPublicResultsDisabled] = useState(election.settings.ballot_updates);
+    //const [ballotUpdatesDisabled, setBallotUpdatesDisabled] =       useState(!ballotUpdatesConditionsMet || election.settings.public_results);
+    //const [ballotUpdatesDisabledMsg, setBallotUpdatesDisabledMsg] = useState(ballotUpdatesConditionsMet && election.settings.public_results);
 
     // Sync state when election context changes
-    const syncState = () => {
-        setEditedElectionSettings(election.settings);
-        setPublicResults(election.settings.public_results);
-        setBallotUpdates(election.settings.ballot_updates);
-        setBallotUpdatesDisabled(!ballotUpdatesConditionsMet || election.settings.public_results);
-        setBallotUpdatesDisabledMsg(ballotUpdatesConditionsMet && election.settings.public_results);
-        setPublicResultsDisabled(election.settings.ballot_updates);
-    };
     useEffect(() => {
-        syncState();
+        setEditedElectionSettings(election.settings);
+        //setPublicResults(election.settings.public_results);
+        //setBallotUpdates(election.settings.ballot_updates);
+        //setBallotUpdatesDisabled(!ballotUpdatesConditionsMet || election.settings.public_results);
+        //setBallotUpdatesDisabledMsg(ballotUpdatesConditionsMet && election.settings.public_results);
+        //setPublicResultsDisabled(election.settings.ballot_updates);
     }, [election]);
 
-    const applySettingsUpdate = (updateFunc: (settings: IElectionSettings) => void) => {
+    const applySettingsUpdate = async (updateFunc: (settings: IElectionSettings) => void) => {
+        const originalSettings = structuredClone(editedElectionSettings);
         const settingsCopy = structuredClone(editedElectionSettings);
         updateFunc(settingsCopy);
         setEditedElectionSettings(settingsCopy);
+        await updateElection(election => {
+            election.settings = settingsCopy
+        }).then((result) => {
+            if(result === false){
+                setEditedElectionSettings(originalSettings)
+                refreshElection();
+            }else{
+                console.log(result.election.settings)
+            }
+        });
     };
 
-    const validatePage = (electionSettings:IElectionSettings, electionState: ElectionState) => {
-        // Placeholder function
-        return electionSettingsValidation(electionSettings, electionState);
-    }
-
-    const [open, setOpen] = React.useState(false);
-    const handleOpen = () => setOpen(true);
-    const handleClose = () => {
-        setOpen(false);
-        syncState();
-    };
-
-    const onSave = async () => {
-        if (validatePage(editedElectionSettings, election.state)) {
-            setSnack({
-                message: validatePage(editedElectionSettings, election.state),
-                severity: 'error',
-                open: true,
-                autoHideDuration: 6000,
-            })
-            return false
-        }
-        const success = await updateElection(election => {
-            election.settings = editedElectionSettings
-        })
-        if (!success) return false
-        await refreshElection()
-        setOpen(false);
-    }
     interface CheckboxSettingProps {
         setting: string
         disabled?: boolean
         checked?: boolean
-        onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
-        hidden?: boolean
-        helperText?: boolean
+        onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void                
+        helperKey?: string
     }
     const onChangeBallotUpdates = async(e) => {
-         setBallotUpdates(e.target.checked);
-         setPublicResultsDisabled(e.target.checked);
+         //setBallotUpdates(e.target.checked);
+         //setPublicResultsDisabled(e.target.checked);
          applySettingsUpdate(settings => {
              settings.ballot_updates = e.target.checked;
          });
     };
     const onChangePublicResults = async(e) => {
-         setPublicResults(e.target.checked);
-         setBallotUpdatesDisabled(!ballotUpdatesConditionsMet || e.target.checked);
-         setBallotUpdatesDisabledMsg(ballotUpdatesConditionsMet && e.target.checked);
+         //setPublicResults(e.target.checked);
+         //setBallotUpdatesDisabled(!ballotUpdatesConditionsMet || e.target.checked);
+         //setBallotUpdatesDisabledMsg(ballotUpdatesConditionsMet && e.target.checked);
          applySettingsUpdate(settings => { settings.public_results = e.target.checked; });
     };
-    const CheckboxSetting = ({setting, disabled=undefined, checked=undefined, onChange=undefined, hidden=false, helperText=false}: CheckboxSettingProps) => <>
-            <FormControlLabel hidden = {hidden} disabled={disabled} control={
-                <Checkbox
-                    id={setting}
-                    name={`${t(`election_settings.${setting}`)}`}
-                    checked={disabled ? !!checked : (checked ?? !!editedElectionSettings[setting])}
-                    onChange={onChange ?? ((e) => applySettingsUpdate(settings => { settings[setting] = e.target.checked; }))}
-                    sx={{mb: 1}}
-                    hidden={hidden}
-                />}
-                label={t(`election_settings.${setting}`)}
-            />
-        <FormHelperText hidden={!helperText} sx={{ mb:2, mt:0, lineHeight: 0, fontStyle: 'italic', textAlign: 'center' }}>{t(`disabled_msgs.${setting}`)}</FormHelperText>
+    const CheckboxSetting = ({setting, disabled=undefined, checked=undefined, onChange=undefined, helperKey=undefined}: CheckboxSettingProps) => <>
+        <FormControlLabel disabled={disabled} control={
+            <Checkbox
+                id={setting}
+                name={`${t(`election_settings.${setting}`)}`}
+                checked={disabled ? !!checked : (checked ?? !!editedElectionSettings[setting])}
+                onChange={onChange ?? ((e) => applySettingsUpdate(settings => { settings[setting] = e.target.checked; }))}
+                sx={{mb: 1}}
+            />}
+            label={t(`election_settings.${setting}`)}
+        />
+        {disabled && <FormHelperText hidden={!disabled} sx={{ mb:2, mt:0, lineHeight: 0, fontStyle: 'italic', textAlign: 'center' }}>{t(`disabled_msgs.${helperKey ?? setting}`)}</FormHelperText>}
     </>;
+
+    const getBallotUpdateHelperKey = () => {
+        if(editedElectionSettings.voter_access == 'open' || editedElectionSettings.invitation !== 'email') return 'ballot_updates_when_open'
+        if(editedElectionSettings.public_results) return 'ballot_updates_with_prelim'
+        return undefined;
+    };
 
     return <Grid item xs={12} sx={{ m: 0, my: 0, p: 1 }}>
         <FormControl disabled={election.state !== 'draft'} component="fieldset" variant="standard">
@@ -161,12 +149,14 @@ export default function ElectionSettings() {
                     </RadioGroup>
                 </Box>
                 
-
                 <CheckboxSetting setting='random_candidate_order' />
-                { ballotUpdatesConditionsMet && <CheckboxSetting setting='ballot_updates' hidden={!ballotUpdatesConditionsMet}
-                    disabled={election.state !== 'draft' || ballotUpdatesDisabled} checked={ballotUpdates} onChange={onChangeBallotUpdates} helperText={ballotUpdatesDisabledMsg}/>}
-                { ['draft', 'finalized', 'open'].includes(election.state) && <CheckboxSetting setting='public_results' checked={publicResults}
-                    onChange={onChangePublicResults} disabled={election.state !== 'draft' || publicResultsDisabled} helperText={publicResultsDisabled}/>}
+
+                <CheckboxSetting
+                    setting='ballot_updates'
+                    disabled={getBallotUpdateHelperKey()  != undefined}
+                    helperKey={getBallotUpdateHelperKey()}
+                />
+                { ['draft', 'finalized', 'open'].includes(election.state) && <CheckboxSetting setting='public_results' disabled={editedElectionSettings.ballot_updates} />}
                 <CheckboxSetting setting='require_instruction_confirmation'/>
                 <CheckboxSetting setting='draggable_ballot'/>
                 <CheckboxSetting setting='is_public'/>
