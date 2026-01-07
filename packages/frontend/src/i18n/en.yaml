@@ -685,7 +685,8 @@ tabulation_logs:
 #######################################
 
 disabled_msgs:
-    ballot_updates: not supported with preliminary results
+    ballot_updates_with_prelim: not supported with preliminary results
+    ballot_updates_when_open: only supported when election uses email list
     public_results: not supported with vote editing
 
 # Info bubbles

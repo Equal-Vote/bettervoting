@@ -49,9 +49,8 @@ export default function Sidebar() {
                                         </PermissionHandler>
                                     }
                                 </>}
-                            <PermissionHandler permissions={permissions} requiredPermission={'canViewElectionRoll'}>
-                                <ListItem text='Manage Voters' link={`/${id}/admin/voters`} />
-                            </PermissionHandler>
+                            <ListItem text='Manage Voters' link={`/${id}/admin/voters`} />
+                            <ListItem text='Settings' link={`/${id}/admin/settings`} />
                         </Grid>
                     </Paper>
                 </Box>
