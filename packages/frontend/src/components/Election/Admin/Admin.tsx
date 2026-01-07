@@ -8,6 +8,7 @@ import { Box, Typography } from '@mui/material';
 import Races from '~/components/ElectionForm/Races/Races';
 import useElection from '~/components/ElectionContextProvider';
 import TemporaryAccessWarning from '../TemporaryAccessWarning';
+import ElectionSettings from '~/components/ElectionForm/ElectionSettings';
 
 const AdminPage = ({title, children}) => {
     const {election} = useElection();
@@ -39,6 +40,7 @@ const Admin = () => {
                 <Route path='/voters' element={<AdminPage title='Manage Voters'><ViewElectionRolls /></AdminPage>} />
                 <Route path='/roles' element={<EditRoles />} />
                 <Route path='/writeins/:raceId' element={<WriteInApproval />} />
+                <Route path='/settings' element={<AdminPage title='Settings'><ElectionSettings/></AdminPage>} />
             </Routes>
         </Container>
     )
