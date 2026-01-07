@@ -247,15 +247,13 @@ export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled
                     />
                 </Box>                    
 
-                {flags.isSet('CANDIDATE_DETAILS') &&
-                    <IconButton
-                        aria-label={`Edit Candidate Photo ${index + 1}`}
-                        color={candidate.photo_filename ? 'info' : 'default'}
-                        onClick={() => setOpen(true)}
-                        disabled={disabled}>
-                        <PhotoCameraIcon />
-                    </IconButton>
-                }
+                <IconButton
+                    aria-label={`Edit Candidate Photo ${index + 1}`}
+                    color={candidate.photo_filename ? 'info' : 'default'}
+                    onClick={() => setOpen(true)}
+                    disabled={disabled}>
+                    <PhotoCameraIcon />
+                </IconButton>
                 <IconButton
                     aria-label={`Update Link for Candidate Number ${index + 1}`}
                     color={candidate.candidate_url ? 'info' : 'default'}

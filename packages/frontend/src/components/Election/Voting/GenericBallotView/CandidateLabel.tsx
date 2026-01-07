@@ -10,20 +10,28 @@ export default function CandidateLabel({ candidate, gridArea }: CandidateLabelPr
     <Box
       sx={{
         gridArea: gridArea,
+        mt: '16px',
       }}>
+      {candidate.photo_filename && <Box
+        component="img"
+        alt="Equal Vote Coalition Logo"
+        src={candidate.photo_filename}
+        
+        sx={{
+          width: '100px',
+          // borderRadius: '50%',
+        }}
+      />}
       <Typography className="rowHeading" align='left' variant="h6" component="h6" sx={{
         wordBreak: "break-word",
         px: {
           xs: 0,
           sm: '10px',
         },
-        my: {
-          xs: 0,
-          sm: '16px',
-        },
+        my: 0,
         textAlign: {
           xs: 'center',
-          sm: 'left',
+          sm: candidate.photo_filename ? 'center' : 'left',
         },
         width: '100%'
       }}>
