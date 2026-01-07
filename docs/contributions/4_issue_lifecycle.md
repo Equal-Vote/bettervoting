@@ -18,29 +18,21 @@ Team members can create issues directly in GitHub using one of our issue templat
 
 <a href="https://www.youtube.com/watch?v=8QJwyjeS290"><img width="318" height="214" alt="image" src="https://github.com/user-attachments/assets/584205ee-2451-4cc1-9270-986a9b29571d" /><br/>Click for video</a>
 
+> Note: Video is slightly outdated, but it should still be helpful
+
 All issues end up in the board, and then progress as follows:
 
- * Discuss in Next Meeting
+ * Discussion
  * Ice Box
- * Emergent Requests
- * ERs ready for Issue
  * New Issue Approval
  * Prioritized Backlog
  * In Progress
  * Questions / In Review
  * Done
 
-Our current board can be viewed at https://github.com/orgs/Equal-Vote/projects/3 (at time of writing this still need to be updated to reflect the new convention)
+Our current board can be viewed at https://github.com/orgs/Equal-Vote/projects/3
 
 The following sections will detail each of these stages
-
-## Emergent Requests
-
-When items come up during a meeting or a pull request, then they can initially be created as Emergent Requests. ER give a quick way to file the request or problem, but they won't necessarily be actionable. ERs can be turned into issues later. 
-
-To create an Emergent Request navigate to the [bettervoting](https://github.com/Equal-Vote/bettervoting/issues) issues tab, then click "New Issue" and select the emergent request template.
-
-Dev Leads can add ERs to the "ERs ready for Issue" lane. There it's available for any member to proceed to create an issue from the ER.
 
 ## Creating a GitHub Issue
 
@@ -58,6 +50,8 @@ As you write the issue, make sure it passes the "New Team Member" test. A new te
  * Be as small as it can reasonably be
  * The new person assigned to it can start making progress as soon as they have absorbed the context, in a week or less (preferable 1 work day)
  * Be properly labeled (see next section)
+
+The "New Team Member" test is especially true for issues with the "Good First Issue" label. Higher complexity issues, can have more ambiguity but it's always good practice to have as much context as possible in your issues. 
 
 ## Issue Labels
 
@@ -158,11 +152,17 @@ If a member is stuck on an issue they can apply the "Status: Help Needed" label,
 
 💡Idea: In the future there could also be a slack integration that automatically pings the #bettervoting channel with the issue number whenever a "Status: Help Needed" label is added to an issue.
 
-## Discuss in Next Meeting
+## Discussion
 
-Most communication should happen async through updates on the issue it's self, but if an issue requires further discussion then it can be added to the "Discuss in Next Meeting" lane to be discussed in regular meeting.
+Issues without clear action items that need discussion for next steps should be placed in the Discussion column.
 
-Before regular meetings, the dev leads will ensure sort the items in the lane so that they're properly prioritized for the meeting. Then the meeting will have a decidated block (30-60 minutes) where we'll address as many issues as possible. Any issues left unaddressed will roll over to the next meeting. 
+Any issue can be placed in the discussion column, but when creating new issues for discssuion you should use the "Discussion Issue" template by navigate to the [bettervoting](https://github.com/Equal-Vote/bettervoting/issues) issues tab, then clicking "New Issue" and selecting the template.
+
+### Discuss in Next Meeting
+
+Most communication should happen async through updates on the issues themselves, but we also review the high priority items during our regular meetings. 
+
+Before regular meetings, the dev leads will sort the items in the discussion lane so that they're properly prioritized for the meeting. Then the meeting will have a decidated block (30-60 minutes) where we'll address as many issues as possible.
 
 ## Ice Box
 
