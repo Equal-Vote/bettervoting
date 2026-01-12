@@ -70,6 +70,7 @@ Executed by Dev Lead
 
 - [ ] Navigate to the [BetterVoting Repo](https://github.com/Equal-Vote/bettervoting), then enter the "Settings" tab, and open the "Collaborators and teams" tab.
 - [ ] Click "Add People" to add the new team member and grant them Triage Access
+- [ ] Wait for the team member to accept the invitation
 - [ ] Navigate to the [BetterVoting Project Board](https://github.com/orgs/Equal-Vote/projects/3/views/1)
 - [ ] Using the 3 dots in the top right open "Settings", then go to "Manage Access" 
 - [ ] Invite the new team member to have the "Write" role
