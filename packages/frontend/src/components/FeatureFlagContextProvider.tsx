@@ -40,10 +40,6 @@ const flagDefinitions = {
 	RESET_FLAGS:
 		"Set this and refresh the page to return to defaults (sorry, it's a bit hacky)",
 	ELECTION_ROLES: 'Allows elections to have roles such as admin or auditor',
-	CANDIDATE_DETAILS:
-		'Allows candidate details to be specified when creating elections',
-	CANDIDATE_PHOTOS:
-		'Allows candidate phtotos to be specified when creating elections',
 	VOTER_FLAGGING: 'Allows voters to be flagged',
 	ELECTION_TESTIMONIALS:
 		'Enables the election testimonials widget on the landing page',

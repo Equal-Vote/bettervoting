@@ -6,7 +6,7 @@ import TextField from "@mui/material/TextField";
 import Typography from '@mui/material/Typography';
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle, FormHelperText, IconButton, Paper } from '@mui/material';
 import Cropper from 'react-easy-crop';
-import getCroppedImg from './PhotoCropper';
+import {getImage} from './PhotoCropper';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import { PrimaryButton, SecondaryButton } from '../../styles';
@@ -28,7 +28,6 @@ const CandidatePhotoDialog = ({ onEditCandidate, candidate, open, handleClose }:
         onEditCandidate(newCandidate)
     }
 
-    const [candidatePhotoFile, setCandidatePhotoFile] = useState(null)
     const inputRef = useRef(null)
 
     const handleDragOver = (e) => {
@@ -36,17 +35,8 @@ const CandidatePhotoDialog = ({ onEditCandidate, candidate, open, handleClose }:
     }
     const handleOnDrop = (e) => {
         e.preventDefault()
-        setCandidatePhotoFile(URL.createObjectURL(e.dataTransfer.files[0]))
+        saveImage(URL.createObjectURL(e.dataTransfer.files[0]))
     }
-
-    const [zoom, setZoom] = useState(1)
-    const [crop, setCrop] = useState({ x: 0, y: 0 })
-    const [croppedAreaPixels, setCroppedAreaPixels] = useState(null)
-    const onCropChange = (crop) => { setCrop(crop) }
-    const onZoomChange = (zoom) => { setZoom(zoom) }
-    const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
-        setCroppedAreaPixels(croppedAreaPixels)
-    }, [])
 
     const postImage = async (image) => {
         const url = '/API/images'
@@ -66,38 +56,32 @@ const CandidatePhotoDialog = ({ onEditCandidate, candidate, open, handleClose }:
         return true
     }
 
-    const saveImage = async () => {
-        const image = await getCroppedImg(
-            candidatePhotoFile,
-            croppedAreaPixels
-        )
-        if (await postImage(image)) {
-            setCandidatePhotoFile(null)
-        }
+    const saveImage = async (photoFile) => {
+        const image = await getImage(photoFile);
+        await postImage(image)
     }
 
     return <Dialog open={open} onClose={handleClose} scroll={'paper'} keepMounted>
         <DialogTitle> Update Candidate Photo </DialogTitle>
         <DialogContent>
             <Box>
-                {!candidatePhotoFile &&
-                    <Grid item className={candidate.photo_filename ? 'filledPhotoContainer' : 'emptyPhotoContainer'} sx={{ display: "flex", flexDirection: "column", alignItems: "center", m: 0, p: 1, gap: 1 }}>
-                        <Box display={'flex'} flexDirection={'column'} justifyContent={'center'} alignItems={'center'} height={'200px'} minWidth={'200px'} border={'4px dashed rgb(112,112,112)'} sx={{ m: 0 }} style={{ margin: '0 auto' }} onDragOver={handleDragOver} onDrop={handleOnDrop}>
-                            {candidate.photo_filename && <img aria-labelledby='candidate-photo-caption' src={candidate.photo_filename} style={{ position: 'absolute', width: 200, height: 200 }} />}
-                            <Typography id='candidate-photo-caption' variant="h6" component="h6" style={{ marginTop: 0 }}>Candidate Photo</Typography>
-                            <Typography variant="h6" component="h6" sx={{ m: 0 }} style={candidate.photo_filename ? { marginTop: '50px' } : {}}>Drag and Drop</Typography>
-                            <Typography variant="h6" component="h6" sx={{ m: 0 }}>Or</Typography>
-                            <input type='file' onChange={(e) => setCandidatePhotoFile(URL.createObjectURL(e.target.files[0]))} hidden ref={inputRef} />
-                            {!candidate.photo_filename && <SecondaryButton className='selectPhotoButton' onClick={() => inputRef.current.click()}>Select File</SecondaryButton>}
-                        </Box>
-                        {candidate.photo_filename && <SecondaryButton className='selectPhotoButton' onClick={() => inputRef.current.click()} sx={{ p: 1, margin: '0 auto', width: '150px' }}>Select File</SecondaryButton>}
-                    </Grid>
-                }
-                {candidatePhotoFile && 
-                    <Box position='relative' width={'100%'} height={'300px'}>
-                        <Cropper image={candidatePhotoFile} zoom={zoom} crop={crop} onCropChange={onCropChange} onZoomChange={onZoomChange} onCropComplete={onCropComplete} aspect={1} />
+                <input type='file' onChange={(e) =>{
+                    saveImage(URL.createObjectURL(e.target.files[0]))
+                }} hidden ref={inputRef} />
+
+                {!candidate.photo_filename && <Grid item className={candidate.photo_filename ? 'filledPhotoContainer' : 'emptyPhotoContainer'} sx={{ display: "flex", flexDirection: "column", alignItems: "center", m: 0, p: 1, gap: 1 }}>
+                    <Box display={'flex'} flexDirection={'column'} justifyContent={'center'} alignItems={'center'} height={'200px'} minWidth={'200px'} border={'4px dashed rgb(112,112,112)'} sx={{ m: 0 }} style={{ margin: '0 auto' }} onDragOver={handleDragOver} onDrop={handleOnDrop}>
+                        <Typography id='candidate-photo-caption' variant="h6" component="h6" style={{ marginTop: 0 }}>Candidate Photo</Typography>
+                        <Typography variant="h6" component="h6" sx={{ m: 0 }} style={candidate.photo_filename ? { marginTop: '50px' } : {}}>Drag and Drop</Typography>
+                        <Typography variant="h6" component="h6" sx={{ m: 0 }}>Or</Typography>
+                        {!candidate.photo_filename && <SecondaryButton onClick={() => inputRef.current.click()}>Select File</SecondaryButton>}
                     </Box>
-                }
+                </Grid>}
+
+                {candidate.photo_filename && <Box display='flex' flexDirection='column' alignItems='center' gap={1}>
+                    <Box component='img' aria-labelledby='candidate-photo-caption' src={candidate.photo_filename} style={{ objectFit: 'contain', height: '200px', minWidth: '200px'}} />
+                    <SecondaryButton onClick={() => inputRef.current.click()} sx={{ p: 1, margin: '0 auto', width: '150px' }}>Select File</SecondaryButton>
+                </Box>}
             </Box>
         </DialogContent>
         <DialogActions>
@@ -105,7 +89,6 @@ const CandidatePhotoDialog = ({ onEditCandidate, candidate, open, handleClose }:
                 type='button'
                 onClick={() => {
                     onApplyEditCandidate((candidate) => { candidate.photo_filename = '' })
-                    setCandidatePhotoFile(null)
                     handleClose()
                 }}
             >
@@ -114,9 +97,6 @@ const CandidatePhotoDialog = ({ onEditCandidate, candidate, open, handleClose }:
             <PrimaryButton
                 type='button'
                 onClick={async () => {
-                    if (candidatePhotoFile) {
-                        await saveImage()
-                    }
                     handleClose()
                 }}
             >

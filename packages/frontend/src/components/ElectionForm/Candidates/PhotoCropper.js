@@ -7,19 +7,23 @@ export const createImage = (url) =>
         image.src = url
     })
 
-export default async function getCroppedImg(
+export async function getImage(
     imageSrc,
-    pixelCrop,
+    pixelCrop=undefined,
 ) {
     const image = await createImage(imageSrc)
+    pixelCrop ??= {x: 0, y: 0, width: image.width, height: image.height}
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')
     if (!ctx) {
         return null
     }
-    canvas.width = 300
-    canvas.height = 300
-    ctx.drawImage(image, pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height, 0, 0, 300, 300)
+    let longerLength = 300;
+    let w = pixelCrop.width > pixelCrop.height ? longerLength : longerLength * pixelCrop.width / pixelCrop.height;
+    let h = pixelCrop.height > pixelCrop.width ? longerLength : longerLength * pixelCrop.height / pixelCrop.width;
+    canvas.width = w
+    canvas.height = h
+    ctx.drawImage(image, pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height, 0, 0, w, h)
     return new Promise((resolve) => {
         canvas.toBlob((file) => {
             resolve(file)
