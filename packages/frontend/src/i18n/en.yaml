@@ -277,6 +277,7 @@ results:
       - Each vote goes to the voter's preferred finalist.
       - Finalist with most votes wins.
     runoff_majority: majority of voters with preference
+    runoff_no_preference_footnote: "{{percentage}}% of voters expressed no preference between the two finalists."
     score_table_title: Scores Table
     score_table_columns:
       - '{{capital_candidate}}'

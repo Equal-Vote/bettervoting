@@ -180,7 +180,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
         />
     </>
 
-    let candidateItems = election.state === 'draft' ? ephemeralCandidates : editedRace.candidates;
+    const candidateItems = election.state === 'draft' ? ephemeralCandidates : editedRace.candidates;
 
     return <Box display='flex' flexDirection='column' alignItems='stretch' gap={RACE_FORM_GAP} sx={{textAlign: 'left'}}>
         <TitleAndDescription setErrors={setErrors} errors={errors} editedRace={editedRace} applyRaceUpdate={applyRaceUpdate} open={open}/>

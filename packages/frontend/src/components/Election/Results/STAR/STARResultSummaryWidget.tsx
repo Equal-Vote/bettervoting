@@ -40,10 +40,15 @@ const STARResultSummaryWidget = ({ results, roundIndex, t }: {results: starResul
         votes: c.votesPreferredOver[candidates[1-i].id]
     }));
 
+    const noPreferenceVotes = results.summaryData.nTallyVotes - pieData[0].votes - pieData[1].votes;
+    const noPreferencePercentage = results.summaryData.nTallyVotes > 0 
+        ? (noPreferenceVotes / results.summaryData.nTallyVotes * 100).toFixed(1)
+        : '0.0';
+
     const runoffData = [...pieData]
     runoffData.push({
       name: t('results.star.equal_preferences'),
-      votes: results.summaryData.nTallyVotes - pieData[0].votes - pieData[1].votes,
+      votes: noPreferenceVotes,
     })
 
     return (
@@ -61,7 +66,12 @@ const STARResultSummaryWidget = ({ results, roundIndex, t }: {results: starResul
             <Widget title={t('results.star.runoff_title')}>
                 {(t('results.star.runoff_description') as Array<string>).map( (s, i) => <p key={i}>{s}</p>)}
                 {pie ? 
-                    <ResultsPieChart data={pieData} star runoff/>
+                    <>
+                        <ResultsPieChart data={pieData} star runoff/>
+                        <Typography variant="body2" sx={{ fontStyle: 'italic', textAlign: 'center', mt: 1 }}>
+                            {t('results.star.runoff_no_preference_footnote', { percentage: noPreferencePercentage })}
+                        </Typography>
+                    </>
                 :
                 <>
                     <ResultsBarChart data={runoffData} stars={1} runoff percentage majorityLegend={t('results.star.runoff_majority')} />

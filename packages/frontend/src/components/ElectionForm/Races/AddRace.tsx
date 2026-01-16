@@ -13,7 +13,7 @@ export default function AddRace() {
     const [open, setOpen] = useState(false);
 
     const onAddRace = async (editedRace) => {
-        let success = await updateElection(election => {
+        const success = await updateElection(election => {
             election.races.push({
                 ...editedRace,
                 race_id: makeID(ID_PREFIXES.RACE, ID_LENGTHS.RACE)

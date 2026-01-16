@@ -1,0 +1,33 @@
+# Netlify configuration for the BetterVoting frontend
+# This configuration deploys the frontend and points it to the production backend at https://bettervoting.com
+
+[build]
+  # Build from repository root to properly handle npm workspaces and the shared package
+  # 1. Install all workspace dependencies
+  # 2. Build the shared package first (compiles TypeScript to dist/)
+  # 3. Build the frontend
+  command = "npm install && cd packages/shared && npm run build && cd ../frontend && npm run build"
+  # Directory containing the built files to publish (relative to repository root)
+  publish = "packages/frontend/build"
+
+[build.environment]
+  # Point the frontend to the production backend
+  REACT_APP_BACKEND_URL = "https://bettervoting.com"
+  REACT_APP_KEYCLOAK_URL = "https://keycloak.prod.equal.vote/realms/Prod/protocol/openid-connect"
+  # Frontend feature settings
+  REACT_APP_FEATURED_ELECTIONS = ""
+  REACT_APP_MAX_BALLOT_RANKS = "10"
+  REACT_APP_DEFAULT_BALLOT_RANKS = "6"
+
+# Proxy API requests to the production backend
+[[redirects]]
+  from = "/API/*"
+  to = "https://bettervoting.com/API/:splat"
+  status = 200
+  force = true
+
+# SPA routing: redirect all other paths to index.html for client-side routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

@@ -30,7 +30,7 @@ export default function Race({ race, race_index }: RaceProps) {
     const [open, setOpen] = useState(false);
 
     const onSave = async (editedRace) => {
-        let success = await updateElection(election => {
+        const success = await updateElection(election => {
             election.races[race_index] = editedRace
         }) && await deleteAllBallots()
         if (!success) return false
@@ -39,8 +39,8 @@ export default function Race({ race, race_index }: RaceProps) {
     }
 
     const onDuplicate = async () => {
-        let race = election.races[race_index];
-        let success = await updateElection(election => {
+        const race = election.races[race_index];
+        const success = await updateElection(election => {
             election.races.push({
                 ...race,
                 title: 'Copy Of ' + race.title,
