@@ -12,34 +12,23 @@ export default function CandidateLabel({ candidate, gridArea }: CandidateLabelPr
         gridArea: gridArea,
         mt: '16px',
       }}>
-      {candidate.photo_filename && <Box sx={{mr: 2}}>
-        {/*<Box
-          sx={{
-            width: '150px',
-            height: '150px',
-            borderRadius: '10px',
-            backgroundImage: `url(${candidate.photo_filename})`,
-            position: 'absolute',
-        }}
-        />*/}
-        <Box
+      {candidate.photo_filename &&
+        <Paper
           component="img"
           alt="Equal Vote Coalition Logo"
           src={candidate.photo_filename}
+          elevation={2}
           
           sx={{
+            mr: 2,
             width: '150px',
             height: '150px',
             objectFit: 'contain',
             borderRadius: '10px',
-            // copied from paper elevation=1
-            //boxShadow: '0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12)',
-            //boxShadow: '0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12)',
-            //p: 1,
-            //backdropFilter: 'brightness(150%) grayscale(20%) blur(40px)'
+            background: 'none',
+            p: 1,
           }}
         />
-      </Box>
       }
         <Typography className="rowHeading" align='left' variant="h6" component="h6" sx={{
           wordBreak: "break-word",
