@@ -1,4 +1,4 @@
-import { Box, Button, ClickAwayListener, IconButton, Paper, TextFieldProps, Tooltip, Typography } from "@mui/material"
+import { Box, Button, ClickAwayListener, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Paper, TextFieldProps, Tooltip, Typography } from "@mui/material"
 import { TextField } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { ReactNode, useState, isValidElement } from "react";
@@ -58,23 +58,44 @@ export const Tip = (props: {name?: TipName, children?: ReactNode, content?: {tit
 }
 
 export const CandidatePhoto = (props) => {
+    const [open, setOpen] = useState(false);
     if(!props.candidate.photo_filename) return <></>
-    return <Paper
-        {...props}
 
+    const {size, candidate, ...boxProps} = props;
+
+    const Photo = ({size, clickable=false}) => <Paper
+        onClick={() => clickable && setOpen(o => !o)}
         component="img"
         src={props.candidate.photo_filename}
         elevation={2}
         
         sx={{
-            width: props.size,
-            height: props.size,
+            width: size,
+            aspectRatio: '1 / 1',
             objectFit: 'contain',
             borderRadius: '10px',
             background: 'none',
             p: 1,
         }}
     />
+
+    return <Box {...boxProps} width={props.size} height={props.size}>
+        <Photo size={size} clickable/>
+        <Dialog open={open} maxWidth='xl'>
+            <DialogTitle>{candidate.candidate_name}</DialogTitle>
+            <DialogContent>
+                <Photo size={{xs: '70vw', md: '60vh'}}/>
+            </DialogContent>
+            <DialogActions>
+                <SecondaryButton
+                    type='button'
+                    onClick={() => setOpen(false)}
+                >
+                    Close
+                </SecondaryButton>
+            </DialogActions>
+        </Dialog>
+    </Box>
 }
 
 export const FileDropBox = (props) => {
