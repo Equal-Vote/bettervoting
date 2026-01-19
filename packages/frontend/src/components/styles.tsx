@@ -1,4 +1,4 @@
-import { Button, ClickAwayListener, IconButton, TextFieldProps, Tooltip } from "@mui/material"
+import { Box, Button, ClickAwayListener, IconButton, Paper, TextFieldProps, Tooltip, Typography } from "@mui/material"
 import { TextField } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { ReactNode, useState, isValidElement } from "react";
@@ -55,6 +55,63 @@ export const Tip = (props: {name?: TipName, children?: ReactNode, content?: {tit
             </IconButton>}
         </Tooltip>
     </ClickAwayListener>
+}
+
+export const CandidatePhoto = (props) => {
+    if(!props.candidate.photo_filename) return <></>
+    return <Paper
+        {...props}
+
+        component="img"
+        src={props.candidate.photo_filename}
+        elevation={2}
+        
+        sx={{
+            width: props.size,
+            height: props.size,
+            objectFit: 'contain',
+            borderRadius: '10px',
+            background: 'none',
+            p: 1,
+        }}
+    />
+}
+
+export const DragAndDropBox = (props) => {
+    const [dragged, setDragged] = useState(false);
+
+    const {onDrop, onlyShowOnDrag, helperText, ...boxProps} = props;
+
+    return <Box
+        border={`4px dashed ${dragged ? 'var(--brand-pop)': (onlyShowOnDrag ? 'rgba(0, 0, 0, 0)' : 'rgb(112,112,112)')}`} 
+        onDragOver={() => setDragged(true)}
+        onDragLeave={() => setDragged(false)}
+        onDrop={(e) => {
+            setDragged(false);
+            onDrop(e)
+        }}
+        {...boxProps}
+        sx={{
+            position: 'relative',
+            ...props.sx,
+        }}
+    >
+        {onlyShowOnDrag && dragged && <Box
+            position='absolute'
+            display='flex'
+            flexDirection='column-reverse'
+            textAlign='center'
+            width={'100%'}
+            height={'100%'}
+            sx={{
+                pointerEvents: 'none',
+                backgroundColor: dragged ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0)'
+            }}
+        >
+            <Typography component='p' color='var(--brand-pop)'><b>{helperText}</b></Typography>
+        </Box>}
+        {props.children}
+    </Box>
 }
 interface CustomButtonProps extends ButtonProps {
     to?: string;

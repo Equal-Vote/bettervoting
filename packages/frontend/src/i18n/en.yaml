@@ -349,8 +349,8 @@ keyword:
   poll:
     election: poll
     elections: polls
-    candidate: option
-    candidates: options
+    candidate: choice
+    candidates: choices
     race: question
     races: questions
     race_title: question title

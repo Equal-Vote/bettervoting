@@ -9,7 +9,7 @@ import Cropper from 'react-easy-crop';
 import {getImage} from './PhotoCropper';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
-import { PrimaryButton, SecondaryButton } from '../../styles';
+import { CandidatePhoto, DragAndDropBox, PrimaryButton, SecondaryButton } from '../../styles';
 import useFeatureFlags from '../../FeatureFlagContextProvider';
 import { DragHandle } from '~/components/DragAndDrop';
 import LinkIcon from '@mui/icons-material/Link';
@@ -30,12 +30,8 @@ const CandidatePhotoDialog = ({ onEditCandidate, candidate, open, handleClose }:
 
     const inputRef = useRef(null)
 
-    const handleDragOver = (e) => {
-        e.preventDefault()
-    }
     const handleOnDrop = (e) => {
-        e.preventDefault()
-        saveImage(URL.createObjectURL(e.dataTransfer.files[0]))
+        
     }
 
     const postImage = async (image) => {
@@ -69,17 +65,26 @@ const CandidatePhotoDialog = ({ onEditCandidate, candidate, open, handleClose }:
                     saveImage(URL.createObjectURL(e.target.files[0]))
                 }} hidden ref={inputRef} />
 
-                {!candidate.photo_filename && <Grid item className={candidate.photo_filename ? 'filledPhotoContainer' : 'emptyPhotoContainer'} sx={{ display: "flex", flexDirection: "column", alignItems: "center", m: 0, p: 1, gap: 1 }}>
-                    <Box display={'flex'} flexDirection={'column'} justifyContent={'center'} alignItems={'center'} height={'200px'} minWidth={'200px'} border={'4px dashed rgb(112,112,112)'} sx={{ m: 0 }} style={{ margin: '0 auto' }} onDragOver={handleDragOver} onDrop={handleOnDrop}>
-                        <Typography id='candidate-photo-caption' variant="h6" component="h6" style={{ marginTop: 0 }}>Candidate Photo</Typography>
-                        <Typography variant="h6" component="h6" sx={{ m: 0 }} style={candidate.photo_filename ? { marginTop: '50px' } : {}}>Drag and Drop</Typography>
-                        <Typography variant="h6" component="h6" sx={{ m: 0 }}>Or</Typography>
-                        {!candidate.photo_filename && <SecondaryButton onClick={() => inputRef.current.click()}>Select File</SecondaryButton>}
-                    </Box>
-                </Grid>}
+                    <DragAndDropBox
+                        onlyShowOnDrag={candidate.photo_filename}
+                        onDrop={(e) => saveImage(URL.createObjectURL(e.dataTransfer.files[0]))}
+                        height='200px'
+                        width='200px'
+                        sx={{margin: 'auto'}}
+                        helperText='Replace Photo'
+                    >
+                        <Box display={'flex'} flexDirection={'column'} justifyContent={'center'} alignItems={'center'} height='100%'>
+                            <CandidatePhoto candidate={candidate} size={'100%'}/>
+                            {!candidate.photo_filename && <>
+                                <Typography id='candidate-photo-caption' variant="h6" component="h6" style={{ marginTop: 0 }}>Candidate Photo</Typography>
+                                <Typography variant="h6" component="h6" sx={{ m: 0 }} style={candidate.photo_filename ? { marginTop: '50px' } : {}}>Drag and Drop</Typography>
+                                <Typography variant="h6" component="h6" sx={{ m: 0 }}>Or</Typography>
+                                <SecondaryButton onClick={() => inputRef.current.click()}>Select File</SecondaryButton>
+                            </>}
+                        </Box>
+                    </DragAndDropBox>
 
-                {candidate.photo_filename && <Box display='flex' flexDirection='column' alignItems='center' gap={1}>
-                    <Box component='img' aria-labelledby='candidate-photo-caption' src={candidate.photo_filename} style={{ objectFit: 'contain', height: '200px', minWidth: '200px'}} />
+                {candidate.photo_filename && <Box display='flex' flexDirection='column' alignItems='center' gap={1} sx={{mt: 1}}>
                     <SecondaryButton onClick={() => inputRef.current.click()} sx={{ p: 1, margin: '0 auto', width: '150px' }}>Select File</SecondaryButton>
                 </Box>}
             </Box>
