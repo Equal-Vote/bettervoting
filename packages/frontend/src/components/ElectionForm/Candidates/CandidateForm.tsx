@@ -36,7 +36,9 @@ const CandidatePhotoDialog = ({ onEditCandidate, candidate, open, handleClose }:
         if(response) onApplyEditCandidate((candidate) => { candidate.photo_filename = response.photo_filename })
     }
 
-    return <Dialog open={open} onClose={handleClose} scroll={'paper'} keepMounted>
+    return <Dialog open={open} onClose={handleClose} scroll={'paper'} keepMounted
+        onDragEnter={(e) => e.stopPropagation()}
+    >
         <DialogTitle> Update Candidate Photo </DialogTitle>
         <DialogContent>
             <Box>
@@ -51,6 +53,7 @@ const CandidatePhotoDialog = ({ onEditCandidate, candidate, open, handleClose }:
                         width='200px'
                         sx={{margin: 'auto'}}
                         helperText='Replace Photo'
+                        insideDialog
                     >
                         <Box display={'flex'} flexDirection={'column'} justifyContent={'center'} alignItems={'center'} height='100%'>
                             <CandidatePhoto candidate={candidate} size={'100%'}/>

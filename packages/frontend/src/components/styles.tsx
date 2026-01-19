@@ -3,7 +3,7 @@ import { TextField } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { ReactNode, useState, isValidElement } from "react";
 import en from './en.yaml';
-import { useSubstitutedTranslation } from "./util";
+import { isMuiDialogActive, isMuiDialogGloballyOpen, useSubstitutedTranslation } from "./util";
 import useRace from "./RaceContextProvider";
 import useElection from "./ElectionContextProvider";
 import { ButtonProps } from "@mui/material";
@@ -80,13 +80,31 @@ export const CandidatePhoto = (props) => {
 export const FileDropBox = (props) => {
     const [dragged, setDragged] = useState(false);
 
-    const {onDrop, onlyShowOnDrag, helperText, ...boxProps} = props;
+    const {onDrop, onlyShowOnDrag, helperText, insideDialog, ...boxProps} = props;
+
+    // HACK: Most pointer events can be disabled more elegantly, but drag and drop is more difficult. This was the best work around I could find
+    const isMuiDialogActive = () => 
+        Array.from(
+            document.querySelectorAll('.MuiDialog-container')
+        ).some(el => {
+            const style = window.getComputedStyle(el);
+            return (
+            style.visibility !== 'hidden' &&
+            style.opacity !== '0'
+            );
+        });
 
     return <Box
-        border={`4px dashed ${dragged ? 'var(--brand-pop)': (onlyShowOnDrag ? 'rgba(0, 0, 0, 0)' : 'rgb(112,112,112)')}`} 
-        onDragOver={() => setDragged(true)}
-        onDragLeave={() => setDragged(false)}
+        onDragOver={() => {
+            if(!insideDialog && isMuiDialogActive()) return;
+            setDragged(true)
+        }}
+        onDragLeave={() => {
+            if(!insideDialog && isMuiDialogActive()) return;
+            setDragged(false)
+        }}
         onDrop={(e) => {
+            if(!insideDialog && isMuiDialogActive()) return;
             setDragged(false);
             onDrop(e)
         }}
@@ -105,11 +123,23 @@ export const FileDropBox = (props) => {
             height={'100%'}
             sx={{
                 pointerEvents: 'none',
-                backgroundColor: dragged ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0)'
+                backgroundColor: dragged ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0)',
+                zIndex: 1, // setting z-index so order is displayed correctly for the RaceForm case
             }}
         >
-            <Typography component='p' color='var(--brand-pop)'><b>{helperText}</b></Typography>
+            <Typography component='p' color='var(--brand-pop)' sx={{mb: 1}}><b>{helperText}</b></Typography>
         </Box>}
+        {/* Adding this as a separate outline so that outline overlays on the box in stead of offseting elements */}
+        <Box
+            position='absolute'
+            border={`4px dashed ${dragged ? 'var(--brand-pop)': (onlyShowOnDrag ? 'rgba(0, 0, 0, 0)' : 'rgb(112,112,112)')}`} 
+            width={'100%'}
+            height={'100%'}
+            sx={{
+                pointerEvents: 'none',
+                zIndex: 2, // setting z-index so order is displayed correctly for the RaceForm case
+            }}
+        />
         {props.children}
     </Box>
 }

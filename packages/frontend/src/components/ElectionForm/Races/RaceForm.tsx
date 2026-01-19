@@ -13,6 +13,8 @@ import VotingMethodSelector from './VotingMethodSelector';
 import useElection from '~/components/ElectionContextProvider';
 import { SecondaryButton, PrimaryButton, FileDropBox } from '~/components/styles';
 import RaceDialog from './RaceDialog';
+import { Candidate } from '@equal-vote/star-vote-shared/domain_model/Candidate';
+import { getImage, postImage } from '../Candidates/PhotoUtil';
 
 interface RaceFormProps {
     raceIndex?: number,
@@ -183,12 +185,53 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
     let candidateItems = election.state === 'draft' ? ephemeralCandidates : editedRace.candidates;
 
     const saveImage = async (photoFile) => {
-        const image = await getImage(photoFile);
-        await postImage(image)
+        //const image = await getImage(photoFile);
+        //await postImage(image)
     }
 
-    const handlePhotoDrop = (e) => {
-        saveImage(URL.createObjectURL(e.dataTransfer.files[0]))
+    const handlePhotoDrop = async (e) =>  {
+        console.log(e.dataTransfer.files)
+        // load file data
+        let names = []
+        let promises = []
+        // forEach doesn't exist on fileList type
+        // I'm keeping the loops separate since all the files need to be retrieved from dataTransfer before any await functions are called
+        for(let i = 0; i < e.dataTransfer.files.length; i++){ 
+            let f = e.dataTransfer.files[i];
+
+            let parts = f.name.split('\.');
+            parts.pop(); // drop extension
+            names.push(parts.join('.'))
+
+            promises.push(getImage(URL.createObjectURL(f)).then(img => postImage(img)))
+        }
+
+        // get photos
+        let photos = (await Promise.all(promises)).map(res => res.photo_filename);
+
+        // create candidates
+        const existingIds = new Set(editedRace.candidates.map(c => c.candidate_id));
+        let newCandidates = names.map((n, i) => {
+            const hasCollision = (id: string) => existingIds.has(id);
+
+            const newId = makeUniqueIDSync(
+                ID_PREFIXES.CANDIDATE,
+                ID_LENGTHS.CANDIDATE,
+                hasCollision
+            );
+
+            return {
+                candidate_id: newId,
+                candidate_name: names[i],
+                photo_filename: photos[i],
+            } as Candidate;
+        })
+
+        // I can't use onEditCandidate since it can't be called multiple times
+        applyRaceUpdate(race => {
+            if(race.candidates.length == 1 && race.candidates[0].candidate_name == '') race.candidates.pop();
+            newCandidates.forEach(c => race.candidates.push(c))
+        });
     }
 
     return <Box display='flex' flexDirection='column' alignItems='stretch' gap={RACE_FORM_GAP} sx={{textAlign: 'left'}}>
@@ -196,7 +239,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
 
         <VotingMethodSelector election={election} editedRace={editedRace} isDisabled={isDisabled} setErrors={setErrors} errors={errors} applyRaceUpdate={applyRaceUpdate} />
 
-        <FileDropBox onlyShowOnDrag helperText={'Add from photo(s)'}>
+        <FileDropBox onlyShowOnDrag helperText={'Add from photo(s)'} onDrop={handlePhotoDrop}>
             <Button
                 // it's hacky, but opacity 0.8 does helps take the edge off the bold a bit
                 sx={{mr: "auto", textDecoration: 'none', textTransform: 'none', color: 'black', fontSize: '1.125rem', opacity: 0.86}}
