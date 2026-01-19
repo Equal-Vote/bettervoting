@@ -6,7 +6,7 @@ import TextField from "@mui/material/TextField";
 import Typography from '@mui/material/Typography';
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle, FormHelperText, IconButton, Paper } from '@mui/material';
 import Cropper from 'react-easy-crop';
-import {getImage, postImage} from './PhotoCropper';
+import {getImage, postImage} from './PhotoUtil';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import { CandidatePhoto, FileDropBox, PrimaryButton, SecondaryButton } from '../../styles';
