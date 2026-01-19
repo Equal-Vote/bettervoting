@@ -6,10 +6,10 @@ import TextField from "@mui/material/TextField";
 import Typography from '@mui/material/Typography';
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle, FormHelperText, IconButton, Paper } from '@mui/material';
 import Cropper from 'react-easy-crop';
-import {getImage} from './PhotoCropper';
+import {getImage, postImage} from './PhotoCropper';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
-import { CandidatePhoto, DragAndDropBox, PrimaryButton, SecondaryButton } from '../../styles';
+import { CandidatePhoto, FileDropBox, PrimaryButton, SecondaryButton } from '../../styles';
 import useFeatureFlags from '../../FeatureFlagContextProvider';
 import { DragHandle } from '~/components/DragAndDrop';
 import LinkIcon from '@mui/icons-material/Link';
@@ -30,31 +30,10 @@ const CandidatePhotoDialog = ({ onEditCandidate, candidate, open, handleClose }:
 
     const inputRef = useRef(null)
 
-    const handleOnDrop = (e) => {
-        
-    }
-
-    const postImage = async (image) => {
-        const url = '/API/images'
-        const fileOfBlob = new File([image], 'image.jpg', { type: "image/jpeg" });
-        const formData = new FormData()
-        formData.append('file', fileOfBlob)
-        const options = {
-            method: 'post',
-            body: formData
-        }
-        const response = await fetch(url, options)
-        if (!response.ok) {
-            return false
-        }
-        const data = await response.json()
-        onApplyEditCandidate((candidate) => { candidate.photo_filename = data.photo_filename })
-        return true
-    }
-
     const saveImage = async (photoFile) => {
         const image = await getImage(photoFile);
-        await postImage(image)
+        const response = await postImage(image)
+        if(response) onApplyEditCandidate((candidate) => { candidate.photo_filename = response.photo_filename })
     }
 
     return <Dialog open={open} onClose={handleClose} scroll={'paper'} keepMounted>
@@ -65,7 +44,7 @@ const CandidatePhotoDialog = ({ onEditCandidate, candidate, open, handleClose }:
                     saveImage(URL.createObjectURL(e.target.files[0]))
                 }} hidden ref={inputRef} />
 
-                    <DragAndDropBox
+                    <FileDropBox
                         onlyShowOnDrag={candidate.photo_filename}
                         onDrop={(e) => saveImage(URL.createObjectURL(e.dataTransfer.files[0]))}
                         height='200px'
@@ -82,7 +61,7 @@ const CandidatePhotoDialog = ({ onEditCandidate, candidate, open, handleClose }:
                                 <SecondaryButton onClick={() => inputRef.current.click()}>Select File</SecondaryButton>
                             </>}
                         </Box>
-                    </DragAndDropBox>
+                    </FileDropBox>
 
                 {candidate.photo_filename && <Box display='flex' flexDirection='column' alignItems='center' gap={1} sx={{mt: 1}}>
                     <SecondaryButton onClick={() => inputRef.current.click()} sx={{ p: 1, margin: '0 auto', width: '150px' }}>Select File</SecondaryButton>

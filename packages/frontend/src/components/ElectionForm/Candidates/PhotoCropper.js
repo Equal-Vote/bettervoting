@@ -30,3 +30,19 @@ export async function getImage(
         }, 'image/jpeg')
     })
 }
+
+export const postImage = async (image) => {
+    const url = '/API/images'
+    const fileOfBlob = new File([image], 'image.jpg', { type: "image/jpeg" });
+    const formData = new FormData()
+    formData.append('file', fileOfBlob)
+    const options = {
+        method: 'post',
+        body: formData
+    }
+    const response = await fetch(url, options)
+    if (!response.ok) {
+        return false
+    }
+    return await response.json()
+}

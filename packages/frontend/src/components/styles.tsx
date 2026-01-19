@@ -77,7 +77,7 @@ export const CandidatePhoto = (props) => {
     />
 }
 
-export const DragAndDropBox = (props) => {
+export const FileDropBox = (props) => {
     const [dragged, setDragged] = useState(false);
 
     const {onDrop, onlyShowOnDrag, helperText, ...boxProps} = props;

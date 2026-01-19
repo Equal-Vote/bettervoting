@@ -11,7 +11,7 @@ import { makeDefaultRace, RaceErrors, useEditRace } from './useEditRace';
 import { makeUniqueIDSync, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
 import VotingMethodSelector from './VotingMethodSelector';
 import useElection from '~/components/ElectionContextProvider';
-import { SecondaryButton, PrimaryButton } from '~/components/styles';
+import { SecondaryButton, PrimaryButton, FileDropBox } from '~/components/styles';
 import RaceDialog from './RaceDialog';
 
 interface RaceFormProps {
@@ -182,12 +182,21 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
 
     let candidateItems = election.state === 'draft' ? ephemeralCandidates : editedRace.candidates;
 
+    const saveImage = async (photoFile) => {
+        const image = await getImage(photoFile);
+        await postImage(image)
+    }
+
+    const handlePhotoDrop = (e) => {
+        saveImage(URL.createObjectURL(e.dataTransfer.files[0]))
+    }
+
     return <Box display='flex' flexDirection='column' alignItems='stretch' gap={RACE_FORM_GAP} sx={{textAlign: 'left'}}>
         <TitleAndDescription setErrors={setErrors} errors={errors} editedRace={editedRace} applyRaceUpdate={applyRaceUpdate} open={open}/>
 
         <VotingMethodSelector election={election} editedRace={editedRace} isDisabled={isDisabled} setErrors={setErrors} errors={errors} applyRaceUpdate={applyRaceUpdate} />
 
-        <Box>
+        <FileDropBox onlyShowOnDrag helperText={'Add from photo(s)'}>
             <Button
                 // it's hacky, but opacity 0.8 does helps take the edge off the bold a bit
                 sx={{mr: "auto", textDecoration: 'none', textTransform: 'none', color: 'black', fontSize: '1.125rem', opacity: 0.86}}
@@ -228,7 +237,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
                     </Stack>
                 </TransitionBox>
             </Box>
-        </Box>
+        </FileDropBox>
     </Box>
 }
 
