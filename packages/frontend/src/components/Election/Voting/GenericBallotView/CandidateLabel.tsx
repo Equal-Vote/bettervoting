@@ -11,7 +11,10 @@ export default function CandidateLabel({ candidate, gridArea }: CandidateLabelPr
     <Box
       sx={{
         gridArea: gridArea,
-        mt: '16px',
+        my: {
+          xs: 0,
+          sm: '16px',
+        },
       }}>
       <CandidatePhoto candidate={candidate} size={'150px'} sx={{ml: {xs: 'auto', md: 0}, mr: {xs: 'auto', md: 2}}}/>
       <Typography className="rowHeading" align='left' variant="h6" component="h6" sx={{

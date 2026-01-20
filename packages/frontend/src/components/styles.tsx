@@ -3,7 +3,7 @@ import { TextField } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { ReactNode, useState, isValidElement } from "react";
 import en from './en.yaml';
-import { isMuiDialogActive, isMuiDialogGloballyOpen, useSubstitutedTranslation } from "./util";
+import { useSubstitutedTranslation } from "./util";
 import useRace from "./RaceContextProvider";
 import useElection from "./ElectionContextProvider";
 import { ButtonProps } from "@mui/material";

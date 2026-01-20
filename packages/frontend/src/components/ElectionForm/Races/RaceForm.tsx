@@ -184,13 +184,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
 
     let candidateItems = election.state === 'draft' ? ephemeralCandidates : editedRace.candidates;
 
-    const saveImage = async (photoFile) => {
-        //const image = await getImage(photoFile);
-        //await postImage(image)
-    }
-
     const handlePhotoDrop = async (e) =>  {
-        console.log(e.dataTransfer.files)
         // load file data
         let names = []
         let promises = []
