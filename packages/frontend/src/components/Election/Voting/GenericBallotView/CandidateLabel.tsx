@@ -13,7 +13,7 @@ export default function CandidateLabel({ candidate, gridArea }: CandidateLabelPr
         gridArea: gridArea,
         mt: '16px',
       }}>
-      <CandidatePhoto candidate={candidate} size={'150px'} sx={{mr: 2}}/>
+      <CandidatePhoto candidate={candidate} size={'150px'} sx={{ml: {xs: 'auto', md: 0}, mr: {xs: 'auto', md: 2}}}/>
       <Typography className="rowHeading" align='left' variant="h6" component="h6" sx={{
         wordBreak: "break-word",
         px: {
