@@ -6,288 +6,91 @@ import TextField from "@mui/material/TextField";
 import Typography from '@mui/material/Typography';
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle, FormHelperText, IconButton, Paper } from '@mui/material';
 import Cropper from 'react-easy-crop';
-import getCroppedImg from './PhotoCropper';
+import {getImage, postImage} from './PhotoUtil';
 import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import { PrimaryButton, SecondaryButton } from '../../styles';
+import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
+import { CandidatePhoto, FileDropBox, PrimaryButton, SecondaryButton } from '../../styles';
 import useFeatureFlags from '../../FeatureFlagContextProvider';
 import { DragHandle } from '~/components/DragAndDrop';
 import LinkIcon from '@mui/icons-material/Link';
 
-interface CandidateDialogProps {
+interface CandidatePhotoDialogProps {
     onEditCandidate: (newCandidate: Candidate) => void,
     candidate: Candidate,
     open: boolean,
     handleClose: () => void
 }
 
-const CandidateDialog = ({ onEditCandidate, candidate, open, handleClose }: CandidateDialogProps) => {
-    const flags = useFeatureFlags();
-
+const CandidatePhotoDialog = ({ onEditCandidate, candidate, open, handleClose }: CandidatePhotoDialogProps) => {
     const onApplyEditCandidate = (updateFunc) => {
         const newCandidate = { ...candidate }
         updateFunc(newCandidate)
         onEditCandidate(newCandidate)
     }
 
-    const [candidatePhotoFile, setCandidatePhotoFile] = useState(null)
     const inputRef = useRef(null)
 
-    const handleDragOver = (e) => {
-        e.preventDefault()
-    }
-    const handleOnDrop = (e) => {
-        e.preventDefault()
-        setCandidatePhotoFile(URL.createObjectURL(e.dataTransfer.files[0]))
+    const saveImage = async (photoFile) => {
+        const image = await getImage(photoFile);
+        const response = await postImage(image)
+        if(response) onApplyEditCandidate((candidate) => { candidate.photo_filename = response.photo_filename })
     }
 
-    const [zoom, setZoom] = useState(1)
-    const [crop, setCrop] = useState({ x: 0, y: 0 })
-    const [croppedAreaPixels, setCroppedAreaPixels] = useState(null)
-    const onCropChange = (crop) => { setCrop(crop) }
-    const onZoomChange = (zoom) => { setZoom(zoom) }
-    const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
-        setCroppedAreaPixels(croppedAreaPixels)
-    }, [])
+    return <Dialog open={open} onClose={handleClose} scroll={'paper'} keepMounted
+        onDragEnter={(e) => e.stopPropagation()}
+    >
+        <DialogTitle> Update Candidate Photo </DialogTitle>
+        <DialogContent>
+            <Box>
+                <input type='file' onChange={(e) =>{
+                    saveImage(URL.createObjectURL(e.target.files[0]))
+                }} hidden ref={inputRef} />
 
-    const postImage = async (image) => {
-        const url = '/API/images'
-
-        const fileOfBlob = new File([image], 'image.jpg', { type: "image/jpeg" });
-        const formData = new FormData()
-        formData.append('file', fileOfBlob)
-        const options = {
-            method: 'post',
-            body: formData
-        }
-        const response = await fetch(url, options)
-        if (!response.ok) {
-            return false
-        }
-        const data = await response.json()
-        onApplyEditCandidate((candidate) => { candidate.photo_filename = data.photo_filename })
-        return true
-    }
-
-    const saveImage = async () => {
-        const image = await getCroppedImg(
-            candidatePhotoFile,
-            croppedAreaPixels
-        )
-        if (await postImage(image)) {
-            setCandidatePhotoFile(null)
-        }
-    }
-
-    return (
-        <Dialog
-            open={open}
-            onClose={handleClose}
-            scroll={'paper'}
-            keepMounted>
-            <DialogTitle> Edit Candidate </DialogTitle>
-            <DialogContent>
-                <Grid container>
-
-                    <Grid item xs={12} sx={{ display: "flex", alignItems: "center", m: 0, p: 1 }}>
-                        <TextField
-                            id={'candidate-name'}
-                            inputProps={{ "aria-label": "New Candidate Name" }}
-                            label={"Candidate Name"}
-                            type="text"
-                            value={candidate.candidate_name}
-                            fullWidth
-
-                            sx={{
-                                px: 0,
-                                boxShadow: 2,
-                            }}
-                            onChange={(e) => onApplyEditCandidate((candidate) => { candidate.candidate_name = e.target.value })}
-                        />
-                    </Grid>
-                    {flags.isSet('CANDIDATE_DETAILS') && <>
-                        <Grid item xs={12} sx={{ position: 'relative', display: 'flex', flexDirection: { sm: 'row', xs: 'column' }, justifyContent: 'flex-start', alignItems: 'top' }}>
-                            {flags.isSet('CANDIDATE_PHOTOS') && <>
-                                <Box>
-                                    {!candidatePhotoFile &&
-                                        <>
-                                            <Grid item
-                                                className={candidate.photo_filename ? 'filledPhotoContainer' : 'emptyPhotoContainer'}
-                                                sx={{ display: "flex", flexDirection: "column", alignItems: "center", m: 0, p: 1, gap: 1 }}
-                                            >
-                                                {/* NOTE: setting width in px is a bad habit, but I change the flex direction to column on smaller screens to account for this */}
-                                                <Box
-                                                    display={'flex'}
-                                                    flexDirection={'column'}
-                                                    justifyContent={'center'}
-                                                    alignItems={'center'}
-                                                    height={'200px'}
-                                                    minWidth={'200px'}
-                                                    border={'4px dashed rgb(112,112,112)'}
-                                                    sx={{ m: 0 }}
-                                                    style={{ margin: '0 auto 0 auto' }}
-                                                    onDragOver={handleDragOver}
-                                                    onDrop={handleOnDrop}
-                                                >
-                                                    {candidate.photo_filename &&
-                                                        <img aria-labelledby='candidate-photo-caption' src={candidate.photo_filename} style={{ position: 'absolute', width: 200, height: 200 }} />
-                                                    }
-                                                    <Typography id='candidate-photo-caption' variant="h6" component="h6" style={{ marginTop: 0 }}>
-                                                        Candidate Photo
-                                                    </Typography>
-                                                    <Typography variant="h6" component="h6" sx={{ m: 0 }} style={candidate.photo_filename ? { marginTop: '50px' } : {}} >
-                                                        Drag and Drop
-                                                    </Typography>
-                                                    <Typography variant="h6" component="h6" sx={{ m: 0 }} >
-                                                        Or
-                                                    </Typography>
-                                                    <input
-                                                        type='file'
-                                                        onChange={(e) => setCandidatePhotoFile(URL.createObjectURL(e.target.files[0]))}
-                                                        hidden
-                                                        ref={inputRef} />
-                                                    {!candidate.photo_filename &&
-                                                        <SecondaryButton 
-                                                            className='selectPhotoButton'
-                                                            onClick={() => inputRef.current.click()} >
-                                                            Select File
-                                                        </SecondaryButton>
-                                                    }
-                                                </Box>
-                                                {candidate.photo_filename &&
-                                                    <SecondaryButton 
-                                                        className='selectPhotoButton'
-                                                        onClick={() => inputRef.current.click()}
-                                                        sx={{ p: 1, margin: '0 auto 0 auto', width: '150px' }}
-                                                    >
-                                                        Select File
-                                                    </SecondaryButton>
-                                                }
-
-                                            </Grid>
-                                        </>
-                                    }
-                                    {candidatePhotoFile &&
-                                        <Grid item xs={12} sx={{ m: 0, p: 1 }}>
-                                            <Box
-                                                position='relative'
-                                                width={'100%'}
-                                                height={'300px'}
-                                            >
-                                                <Cropper
-                                                    image={candidatePhotoFile}
-                                                    zoom={zoom}
-                                                    crop={crop}
-                                                    onCropChange={onCropChange}
-                                                    onZoomChange={onZoomChange}
-                                                    onCropComplete={onCropComplete}
-                                                    aspect={1}
-                                                />
-                                            </Box>
-                                            <SecondaryButton 
-                                                onClick={() => setCandidatePhotoFile(null)} >
-                                                Cancel
-                                            </SecondaryButton>
-                                            <PrimaryButton
-                                                onClick={() => saveImage()} >
-                                                Save
-                                            </PrimaryButton>
-                                        </Grid>}
-                                </Box>
+                    <FileDropBox
+                        onlyShowOnDrag={candidate.photo_filename}
+                        onDrop={(e) => saveImage(URL.createObjectURL(e.dataTransfer.files[0]))}
+                        height='200px'
+                        width='200px'
+                        sx={{margin: 'auto'}}
+                        helperText='Replace Photo'
+                        insideDialog
+                    >
+                        <Box display={'flex'} flexDirection={'column'} justifyContent={'center'} alignItems={'center'} height='100%'>
+                            <CandidatePhoto candidate={candidate} size={'100%'}/>
+                            {!candidate.photo_filename && <>
+                                <Typography id='candidate-photo-caption' variant="h6" component="h6" style={{ marginTop: 0 }}>Candidate Photo</Typography>
+                                <Typography variant="h6" component="h6" sx={{ m: 0 }} style={candidate.photo_filename ? { marginTop: '50px' } : {}}>Drag and Drop</Typography>
+                                <Typography variant="h6" component="h6" sx={{ m: 0 }}>Or</Typography>
+                                <SecondaryButton onClick={() => inputRef.current.click()}>Select File</SecondaryButton>
                             </>}
-                            <Box flexGrow='1' pl={{ sm: 1, xs: 3 }}>
-                                <Grid item xs={12} sx={{ m: 0, p: 1 }}>
-                                    <TextField
-                                        id="long-name"
-                                        label="Full Name"
-                                        type="text"
-                                        fullWidth
-                                        value={candidate.full_name}
-                                        sx={{
-                                            m: 0,
-                                            p: 0,
-                                            boxShadow: 2,
-                                        }}
-                                        onChange={(e) => onApplyEditCandidate((candidate) => { candidate.full_name = e.target.value })}
-                                    />
-                                </Grid>
-                                <Grid item xs={12} sx={{ m: 0, p: 1 }}>
-                                    <TextField
-                                        id="bio"
-                                        label="Bio"
-                                        type="text"
-                                        rows={3}
-                                        multiline
-                                        fullWidth
-                                        value={candidate.bio}
-                                        sx={{
-                                            m: 0,
-                                            p: 0,
-                                            boxShadow: 2,
-                                        }}
-                                        onChange={(e) => onApplyEditCandidate((candidate) => { candidate.bio = e.target.value })}
-                                    />
-                                </Grid>
-                                <Grid item xs={12} sx={{ m: 0, p: 1 }}>
-                                    <TextField
-                                        id="candidate url"
-                                        label="Candidate URL"
-                                        type="url"
-                                        fullWidth
-                                        value={candidate.candidate_url}
-                                        sx={{
-                                            m: 0,
-                                            p: 0,
-                                            boxShadow: 2,
-                                        }}
-                                        onChange={(e) => onApplyEditCandidate((candidate) => { candidate.candidate_url = e.target.value })}
-                                    />
-                                </Grid>
-                                <Grid item xs={12} sx={{ m: 0, p: 1 }}>
-                                    <TextField
-                                        id="Party"
-                                        label="Party"
-                                        type="text"
-                                        fullWidth
-                                        value={candidate.party}
-                                        sx={{
-                                            m: 0,
-                                            p: 0,
-                                            boxShadow: 2,
-                                        }}
-                                        onChange={(e) => onApplyEditCandidate((candidate) => { candidate.party = e.target.value })}
-                                    />
-                                </Grid>
-                                <Grid item xs={12} sx={{ m: 0, p: 1 }}>
-                                    <TextField
-                                        id="party url"
-                                        label="Party URL"
-                                        type="url"
-                                        fullWidth
-                                        value={candidate.partyUrl}
-                                        sx={{
-                                            m: 0,
-                                            p: 0,
-                                            boxShadow: 2,
-                                        }}
-                                        onChange={(e) => onApplyEditCandidate((candidate) => { candidate.partyUrl = e.target.value })}
-                                    />
-                                </Grid>
-                            </Box>
-                        </Grid>
-                    </>}
-                </Grid>
-            </DialogContent>
+                        </Box>
+                    </FileDropBox>
 
-            <DialogActions>
-                <SecondaryButton
-                    type='button'
-                    onClick={() => handleClose()}>
-                    Apply
-                </SecondaryButton>
-            </DialogActions>
-        </Dialog>
-    )
+                {candidate.photo_filename && <Box display='flex' flexDirection='column' alignItems='center' gap={1} sx={{mt: 1}}>
+                    <SecondaryButton onClick={() => inputRef.current.click()} sx={{ p: 1, margin: '0 auto', width: '150px' }}>Select File</SecondaryButton>
+                </Box>}
+            </Box>
+        </DialogContent>
+        <DialogActions>
+            <SecondaryButton
+                type='button'
+                onClick={() => {
+                    onApplyEditCandidate((candidate) => { candidate.photo_filename = '' })
+                    handleClose()
+                }}
+            >
+                Remove
+            </SecondaryButton>
+            <PrimaryButton
+                type='button'
+                onClick={async () => {
+                    handleClose()
+                }}
+            >
+                Apply
+            </PrimaryButton>
+        </DialogActions>
+    </Dialog>
 }
 
 interface CandidateFormProps {
@@ -411,14 +214,13 @@ export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled
                     />
                 </Box>                    
 
-                {flags.isSet('CANDIDATE_DETAILS') &&
-                    <IconButton
-                        aria-label={`Edit Candidate ${index + 1} Details`}
-                        onClick={() => setOpen(true)}
-                        disabled={disabled}>
-                        <EditIcon />
-                    </IconButton>
-                }
+                <IconButton
+                    aria-label={`Edit Candidate Photo ${index + 1}`}
+                    color={candidate.photo_filename ? 'info' : 'default'}
+                    onClick={() => setOpen(true)}
+                    disabled={disabled}>
+                    <PhotoCameraIcon />
+                </IconButton>
                 <IconButton
                     aria-label={`Update Link for Candidate Number ${index + 1}`}
                     color={candidate.candidate_url ? 'info' : 'default'}
@@ -434,7 +236,7 @@ export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled
                     <DeleteIcon />
                 </IconButton>
             </Box>
-            <CandidateDialog onEditCandidate={onEditCandidate} candidate={candidate} open={open} handleClose={() => setOpen(false)} />
+            <CandidatePhotoDialog onEditCandidate={onEditCandidate} candidate={candidate} open={open} handleClose={() => setOpen(false)} />
             <LinkDialog onEditCandidate={onEditCandidate} candidate={candidate} open={linkOpen} handleClose={() => setLinkOpen(false)} />
         </Paper >
     )

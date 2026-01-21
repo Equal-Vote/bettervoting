@@ -1,4 +1,4 @@
-import { Button, ClickAwayListener, IconButton, TextFieldProps, Tooltip } from "@mui/material"
+import { Box, Button, ClickAwayListener, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Paper, TextFieldProps, Tooltip, Typography } from "@mui/material"
 import { TextField } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { ReactNode, useState, isValidElement } from "react";
@@ -55,6 +55,114 @@ export const Tip = (props: {name?: TipName, children?: ReactNode, content?: {tit
             </IconButton>}
         </Tooltip>
     </ClickAwayListener>
+}
+
+export const CandidatePhoto = (props) => {
+    const [open, setOpen] = useState(false);
+    if(!props.candidate.photo_filename) return <></>
+
+    const {size, candidate, ...boxProps} = props;
+
+    const Photo = ({size, clickable=false}) => <Paper
+        onClick={() => clickable && setOpen(o => !o)}
+        component="img"
+        src={props.candidate.photo_filename}
+        elevation={2}
+        
+        sx={{
+            width: size,
+            aspectRatio: '1 / 1',
+            objectFit: 'contain',
+            borderRadius: '10px',
+            background: 'none',
+            p: 1,
+        }}
+    />
+
+    return <Box {...boxProps} width={props.size} height={props.size}>
+        <Photo size={size} clickable/>
+        <Dialog open={open} maxWidth='xl'>
+            <DialogTitle>{candidate.candidate_name}</DialogTitle>
+            <DialogContent>
+                <Photo size={{xs: '70vw', md: '60vh'}}/>
+            </DialogContent>
+            <DialogActions>
+                <SecondaryButton
+                    type='button'
+                    onClick={() => setOpen(false)}
+                >
+                    Close
+                </SecondaryButton>
+            </DialogActions>
+        </Dialog>
+    </Box>
+}
+
+export const FileDropBox = (props) => {
+    const [dragged, setDragged] = useState(false);
+
+    const {onDrop, onlyShowOnDrag, helperText, insideDialog, ...boxProps} = props;
+
+    // HACK: Most pointer events can be disabled more elegantly, but drag and drop is more difficult. This was the best work around I could find
+    const isMuiDialogActive = () => 
+        Array.from(
+            document.querySelectorAll('.MuiDialog-container')
+        ).some(el => {
+            const style = window.getComputedStyle(el);
+            return (
+            style.visibility !== 'hidden' &&
+            style.opacity !== '0'
+            );
+        });
+
+    return <Box
+        onDragOver={() => {
+            if(!insideDialog && isMuiDialogActive()) return;
+            setDragged(true)
+        }}
+        onDragLeave={() => {
+            if(!insideDialog && isMuiDialogActive()) return;
+            setDragged(false)
+        }}
+        onDrop={(e) => {
+            if(!insideDialog && isMuiDialogActive()) return;
+            setDragged(false);
+            onDrop(e)
+        }}
+        {...boxProps}
+        sx={{
+            position: 'relative',
+            ...props.sx,
+        }}
+    >
+        {onlyShowOnDrag && dragged && <Box
+            position='absolute'
+            display='flex'
+            flexDirection='column-reverse'
+            textAlign='center'
+            width={'100%'}
+            height={'100%'}
+            sx={{
+                pointerEvents: 'none',
+                backgroundColor: dragged ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0)',
+                zIndex: 1, // setting z-index so order is displayed correctly for the RaceForm case
+            }}
+        >
+            <Typography component='p' color='var(--brand-pop)' sx={{mb: 1}}><b>{helperText}</b></Typography>
+        </Box>}
+        {/* Adding this as a separate outline so that outline overlays on the box in stead of offseting elements */}
+        <Box
+            position='absolute'
+            border={`4px dashed ${dragged ? 'var(--brand-pop)': (onlyShowOnDrag ? 'rgba(0, 0, 0, 0)' : 'rgb(112,112,112)')}`} 
+            width={'100%'}
+            height={'100%'}
+            sx={{
+                pointerEvents: 'none',
+                zIndex: 2, // setting z-index so order is displayed correctly for the RaceForm case
+            }}
+        />
+        {props.children}
+    </Box>
 }
 interface CustomButtonProps extends ButtonProps {
     to?: string;
