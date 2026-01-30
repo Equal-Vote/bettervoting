@@ -13,7 +13,7 @@
         }
 
         .simulator-container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -82,70 +82,28 @@
             opacity: 0.9;
         }
 
-        .btn-primary {
-            background: #2563eb;
-            color: white;
-        }
-
-        .btn-secondary {
-            background: #6b7280;
-            color: white;
-        }
-
-        .btn-success {
-            background: #059669;
-            color: white;
-        }
-
-        .btn-warning {
-            background: #d97706;
-            color: white;
-        }
-
-        .btn-danger {
-            background: #dc2626;
-            color: white;
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
+        .btn-primary { background: #2563eb; color: white; }
+        .btn-secondary { background: #6b7280; color: white; }
+        .btn-success { background: #059669; color: white; }
+        .btn-warning { background: #d97706; color: white; }
+        .btn-danger { background: #dc2626; color: white; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .state-badge {
             display: inline-block;
-            padding: 4px 12px;
-            border-radius: 9999px;
-            font-size: 12px;
+            padding: 8px 16px;
+            border-radius: 16px;
             font-weight: 600;
+            font-size: 16px;
             text-transform: uppercase;
         }
 
-        .state-draft { background: #fef3c7; color: #92400e; }
-        .state-finalized { background: #dbeafe; color: #1e40af; }
+        .state-draft { background: #e5e7eb; color: #374151; }
+        .state-finalized { background: #fef3c7; color: #92400e; }
         .state-open { background: #d1fae5; color: #065f46; }
         .state-closed { background: #fee2e2; color: #991b1b; }
-        .state-archived { background: #e5e7eb; color: #374151; }
-
-        .log-container {
-            background: #1f2937;
-            color: #d1d5db;
-            padding: 12px;
-            border-radius: 4px;
-            font-family: monospace;
-            font-size: 12px;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .log-entry {
-            margin-bottom: 4px;
-        }
-
-        .log-entry.error { color: #f87171; }
-        .log-entry.success { color: #4ade80; }
-        .log-entry.info { color: #60a5fa; }
-        .log-entry.warning { color: #fbbf24; }
+        .state-archived { background: #e0e7ff; color: #3730a3; }
+        .state-none { background: #f3f4f6; color: #6b7280; }
 
         .two-column {
             display: grid;
@@ -153,77 +111,101 @@
             gap: 16px;
         }
 
-        @media (max-width: 768px) {
-            .two-column {
-                grid-template-columns: 1fr;
-            }
+        @media (max-width: 900px) {
+            .two-column { grid-template-columns: 1fr; }
         }
 
-        .ballot-list {
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid #e5e7eb;
-            border-radius: 4px;
+        .three-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
         }
 
-        .ballot-item {
-            padding: 8px 12px;
-            border-bottom: 1px solid #e5e7eb;
-            font-size: 13px;
+        @media (max-width: 1100px) {
+            .three-column { grid-template-columns: 1fr 1fr; }
         }
 
-        .ballot-item:last-child {
-            border-bottom: none;
-        }
-
-        .info-box {
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
-            border-radius: 4px;
-            padding: 12px;
-            margin-bottom: 12px;
-            font-size: 14px;
-        }
-
-        .warning-box {
-            background: #fef3c7;
-            border: 1px solid #fcd34d;
-            border-radius: 4px;
-            padding: 12px;
-            margin-bottom: 12px;
-            font-size: 14px;
-        }
-
-        .error-box {
-            background: #fee2e2;
-            border: 1px solid #fca5a5;
-            border-radius: 4px;
-            padding: 12px;
-            margin-bottom: 12px;
-            font-size: 14px;
+        @media (max-width: 700px) {
+            .three-column { grid-template-columns: 1fr; }
         }
 
         .time-display {
             font-size: 18px;
             font-weight: 600;
-            text-align: center;
-            padding: 12px;
-            background: #f3f4f6;
-            border-radius: 4px;
+            color: #1f2937;
             margin-bottom: 12px;
         }
 
-        .permissions-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
+        .log-container {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            padding: 8px;
+            background: #f9fafb;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .log-entry {
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-bottom: 4px;
+        }
+
+        .log-entry.info { background: #e0f2fe; color: #0369a1; }
+        .log-entry.success { background: #d1fae5; color: #065f46; }
+        .log-entry.warning { background: #fef3c7; color: #92400e; }
+        .log-entry.error { background: #fee2e2; color: #991b1b; }
+
+        .ballot-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .ballot-item {
+            padding: 8px;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .warning-box {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            color: #92400e;
+        }
+
+        .error-box {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            color: #991b1b;
+        }
+
+        .info-box {
+            background: #e0f2fe;
+            border: 1px solid #0ea5e9;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            color: #0369a1;
         }
 
         .permission-badge {
-            background: #e5e7eb;
-            padding: 2px 8px;
+            display: inline-block;
+            padding: 4px 8px;
             border-radius: 4px;
             font-size: 11px;
+            margin: 2px;
+            background: #fee2e2;
+            color: #991b1b;
         }
 
         .permission-badge.granted {
@@ -238,6 +220,64 @@
             margin-bottom: 20px;
             border-left: 4px solid #2563eb;
         }
+
+        .user-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 8px;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+
+        .user-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+            background: white;
+        }
+
+        .user-card:hover {
+            border-color: #2563eb;
+            background: #f0f9ff;
+        }
+
+        .user-card.selected {
+            border-color: #2563eb;
+            background: #dbeafe;
+        }
+
+        .user-card .user-name {
+            font-weight: 600;
+            color: #1f2937;
+            font-size: 13px;
+        }
+
+        .user-card .user-type {
+            font-size: 10px;
+            color: #6b7280;
+            text-transform: uppercase;
+        }
+
+        .user-card .user-role {
+            font-size: 11px;
+            color: #059669;
+            margin-top: 4px;
+        }
+
+        .no-election-notice {
+            text-align: center;
+            padding: 40px;
+            background: #f3f4f6;
+            border-radius: 12px;
+            color: #6b7280;
+        }
+
+        .no-election-notice h4 {
+            color: #374151;
+            margin-bottom: 12px;
+        }
     </style>
 </head>
 <body>
@@ -246,61 +286,46 @@
         
         <div class="intro-text">
             <p><strong>This simulator allows you to test and understand the complete election lifecycle without making any backend calls.</strong></p>
-            <p>It faithfully captures every possible state of an election, including credential flows, time-based transitions, and all user actions. Perfect for understanding how BetterVoting works!</p>
+            <p>Select a user from the list below to act as that user. Only <strong>Alice Owner</strong> can create elections. 
+               Test ballots can be cast in draft mode but are cleared when the election is finalized.</p>
+            <button class="btn btn-danger" onclick="resetSimulator()">🔄 Reset Simulator</button>
         </div>
 
         <div class="simulator-panel">
             <h3>⏰ Simulated Time Control</h3>
             <div class="time-display" id="current-time">Loading...</div>
-            <div class="control-group">
-                <label>Advance Time By:</label>
-                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <button class="btn btn-secondary" onclick="advanceTime(1)">+1 Hour</button>
-                    <button class="btn btn-secondary" onclick="advanceTime(6)">+6 Hours</button>
-                    <button class="btn btn-secondary" onclick="advanceTime(24)">+1 Day</button>
-                    <button class="btn btn-secondary" onclick="advanceTime(168)">+1 Week</button>
-                </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button class="btn btn-secondary" onclick="advanceTime(1)">+1 Hour</button>
+                <button class="btn btn-secondary" onclick="advanceTime(6)">+6 Hours</button>
+                <button class="btn btn-secondary" onclick="advanceTime(24)">+1 Day</button>
+                <button class="btn btn-secondary" onclick="advanceTime(168)">+1 Week</button>
             </div>
-            <p style="font-size: 12px; color: #6b7280; margin-top: 8px;">
-                ⚠️ Time only moves forward. Used to test election start/end time behavior and temporary access expiration.
-            </p>
         </div>
 
-        <div class="two-column">
+        <div class="simulator-panel">
+            <h3>👥 Select User (15 Available Users)</h3>
+            <p style="font-size: 12px; color: #6b7280; margin-bottom: 12px;">
+                Click a user to act as them. Only <strong>Alice Owner</strong> can create new elections.
+            </p>
+            <div class="user-list" id="user-list"></div>
+            <div class="control-group" style="margin-top: 12px;">
+                <label>Current User Permissions:</label>
+                <div class="permissions-list" id="permissions-display"></div>
+            </div>
+        </div>
+
+        <div class="three-column">
             <div>
                 <div class="simulator-panel">
-                    <h3>👤 Credential Simulation</h3>
-                    <div class="control-group">
-                        <label>Current User Type:</label>
-                        <select id="user-type" onchange="updateUserType()">
-                            <option value="anonymous">Anonymous (No credentials)</option>
-                            <option value="temp_id_new">Temp ID - New (will receive claim_key)</option>
-                            <option value="temp_id_finalized">Temp ID - Finalized (no claim_key notification)</option>
-                            <option value="logged_in_owner">Logged In - Election Owner</option>
-                            <option value="logged_in_admin">Logged In - Admin</option>
-                            <option value="logged_in_auditor">Logged In - Auditor</option>
-                            <option value="logged_in_voter">Logged In - Regular Voter</option>
-                        </select>
-                    </div>
-                    <div id="claim-key-section" style="display: none;">
-                        <div class="warning-box">
-                            <strong>⚠️ Claim Key Available</strong><br>
-                            <code id="claim-key-display" style="background: #fff; padding: 4px 8px; border-radius: 4px;"></code><br>
-                            <small>Use this to claim the election after logging in. Don't lose it!</small>
-                        </div>
-                        <button class="btn btn-primary" onclick="simulateClaimElection()">Claim Election (Simulate Login)</button>
-                    </div>
-                    <div class="control-group" style="margin-top: 12px;">
-                        <label>Current Permissions:</label>
-                        <div class="permissions-list" id="permissions-display"></div>
-                    </div>
+                    <h3>📊 Election Status</h3>
+                    <div id="election-status-content"></div>
                 </div>
 
-                <div class="simulator-panel">
+                <div class="simulator-panel" id="election-settings-panel" style="display: none;">
                     <h3>⚙️ Election Settings</h3>
                     <div class="control-group">
                         <label>Election Title:</label>
-                        <input type="text" id="election-title" value="Sample Election" onchange="updateElectionSettings()">
+                        <input type="text" id="election-title" value="My Test Election" onchange="updateElectionSettings()">
                     </div>
                     <div class="control-group">
                         <label>Voter Access:</label>
@@ -318,9 +343,6 @@
                             <option value="email">Email (requires login)</option>
                             <option value="ip_address">IP Address (one vote per IP)</option>
                         </select>
-                        <p style="font-size: 11px; color: #6b7280; margin-top: 4px;" id="voter-auth-help">
-                            Uses browser storage to track if device has voted.
-                        </p>
                     </div>
                     <div class="control-group">
                         <label>Start Time (optional):</label>
@@ -333,7 +355,7 @@
                     <div class="control-group">
                         <label>
                             <input type="checkbox" id="public-results" onchange="updateElectionSettings()">
-                            Public Results (show results before close)
+                            Public Results
                         </label>
                     </div>
                     <div class="control-group">
@@ -347,26 +369,18 @@
 
             <div>
                 <div class="simulator-panel">
-                    <h3>📊 Election State</h3>
-                    <div style="text-align: center; margin-bottom: 16px;">
-                        <span class="state-badge" id="election-state-badge">DRAFT</span>
-                    </div>
-                    <div id="state-info-box"></div>
-                    
-                    <h4>State Transitions</h4>
-                    <div id="state-actions">
-                        <!-- Populated dynamically -->
-                    </div>
+                    <h3>🎯 State Transitions</h3>
+                    <div id="state-actions"></div>
                 </div>
 
                 <div class="simulator-panel">
                     <h3>🗳️ Voter Actions</h3>
-                    <div id="voter-actions">
-                        <!-- Populated dynamically -->
-                    </div>
+                    <div id="voter-actions"></div>
                     <div id="vote-status" style="margin-top: 12px;"></div>
                 </div>
+            </div>
 
+            <div>
                 <div class="simulator-panel">
                     <h3>📋 Ballots (<span id="ballot-count">0</span>)</h3>
                     <div class="ballot-list" id="ballot-list">
@@ -385,96 +399,150 @@
         </div>
 
         <div class="simulator-panel">
-            <h3>📚 How to Use This Simulator</h3>
-            
-            <h4>Credential Flows</h4>
-            <ol>
-                <li><strong>Anonymous</strong>: No special permissions. Can only vote in open access elections.</li>
-                <li><strong>Temp ID - New (with claim_key)</strong>: Simulates creating an election without logging in.
-                    <ul>
-                        <li>User receives a <code>temp_id</code> stored in a cookie</li>
-                        <li>A <code>claim_key</code> is generated and shown (yellow warning)</li>
-                        <li>User has owner permissions for a limited time (10 hours)</li>
-                        <li>User can claim the election by logging in with the claim_key</li>
+            <h3>📚 How It Works</h3>
+            <div class="two-column">
+                <div>
+                    <h4>Users</h4>
+                    <ul style="font-size: 13px;">
+                        <li><strong>Alice Owner</strong> - The only user who can create elections.</li>
+                        <li><strong>Bob Admin, Carol Admin</strong> - Will be admins once Alice adds them.</li>
+                        <li><strong>Dave Auditor, Eve Auditor</strong> - Can audit but not modify.</li>
+                        <li><strong>Voters (10)</strong> - Regular voters with unique device IDs.</li>
                     </ul>
-                </li>
-                <li><strong>Temp ID - Finalized (no claim_key)</strong>: After finalizing, the claim_key notification is not shown on page refresh.</li>
-                <li><strong>Logged In Users</strong>: Full authentication with various roles (Owner, Admin, Auditor, Voter)</li>
-            </ol>
-
-            <h4>Voter Authentication (voter_authentication object)</h4>
-            <p>The <code>voter_authentication</code> setting controls how votes are limited. Each is a boolean flag:</p>
-            <ul>
-                <li><strong>voter_id: true</strong> - Device ID authentication. Uses browser storage to track voting. Each device/browser can vote once.</li>
-                <li><strong>email: true</strong> - Email authentication. Requires user to log in. Each email address can vote once.</li>
-                <li><strong>ip_address: true</strong> - IP address authentication. Tracks IP to limit votes. Each IP can vote once.</li>
-                <li><strong>{} (empty)</strong> - No authentication. Anyone can vote unlimited times. Use for informal polls.</li>
-            </ul>
-            <p><em>Note: These are mutually exclusive in the UI but the backend model supports combining them.</em></p>
-
-            <h4>Election States</h4>
-            <ul>
-                <li><strong>Draft</strong>: Initial state. All settings editable. Test ballots allowed.</li>
-                <li><strong>Finalized</strong>: Locked settings. Waiting for start time (if set).</li>
-                <li><strong>Open</strong>: Accepting votes. Closes at end time or manually.</li>
-                <li><strong>Closed</strong>: No more votes. Results viewable.</li>
-                <li><strong>Archived</strong>: Read-only historical record.</li>
-            </ul>
-
-            <h4>Things to Test</h4>
-            <ol>
-                <li>Create an election as anonymous user (temp_id flow)</li>
-                <li>Try to finalize without logging in</li>
-                <li>Observe the claim_key warning</li>
-                <li>Advance time past the temporary access window (10 hours)</li>
-                <li>Set up scheduled elections with start/end times</li>
-                <li>Test ballot updates with different voter access settings</li>
-                <li>Try viewing results with different permission levels</li>
-                <li><strong>Test voter authentication:</strong> Vote, then try to vote again with different auth types</li>
-                <li><strong>Test email auth:</strong> Try voting as anonymous (should fail), then log in and vote</li>
-            </ol>
+                    
+                    <h4>Election Lifecycle</h4>
+                    <ol style="font-size: 13px;">
+                        <li><strong>No Election</strong> - Starting state. Only Alice can create.</li>
+                        <li><strong>Draft</strong> - Test ballots allowed. Cleared on finalize.</li>
+                        <li><strong>Finalized</strong> - Waiting for start time (if set).</li>
+                        <li><strong>Open</strong> - Accepting real votes.</li>
+                        <li><strong>Closed</strong> - No more votes. Results viewable.</li>
+                        <li><strong>Archived</strong> - Read-only historical record.</li>
+                    </ol>
+                </div>
+                <div>
+                    <h4>Voter Authentication Types</h4>
+                    <ul style="font-size: 13px;">
+                        <li><strong>Device ID</strong> - One vote per browser/device</li>
+                        <li><strong>Email</strong> - Requires login</li>
+                        <li><strong>IP Address</strong> - One vote per IP</li>
+                        <li><strong>None</strong> - Unlimited votes</li>
+                    </ul>
+                    
+                    <h4>Key Behaviors</h4>
+                    <ul style="font-size: 13px;">
+                        <li>Test ballots in draft mode are <strong>deleted</strong> when finalized</li>
+                        <li>Only the election owner can change election state</li>
+                        <li>Admins/Auditors get their roles after being added by owner</li>
+                        <li>Each voter has a unique device ID for vote tracking</li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-    // ============================================
-    // Election Simulator State
-    // ============================================
+    // Fixed Users (15 users with defined roles)
+    const FIXED_USERS = [
+        { id: 'alice_owner', name: 'Alice Owner', type: 'logged_in', canCreate: true, deviceId: 'device_alice_001', ip: '192.168.1.1', email: 'alice@example.com' },
+        { id: 'bob_admin', name: 'Bob Admin', type: 'logged_in', potentialRole: 'admin', deviceId: 'device_bob_002', ip: '192.168.1.2', email: 'bob@example.com' },
+        { id: 'carol_admin', name: 'Carol Admin', type: 'logged_in', potentialRole: 'admin', deviceId: 'device_carol_003', ip: '192.168.1.3', email: 'carol@example.com' },
+        { id: 'dave_auditor', name: 'Dave Auditor', type: 'logged_in', potentialRole: 'auditor', deviceId: 'device_dave_004', ip: '192.168.1.4', email: 'dave@example.com' },
+        { id: 'eve_auditor', name: 'Eve Auditor', type: 'logged_in', potentialRole: 'auditor', deviceId: 'device_eve_005', ip: '192.168.1.5', email: 'eve@example.com' },
+        { id: 'voter_frank', name: 'Frank Voter', type: 'logged_in', deviceId: 'device_frank_006', ip: '192.168.1.6', email: 'frank@example.com' },
+        { id: 'voter_grace', name: 'Grace Voter', type: 'logged_in', deviceId: 'device_grace_007', ip: '192.168.1.7', email: 'grace@example.com' },
+        { id: 'voter_henry', name: 'Henry Voter', type: 'logged_in', deviceId: 'device_henry_008', ip: '192.168.1.8', email: 'henry@example.com' },
+        { id: 'voter_ivy', name: 'Ivy Voter', type: 'logged_in', deviceId: 'device_ivy_009', ip: '192.168.1.9', email: 'ivy@example.com' },
+        { id: 'voter_jack', name: 'Jack Voter', type: 'logged_in', deviceId: 'device_jack_010', ip: '192.168.1.10', email: 'jack@example.com' },
+        { id: 'voter_kate', name: 'Kate Voter', type: 'logged_in', deviceId: 'device_kate_011', ip: '192.168.1.11', email: 'kate@example.com' },
+        { id: 'voter_leo', name: 'Leo Voter', type: 'logged_in', deviceId: 'device_leo_012', ip: '192.168.1.12', email: 'leo@example.com' },
+        { id: 'voter_mia', name: 'Mia Voter', type: 'logged_in', deviceId: 'device_mia_013', ip: '192.168.1.13', email: 'mia@example.com' },
+        { id: 'voter_nick', name: 'Nick Voter', type: 'logged_in', deviceId: 'device_nick_014', ip: '192.168.1.14', email: 'nick@example.com' },
+        { id: 'voter_olivia', name: 'Olivia Voter', type: 'logged_in', deviceId: 'device_olivia_015', ip: '192.168.1.15', email: 'olivia@example.com' },
+    ];
 
+    // Simulator State
     const SimulatorState = {
-        // Simulated current time (starts at real time)
         currentTime: new Date(),
-        
-        // User credentials
-        userType: 'anonymous',
-        userId: null,
-        tempId: null,
-        claimKey: null,
-        
-        // Voter authentication simulation
-        // Tracks which "devices" and "emails" have voted
-        votedDeviceIds: new Set(),  // For voter_id auth
-        votedEmails: new Set(),     // For email auth  
-        votedIpAddresses: new Set(), // For ip_address auth
-        currentDeviceId: 'device_' + Math.random().toString(36).substring(2, 11),
-        currentIpAddress: '192.168.1.' + Math.floor(Math.random() * 255),
-        
-        // Election state
-        election: {
-            election_id: 'sim_' + Math.random().toString(36).substring(2, 11),
-            title: 'Sample Election',
-            state: 'draft', // draft, finalized, open, closed, archived
-            owner_id: null,
-            admin_ids: [],
-            audit_ids: [],
-            credential_ids: [],
+        currentUserIndex: null,
+        election: null,
+        userRoles: {},
+        ballots: [],
+        votedDeviceIds: new Set(),
+        votedEmails: new Set(),
+        votedIpAddresses: new Set(),
+    };
+
+    // Helper Functions
+    function getCurrentUser() {
+        if (SimulatorState.currentUserIndex === null) return null;
+        return FIXED_USERS[SimulatorState.currentUserIndex];
+    }
+
+    function getUserRoles() {
+        const user = getCurrentUser();
+        if (!user) return [];
+        const roles = [];
+        if (SimulatorState.election && SimulatorState.election.owner_id === user.id) {
+            roles.push('owner');
+        }
+        const assignedRole = SimulatorState.userRoles[user.id];
+        if (assignedRole) roles.push(assignedRole);
+        return roles;
+    }
+
+    const Permissions = {
+        canEditElectionState: ['owner'],
+        canViewBallots: ['owner', 'admin', 'auditor'],
+        canEditElection: ['owner', 'admin'],
+        canViewPreliminaryResults: ['owner', 'admin', 'auditor'],
+        canAddRoles: ['owner'],
+    };
+
+    function getUserPermissions() {
+        const roles = getUserRoles();
+        const permissions = [];
+        for (const [permission, allowedRoles] of Object.entries(Permissions)) {
+            if (roles.some(role => allowedRoles.includes(role))) {
+                permissions.push(permission);
+            }
+        }
+        return permissions;
+    }
+
+    function hasPermission(permission) {
+        return getUserPermissions().includes(permission);
+    }
+
+    // User Selection
+    function selectUser(index) {
+        SimulatorState.currentUserIndex = index;
+        const user = FIXED_USERS[index];
+        log(`Now acting as: ${user.name}`, 'info');
+        updateUI();
+    }
+
+    // Election Creation
+    function createElection() {
+        const user = getCurrentUser();
+        if (!user || !user.canCreate) {
+            log('Only Alice Owner can create elections!', 'error');
+            return;
+        }
+        if (SimulatorState.election) {
+            log('An election already exists. Use Reset to start over.', 'error');
+            return;
+        }
+        SimulatorState.election = {
+            election_id: 'election_' + Date.now(),
+            title: 'My Test Election',
+            state: 'draft',
+            owner_id: user.id,
+            create_date: new Date(SimulatorState.currentTime),
             start_time: null,
             end_time: null,
-            create_date: new Date(),
             settings: {
                 voter_access: 'open',
-                // voter_authentication mirrors the backend model exactly:
-                // { voter_id?: boolean, email?: boolean, ip_address?: boolean }
                 voter_authentication: { voter_id: true },
                 public_results: false,
                 ballot_updates: false,
@@ -485,307 +553,106 @@
                 voting_method: 'STAR',
                 num_winners: 1,
                 candidates: [
-                    { candidate_id: 'c1', candidate_name: 'Alice' },
-                    { candidate_id: 'c2', candidate_name: 'Bob' },
-                    { candidate_id: 'c3', candidate_name: 'Carol' },
+                    { candidate_id: 'c1', candidate_name: 'Candidate A' },
+                    { candidate_id: 'c2', candidate_name: 'Candidate B' },
+                    { candidate_id: 'c3', candidate_name: 'Candidate C' },
                 ]
             }]
-        },
-        
-        // Ballots
-        ballots: [],
-        
-        // Current user's vote status
-        hasVoted: false,
-        
-        // TEMPORARY_ACCESS_HOURS from shared config
-        TEMPORARY_ACCESS_HOURS: 10,
-    };
-
-    // ============================================
-    // Permission System
-    // ============================================
-
-    const Permissions = {
-        canEditElectionRoles: ['system_admin', 'owner'],
-        canViewElection: ['system_admin', 'owner', 'admin', 'auditor', 'credentialer'],
-        canEditElection: ['system_admin', 'owner', 'admin'],
-        canDeleteElection: ['system_admin', 'owner'],
-        canEditElectionRoll: ['system_admin', 'owner'],
-        canAddToElectionRoll: ['system_admin', 'owner', 'admin'],
-        canViewElectionRoll: ['system_admin', 'owner', 'admin', 'auditor', 'credentialer'],
-        canFlagElectionRoll: ['system_admin', 'owner', 'admin', 'auditor', 'credentialer'],
-        canApproveElectionRoll: ['system_admin', 'owner', 'admin', 'credentialer'],
-        canUnflagElectionRoll: ['system_admin', 'owner', 'admin'],
-        canInvalidateElectionRoll: ['system_admin', 'owner', 'admin'],
-        canDeleteElectionRoll: ['system_admin', 'owner'],
-        canViewElectionRollIDs: ['system_admin', 'auditor'],
-        canViewBallots: ['system_admin', 'owner', 'admin', 'auditor'],
-        canDeleteAllBallots: ['system_admin', 'owner', 'admin'],
-        canViewBallot: ['system_admin'],
-        canEditBallot: ['system_admin', 'owner'],
-        canFlagBallot: ['system_admin', 'owner', 'admin', 'auditor'],
-        canInvalidateBallot: ['system_admin', 'owner'],
-        canEditElectionState: ['system_admin', 'owner'],
-        canClaimElection: ['system_admin', 'owner'],
-        canViewPreliminaryResults: ['system_admin', 'owner', 'admin', 'auditor'],
-        canSendEmails: ['system_admin', 'owner', 'admin'],
-    };
-
-    function getUserRoles() {
-        const { userType, tempId, election } = SimulatorState;
-        const roles = [];
-        
-        if (userType === 'anonymous') {
-            return [];
-        }
-        
-        // Temp ID users who own the election (and not expired)
-        if (userType.startsWith('temp_id') && tempId && election.owner_id === tempId) {
-            const hoursSinceCreate = (SimulatorState.currentTime - new Date(election.create_date)) / (1000 * 60 * 60);
-            if (hoursSinceCreate <= SimulatorState.TEMPORARY_ACCESS_HOURS) {
-                roles.push('owner');
-            }
-        }
-        
-        // Logged in users
-        if (userType === 'logged_in_owner') {
-            roles.push('owner');
-        } else if (userType === 'logged_in_admin') {
-            roles.push('admin');
-        } else if (userType === 'logged_in_auditor') {
-            roles.push('auditor');
-        }
-        
-        return roles;
+        };
+        log(`Election "${SimulatorState.election.title}" created by ${user.name}!`, 'success');
+        updateUI();
     }
 
-    function getUserPermissions() {
-        const roles = getUserRoles();
-        const permissions = [];
-        
-        for (const [permission, allowedRoles] of Object.entries(Permissions)) {
-            if (roles.some(role => allowedRoles.includes(role))) {
-                permissions.push(permission);
-            }
+    // Role Management
+    function addUserRole(userId, role) {
+        if (!hasPermission('canAddRoles')) {
+            log('Permission denied: Cannot add roles', 'error');
+            return;
         }
-        
-        return permissions;
+        const user = FIXED_USERS.find(u => u.id === userId);
+        if (!user) return;
+        SimulatorState.userRoles[userId] = role;
+        log(`Added ${user.name} as ${role}`, 'success');
+        updateUI();
     }
 
-    function hasPermission(permission) {
-        return getUserPermissions().includes(permission);
-    }
-
-    // ============================================
     // Time Management
-    // ============================================
-
     function advanceTime(hours) {
         SimulatorState.currentTime = new Date(SimulatorState.currentTime.getTime() + hours * 60 * 60 * 1000);
         log(`Time advanced by ${hours} hour(s)`, 'info');
-        
-        // Check if election should auto-open or auto-close
         checkTimeBasedTransitions();
         updateUI();
     }
 
     function checkTimeBasedTransitions() {
+        if (!SimulatorState.election) return;
         const { election, currentTime } = SimulatorState;
-        
-        // Auto-open if start_time has passed and election is finalized
         if (election.state === 'finalized' && election.start_time) {
             if (currentTime >= new Date(election.start_time)) {
                 election.state = 'open';
                 log('Election automatically opened (start time reached)', 'success');
             }
         }
-        
-        // Auto-close if end_time has passed and election is open
         if (election.state === 'open' && election.end_time) {
             if (currentTime >= new Date(election.end_time)) {
                 election.state = 'closed';
                 log('Election automatically closed (end time reached)', 'warning');
             }
         }
-        
-        // Check temporary access expiration
-        if (SimulatorState.userType.startsWith('temp_id') && SimulatorState.tempId) {
-            const hoursSinceCreate = (currentTime - new Date(election.create_date)) / (1000 * 60 * 60);
-            if (hoursSinceCreate > SimulatorState.TEMPORARY_ACCESS_HOURS) {
-                const wasExpired = SimulatorState._tempAccessExpiredLogged;
-                if (!wasExpired) {
-                    log(`Temporary access expired (${SimulatorState.TEMPORARY_ACCESS_HOURS}h limit reached)`, 'error');
-                    SimulatorState._tempAccessExpiredLogged = true;
-                }
-            }
-        }
     }
 
-    function formatDateTime(date) {
-        if (!date) return 'Not set';
-        return new Date(date).toLocaleString();
-    }
-
-    // ============================================
-    // User Type Management
-    // ============================================
-
-    function updateUserType() {
-        const userType = document.getElementById('user-type').value;
-        SimulatorState.userType = userType;
-        SimulatorState.hasVoted = false; // Reset vote status when changing user
-        SimulatorState._tempAccessExpiredLogged = false;
-        
-        if (userType === 'temp_id_new') {
-            // Generate new temp ID and claim key
-            SimulatorState.tempId = 'temp_' + Math.random().toString(36).substring(2, 11);
-            SimulatorState.claimKey = 'claim_' + Math.random().toString(36).substring(2, 18);
-            SimulatorState.election.owner_id = SimulatorState.tempId;
-            SimulatorState.election.create_date = new Date(SimulatorState.currentTime);
-            log(`Created election with Temp ID: ${SimulatorState.tempId}`, 'info');
-            log(`Claim key generated: ${SimulatorState.claimKey}`, 'warning');
-        } else if (userType === 'temp_id_finalized') {
-            // Temp ID user who already finalized (no claim key notification)
-            SimulatorState.tempId = 'temp_' + Math.random().toString(36).substring(2, 11);
-            SimulatorState.claimKey = null; // Already used/not shown
-            SimulatorState.election.owner_id = SimulatorState.tempId;
-            SimulatorState.election.create_date = new Date(SimulatorState.currentTime);
-            log(`Temp ID (finalized, no claim key shown): ${SimulatorState.tempId}`, 'info');
-        } else if (userType === 'logged_in_owner') {
-            SimulatorState.userId = 'user_' + Math.random().toString(36).substring(2, 11);
-            SimulatorState.tempId = null;
-            SimulatorState.claimKey = null;
-            SimulatorState.election.owner_id = SimulatorState.userId;
-            log(`Logged in as owner: ${SimulatorState.userId}`, 'success');
-        } else if (userType === 'logged_in_admin') {
-            SimulatorState.userId = 'admin_' + Math.random().toString(36).substring(2, 11);
-            SimulatorState.tempId = null;
-            SimulatorState.claimKey = null;
-            SimulatorState.election.admin_ids = [SimulatorState.userId];
-            log(`Logged in as admin: ${SimulatorState.userId}`, 'success');
-        } else if (userType === 'logged_in_auditor') {
-            SimulatorState.userId = 'auditor_' + Math.random().toString(36).substring(2, 11);
-            SimulatorState.tempId = null;
-            SimulatorState.claimKey = null;
-            SimulatorState.election.audit_ids = [SimulatorState.userId];
-            log(`Logged in as auditor: ${SimulatorState.userId}`, 'success');
-        } else if (userType === 'logged_in_voter') {
-            SimulatorState.userId = 'voter_' + Math.random().toString(36).substring(2, 11);
-            SimulatorState.tempId = null;
-            SimulatorState.claimKey = null;
-            log(`Logged in as voter: ${SimulatorState.userId}`, 'success');
-        } else {
-            SimulatorState.userId = null;
-            SimulatorState.tempId = null;
-            SimulatorState.claimKey = null;
-            log('Switched to anonymous user', 'info');
-        }
-        
-        updateUI();
-    }
-
-    function simulateClaimElection() {
-        if (!SimulatorState.claimKey) {
-            log('No claim key available', 'error');
+    // Election Settings
+    function updateElectionSettings() {
+        if (!SimulatorState.election) return;
+        if (!hasPermission('canEditElection')) {
+            log('Permission denied: Cannot edit election', 'error');
             return;
         }
-        
-        // Simulate the claim process
-        SimulatorState.userId = 'user_' + Math.random().toString(36).substring(2, 11);
-        SimulatorState.election.owner_id = SimulatorState.userId;
-        SimulatorState.claimKey = null; // Claim key is consumed
-        SimulatorState.userType = 'logged_in_owner';
-        SimulatorState.tempId = null;
-        
-        document.getElementById('user-type').value = 'logged_in_owner';
-        
-        log(`Election claimed! New owner: ${SimulatorState.userId}`, 'success');
-        updateUI();
-    }
-
-    // ============================================
-    // Election Settings
-    // ============================================
-
-    function updateElectionSettings() {
         const election = SimulatorState.election;
-        
         election.title = document.getElementById('election-title').value;
         election.settings.voter_access = document.getElementById('voter-access').value;
         election.settings.public_results = document.getElementById('public-results').checked;
         election.settings.ballot_updates = document.getElementById('ballot-updates').checked;
         
-        // Handle voter authentication - mirrors backend model exactly
         const authType = document.getElementById('voter-authentication').value;
-        const authHelpEl = document.getElementById('voter-auth-help');
-        
-        // Reset authentication object (exactly as backend does)
         election.settings.voter_authentication = {};
-        
-        switch (authType) {
-            case 'voter_id':
-                election.settings.voter_authentication = { voter_id: true };
-                authHelpEl.textContent = 'Uses browser storage to track if device has voted.';
-                break;
-            case 'email':
-                election.settings.voter_authentication = { email: true };
-                authHelpEl.textContent = 'Requires user to log in with their email address.';
-                break;
-            case 'ip_address':
-                election.settings.voter_authentication = { ip_address: true };
-                authHelpEl.textContent = 'Tracks IP address to prevent multiple votes.';
-                break;
-            case 'none':
-            default:
-                election.settings.voter_authentication = {};
-                authHelpEl.textContent = 'No vote limiting - anyone can vote multiple times.';
-                break;
-        }
+        if (authType === 'voter_id') election.settings.voter_authentication = { voter_id: true };
+        else if (authType === 'email') election.settings.voter_authentication = { email: true };
+        else if (authType === 'ip_address') election.settings.voter_authentication = { ip_address: true };
         
         const startTime = document.getElementById('start-time').value;
         const endTime = document.getElementById('end-time').value;
-        
         election.start_time = startTime ? new Date(startTime) : null;
         election.end_time = endTime ? new Date(endTime) : null;
-        
-        // Validate settings
-        if (election.settings.ballot_updates) {
-            if (election.settings.public_results && !['closed', 'archived'].includes(election.state)) {
-                log('Warning: Public results not permitted with ballot updates while election is open', 'warning');
-            }
-            if (election.settings.voter_access === 'open') {
-                log('Warning: Ballot updates not permitted on open access elections', 'warning');
-            }
-        }
         
         log('Election settings updated', 'info');
         updateUI();
     }
 
-    // ============================================
     // State Transitions
-    // ============================================
-
     function finalizeElection() {
-        const { election, userType } = SimulatorState;
-        
+        if (!SimulatorState.election) return;
         if (!hasPermission('canEditElectionState')) {
             log('Permission denied: Cannot finalize election', 'error');
             return;
         }
-        
+        const election = SimulatorState.election;
         if (election.state !== 'draft') {
             log('Can only finalize elections in draft state', 'error');
             return;
         }
         
-        if (!election.title || election.title.length < 3) {
-            log('Election title must be at least 3 characters', 'error');
-            return;
+        // Clear all test ballots (this happens on the real site too!)
+        const ballotCount = SimulatorState.ballots.length;
+        SimulatorState.ballots = [];
+        SimulatorState.votedDeviceIds.clear();
+        SimulatorState.votedEmails.clear();
+        SimulatorState.votedIpAddresses.clear();
+        
+        if (ballotCount > 0) {
+            log(`Cleared ${ballotCount} test ballot(s) upon finalization`, 'warning');
         }
         
-        // If start_time is set and in the future, go to finalized; otherwise open immediately
         const now = SimulatorState.currentTime;
         if (election.start_time && now < new Date(election.start_time)) {
             election.state = 'finalized';
@@ -794,351 +661,170 @@
             election.state = 'open';
             log('Election finalized and opened!', 'success');
         }
-        
-        // If using temp_id_new, the claim_key was shown at creation
-        // After finalize, user won't see claim_key notification anymore
-        if (userType === 'temp_id_new') {
-            log('Note: After finalize, claim_key notification would not be shown on page refresh', 'info');
-        }
-        
-        updateUI();
-    }
-
-    function openElection() {
-        if (!hasPermission('canEditElectionState')) {
-            log('Permission denied: Cannot open election', 'error');
-            return;
-        }
-        
-        const { election } = SimulatorState;
-        
-        if (election.state !== 'closed') {
-            log('Can only re-open closed elections (without start/end times)', 'error');
-            return;
-        }
-        
-        if (election.start_time || election.end_time) {
-            log('Cannot manually open/close elections with scheduled times', 'error');
-            return;
-        }
-        
-        election.state = 'open';
-        log('Election manually re-opened', 'success');
         updateUI();
     }
 
     function closeElection() {
+        if (!SimulatorState.election) return;
         if (!hasPermission('canEditElectionState')) {
-            log('Permission denied: Cannot close election', 'error');
+            log('Permission denied', 'error');
             return;
         }
-        
-        const { election } = SimulatorState;
-        
-        if (election.state !== 'open') {
+        if (SimulatorState.election.state !== 'open') {
             log('Can only close open elections', 'error');
             return;
         }
-        
-        if (election.start_time || election.end_time) {
-            log('Cannot manually open/close elections with scheduled times', 'error');
-            return;
-        }
-        
-        election.state = 'closed';
+        SimulatorState.election.state = 'closed';
         log('Election manually closed', 'success');
         updateUI();
     }
 
-    function archiveElection() {
+    function openElection() {
+        if (!SimulatorState.election) return;
         if (!hasPermission('canEditElectionState')) {
-            log('Permission denied: Cannot archive election', 'error');
+            log('Permission denied', 'error');
             return;
         }
-        
-        const { election } = SimulatorState;
-        
-        if (election.state === 'archived') {
-            log('Election is already archived', 'error');
+        if (SimulatorState.election.state !== 'closed') {
+            log('Can only re-open closed elections', 'error');
             return;
         }
-        
-        election.state = 'archived';
+        SimulatorState.election.state = 'open';
+        log('Election manually re-opened', 'success');
+        updateUI();
+    }
+
+    function archiveElection() {
+        if (!SimulatorState.election) return;
+        if (!hasPermission('canEditElectionState')) {
+            log('Permission denied', 'error');
+            return;
+        }
+        SimulatorState.election.state = 'archived';
         log('Election archived', 'success');
         updateUI();
     }
 
-    function togglePublicResults() {
-        if (!hasPermission('canEditElectionState')) {
-            log('Permission denied: Cannot toggle public results', 'error');
-            return;
-        }
-        
-        const { election } = SimulatorState;
-        
-        // Check if allowed based on state and ballot_updates
-        if (election.settings.ballot_updates && 
-            election.state === 'open' &&
-            !election.settings.public_results) {
-            log('Cannot enable public results while ballot updates enabled and election open', 'error');
-            return;
-        }
-        
-        election.settings.public_results = !election.settings.public_results;
-        document.getElementById('public-results').checked = election.settings.public_results;
-        
-        log(`Public results ${election.settings.public_results ? 'enabled' : 'disabled'}`, 'success');
-        updateUI();
-    }
-
-    // ============================================
-    // Voter Actions
-    // ============================================
-
+    // Voting
     function castBallot() {
-        const { election, userType, currentTime, hasVoted } = SimulatorState;
+        const user = getCurrentUser();
+        if (!user) { log('No user selected', 'error'); return; }
+        if (!SimulatorState.election) { log('No election exists yet', 'error'); return; }
+        
+        const election = SimulatorState.election;
         const auth = election.settings.voter_authentication;
         
-        if (election.state !== 'open' && election.state !== 'draft') {
+        if (election.state !== 'draft' && election.state !== 'open') {
             log('Cannot vote: Election is not open', 'error');
             return;
         }
         
-        // Check voter access (closed elections require email list)
-        if (election.settings.voter_access === 'closed' && userType === 'anonymous') {
-            log('Cannot vote: Closed election requires voter to be on email list', 'error');
+        if (election.settings.voter_access === 'closed') {
+            log('Cannot vote: Closed election (not implemented)', 'error');
             return;
         }
         
-        // Check voter authentication based on type
-        // This mimics how the backend validates voting eligibility
-        
-        if (auth.voter_id) {
-            // Device ID authentication - check if this device has voted
-            if (SimulatorState.votedDeviceIds.has(SimulatorState.currentDeviceId)) {
-                if (!election.settings.ballot_updates) {
-                    log(`Cannot vote: This device (${SimulatorState.currentDeviceId}) has already voted`, 'error');
-                    return;
-                }
-            }
+        if (auth.voter_id && SimulatorState.votedDeviceIds.has(user.deviceId) && !election.settings.ballot_updates) {
+            log(`Cannot vote: Device ${user.deviceId} has already voted`, 'error');
+            return;
         }
-        
-        if (auth.email) {
-            // Email authentication - requires logged in user with a userId
-            // Temp ID users don't have userId, so they can't vote with email auth
-            if (userType === 'anonymous' || !SimulatorState.userId) {
-                log('Cannot vote: Email authentication requires you to log in with an email account', 'error');
-                return;
-            }
-            const userEmail = `${SimulatorState.userId}@example.com`;
-            if (SimulatorState.votedEmails.has(userEmail)) {
-                if (!election.settings.ballot_updates) {
-                    log(`Cannot vote: Email ${userEmail} has already voted`, 'error');
-                    return;
-                }
-            }
+        if (auth.email && SimulatorState.votedEmails.has(user.email) && !election.settings.ballot_updates) {
+            log(`Cannot vote: Email ${user.email} has already voted`, 'error');
+            return;
         }
-        
-        if (auth.ip_address) {
-            // IP address authentication - check if this IP has voted
-            if (SimulatorState.votedIpAddresses.has(SimulatorState.currentIpAddress)) {
-                if (!election.settings.ballot_updates) {
-                    log(`Cannot vote: IP address ${SimulatorState.currentIpAddress} has already voted`, 'error');
-                    return;
-                }
-            }
-        }
-        
-        // Check legacy hasVoted flag (for no-auth elections)
-        if (hasVoted && !election.settings.ballot_updates && !auth.voter_id && !auth.email && !auth.ip_address) {
-            log('Cannot vote: Already voted and ballot updates not enabled', 'error');
+        if (auth.ip_address && SimulatorState.votedIpAddresses.has(user.ip) && !election.settings.ballot_updates) {
+            log(`Cannot vote: IP ${user.ip} has already voted`, 'error');
             return;
         }
         
-        // Generate a simulated ballot
-        const ballotId = 'ballot_' + Math.random().toString(36).substring(2, 11);
         const ballot = {
-            ballot_id: ballotId,
+            ballot_id: 'ballot_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
             election_id: election.election_id,
-            date_submitted: currentTime.getTime(),
-            status: 'submitted',
-            votes: election.races.map(race => ({
-                race_id: race.race_id,
-                scores: race.candidates.map(c => ({
-                    candidate_id: c.candidate_id,
-                    score: Math.floor(Math.random() * 6) // Random 0-5 for STAR
-                }))
-            }))
+            voter_name: user.name,
+            date_submitted: SimulatorState.currentTime.getTime(),
+            is_test: election.state === 'draft',
         };
         
-        // Track the vote based on authentication method
-        if (auth.voter_id) {
-            SimulatorState.votedDeviceIds.add(SimulatorState.currentDeviceId);
-        }
-        if (auth.email && SimulatorState.userId) {
-            const userEmail = `${SimulatorState.userId}@example.com`;
-            SimulatorState.votedEmails.add(userEmail);
-        }
-        if (auth.ip_address) {
-            SimulatorState.votedIpAddresses.add(SimulatorState.currentIpAddress);
-        }
+        if (auth.voter_id) SimulatorState.votedDeviceIds.add(user.deviceId);
+        if (auth.email) SimulatorState.votedEmails.add(user.email);
+        if (auth.ip_address) SimulatorState.votedIpAddresses.add(user.ip);
         
-        const isUpdate = hasVoted && election.settings.ballot_updates;
-        if (isUpdate) {
-            log(`Ballot updated: ${ballotId}`, 'success');
-        } else {
-            SimulatorState.ballots.push(ballot);
-            SimulatorState.hasVoted = true;
-            log(`Ballot cast: ${ballotId}`, 'success');
-        }
-        
+        SimulatorState.ballots.push(ballot);
+        const ballotType = election.state === 'draft' ? '(TEST ballot)' : '';
+        log(`${user.name} cast a ballot ${ballotType}`, 'success');
         updateUI();
     }
 
     function viewResults() {
-        const { election } = SimulatorState;
-        
+        if (!SimulatorState.election) { log('No election exists', 'error'); return; }
+        const election = SimulatorState.election;
         const canViewPreliminary = hasPermission('canViewPreliminaryResults');
         const isPublic = election.settings.public_results;
         const isClosed = ['closed', 'archived'].includes(election.state);
         
-        if (!canViewPreliminary && !isPublic && !isClosed) {
-            log('Cannot view results: Not public and election not closed', 'error');
-            return;
-        }
-        
-        log(`Viewing results: ${SimulatorState.ballots.length} ballots cast`, 'info');
-        
-        // Show simple tally
-        if (SimulatorState.ballots.length > 0) {
-            const race = election.races[0];
-            const totals = {};
-            race.candidates.forEach(c => totals[c.candidate_name] = 0);
-            
-            SimulatorState.ballots.forEach(ballot => {
-                ballot.votes[0].scores.forEach(score => {
-                    const candidate = race.candidates.find(c => c.candidate_id === score.candidate_id);
-                    if (candidate) {
-                        totals[candidate.candidate_name] += score.score;
-                    }
-                });
-            });
-            
-            const resultsStr = Object.entries(totals)
-                .sort((a, b) => b[1] - a[1])
-                .map(([name, score]) => `${name}: ${score} pts`)
-                .join(', ');
-            log(`STAR Results - ${resultsStr}`, 'success');
+        if (isClosed || isPublic || canViewPreliminary) {
+            log(`Results: ${SimulatorState.ballots.length} ballot(s) cast`, 'info');
         } else {
-            log('No ballots to tally', 'warning');
+            log('Cannot view results yet', 'error');
         }
-        
+    }
+
+    // Reset
+    function resetSimulator() {
+        SimulatorState.currentTime = new Date();
+        SimulatorState.currentUserIndex = null;
+        SimulatorState.election = null;
+        SimulatorState.userRoles = {};
+        SimulatorState.ballots = [];
+        SimulatorState.votedDeviceIds.clear();
+        SimulatorState.votedEmails.clear();
+        SimulatorState.votedIpAddresses.clear();
+        log('🔄 Simulator reset! Select a user to begin.', 'warning');
         updateUI();
     }
 
-    function viewBallots() {
-        if (!hasPermission('canViewBallots')) {
-            log('Permission denied: Cannot view ballots', 'error');
-            return;
-        }
-        
-        log(`Admin view: ${SimulatorState.ballots.length} ballots in database`, 'info');
-        SimulatorState.ballots.forEach((ballot, i) => {
-            const scores = ballot.votes[0].scores.map(s => s.score).join(',');
-            log(`  Ballot ${i + 1}: [${scores}]`, 'info');
-        });
-        updateUI();
-    }
-
-    // ============================================
     // UI Updates
-    // ============================================
-
     function updateUI() {
         updateTimeDisplay();
-        updateStateDisplay();
-        updateClaimKeySection();
+        updateUserList();
         updatePermissionsDisplay();
+        updateElectionStatus();
         updateStateActions();
         updateVoterActions();
         updateBallotList();
     }
 
     function updateTimeDisplay() {
-        document.getElementById('current-time').textContent = 
-            'Simulated Time: ' + SimulatorState.currentTime.toLocaleString();
+        document.getElementById('current-time').textContent = 'Simulated Time: ' + SimulatorState.currentTime.toLocaleString();
     }
 
-    function updateStateDisplay() {
-        const state = SimulatorState.election.state;
-        const badge = document.getElementById('election-state-badge');
-        badge.textContent = state.toUpperCase();
-        badge.className = `state-badge state-${state}`;
-        
-        // Update state info box
-        const infoBox = document.getElementById('state-info-box');
-        const election = SimulatorState.election;
-        
-        let info = '';
-        
-        if (state === 'draft') {
-            info = '<div class="info-box">📝 Election is in draft mode. Settings can be changed. Test ballots can be cast.</div>';
-        } else if (state === 'finalized') {
-            if (election.start_time) {
-                info = `<div class="info-box">⏳ Election finalized. Voting will begin at: <strong>${formatDateTime(election.start_time)}</strong></div>`;
-            }
-        } else if (state === 'open') {
-            if (election.end_time) {
-                info = `<div class="info-box">🗳️ Election is open for voting! Will automatically close at: <strong>${formatDateTime(election.end_time)}</strong></div>`;
-            } else {
-                info = '<div class="info-box">🗳️ Election is open for voting! Must be manually closed by an admin.</div>';
-            }
-        } else if (state === 'closed') {
-            info = '<div class="warning-box">🔒 Election is closed. No more votes accepted. Results are available.</div>';
-        } else if (state === 'archived') {
-            info = '<div class="info-box">📦 Election is archived. This is a read-only historical record.</div>';
-        }
-        
-        // Add temporary access warning if applicable
-        if (SimulatorState.userType.startsWith('temp_id') && SimulatorState.tempId) {
-            const hoursSinceCreate = (SimulatorState.currentTime - new Date(election.create_date)) / (1000 * 60 * 60);
-            const hoursRemaining = SimulatorState.TEMPORARY_ACCESS_HOURS - hoursSinceCreate;
+    function updateUserList() {
+        const container = document.getElementById('user-list');
+        container.innerHTML = FIXED_USERS.map((user, index) => {
+            const isSelected = SimulatorState.currentUserIndex === index;
+            const isOwner = SimulatorState.election && SimulatorState.election.owner_id === user.id;
+            const assignedRole = SimulatorState.userRoles[user.id];
             
-            if (hoursRemaining > 0) {
-                info += `<div class="warning-box">⚠️ <strong>Temporary Access:</strong> ${hoursRemaining.toFixed(1)} hours remaining. Sign in to keep permanent access to this election!</div>`;
-            } else {
-                info += `<div class="error-box">⛔ <strong>Temporary Access Expired!</strong> You no longer have admin access to this election. The claim key can no longer be used.</div>`;
-            }
-        }
-        
-        infoBox.innerHTML = info;
-    }
-
-    function updateClaimKeySection() {
-        const section = document.getElementById('claim-key-section');
-        const display = document.getElementById('claim-key-display');
-        
-        if (SimulatorState.claimKey && SimulatorState.userType === 'temp_id_new') {
-            section.style.display = 'block';
-            display.textContent = SimulatorState.claimKey;
-        } else {
-            section.style.display = 'none';
-        }
+            let roleText = '';
+            if (isOwner) roleText = '👑 Owner';
+            else if (assignedRole === 'admin') roleText = '🔧 Admin';
+            else if (assignedRole === 'auditor') roleText = '👁️ Auditor';
+            else if (user.canCreate) roleText = '⭐ Can Create';
+            else if (user.potentialRole) roleText = `(potential ${user.potentialRole})`;
+            else roleText = '🗳️ Voter';
+            
+            return `<div class="user-card ${isSelected ? 'selected' : ''}" onclick="selectUser(${index})">
+                <div class="user-name">${user.name}</div>
+                <div class="user-type">${user.type}</div>
+                <div class="user-role">${roleText}</div>
+            </div>`;
+        }).join('');
     }
 
     function updatePermissionsDisplay() {
         const container = document.getElementById('permissions-display');
         const permissions = getUserPermissions();
-        
-        // Show key permissions only
-        const keyPermissions = [
-            'canEditElectionState',
-            'canViewBallots', 
-            'canEditElection',
-            'canViewPreliminaryResults',
-            'canSendEmails'
-        ];
-        
+        const keyPermissions = ['canEditElectionState', 'canViewBallots', 'canEditElection', 'canViewPreliminaryResults', 'canAddRoles'];
         container.innerHTML = keyPermissions.map(p => {
             const granted = permissions.includes(p);
             const label = p.replace('can', '').replace(/([A-Z])/g, ' $1').trim();
@@ -1146,165 +832,136 @@
         }).join('');
     }
 
+    function updateElectionStatus() {
+        const container = document.getElementById('election-status-content');
+        const settingsPanel = document.getElementById('election-settings-panel');
+        const user = getCurrentUser();
+        
+        if (!SimulatorState.election) {
+            const canCreate = user && user.canCreate;
+            container.innerHTML = `<div class="no-election-notice">
+                <h4>No Election Created Yet</h4>
+                <p>${canCreate ? 'You are Alice Owner. Click below to create an election.' : 'Only Alice Owner can create an election.'}</p>
+                <button class="btn btn-primary" onclick="createElection()" ${!canCreate ? 'disabled' : ''}>➕ Create Election</button>
+            </div>`;
+            settingsPanel.style.display = 'none';
+            return;
+        }
+        
+        const election = SimulatorState.election;
+        const owner = FIXED_USERS.find(u => u.id === election.owner_id);
+        container.innerHTML = `
+            <div style="text-align: center; margin-bottom: 16px;">
+                <span class="state-badge state-${election.state}">${election.state.toUpperCase()}</span>
+            </div>
+            <div class="info-box">
+                <strong>Title:</strong> ${election.title}<br>
+                <strong>Owner:</strong> ${owner ? owner.name : 'Unknown'}<br>
+                <strong>Ballots:</strong> ${SimulatorState.ballots.length} ${election.state === 'draft' ? '(test)' : ''}
+            </div>
+            ${election.state === 'draft' ? '<div class="warning-box">⚠️ Test ballots will be cleared when finalized!</div>' : ''}
+        `;
+        
+        if (election.state === 'draft' && hasPermission('canEditElection')) {
+            settingsPanel.style.display = 'block';
+            document.getElementById('election-title').value = election.title;
+            document.getElementById('voter-access').value = election.settings.voter_access;
+            document.getElementById('public-results').checked = election.settings.public_results;
+            document.getElementById('ballot-updates').checked = election.settings.ballot_updates;
+            const auth = election.settings.voter_authentication;
+            document.getElementById('voter-authentication').value = auth.voter_id ? 'voter_id' : auth.email ? 'email' : auth.ip_address ? 'ip_address' : 'none';
+        } else {
+            settingsPanel.style.display = 'none';
+        }
+    }
+
     function updateStateActions() {
         const container = document.getElementById('state-actions');
-        const { election } = SimulatorState;
-        const canEdit = hasPermission('canEditElectionState');
+        if (!SimulatorState.election) {
+            container.innerHTML = '<p style="color: #6b7280;">Create an election first</p>';
+            return;
+        }
         
+        const election = SimulatorState.election;
+        const canEdit = hasPermission('canEditElectionState');
         let html = '';
         
         if (election.state === 'draft') {
-            html += `<button class="btn btn-success" onclick="finalizeElection()" ${!canEdit ? 'disabled title="No permission"' : ''}>
-                ✓ Finalize Election
-            </button>`;
+            html += `<button class="btn btn-success" onclick="finalizeElection()" ${!canEdit ? 'disabled' : ''}>✓ Finalize</button>`;
         }
-        
-        if (election.state === 'open' && !election.start_time && !election.end_time) {
-            html += `<button class="btn btn-warning" onclick="closeElection()" ${!canEdit ? 'disabled title="No permission"' : ''}>
-                🔒 Close Election
-            </button>`;
+        if (election.state === 'open') {
+            html += `<button class="btn btn-warning" onclick="closeElection()" ${!canEdit ? 'disabled' : ''}>🔒 Close</button>`;
         }
-        
-        if (election.state === 'closed' && !election.start_time && !election.end_time) {
-            html += `<button class="btn btn-success" onclick="openElection()" ${!canEdit ? 'disabled title="No permission"' : ''}>
-                🔓 Re-open Election
-            </button>`;
+        if (election.state === 'closed') {
+            html += `<button class="btn btn-success" onclick="openElection()" ${!canEdit ? 'disabled' : ''}>🔓 Re-open</button>`;
         }
-        
-        if (!['closed', 'archived'].includes(election.state) || 
-            (election.state === 'open' && !election.settings.ballot_updates)) {
-            html += `<button class="btn btn-primary" onclick="togglePublicResults()" ${!canEdit ? 'disabled title="No permission"' : ''}>
-                ${election.settings.public_results ? '🔒 Disable' : '📊 Enable'} Public Results
-            </button>`;
-        }
-        
         if (election.state !== 'archived') {
-            html += `<button class="btn btn-danger" onclick="archiveElection()" ${!canEdit ? 'disabled title="No permission"' : ''}>
-                📦 Archive Election
-            </button>`;
+            html += `<button class="btn btn-danger" onclick="archiveElection()" ${!canEdit ? 'disabled' : ''}>📦 Archive</button>`;
         }
         
-        container.innerHTML = html || '<p style="color: #6b7280;">No state transitions available</p>';
+        if (hasPermission('canAddRoles')) {
+            const usersToAdd = FIXED_USERS.filter(u => u.potentialRole && !SimulatorState.userRoles[u.id] && u.id !== election.owner_id);
+            if (usersToAdd.length > 0) {
+                html += '<hr style="margin: 12px 0;"><strong>Add Roles:</strong><br>';
+                usersToAdd.forEach(u => {
+                    html += `<button class="btn btn-secondary" onclick="addUserRole('${u.id}', '${u.potentialRole}')" style="font-size: 11px;">Add ${u.name.split(' ')[0]} as ${u.potentialRole}</button>`;
+                });
+            }
+        }
+        
+        container.innerHTML = html || '<p style="color: #6b7280;">No actions available</p>';
     }
 
     function updateVoterActions() {
         const container = document.getElementById('voter-actions');
         const statusContainer = document.getElementById('vote-status');
-        const { election, hasVoted, userType } = SimulatorState;
+        const user = getCurrentUser();
+        
+        if (!user) {
+            container.innerHTML = '<p style="color: #6b7280;">Select a user first</p>';
+            statusContainer.innerHTML = '';
+            return;
+        }
+        if (!SimulatorState.election) {
+            container.innerHTML = '<p style="color: #6b7280;">No election exists yet</p>';
+            statusContainer.innerHTML = '';
+            return;
+        }
+        
+        const election = SimulatorState.election;
         const auth = election.settings.voter_authentication;
-        
-        let html = '';
-        let status = '';
-        
-        // Determine if user can vote based on authentication type
-        let canVote = (election.state === 'open' || election.state === 'draft');
+        let canVote = election.state === 'draft' || election.state === 'open';
         let blockReason = '';
         
         if (canVote) {
-            // Check voter access (closed = email list only)
-            if (election.settings.voter_access === 'closed' && userType === 'anonymous') {
+            if (auth.voter_id && SimulatorState.votedDeviceIds.has(user.deviceId) && !election.settings.ballot_updates) {
                 canVote = false;
-                blockReason = 'Closed election - requires being on voter list';
+                blockReason = `Device already voted`;
             }
-            
-            // Check authentication-specific blocks
-            if (canVote && auth.voter_id) {
-                if (SimulatorState.votedDeviceIds.has(SimulatorState.currentDeviceId) && !election.settings.ballot_updates) {
-                    canVote = false;
-                    blockReason = `Device ${SimulatorState.currentDeviceId} has already voted`;
-                }
+            if (auth.email && SimulatorState.votedEmails.has(user.email) && !election.settings.ballot_updates) {
+                canVote = false;
+                blockReason = `Email already voted`;
             }
-            
-            if (canVote && auth.email) {
-                // Email auth requires logged in user with userId (not temp_id users)
-                if (userType === 'anonymous' || !SimulatorState.userId) {
-                    canVote = false;
-                    blockReason = 'Email authentication requires login with email account';
-                } else {
-                    const userEmail = `${SimulatorState.userId}@example.com`;
-                    if (SimulatorState.votedEmails.has(userEmail) && !election.settings.ballot_updates) {
-                        canVote = false;
-                        blockReason = `Email ${userEmail} has already voted`;
-                    }
-                }
-            }
-            
-            if (canVote && auth.ip_address) {
-                if (SimulatorState.votedIpAddresses.has(SimulatorState.currentIpAddress) && !election.settings.ballot_updates) {
-                    canVote = false;
-                    blockReason = `IP ${SimulatorState.currentIpAddress} has already voted`;
-                }
+            if (auth.ip_address && SimulatorState.votedIpAddresses.has(user.ip) && !election.settings.ballot_updates) {
+                canVote = false;
+                blockReason = `IP already voted`;
             }
         }
         
-        html += `<button class="btn btn-primary" onclick="castBallot()" ${!canVote ? 'disabled' : ''}>
-            ${hasVoted && election.settings.ballot_updates ? '✏️ Update Ballot' : '🗳️ Cast Ballot'}
-        </button>`;
+        container.innerHTML = `
+            <button class="btn btn-primary" onclick="castBallot()" ${!canVote ? 'disabled' : ''}>🗳️ Cast ${election.state === 'draft' ? 'Test ' : ''}Ballot</button>
+            <button class="btn btn-secondary" onclick="viewResults()">📊 View Results</button>
+        `;
         
-        // View results button
-        const canViewResults = hasPermission('canViewPreliminaryResults') ||
-                               election.settings.public_results ||
-                               ['closed', 'archived'].includes(election.state);
-        
-        html += `<button class="btn btn-secondary" onclick="viewResults()" ${!canViewResults ? 'disabled' : ''}>
-            📊 View Results
-        </button>`;
-        
-        // View ballots (admin)
-        if (hasPermission('canViewBallots')) {
-            html += `<button class="btn btn-secondary" onclick="viewBallots()">
-                📋 View All Ballots (Admin)
-            </button>`;
-        }
-        
-        container.innerHTML = html;
-        
-        // Status message - show authentication info
-        status = '';
-        
-        // Show current "identity" based on auth type
-        if (auth.voter_id || auth.email || auth.ip_address) {
-            let identityInfo = '<div class="info-box" style="font-size: 12px;"><strong>Your voting identity:</strong><br>';
-            if (auth.voter_id) {
-                identityInfo += `Device ID: <code>${SimulatorState.currentDeviceId}</code><br>`;
-            }
-            if (auth.email && SimulatorState.userId) {
-                identityInfo += `Email: <code>${SimulatorState.userId}@example.com</code><br>`;
-            } else if (auth.email) {
-                identityInfo += `Email: <em>Login required to vote</em><br>`;
-            }
-            if (auth.ip_address) {
-                identityInfo += `IP Address: <code>${SimulatorState.currentIpAddress}</code><br>`;
-            }
-            identityInfo += '</div>';
-            status += identityInfo;
-        }
-        
-        if (hasVoted) {
-            status += '<div class="info-box">✅ You have submitted a ballot</div>';
-            if (election.settings.ballot_updates && election.state === 'open') {
-                status += '<div class="info-box">Ballot updates are enabled - you can change your vote until the election closes.</div>';
-            }
-        } else if (blockReason) {
-            status += `<div class="error-box">🚫 ${blockReason}</div>`;
-        } else if (election.state === 'open') {
-            status += '<div class="info-box">You have not yet voted in this election.</div>';
-        } else if (election.state === 'draft') {
-            status += '<div class="warning-box">🧪 This is a TEST ballot (draft mode) - it won\'t count in final results.</div>';
-        }
-        
-        // Show no-auth warning
-        if (!auth.voter_id && !auth.email && !auth.ip_address && election.state === 'open') {
-            status += '<div class="warning-box">⚠️ No vote limiting enabled - anyone can vote unlimited times!</div>';
-        }
-        
+        let status = `<div class="info-box" style="font-size: 11px;"><strong>Your identity:</strong> Device: ${user.deviceId}</div>`;
+        if (blockReason) status += `<div class="error-box">🚫 ${blockReason}</div>`;
+        if (election.state === 'draft') status += `<div class="warning-box">⚠️ Test ballots cleared on finalization</div>`;
         statusContainer.innerHTML = status;
     }
 
     function updateBallotList() {
         const container = document.getElementById('ballot-list');
         const count = document.getElementById('ballot-count');
-        
         count.textContent = SimulatorState.ballots.length;
         
         if (SimulatorState.ballots.length === 0) {
@@ -1314,17 +971,12 @@
         
         container.innerHTML = SimulatorState.ballots.map((ballot, i) => {
             const date = new Date(ballot.date_submitted).toLocaleString();
-            return `<div class="ballot-item">
-                <strong>#${i + 1} - ${ballot.ballot_id}</strong><br>
-                <small style="color: #6b7280;">Submitted: ${date}</small>
-            </div>`;
+            const testLabel = ballot.is_test ? ' <span style="color: #d97706;">(TEST)</span>' : '';
+            return `<div class="ballot-item"><strong>#${i + 1} - ${ballot.voter_name}</strong>${testLabel}<br><small style="color: #6b7280;">${date}</small></div>`;
         }).join('');
     }
 
-    // ============================================
     // Logging
-    // ============================================
-
     function log(message, type = 'info') {
         const container = document.getElementById('event-log');
         const timestamp = SimulatorState.currentTime.toLocaleTimeString();
@@ -1336,26 +988,18 @@
     }
 
     function clearLog() {
-        const container = document.getElementById('event-log');
-        container.innerHTML = '<div class="log-entry info">Log cleared</div>';
+        document.getElementById('event-log').innerHTML = '<div class="log-entry info">Log cleared</div>';
     }
 
-    // ============================================
     // Initialization
-    // ============================================
-
     function initialize() {
-        // Initialize UI
         updateUI();
         log('🚀 Election simulator ready!', 'success');
-        log('Select a user type to begin testing different credential scenarios', 'info');
+        log('Select a user to begin. Only Alice Owner can create elections.', 'info');
     }
 
-    // Start the simulator
     document.addEventListener('DOMContentLoaded', initialize);
-    if (document.readyState !== 'loading') {
-        initialize();
-    }
+    if (document.readyState !== 'loading') initialize();
     </script>
 </body>
 </html>
