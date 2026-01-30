@@ -76,6 +76,11 @@ const templateMappers = {
         ...election,
         settings: {
             ...election.settings,
+            voter_authentication: {
+                voter_id: false,
+                email: false,
+                ip_address: false,
+            },
             public_results: true,
         },
     }),
@@ -85,8 +90,9 @@ const templateMappers = {
         settings: {
             ...election.settings,
             voter_authentication: {
-                ...election.settings.voter_authentication,
-                voter_id: true
+                voter_id: true,
+                email: false,
+                ip_address: false,
             },
         }
     }),
@@ -96,9 +102,10 @@ const templateMappers = {
         settings: {
             ...election.settings,
             voter_authentication: {
-                ...election.settings.voter_authentication,
                 // email: true <- this means login will be required, that's not what we want for this setting. TODO: figure out refactored name
-                voter_id: true
+                voter_id: true,
+                email: false,
+                ip_address: false,
             },
             invitation: 'email',
         }
@@ -109,8 +116,9 @@ const templateMappers = {
         settings: {
             ...election.settings,
             voter_authentication: {
-                ...election.settings.voter_authentication,
-                voter_id: true
+                voter_id: true,
+                email: false,
+                ip_address: false,
             },
         }
     }),
