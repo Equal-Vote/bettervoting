@@ -350,7 +350,7 @@ const SimulatorState = {
   
   // Election state
   election: {
-    election_id: 'sim_' + Math.random().toString(36).substr(2, 9),
+    election_id: 'sim_' + Math.random().toString(36).substring(2, 11),
     title: 'Sample Election',
     state: 'draft', // draft, finalized, open, closed, archived
     owner_id: null,
@@ -427,9 +427,12 @@ function getUserRoles() {
     return [];
   }
   
-  // Temp ID users who own the election
+  // Temp ID users who own the election (and not expired)
   if (userType.startsWith('temp_id') && tempId && election.owner_id === tempId) {
-    roles.push('owner');
+    const hoursSinceCreate = (SimulatorState.currentTime - new Date(election.create_date)) / (1000 * 60 * 60);
+    if (hoursSinceCreate <= SimulatorState.TEMPORARY_ACCESS_HOURS) {
+      roles.push('owner');
+    }
   }
   
   // Logged in users
@@ -497,7 +500,11 @@ function checkTimeBasedTransitions() {
   if (SimulatorState.userType.startsWith('temp_id') && SimulatorState.tempId) {
     const hoursSinceCreate = (currentTime - new Date(election.create_date)) / (1000 * 60 * 60);
     if (hoursSinceCreate > SimulatorState.TEMPORARY_ACCESS_HOURS) {
-      log(`Temporary access expired (${SimulatorState.TEMPORARY_ACCESS_HOURS}h limit)`, 'warning');
+      const wasExpired = SimulatorState._tempAccessExpiredLogged;
+      if (!wasExpired) {
+        log(`Temporary access expired (${SimulatorState.TEMPORARY_ACCESS_HOURS}h limit reached)`, 'error');
+        SimulatorState._tempAccessExpiredLogged = true;
+      }
     }
   }
 }
@@ -515,41 +522,43 @@ function updateUserType() {
   const userType = document.getElementById('user-type').value;
   SimulatorState.userType = userType;
   SimulatorState.hasVoted = false; // Reset vote status when changing user
+  SimulatorState._tempAccessExpiredLogged = false;
   
   if (userType === 'temp_id_new') {
     // Generate new temp ID and claim key
-    SimulatorState.tempId = 'temp_' + Math.random().toString(36).substr(2, 9);
-    SimulatorState.claimKey = 'claim_' + Math.random().toString(36).substr(2, 16);
+    SimulatorState.tempId = 'temp_' + Math.random().toString(36).substring(2, 11);
+    SimulatorState.claimKey = 'claim_' + Math.random().toString(36).substring(2, 18);
     SimulatorState.election.owner_id = SimulatorState.tempId;
     SimulatorState.election.create_date = new Date(SimulatorState.currentTime);
-    log(`Created with Temp ID: ${SimulatorState.tempId}`, 'info');
+    log(`Created election with Temp ID: ${SimulatorState.tempId}`, 'info');
     log(`Claim key generated: ${SimulatorState.claimKey}`, 'warning');
   } else if (userType === 'temp_id_finalized') {
     // Temp ID user who already finalized (no claim key notification)
-    SimulatorState.tempId = 'temp_' + Math.random().toString(36).substr(2, 9);
+    SimulatorState.tempId = 'temp_' + Math.random().toString(36).substring(2, 11);
     SimulatorState.claimKey = null; // Already used/not shown
     SimulatorState.election.owner_id = SimulatorState.tempId;
-    log(`Temp ID (finalized, no claim key): ${SimulatorState.tempId}`, 'info');
+    SimulatorState.election.create_date = new Date(SimulatorState.currentTime);
+    log(`Temp ID (finalized, no claim key shown): ${SimulatorState.tempId}`, 'info');
   } else if (userType === 'logged_in_owner') {
-    SimulatorState.userId = 'user_' + Math.random().toString(36).substr(2, 9);
+    SimulatorState.userId = 'user_' + Math.random().toString(36).substring(2, 11);
     SimulatorState.tempId = null;
     SimulatorState.claimKey = null;
     SimulatorState.election.owner_id = SimulatorState.userId;
     log(`Logged in as owner: ${SimulatorState.userId}`, 'success');
   } else if (userType === 'logged_in_admin') {
-    SimulatorState.userId = 'admin_' + Math.random().toString(36).substr(2, 9);
+    SimulatorState.userId = 'admin_' + Math.random().toString(36).substring(2, 11);
     SimulatorState.tempId = null;
     SimulatorState.claimKey = null;
     SimulatorState.election.admin_ids = [SimulatorState.userId];
     log(`Logged in as admin: ${SimulatorState.userId}`, 'success');
   } else if (userType === 'logged_in_auditor') {
-    SimulatorState.userId = 'auditor_' + Math.random().toString(36).substr(2, 9);
+    SimulatorState.userId = 'auditor_' + Math.random().toString(36).substring(2, 13);
     SimulatorState.tempId = null;
     SimulatorState.claimKey = null;
     SimulatorState.election.audit_ids = [SimulatorState.userId];
     log(`Logged in as auditor: ${SimulatorState.userId}`, 'success');
   } else if (userType === 'logged_in_voter') {
-    SimulatorState.userId = 'voter_' + Math.random().toString(36).substr(2, 9);
+    SimulatorState.userId = 'voter_' + Math.random().toString(36).substring(2, 11);
     SimulatorState.tempId = null;
     SimulatorState.claimKey = null;
     log(`Logged in as voter: ${SimulatorState.userId}`, 'success');
@@ -570,7 +579,7 @@ function simulateClaimElection() {
   }
   
   // Simulate the claim process
-  SimulatorState.userId = 'user_' + Math.random().toString(36).substr(2, 9);
+  SimulatorState.userId = 'user_' + Math.random().toString(36).substring(2, 11);
   SimulatorState.election.owner_id = SimulatorState.userId;
   SimulatorState.claimKey = null; // Claim key is consumed
   SimulatorState.userType = 'logged_in_owner';
@@ -767,7 +776,7 @@ function castBallot() {
   }
   
   // Generate a simulated ballot
-  const ballotId = 'ballot_' + Math.random().toString(36).substr(2, 9);
+  const ballotId = 'ballot_' + Math.random().toString(36).substring(2, 11);
   const ballot = {
     ballot_id: ballotId,
     election_id: election.election_id,
