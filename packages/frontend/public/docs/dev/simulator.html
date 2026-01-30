@@ -278,6 +278,14 @@
             color: #374151;
             margin-bottom: 12px;
         }
+
+        .claim-key {
+            font-family: monospace;
+            font-size: 11px;
+            background: #fef3c7;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
@@ -286,8 +294,8 @@
         
         <div class="intro-text">
             <p><strong>This simulator allows you to test and understand the complete election lifecycle without making any backend calls.</strong></p>
-            <p>Select a user from the list below to act as that user. Only <strong>Alice Owner</strong> can create elections. 
-               Test ballots can be cast in draft mode but are cleared when the election is finalized.</p>
+            <p>Select a user from the list below to act as that user. <strong>Anyone can create elections</strong> - including anonymous and temp_id users! 
+               Non-logged-in users get temporary access (10 hours) and a claim_key. Test ballots can be cast in draft mode but are cleared when the election is finalized.</p>
             <button class="btn btn-danger" onclick="resetSimulator()">🔄 Reset Simulator</button>
         </div>
 
@@ -305,7 +313,7 @@
         <div class="simulator-panel">
             <h3>👥 Select User (15 Available Users)</h3>
             <p style="font-size: 12px; color: #6b7280; margin-bottom: 12px;">
-                Click a user to act as them. Only <strong>Alice Owner</strong> can create new elections.
+                Click a user to act as them. <strong>Anyone</strong> can create elections - even anonymous users!
             </p>
             <div class="user-list" id="user-list"></div>
             <div class="control-group" style="margin-top: 12px;">
@@ -402,17 +410,23 @@
             <h3>📚 How It Works</h3>
             <div class="two-column">
                 <div>
-                    <h4>Users</h4>
+                    <h4>User Types</h4>
                     <ul style="font-size: 13px;">
-                        <li><strong>Alice Owner</strong> - The only user who can create elections.</li>
-                        <li><strong>Bob Admin, Carol Admin</strong> - Will be admins once Alice adds them.</li>
-                        <li><strong>Dave Auditor, Eve Auditor</strong> - Can audit but not modify.</li>
-                        <li><strong>Voters (10)</strong> - Regular voters with unique device IDs.</li>
+                        <li><strong>Anonymous</strong> - Not logged in. Can create elections! Gets temp access (10h) + claim_key.</li>
+                        <li><strong>Temp ID</strong> - Quick create flow. Has temp access (10h) + claim_key.</li>
+                        <li><strong>Logged In</strong> - Full permanent account. No expiry.</li>
+                    </ul>
+                    
+                    <h4>Election Creation</h4>
+                    <ul style="font-size: 13px;">
+                        <li>🎉 <strong>Anyone</strong> can create an election - even anonymous users!</li>
+                        <li>Non-logged-in users get <strong>temporary access</strong> (10 hours)</li>
+                        <li>They also receive a <strong>claim_key</strong> to transfer ownership later</li>
+                        <li>After 10 hours, temp access expires and the election is orphaned</li>
                     </ul>
                     
                     <h4>Election Lifecycle</h4>
                     <ol style="font-size: 13px;">
-                        <li><strong>No Election</strong> - Starting state. Only Alice can create.</li>
                         <li><strong>Draft</strong> - Test ballots allowed. Cleared on finalize.</li>
                         <li><strong>Finalized</strong> - Waiting for start time (if set).</li>
                         <li><strong>Open</strong> - Accepting real votes.</li>
@@ -434,7 +448,7 @@
                         <li>Test ballots in draft mode are <strong>deleted</strong> when finalized</li>
                         <li>Only the election owner can change election state</li>
                         <li>Admins/Auditors get their roles after being added by owner</li>
-                        <li>Each voter has a unique device ID for vote tracking</li>
+                        <li>Advance time by 10+ hours to see temp access expire!</li>
                     </ul>
                 </div>
             </div>
@@ -442,13 +456,19 @@
     </div>
 
     <script>
-    // Fixed Users (15 users with defined roles)
+    // Fixed Users (mix of logged-in, anonymous, and temp_id users)
+    // In the real system, ANYONE can create an election - even anonymous users!
     const FIXED_USERS = [
-        { id: 'alice_owner', name: 'Alice Owner', type: 'logged_in', canCreate: true, deviceId: 'device_alice_001', ip: '192.168.1.1', email: 'alice@example.com' },
-        { id: 'bob_admin', name: 'Bob Admin', type: 'logged_in', potentialRole: 'admin', deviceId: 'device_bob_002', ip: '192.168.1.2', email: 'bob@example.com' },
-        { id: 'carol_admin', name: 'Carol Admin', type: 'logged_in', potentialRole: 'admin', deviceId: 'device_carol_003', ip: '192.168.1.3', email: 'carol@example.com' },
-        { id: 'dave_auditor', name: 'Dave Auditor', type: 'logged_in', potentialRole: 'auditor', deviceId: 'device_dave_004', ip: '192.168.1.4', email: 'dave@example.com' },
-        { id: 'eve_auditor', name: 'Eve Auditor', type: 'logged_in', potentialRole: 'auditor', deviceId: 'device_eve_005', ip: '192.168.1.5', email: 'eve@example.com' },
+        // Anonymous users (not logged in, can still create elections!)
+        { id: 'anon_visitor', name: 'Anonymous Visitor', type: 'anonymous', deviceId: 'device_anon_001', ip: '192.168.1.100' },
+        // Temp ID users (created via quick election flow, get claim_key)
+        { id: 'temp_user_1', name: 'Temp User (Quick Create)', type: 'temp_id', tempId: 'temp_abc123', claimKey: 'claim_xyz789', deviceId: 'device_temp_001', ip: '192.168.1.101', tempAccessCreated: null },
+        // Logged-in users
+        { id: 'alice_logged', name: 'Alice (Logged In)', type: 'logged_in', potentialRole: 'admin', deviceId: 'device_alice_001', ip: '192.168.1.1', email: 'alice@example.com' },
+        { id: 'bob_logged', name: 'Bob (Logged In)', type: 'logged_in', potentialRole: 'admin', deviceId: 'device_bob_002', ip: '192.168.1.2', email: 'bob@example.com' },
+        { id: 'carol_logged', name: 'Carol (Logged In)', type: 'logged_in', potentialRole: 'auditor', deviceId: 'device_carol_003', ip: '192.168.1.3', email: 'carol@example.com' },
+        { id: 'dave_logged', name: 'Dave (Logged In)', type: 'logged_in', potentialRole: 'auditor', deviceId: 'device_dave_004', ip: '192.168.1.4', email: 'dave@example.com' },
+        { id: 'voter_eve', name: 'Eve Voter', type: 'logged_in', deviceId: 'device_eve_005', ip: '192.168.1.5', email: 'eve@example.com' },
         { id: 'voter_frank', name: 'Frank Voter', type: 'logged_in', deviceId: 'device_frank_006', ip: '192.168.1.6', email: 'frank@example.com' },
         { id: 'voter_grace', name: 'Grace Voter', type: 'logged_in', deviceId: 'device_grace_007', ip: '192.168.1.7', email: 'grace@example.com' },
         { id: 'voter_henry', name: 'Henry Voter', type: 'logged_in', deviceId: 'device_henry_008', ip: '192.168.1.8', email: 'henry@example.com' },
@@ -457,8 +477,6 @@
         { id: 'voter_kate', name: 'Kate Voter', type: 'logged_in', deviceId: 'device_kate_011', ip: '192.168.1.11', email: 'kate@example.com' },
         { id: 'voter_leo', name: 'Leo Voter', type: 'logged_in', deviceId: 'device_leo_012', ip: '192.168.1.12', email: 'leo@example.com' },
         { id: 'voter_mia', name: 'Mia Voter', type: 'logged_in', deviceId: 'device_mia_013', ip: '192.168.1.13', email: 'mia@example.com' },
-        { id: 'voter_nick', name: 'Nick Voter', type: 'logged_in', deviceId: 'device_nick_014', ip: '192.168.1.14', email: 'nick@example.com' },
-        { id: 'voter_olivia', name: 'Olivia Voter', type: 'logged_in', deviceId: 'device_olivia_015', ip: '192.168.1.15', email: 'olivia@example.com' },
     ];
 
     // Simulator State
@@ -479,12 +497,27 @@
         return FIXED_USERS[SimulatorState.currentUserIndex];
     }
 
+    // Check if temp access has expired (10 hours)
+    function isTempAccessExpired(user) {
+        if (!user.tempAccessCreated) return false;
+        const expiryTime = new Date(user.tempAccessCreated.getTime() + 10 * 60 * 60 * 1000); // 10 hours
+        return SimulatorState.currentTime >= expiryTime;
+    }
+
     function getUserRoles() {
         const user = getCurrentUser();
         if (!user) return [];
         const roles = [];
+        
+        // Check if this user is the election owner
         if (SimulatorState.election && SimulatorState.election.owner_id === user.id) {
-            roles.push('owner');
+            // For temp_id or anonymous-turned-temp users, check if temp access expired
+            if ((user.type === 'temp_id' || user.tempId) && isTempAccessExpired(user)) {
+                // Temp access expired - no owner role
+                // They need to claim the election with a real account
+            } else {
+                roles.push('owner');
+            }
         }
         const assignedRole = SimulatorState.userRoles[user.id];
         if (assignedRole) roles.push(assignedRole);
@@ -522,22 +555,47 @@
         updateUI();
     }
 
-    // Election Creation
+    // Election Creation - Anyone can create (even anonymous users!)
     function createElection() {
         const user = getCurrentUser();
-        if (!user || !user.canCreate) {
-            log('Only Alice Owner can create elections!', 'error');
+        if (!user) {
+            log('Select a user first!', 'error');
             return;
         }
         if (SimulatorState.election) {
             log('An election already exists. Use Reset to start over.', 'error');
             return;
         }
+        
+        // Handle temp_id user - they get temporary access and a claim_key
+        let ownerInfo = {};
+        if (user.type === 'temp_id') {
+            // Record when temp access was created (10 hour expiry)
+            FIXED_USERS[SimulatorState.currentUserIndex].tempAccessCreated = new Date(SimulatorState.currentTime);
+            ownerInfo.temp_id = user.tempId;
+            ownerInfo.claim_key = user.claimKey;
+            log(`⚠️ Temp user created election. Claim key: ${user.claimKey}`, 'warning');
+            log(`⚠️ Temp access expires in 10 hours. Log in to claim this election!`, 'warning');
+        } else if (user.type === 'anonymous') {
+            // Anonymous user also gets temp access
+            const tempId = 'temp_' + Date.now();
+            const claimKey = 'claim_' + Math.random().toString(36).substring(2, 10);
+            FIXED_USERS[SimulatorState.currentUserIndex].tempId = tempId;
+            FIXED_USERS[SimulatorState.currentUserIndex].claimKey = claimKey;
+            FIXED_USERS[SimulatorState.currentUserIndex].tempAccessCreated = new Date(SimulatorState.currentTime);
+            ownerInfo.temp_id = tempId;
+            ownerInfo.claim_key = claimKey;
+            log(`⚠️ Anonymous user created election. You now have a temp_id!`, 'warning');
+            log(`⚠️ Claim key: ${claimKey}. Access expires in 10 hours.`, 'warning');
+        }
+        
         SimulatorState.election = {
             election_id: 'election_' + Date.now(),
             title: 'My Test Election',
             state: 'draft',
             owner_id: user.id,
+            owner_type: user.type,
+            ...ownerInfo,
             create_date: new Date(SimulatorState.currentTime),
             start_time: null,
             end_time: null,
@@ -779,6 +837,14 @@
         SimulatorState.votedDeviceIds.clear();
         SimulatorState.votedEmails.clear();
         SimulatorState.votedIpAddresses.clear();
+        // Reset temp access on users
+        FIXED_USERS.forEach(u => {
+            u.tempAccessCreated = null;
+            if (u.type === 'anonymous') {
+                delete u.tempId;
+                delete u.claimKey;
+            }
+        });
         log('🔄 Simulator reset! Select a user to begin.', 'warning');
         updateUI();
     }
@@ -804,18 +870,29 @@
             const isSelected = SimulatorState.currentUserIndex === index;
             const isOwner = SimulatorState.election && SimulatorState.election.owner_id === user.id;
             const assignedRole = SimulatorState.userRoles[user.id];
+            const tempExpired = (user.type === 'temp_id' || user.tempId) && isTempAccessExpired(user);
             
             let roleText = '';
-            if (isOwner) roleText = '👑 Owner';
+            if (isOwner && !tempExpired) roleText = '👑 Owner';
+            else if (isOwner && tempExpired) roleText = '⏰ Owner (EXPIRED)';
             else if (assignedRole === 'admin') roleText = '🔧 Admin';
             else if (assignedRole === 'auditor') roleText = '👁️ Auditor';
-            else if (user.canCreate) roleText = '⭐ Can Create';
             else if (user.potentialRole) roleText = `(potential ${user.potentialRole})`;
             else roleText = '🗳️ Voter';
             
+            // Show temp status for temp_id users
+            let typeDisplay = user.type;
+            if (user.type === 'temp_id' || user.tempId) {
+                if (tempExpired) {
+                    typeDisplay = 'temp_id (EXPIRED)';
+                } else if (user.tempAccessCreated) {
+                    typeDisplay = 'temp_id (active)';
+                }
+            }
+            
             return `<div class="user-card ${isSelected ? 'selected' : ''}" onclick="selectUser(${index})">
                 <div class="user-name">${user.name}</div>
-                <div class="user-type">${user.type}</div>
+                <div class="user-type">${typeDisplay}</div>
                 <div class="user-role">${roleText}</div>
             </div>`;
         }).join('');
@@ -838,10 +915,12 @@
         const user = getCurrentUser();
         
         if (!SimulatorState.election) {
-            const canCreate = user && user.canCreate;
+            // Anyone can create an election!
+            const canCreate = user !== null;
             container.innerHTML = `<div class="no-election-notice">
                 <h4>No Election Created Yet</h4>
-                <p>${canCreate ? 'You are Alice Owner. Click below to create an election.' : 'Only Alice Owner can create an election.'}</p>
+                <p>${canCreate ? `You are ${user.name}. Anyone can create an election - click below!` : 'Select a user first.'}</p>
+                ${user && (user.type === 'anonymous' || user.type === 'temp_id') ? '<p class="info-box" style="margin-top:8px;">⚠️ Non-logged-in users get temporary access (10 hours) and a claim_key.</p>' : ''}
                 <button class="btn btn-primary" onclick="createElection()" ${!canCreate ? 'disabled' : ''}>➕ Create Election</button>
             </div>`;
             settingsPanel.style.display = 'none';
@@ -850,16 +929,25 @@
         
         const election = SimulatorState.election;
         const owner = FIXED_USERS.find(u => u.id === election.owner_id);
+        const ownerTempExpired = owner && (owner.type === 'temp_id' || owner.tempId) && isTempAccessExpired(owner);
+        
+        let ownerInfo = owner ? owner.name : 'Unknown';
+        if (election.claim_key) {
+            ownerInfo += ` <span class="claim-key">(claim_key: ${election.claim_key})</span>`;
+        }
+        
         container.innerHTML = `
             <div style="text-align: center; margin-bottom: 16px;">
                 <span class="state-badge state-${election.state}">${election.state.toUpperCase()}</span>
             </div>
             <div class="info-box">
                 <strong>Title:</strong> ${election.title}<br>
-                <strong>Owner:</strong> ${owner ? owner.name : 'Unknown'}<br>
+                <strong>Owner:</strong> ${ownerInfo}<br>
+                <strong>Owner Type:</strong> ${election.owner_type || 'logged_in'}<br>
                 <strong>Ballots:</strong> ${SimulatorState.ballots.length} ${election.state === 'draft' ? '(test)' : ''}
             </div>
             ${election.state === 'draft' ? '<div class="warning-box">⚠️ Test ballots will be cleared when finalized!</div>' : ''}
+            ${ownerTempExpired ? '<div class="error-box">🚫 Owner\'s temp access has expired! No one can manage this election until claimed.</div>' : ''}
         `;
         
         if (election.state === 'draft' && hasPermission('canEditElection')) {
@@ -995,7 +1083,7 @@
     function initialize() {
         updateUI();
         log('🚀 Election simulator ready!', 'success');
-        log('Select a user to begin. Only Alice Owner can create elections.', 'info');
+        log('Select a user to begin. Anyone can create elections!', 'info');
     }
 
     document.addEventListener('DOMContentLoaded', initialize);
