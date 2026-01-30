@@ -462,7 +462,7 @@
         // Anonymous users (not logged in, can still create elections!)
         { id: 'anon_visitor', name: 'Anonymous Visitor', type: 'anonymous', deviceId: 'device_anon_001', ip: '192.168.1.100' },
         // Temp ID users (created via quick election flow, get claim_key)
-        { id: 'temp_user_1', name: 'Temp User (Quick Create)', type: 'temp_id', tempId: 'temp_abc123', claimKey: 'claim_xyz789', deviceId: 'device_temp_001', ip: '192.168.1.101', tempAccessCreated: null },
+        { id: 'temp_user_1', name: 'Temp User (Quick Create)', type: 'temp_id', temp_id: 'temp_abc123', claim_key: 'claim_xyz789', deviceId: 'device_temp_001', ip: '192.168.1.101', tempAccessCreated: null },
         // Logged-in users
         { id: 'alice_logged', name: 'Alice (Logged In)', type: 'logged_in', potentialRole: 'admin', deviceId: 'device_alice_001', ip: '192.168.1.1', email: 'alice@example.com' },
         { id: 'bob_logged', name: 'Bob (Logged In)', type: 'logged_in', potentialRole: 'admin', deviceId: 'device_bob_002', ip: '192.168.1.2', email: 'bob@example.com' },
@@ -478,6 +478,11 @@
         { id: 'voter_leo', name: 'Leo Voter', type: 'logged_in', deviceId: 'device_leo_012', ip: '192.168.1.12', email: 'leo@example.com' },
         { id: 'voter_mia', name: 'Mia Voter', type: 'logged_in', deviceId: 'device_mia_013', ip: '192.168.1.13', email: 'mia@example.com' },
     ];
+    
+    // Helper function to check if user has temp access
+    function isTempUser(user) {
+        return user.type === 'temp_id' || user.temp_id;
+    }
 
     // Simulator State
     const SimulatorState = {
@@ -512,7 +517,7 @@
         // Check if this user is the election owner
         if (SimulatorState.election && SimulatorState.election.owner_id === user.id) {
             // For temp_id or anonymous-turned-temp users, check if temp access expired
-            if ((user.type === 'temp_id' || user.tempId) && isTempAccessExpired(user)) {
+            if (isTempUser(user) && isTempAccessExpired(user)) {
                 // Temp access expired - no owner role
                 // They need to claim the election with a real account
             } else {
@@ -572,21 +577,21 @@
         if (user.type === 'temp_id') {
             // Record when temp access was created (10 hour expiry)
             FIXED_USERS[SimulatorState.currentUserIndex].tempAccessCreated = new Date(SimulatorState.currentTime);
-            ownerInfo.temp_id = user.tempId;
-            ownerInfo.claim_key = user.claimKey;
-            log(`⚠️ Temp user created election. Claim key: ${user.claimKey}`, 'warning');
+            ownerInfo.temp_id = user.temp_id;
+            ownerInfo.claim_key = user.claim_key;
+            log(`⚠️ Temp user created election. Claim key: ${user.claim_key}`, 'warning');
             log(`⚠️ Temp access expires in 10 hours. Log in to claim this election!`, 'warning');
         } else if (user.type === 'anonymous') {
             // Anonymous user also gets temp access
-            const tempId = 'temp_' + Date.now();
-            const claimKey = 'claim_' + Math.random().toString(36).substring(2, 10);
-            FIXED_USERS[SimulatorState.currentUserIndex].tempId = tempId;
-            FIXED_USERS[SimulatorState.currentUserIndex].claimKey = claimKey;
+            const temp_id = 'temp_' + Date.now();
+            const claim_key = 'claim_' + Math.random().toString(36).substring(2, 10);
+            FIXED_USERS[SimulatorState.currentUserIndex].temp_id = temp_id;
+            FIXED_USERS[SimulatorState.currentUserIndex].claim_key = claim_key;
             FIXED_USERS[SimulatorState.currentUserIndex].tempAccessCreated = new Date(SimulatorState.currentTime);
-            ownerInfo.temp_id = tempId;
-            ownerInfo.claim_key = claimKey;
+            ownerInfo.temp_id = temp_id;
+            ownerInfo.claim_key = claim_key;
             log(`⚠️ Anonymous user created election. You now have a temp_id!`, 'warning');
-            log(`⚠️ Claim key: ${claimKey}. Access expires in 10 hours.`, 'warning');
+            log(`⚠️ Claim key: ${claim_key}. Access expires in 10 hours.`, 'warning');
         }
         
         SimulatorState.election = {
@@ -841,8 +846,8 @@
         FIXED_USERS.forEach(u => {
             u.tempAccessCreated = null;
             if (u.type === 'anonymous') {
-                delete u.tempId;
-                delete u.claimKey;
+                delete u.temp_id;
+                delete u.claim_key;
             }
         });
         log('🔄 Simulator reset! Select a user to begin.', 'warning');
@@ -870,7 +875,7 @@
             const isSelected = SimulatorState.currentUserIndex === index;
             const isOwner = SimulatorState.election && SimulatorState.election.owner_id === user.id;
             const assignedRole = SimulatorState.userRoles[user.id];
-            const tempExpired = (user.type === 'temp_id' || user.tempId) && isTempAccessExpired(user);
+            const tempExpired = isTempUser(user) && isTempAccessExpired(user);
             
             let roleText = '';
             if (isOwner && !tempExpired) roleText = '👑 Owner';
@@ -882,7 +887,7 @@
             
             // Show temp status for temp_id users
             let typeDisplay = user.type;
-            if (user.type === 'temp_id' || user.tempId) {
+            if (isTempUser(user)) {
                 if (tempExpired) {
                     typeDisplay = 'temp_id (EXPIRED)';
                 } else if (user.tempAccessCreated) {
@@ -929,7 +934,7 @@
         
         const election = SimulatorState.election;
         const owner = FIXED_USERS.find(u => u.id === election.owner_id);
-        const ownerTempExpired = owner && (owner.type === 'temp_id' || owner.tempId) && isTempAccessExpired(owner);
+        const ownerTempExpired = owner && isTempUser(owner) && isTempAccessExpired(owner);
         
         let ownerInfo = owner ? owner.name : 'Unknown';
         if (election.claim_key) {
