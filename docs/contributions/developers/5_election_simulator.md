@@ -271,6 +271,18 @@ This simulator allows you to test and understand the complete election lifecycle
           </select>
         </div>
         <div class="control-group">
+          <label>Voter Authentication:</label>
+          <select id="voter-authentication" onchange="updateElectionSettings()">
+            <option value="none">None (unlimited votes)</option>
+            <option value="voter_id" selected>Device ID (one vote per browser)</option>
+            <option value="email">Email (requires login)</option>
+            <option value="ip_address">IP Address (one vote per IP)</option>
+          </select>
+          <p style="font-size: 11px; color: #6b7280; margin-top: 4px;" id="voter-auth-help">
+            Uses browser storage to track if device has voted.
+          </p>
+        </div>
+        <div class="control-group">
           <label>Start Time (optional):</label>
           <input type="datetime-local" id="start-time" onchange="updateElectionSettings()">
         </div>
@@ -348,6 +360,14 @@ const SimulatorState = {
   tempId: null,
   claimKey: null,
   
+  // Voter authentication simulation
+  // Tracks which "devices" and "emails" have voted
+  votedDeviceIds: new Set(),  // For voter_id auth
+  votedEmails: new Set(),     // For email auth  
+  votedIpAddresses: new Set(), // For ip_address auth
+  currentDeviceId: 'device_' + Math.random().toString(36).substring(2, 11),
+  currentIpAddress: '192.168.1.' + Math.floor(Math.random() * 255),
+  
   // Election state
   election: {
     election_id: 'sim_' + Math.random().toString(36).substring(2, 11),
@@ -362,7 +382,9 @@ const SimulatorState = {
     create_date: new Date(),
     settings: {
       voter_access: 'open',
-      voter_authentication: {},
+      // voter_authentication mirrors the backend model exactly:
+      // { voter_id?: boolean, email?: boolean, ip_address?: boolean }
+      voter_authentication: { voter_id: true },
       public_results: false,
       ballot_updates: false,
     },
@@ -603,6 +625,33 @@ function updateElectionSettings() {
   election.settings.public_results = document.getElementById('public-results').checked;
   election.settings.ballot_updates = document.getElementById('ballot-updates').checked;
   
+  // Handle voter authentication - mirrors backend model exactly
+  const authType = document.getElementById('voter-authentication').value;
+  const authHelpEl = document.getElementById('voter-auth-help');
+  
+  // Reset authentication object (exactly as backend does)
+  election.settings.voter_authentication = {};
+  
+  switch (authType) {
+    case 'voter_id':
+      election.settings.voter_authentication = { voter_id: true };
+      authHelpEl.textContent = 'Uses browser storage to track if device has voted.';
+      break;
+    case 'email':
+      election.settings.voter_authentication = { email: true };
+      authHelpEl.textContent = 'Requires user to log in with their email address.';
+      break;
+    case 'ip_address':
+      election.settings.voter_authentication = { ip_address: true };
+      authHelpEl.textContent = 'Tracks IP address to prevent multiple votes.';
+      break;
+    case 'none':
+    default:
+      election.settings.voter_authentication = {};
+      authHelpEl.textContent = 'No vote limiting - anyone can vote multiple times.';
+      break;
+  }
+  
   const startTime = document.getElementById('start-time').value;
   const endTime = document.getElementById('end-time').value;
   
@@ -757,21 +806,61 @@ function togglePublicResults() {
 
 function castBallot() {
   const { election, userType, currentTime, hasVoted } = SimulatorState;
+  const auth = election.settings.voter_authentication;
   
   if (election.state !== 'open' && election.state !== 'draft') {
     log('Cannot vote: Election is not open', 'error');
     return;
   }
   
-  // Check if already voted
-  if (hasVoted && !election.settings.ballot_updates) {
-    log('Cannot vote: Already voted and ballot updates not enabled', 'error');
+  // Check voter access (closed elections require email list)
+  if (election.settings.voter_access === 'closed' && userType === 'anonymous') {
+    log('Cannot vote: Closed election requires voter to be on email list', 'error');
     return;
   }
   
-  // Check voter access
-  if (election.settings.voter_access === 'closed' && userType === 'anonymous') {
-    log('Cannot vote: Election requires email authentication', 'error');
+  // Check voter authentication based on type
+  // This mimics how the backend validates voting eligibility
+  
+  if (auth.voter_id) {
+    // Device ID authentication - check if this device has voted
+    if (SimulatorState.votedDeviceIds.has(SimulatorState.currentDeviceId)) {
+      if (!election.settings.ballot_updates) {
+        log(`Cannot vote: This device (${SimulatorState.currentDeviceId}) has already voted`, 'error');
+        return;
+      }
+    }
+  }
+  
+  if (auth.email) {
+    // Email authentication - requires logged in user with a userId
+    // Temp ID users don't have userId, so they can't vote with email auth
+    if (userType === 'anonymous' || !SimulatorState.userId) {
+      log('Cannot vote: Email authentication requires you to log in with an email account', 'error');
+      return;
+    }
+    const userEmail = `${SimulatorState.userId}@example.com`;
+    if (SimulatorState.votedEmails.has(userEmail)) {
+      if (!election.settings.ballot_updates) {
+        log(`Cannot vote: Email ${userEmail} has already voted`, 'error');
+        return;
+      }
+    }
+  }
+  
+  if (auth.ip_address) {
+    // IP address authentication - check if this IP has voted
+    if (SimulatorState.votedIpAddresses.has(SimulatorState.currentIpAddress)) {
+      if (!election.settings.ballot_updates) {
+        log(`Cannot vote: IP address ${SimulatorState.currentIpAddress} has already voted`, 'error');
+        return;
+      }
+    }
+  }
+  
+  // Check legacy hasVoted flag (for no-auth elections)
+  if (hasVoted && !election.settings.ballot_updates && !auth.voter_id && !auth.email && !auth.ip_address) {
+    log('Cannot vote: Already voted and ballot updates not enabled', 'error');
     return;
   }
   
@@ -791,8 +880,20 @@ function castBallot() {
     }))
   };
   
-  if (hasVoted && election.settings.ballot_updates) {
-    // Update existing ballot
+  // Track the vote based on authentication method
+  if (auth.voter_id) {
+    SimulatorState.votedDeviceIds.add(SimulatorState.currentDeviceId);
+  }
+  if (auth.email && SimulatorState.userId) {
+    const userEmail = `${SimulatorState.userId}@example.com`;
+    SimulatorState.votedEmails.add(userEmail);
+  }
+  if (auth.ip_address) {
+    SimulatorState.votedIpAddresses.add(SimulatorState.currentIpAddress);
+  }
+  
+  const isUpdate = hasVoted && election.settings.ballot_updates;
+  if (isUpdate) {
     log(`Ballot updated: ${ballotId}`, 'success');
   } else {
     SimulatorState.ballots.push(ballot);
@@ -992,15 +1093,52 @@ function updateStateActions() {
 function updateVoterActions() {
   const container = document.getElementById('voter-actions');
   const statusContainer = document.getElementById('vote-status');
-  const { election, hasVoted } = SimulatorState;
+  const { election, hasVoted, userType } = SimulatorState;
+  const auth = election.settings.voter_authentication;
   
   let html = '';
   let status = '';
   
-  // Voting button
-  const canVote = (election.state === 'open' || election.state === 'draft') &&
-                  (!hasVoted || election.settings.ballot_updates) &&
-                  !(election.settings.voter_access === 'closed' && SimulatorState.userType === 'anonymous');
+  // Determine if user can vote based on authentication type
+  let canVote = (election.state === 'open' || election.state === 'draft');
+  let blockReason = '';
+  
+  if (canVote) {
+    // Check voter access (closed = email list only)
+    if (election.settings.voter_access === 'closed' && userType === 'anonymous') {
+      canVote = false;
+      blockReason = 'Closed election - requires being on voter list';
+    }
+    
+    // Check authentication-specific blocks
+    if (canVote && auth.voter_id) {
+      if (SimulatorState.votedDeviceIds.has(SimulatorState.currentDeviceId) && !election.settings.ballot_updates) {
+        canVote = false;
+        blockReason = `Device ${SimulatorState.currentDeviceId} has already voted`;
+      }
+    }
+    
+    if (canVote && auth.email) {
+      // Email auth requires logged in user with userId (not temp_id users)
+      if (userType === 'anonymous' || !SimulatorState.userId) {
+        canVote = false;
+        blockReason = 'Email authentication requires login with email account';
+      } else {
+        const userEmail = `${SimulatorState.userId}@example.com`;
+        if (SimulatorState.votedEmails.has(userEmail) && !election.settings.ballot_updates) {
+          canVote = false;
+          blockReason = `Email ${userEmail} has already voted`;
+        }
+      }
+    }
+    
+    if (canVote && auth.ip_address) {
+      if (SimulatorState.votedIpAddresses.has(SimulatorState.currentIpAddress) && !election.settings.ballot_updates) {
+        canVote = false;
+        blockReason = `IP ${SimulatorState.currentIpAddress} has already voted`;
+      }
+    }
+  }
   
   html += `<button class="btn btn-primary" onclick="castBallot()" ${!canVote ? 'disabled' : ''}>
     ${hasVoted && election.settings.ballot_updates ? 'Update Ballot' : 'Cast Ballot'}
@@ -1024,16 +1162,43 @@ function updateVoterActions() {
   
   container.innerHTML = html;
   
-  // Status message
+  // Status message - show authentication info
+  status = '';
+  
+  // Show current "identity" based on auth type
+  if (auth.voter_id || auth.email || auth.ip_address) {
+    let identityInfo = '<div class="info-box" style="font-size: 12px;"><strong>Your voting identity:</strong><br>';
+    if (auth.voter_id) {
+      identityInfo += `Device ID: <code>${SimulatorState.currentDeviceId}</code><br>`;
+    }
+    if (auth.email && SimulatorState.userId) {
+      identityInfo += `Email: <code>${SimulatorState.userId}@example.com</code><br>`;
+    } else if (auth.email) {
+      identityInfo += `Email: <em>Login required to vote</em><br>`;
+    }
+    if (auth.ip_address) {
+      identityInfo += `IP Address: <code>${SimulatorState.currentIpAddress}</code><br>`;
+    }
+    identityInfo += '</div>';
+    status += identityInfo;
+  }
+  
   if (hasVoted) {
-    status = '<div class="info-box">✓ You have submitted a ballot</div>';
+    status += '<div class="info-box">✓ You have submitted a ballot</div>';
     if (election.settings.ballot_updates && election.state === 'open') {
       status += '<div class="info-box">Ballot updates are enabled - you can change your vote</div>';
     }
+  } else if (blockReason) {
+    status += `<div class="error-box">🚫 ${blockReason}</div>`;
   } else if (election.state === 'open') {
-    status = '<div class="info-box">You have not yet voted</div>';
+    status += '<div class="info-box">You have not yet voted</div>';
   } else if (election.state === 'draft') {
-    status = '<div class="warning-box">This is a test ballot (draft mode)</div>';
+    status += '<div class="warning-box">This is a test ballot (draft mode)</div>';
+  }
+  
+  // Show no-auth warning
+  if (!auth.voter_id && !auth.email && !auth.ip_address && election.state === 'open') {
+    status += '<div class="warning-box">⚠️ No vote limiting enabled - anyone can vote unlimited times!</div>';
   }
   
   statusContainer.innerHTML = status;
