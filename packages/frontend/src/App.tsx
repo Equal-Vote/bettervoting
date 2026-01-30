@@ -28,6 +28,7 @@ import StyleGuide from './components/StyleGuide'
 import { PrimaryButton } from './components/styles'
 import ScrollToTop from './hooks/scrollToTop'
 import QueryTool from './components/Elections/QueryTool'
+import ElectionSimulator from './components/ElectionSimulator'
 
 const App = () => {
   const {t} = useSubstitutedTranslation();
@@ -110,6 +111,8 @@ const App = () => {
               <Route path='/query_tool' element={<QueryTool />} />
                 <Route path='/query-tool' element={<Redirect href='/query_tool'/>} /> 
                 <Route path='/querytool' element={<Redirect href='/query_tool'/>} /> 
+              {/*Developer Tools*/}
+              <Route path='/docs/dev/simulator' element={<ElectionSimulator />} />
             </Routes>
           </Box>
           <Footer />
