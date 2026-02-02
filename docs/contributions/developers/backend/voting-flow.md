@@ -103,6 +103,8 @@ if (election.state !== 'open' && election.state !== 'draft') {
 
 Elections with `ballot_source='prior_election'` skip voter roll and validation checks entirely - they're just importing historical data.
 
+> **Security Note:** This bypass is intentional for admin-uploaded historical data. The `ballot_source` field is server-controlled and cannot be set by clients. Prior elections still require `canUploadBallots` permission (owner/system_admin only).
+
 ---
 
 ## Voter Authentication

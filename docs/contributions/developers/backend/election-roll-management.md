@@ -666,6 +666,10 @@ const revealVoterIdByEmail = async (req, res, next) => {
     const actor = req.user?.email || 'unknown';
     
     // PROMINENT LOGGING
+    // Note: Email is intentionally logged here despite PII concerns because:
+    // 1. This is an emergency endpoint that should rarely be used
+    // 2. The full audit trail is necessary for security review
+    // 3. Server logs should already be treated as sensitive
     Logger.error(req, `🚨 BREAK GLASS 🚨 revealVoterId - Election: ${election_id}, Email: ${email}, Actor: ${actor}`);
     console.error(`🚨🚨🚨 BREAK GLASS: Voter ID revealed for ${email} in election ${election_id} by ${actor} 🚨🚨🚨`);
     

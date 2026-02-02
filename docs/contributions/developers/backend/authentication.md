@@ -175,8 +175,9 @@ const hoursSinceCreate = (now - createDate) / (1000 * 60 * 60);
 const tempUserAuth =
     ownerIsTempUser && 
     election.owner_id == req.cookies.temp_id &&
-    hoursSinceCreate < 24 &&  // sharedConfig.TEMPORARY_ACCESS_HOURS
+    hoursSinceCreate < 24 &&  // sharedConfig.TEMPORARY_ACCESS_HOURS (24 hours)
     hashString(req.cookies[`${election_id}_claim_key`]) === election.claim_key_hash;
+    // Note: hashString() uses SHA-256 for hashing
 
 if (user.sub === election.owner_id || tempUserAuth) {
     roles.push('owner');

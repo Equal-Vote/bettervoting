@@ -96,7 +96,7 @@ interface Election {
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `auth_key` | string | No | Election-specific authentication key. **Hidden from API responses** (set to undefined before returning). Used for election-specific JWT validation. |
+| `auth_key` | string | No | Election-specific authentication key. **Hidden from API responses** (set to undefined before returning). Used for election-specific JWT validation. ⚠️ **Security:** This field must never be logged or included in error messages. |
 | `claim_key_hash` | string | No | SHA-256 hash of the claim key. Used to transfer ownership from temp user to logged-in user. Original key is shown once at creation. |
 | `is_public` | boolean | No | If true, election appears in public listings (open elections page). Only applies when `voter_access=open` and `state=open`. |
 
