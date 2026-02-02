@@ -152,25 +152,68 @@ What the voter experiences:
 - Without voter_id → "Voter ID Required" error
 ```
 
-#### voter_id=true + Open Election (`voter_access='open'`)
+#### voter_id=true + Open Election (`voter_access='open'`) — "One Vote Per Device"
+
+This is the **actual "one vote per device"** feature that uses **cookie-based tracking**, NOT login!
 
 ```
-Meaning: "One vote per logged-in user account"
+Meaning: "One vote per browser/device using a temp_id cookie"
 
 How it works:
-1. Voter must be logged in via Keycloak
-2. Their Keycloak user ID (user.sub) is used as the voter_id
-3. Roll entry created/looked up using this Keycloak ID
-4. Same user can only vote once (tracked by their account)
+1. When ANY user visits the site, Header.tsx creates a temp_id cookie:
+   useCookie('temp_id', makeID(ID_PREFIXES.VOTER, ID_LENGTHS.VOTER))
+   This generates a random ID like "v-abc123def456"
+
+2. When backend receives a request, AccountService.extractUserFromRequest():
+   - First checks for Keycloak login (id_token cookie)
+   - If not logged in, falls back to temp_id cookie
+   - Sets req.user.sub = temp_id
+
+3. For open elections with voter_id=true:
+   - voter_id = req.user?.sub (which is the temp_id)
+   - Roll entry is created/looked up using this temp_id
+   - Same browser = same temp_id = same roll entry = can't vote twice
 
 What the voter experiences:
-- Not logged in → "User ID Required" error
-- Log in → can vote
-- Try to vote again from same account → "Already voted"
+- Visit election → cookie created automatically (invisible to user)
+- Vote → works fine
+- Try to vote again in same browser → "Already voted"
+- Clear cookies or use different browser → can vote again
 
-This is essentially "one vote per device" but better named as 
-"one vote per authenticated user account"
+Important: No login required! The "User ID Required" error only 
+happens if cookies are disabled/blocked and temp_id isn't set.
 ```
+
+**Code flow:**
+```typescript
+// 1. Frontend: Header.tsx creates temp_id cookie on page load
+useCookie('temp_id', makeID(ID_PREFIXES.VOTER, ID_LENGTHS.VOTER))
+// e.g., cookie value: "v-a1b2c3d4e5f6"
+
+// 2. Backend: AccountService extracts user from request
+extractUserFromRequest = (req) => {
+    const token = req.cookies.id_token;
+    if (token) {
+        return /* Keycloak user */;
+    }
+    const tempId = req.cookies.temp_id;
+    if (tempId) {
+        return {
+            'typ': 'TEMP_ID',  // Mark as temp user
+            'sub': tempId      // Use temp_id as the user identifier
+        }
+    }
+    return null;
+}
+
+// 3. Backend: voterRollUtils uses req.user.sub as voter_id
+if (election.settings.voter_authentication.voter_id && 
+    election.settings.voter_access == 'open') {
+    voter_id = req.user?.sub;  // This is the temp_id!
+}
+```
+
+**Logged-in users:** If a user IS logged in via Keycloak, their Keycloak `sub` (UUID) is used instead of the temp_id. This provides stronger protection since they can't just clear cookies.
 
 #### voter_id=false + Open Election (The Surprising Case!)
 
@@ -328,9 +371,9 @@ Here's what actually works and what each combination means:
 | `open` | false | false | true | Anyone can vote, auto-generated voter_id, IP tracked (can detect return visits) | ✅ Yes |
 | `open` | false | true | false | Must log in, email stored, one vote per email | ✅ Yes |
 | `open` | false | true | true | Must log in, email + IP tracked | ✅ Yes |
-| `open` | true | false | false | Must log in, Keycloak ID used, one vote per account | ✅ Yes |
-| `open` | true | true | false | Must log in, both email AND Keycloak ID verified | ✅ Yes |
-| `open` | true | false | true | Must log in, Keycloak ID + IP tracked | ✅ Yes |
+| `open` | true | false | false | **Cookie-based device tracking (temp_id)**, no login required! | ✅ Yes |
+| `open` | true | true | false | Must log in (email required), both email AND user ID verified | ✅ Yes |
+| `open` | true | false | true | Cookie-based device tracking + IP tracked | ✅ Yes |
 | `open` | true | true | true | Must log in, all three verified (most secure open) | ✅ Yes |
 | `closed` | false | - | - | Voters identified by email (requires `invitation='email'`) | ✅ Yes |
 | `closed` | true | false | false | Voters need assigned voter_id from invitation | ✅ Yes |
@@ -346,7 +389,7 @@ The frontend election creation wizard presents these as simpler options:
 
 | UI Option | Internal Settings | Description |
 |-----------|-------------------|-------------|
-| "One vote per device" | `voter_id: true` | For open elections: requires login |
+| "One vote per device" | `voter_id: true` | Cookie-based tracking via temp_id (NO login required!) |
 | "Email required" | `email: true` | Requires login with verified email |
 | "IP tracking" | `ip_address: true` | Tracks IP address |
 | "No limit" | `{}` (all false) | No authentication, unlimited votes! |
@@ -357,9 +400,10 @@ The frontend election creation wizard presents these as simpler options:
 |----------|-----------------|--------|----------------|
 | Closed + voter_id auth | Cookie `voter_id` | Base64-encoded | Admin (via invitation) |
 | Closed + voter_id in URL | URL param | Plain string like `v-abc123` | Admin (via invitation) |
-| Open + voter_id=true | Keycloak JWT (`user.sub`) | UUID | Keycloak |
-| Open + voter_id=false + (email OR ip_address) | Auto-generated | Random `v-{12 chars}` | **System auto-generates** |
-| Open + ALL auth false | Auto-generated | Random `v-{12 chars}` | **System auto-generates (not saved!)** |
+| Open + voter_id=true (not logged in) | Cookie `temp_id` | Random `v-{12 chars}` | **Frontend auto-creates on first visit** |
+| Open + voter_id=true (logged in) | Keycloak JWT (`user.sub`) | UUID | Keycloak |
+| Open + voter_id=false + (email OR ip_address) | Auto-generated | Random `v-{12 chars}` | **Backend auto-generates** |
+| Open + ALL auth false | Auto-generated | Random `v-{12 chars}` | **Backend auto-generates (not saved!)** |
 
 ### The Roll Entry Creation Decision Tree
 
