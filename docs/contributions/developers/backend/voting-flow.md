@@ -109,131 +109,352 @@ Elections with `ballot_source='prior_election'` skip voter roll and validation c
 
 ## Voter Authentication
 
-Authentication verifies the voter's identity based on election settings.
+Authentication verifies the voter's identity based on election settings. This is one of the most complex parts of the system because different combinations of settings create very different behaviors.
 
-### Authentication Settings
+### The Authentication Interface
 
-The `election.settings.voter_authentication` object controls what's required:
+The backend defines an `authentication` interface with several boolean flags:
 
 ```typescript
-interface Authentication {
-    voter_id?:   boolean;  // Require voter ID
-    email?:      boolean;  // Require email
-    ip_address?: boolean;  // Track IP
+interface authentication {
+    voter_id?: boolean;      // ACTIVE - Require voter ID or device tracking
+    email?: boolean;         // ACTIVE - Require email authentication
+    ip_address?: boolean;    // ACTIVE - Track IP for duplicate detection
+    phone?: boolean;         // DEPRECATED - Not implemented
+    address?: boolean;       // DEPRECATED - Not implemented  
+    registration_data?: [registration_field];  // PARTIALLY IMPLEMENTED - For registration-mode elections
+    registration_api_endpoint?: string;         // DEPRECATED - Not implemented
 }
 ```
 
-### Authentication Checks
+**Important:** Despite being in the interface, only `voter_id`, `email`, and `ip_address` are actively used. The others are legacy code that may be removed.
+
+### Understanding voter_id (The Confusing One)
+
+The `voter_id` flag behaves **completely differently** depending on `voter_access`:
+
+#### voter_id + Closed Election (`voter_access='closed'`)
+
+```
+Meaning: "Voters must provide a pre-assigned voter ID"
+
+How it works:
+1. Admin creates election with voter list
+2. Each voter gets a unique voter_id (auto-generated like "v-abc123def456")
+3. Voters receive their voter_id via email invitation link
+4. To vote, voter must have their voter_id in a browser cookie
+5. Cookie is set automatically when visiting the invitation link
+6. Cookie is base64-encoded to handle special characters
+
+What the voter experiences:
+- Click email link → voter_id set automatically → can vote
+- OR enter voter_id manually on election page → can vote
+- Without voter_id → "Voter ID Required" error
+```
+
+#### voter_id + Open Election (`voter_access='open'`)
+
+```
+Meaning: "One vote per logged-in user account"
+
+How it works:
+1. Voter must be logged in via Keycloak
+2. Their Keycloak user ID (user.sub) is used as the voter_id
+3. Roll entry created/looked up using this Keycloak ID
+4. Same user can only vote once (tracked by their account)
+
+What the voter experiences:
+- Not logged in → "User ID Required" error
+- Log in → can vote
+- Try to vote again from same account → "Already voted"
+
+This is essentially "one vote per device" but better named as 
+"one vote per authenticated user account"
+```
+
+#### voter_id = false (regardless of voter_access)
+
+```
+Meaning: No voter identity tracking by ID
+
+For open elections: A new roll entry with a random voter_id is 
+created each time someone votes (unless email or ip_address 
+tracking is enabled to identify returning voters).
+
+For closed elections: Voters are identified by email instead
+(requires invitation='email').
+```
+
+### Understanding email Authentication
 
 ```typescript
-function checkForMissingAuthenticationData(req, election, ctx, voter_id_override?) {
-    const settings = election.settings;
-    
-    // Voter ID check for closed elections
-    if (settings.voter_authentication.voter_id && 
-        settings.voter_access == 'closed') {
-        if (!voter_id_override && !req.cookies?.voter_id) {
+email?: boolean;  // Require email authentication
+```
+
+When `email=true`:
+- Voter **must be logged in** via Keycloak with a verified email
+- The email is stored on the roll entry
+- Used to identify returning voters
+- Combined with other auth methods for multi-factor
+
+```
+What the voter experiences:
+- Not logged in → "Email Validation Required" error
+- Logged in → email checked and stored → can vote
+```
+
+### Understanding ip_address Tracking
+
+```typescript
+ip_address?: boolean;  // Track IP for duplicate detection
+```
+
+When `ip_address=true`:
+- Voter's IP address is hashed (SHA-256) and stored
+- Used to **detect** potential duplicates, not strictly prevent them
+- If returning voter has different IP → error (in some code paths)
+- This is **tracking**, not hard enforcement
+
+```
+Behavior:
+- First vote: IP hash stored on roll entry
+- Same voter, same IP: Can vote (or update if ballot_updates enabled)
+- Same voter, different IP: May get error "IP Address does not match"
+
+Note: This is privacy-sensitive. IP is hashed before storage.
+```
+
+### The Authentication Settings Matrix
+
+Here's what actually works and what each combination means:
+
+| voter_access | voter_id | email | ip_address | Behavior |
+|--------------|:--------:|:-----:|:----------:|----------|
+| `open` | false | false | false | Anyone can vote, no tracking, unlimited votes possible |
+| `open` | false | false | true | Anyone can vote, IP tracked for analytics/review |
+| `open` | false | true | false | Must log in, email stored, one vote per email |
+| `open` | true | false | false | Must log in, Keycloak ID used, one vote per account |
+| `open` | true | true | false | Must log in, both email and account ID tracked |
+| `open` | true | false | true | Must log in, account ID + IP tracked |
+| `closed` | false | - | - | Voters identified by email (requires `invitation='email'`) |
+| `closed` | true | false | false | Voters need assigned voter_id from invitation |
+| `closed` | true | true | false | Voters need voter_id AND matching email |
+| `closed` | true | false | true | Voters need voter_id, IP tracked |
+| `registration` | - | true | - | Voter registers, admin approves, email required |
+
+### Frontend UI Options
+
+The frontend election creation wizard presents these as simpler options:
+
+| UI Option | Internal Settings | Description |
+|-----------|-------------------|-------------|
+| "One vote per device" | `voter_id: true` | For open elections: requires login |
+| "Email required" | `email: true` | Requires login with verified email |
+| "IP tracking" | `ip_address: true` | Tracks IP address |
+| "No limit" | `{}` (all false) | No authentication required |
+
+### Where Each ID Comes From
+
+| Scenario | voter_id Source | Format |
+|----------|-----------------|--------|
+| Closed + voter_id auth | Cookie `voter_id` | Base64-encoded, like `di1hYmMxMjM=` |
+| Closed + voter_id in URL | URL param `/Election/{id}/{voter_id}` | Plain string like `v-abc123` |
+| Open + voter_id auth | Keycloak JWT | UUID like `a1b2c3d4-e5f6-7890-abcd-ef1234567890` |
+| Open + no voter_id auth | Auto-generated | Random `v-{12 chars}` like `v-xyz789def012` |
+
+### The Roll Entry Creation Decision Tree
+
+When a voter submits a ballot, here's the detailed logic:
+
+```
+1. Check voter_access mode
+   │
+   ├─► voter_access = 'closed'
+   │   │
+   │   └─► Search for existing roll by:
+   │       - voter_id (if voter_id auth enabled)
+   │       - email (if email auth enabled)
+   │       - ip_hash (if ip_address enabled)
+   │       │
+   │       ├─► Found: Use existing roll entry
+   │       │   - Verify all enabled auth fields match
+   │       │   - If mismatch → Unauthorized error
+   │       │
+   │       └─► Not found: Return null → "Not authorized to vote"
+   │
+   ├─► voter_access = 'open'
+   │   │
+   │   └─► Search for existing roll by enabled auth fields
+   │       │
+   │       ├─► Found: Use existing roll entry
+   │       │   - Verify matches (see validation below)
+   │       │
+   │       └─► Not found: CREATE new roll entry
+   │           - Generate new voter_id (or use user.sub if voter_id auth enabled)
+   │           - Store email if available
+   │           - Store ip_hash always
+   │           - state = 'approved' (auto-approved for open elections)
+   │
+   └─► voter_access = 'registration'
+       │
+       └─► Voter must explicitly register first
+           - Registration creates roll with state = 'registered'
+           - Admin must approve → state = 'approved'
+           - Then voter can vote
+```
+
+### Authentication Error Messages Explained
+
+| Error | Trigger | Meaning | User Action |
+|-------|---------|---------|-------------|
+| "Voter ID Required" | `voter_id=true`, `voter_access='closed'`, no cookie | Closed election requiring pre-assigned ID | Enter voter ID or use invitation link |
+| "User ID Required" | `voter_id=true`, `voter_access='open'`, not logged in | Open election requiring login for tracking | Log in to your account |
+| "Email Validation Required" | `email=true`, user not logged in | Must log in with verified email | Log in |
+| "IP Address does not match" | `ip_address=true`, different IP than roll entry | Returning voter from different IP | Use original device/network |
+| "Email does not match" | `email=true`, logged-in email ≠ roll email | Wrong account | Log in with correct email |
+| "Voter ID does not match" | `voter_id=true`, provided ID ≠ roll ID | Wrong voter ID | Use correct voter ID |
+
+### Code Flow: checkForMissingAuthenticationData
+
+This function runs **before** roll lookup to ensure the voter has provided required data:
+
+```typescript
+export function checkForMissingAuthenticationData(req, election, ctx, voter_id_override?) {
+    // For CLOSED elections with voter_id auth:
+    // Check for voter_id in cookies (or override from URL param)
+    if (election.settings.voter_authentication.voter_id && 
+        election.settings.voter_access == 'closed') {
+        if (!(voter_id_override ?? req.cookies?.voter_id)) {
             return 'Voter ID Required';
         }
     }
     
-    // Voter ID check for open elections (requires login)
-    if (settings.voter_authentication.voter_id && 
-        settings.voter_access == 'open') {
+    // For OPEN elections with voter_id auth:
+    // User must be logged in (we'll use their Keycloak ID)
+    if (election.settings.voter_authentication.voter_id && 
+        election.settings.voter_access == 'open') {
         if (!req.user) {
             return 'User ID Required';
         }
     }
     
-    // Email check (requires login with email)
-    if (settings.voter_authentication.email) {
+    // For ANY election with email auth:
+    // User must be logged in with verified email
+    if (election.settings.voter_authentication.email) {
         if (!req.user?.email) {
             return 'Email Validation Required';
         }
     }
     
-    return null; // All checks passed
+    return null;  // All required data present
 }
 ```
 
-### Where Credentials Come From
+### Code Flow: getOrCreateElectionRoll
 
-| Credential | Source | Format |
-|------------|--------|--------|
-| `voter_id` (closed) | Cookie | Base64-encoded string in `voter_id` cookie |
-| `voter_id` (open) | Keycloak | `user.sub` from JWT |
-| `email` | Keycloak | `user.email` from JWT |
-| `ip_hash` | Request | `hashString(req.ip)` |
-
-### Authentication Error Messages
-
-| Error | Meaning | Solution |
-|-------|---------|----------|
-| "Voter ID Required" | Closed election, no voter_id cookie | Enter voter ID on election page |
-| "User ID Required" | Open election with voter_id auth, not logged in | Log in |
-| "Email Validation Required" | Email auth required, not logged in | Log in with email |
-
----
-
-## Voter Authorization
-
-After authentication, the system checks if the voter is authorized to vote.
-
-### Roll Lookup
+After authentication check passes, this function finds or creates the roll entry:
 
 ```typescript
-async function getOrCreateElectionRoll(req, election, ctx, voter_id_override?, skipStateCheck?) {
+export async function getOrCreateElectionRoll(req, election, ctx, voter_id_override?, skipStateCheck?) {
+    // Always compute IP hash (may or may not be used)
     const ip_hash = hashString(req.ip);
     
-    // Determine what identifiers to search for
-    const require_ip = election.settings.voter_authentication.ip_address ? ip_hash : null;
+    // Only use these for lookup if the corresponding auth is enabled
+    const require_ip_hash = election.settings.voter_authentication.ip_address ? ip_hash : null;
     const email = election.settings.voter_authentication.email ? req.user?.email : null;
-    let voter_id = null;
     
+    // voter_id lookup depends on voter_access mode
+    let voter_id = null;
     if (election.settings.voter_authentication.voter_id) {
         if (election.settings.voter_access == 'closed') {
+            // Get from cookie (base64 decoded) or URL override
             voter_id = voter_id_override ?? atob(req.cookies?.voter_id);
         } else {
+            // Open election: use Keycloak user ID
             voter_id = voter_id_override ?? req.user?.sub;
         }
     }
     
-    // Search for existing roll entry
-    const entries = await ElectionRollModel.getElectionRoll(
-        election.election_id, voter_id, email, require_ip
-    );
-    
-    if (entries == null) {
-        // No match found
-        if (election.settings.voter_access !== 'open') {
-            return null; // Closed elections require pre-registration
-        }
-        if (!skipStateCheck && election.state !== 'open') {
-            return null; // Can't create during finalized
-        }
-        // Create new roll entry for open election
-        return createNewRollEntry(...);
+    // Search for existing roll entry matching ANY enabled auth field
+    // This is intentionally broad - we then validate all fields match
+    let entries = null;
+    if (require_ip_hash || email || voter_id) {
+        entries = await ElectionRollModel.getElectionRoll(
+            election.election_id, voter_id, email, require_ip_hash
+        );
     }
     
-    // Validate matches (IP, email, voter_id consistency)
-    validateRollEntry(entries[0], ip_hash, email, voter_id);
+    if (entries == null) {
+        // No existing roll found
+        
+        // Closed elections: must have pre-existing roll
+        if (election.settings.voter_access !== 'open') {
+            return null;  // Will result in "Not authorized to vote"
+        }
+        
+        // Open elections: create new roll entry
+        const new_voter_id = election.settings.voter_authentication.voter_id 
+            ? voter_id  // Use the Keycloak ID
+            : await makeUniqueID('v-', 12, checkExists);  // Generate random
+        
+        const roll = {
+            election_id: election.election_id,
+            voter_id: new_voter_id,
+            email: req.user?.email,  // Store if available
+            ip_hash: ip_hash,        // Always store for open elections
+            submitted: false,
+            state: 'approved',       // Auto-approved for open
+            // ... history, dates, etc.
+        };
+        
+        // Save to database (unless no auth fields enabled - then it's ephemeral)
+        if (require_ip_hash || email || voter_id) {
+            await ElectionRollModel.submitElectionRoll([roll]);
+        }
+        
+        return roll;
+    }
+    
+    // Found existing roll - validate ALL enabled auth fields match
+    if (election.settings.voter_authentication.ip_address && entries[0].ip_hash) {
+        if (entries[0].ip_hash !== ip_hash) {
+            throw new Unauthorized('IP Address does not match saved voter roll');
+        }
+    }
+    if (election.settings.voter_authentication.email && entries[0].email !== email) {
+        throw new Unauthorized('Email does not match saved election roll');
+    }
+    if (election.settings.voter_authentication.voter_id && 
+        entries[0].voter_id.trim() !== voter_id.trim()) {
+        throw new Unauthorized('Voter ID does not match saved voter roll');
+    }
     
     return entries[0];
 }
 ```
 
-### Authorization Determination
+---
+
+## Voter Authorization
+
+After authentication passes, the system determines if the voter is authorized to cast a ballot.
+
+### The Authorization Check
+
+The `getVoterAuthorization` function combines authentication and roll status:
 
 ```typescript
 function getVoterAuthorization(roll, missingAuthData) {
+    // If authentication data was missing, not authorized
     if (missingAuthData !== null) {
         return {
             authorized_voter: false,
-            required: missingAuthData,
+            required: missingAuthData,  // e.g., "Voter ID Required"
             has_voted: false
         };
     }
     
+    // If no roll entry found, not authorized
     if (roll === null) {
         return {
             authorized_voter: false,
@@ -241,14 +462,15 @@ function getVoterAuthorization(roll, missingAuthData) {
         };
     }
     
+    // Roll found and auth passed - authorized
     return {
         authorized_voter: true,
-        has_voted: roll.submitted
+        has_voted: roll.submitted  // Important for ballot_updates check
     };
 }
 ```
 
-### Vote Permission Check
+### The Vote Permission Check
 
 ```typescript
 function assertVoterMayVote(voterAuth, election, ctx) {
@@ -256,6 +478,7 @@ function assertVoterMayVote(voterAuth, election, ctx) {
         throw new Unauthorized("User not authorized to vote");
     }
     
+    // Can only vote again if ballot_updates is enabled
     if (voterAuth.has_voted === true && 
         election.settings.ballot_updates !== true) {
         throw new BadRequest("User has already voted");
@@ -263,17 +486,18 @@ function assertVoterMayVote(voterAuth, election, ctx) {
 }
 ```
 
-### Authorization Scenarios
+### Authorization Scenarios Summary
 
-| Scenario | Result |
-|----------|--------|
-| Open election, new voter | Create roll entry, authorized |
-| Open election, returning voter | Find roll entry, authorized |
-| Closed election, voter in roll | Find roll entry, authorized |
-| Closed election, voter NOT in roll | No roll entry, NOT authorized |
-| Registration election, not approved | Roll entry found but state != approved, NOT authorized |
-| Already voted, no ballot_updates | has_voted=true, NOT authorized |
-| Already voted, ballot_updates=true | has_voted=true, authorized (can update) |
+| Scenario | Roll Lookup | Auth Check | Can Vote? |
+|----------|-------------|------------|:---------:|
+| Open election, first-time voter | Creates new roll | Passes | ✓ |
+| Open election, returning (same auth) | Finds existing roll | Passes | ✓ (or update) |
+| Open election, returning (different auth) | May find wrong/no roll | May fail | ? |
+| Closed election, voter_id in roll | Finds roll by voter_id | Passes | ✓ |
+| Closed election, voter_id NOT in roll | No roll found | N/A | ✗ |
+| Registration election, pending approval | Finds roll, state='registered' | Passes but state check fails | ✗ |
+| Already voted, ballot_updates=false | Finds roll, submitted=true | Already voted check fails | ✗ |
+| Already voted, ballot_updates=true | Finds roll, submitted=true | Passes | ✓ (update) |
 
 ---
 
