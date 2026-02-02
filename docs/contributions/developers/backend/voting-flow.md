@@ -133,7 +133,7 @@ interface authentication {
 
 The `voter_id` flag behaves **completely differently** depending on `voter_access`:
 
-#### voter_id + Closed Election (`voter_access='closed'`)
+#### voter_id=true + Closed Election (`voter_access='closed'`)
 
 ```
 Meaning: "Voters must provide a pre-assigned voter ID"
@@ -152,7 +152,7 @@ What the voter experiences:
 - Without voter_id → "Voter ID Required" error
 ```
 
-#### voter_id + Open Election (`voter_access='open'`)
+#### voter_id=true + Open Election (`voter_access='open'`)
 
 ```
 Meaning: "One vote per logged-in user account"
@@ -172,17 +172,69 @@ This is essentially "one vote per device" but better named as
 "one vote per authenticated user account"
 ```
 
-#### voter_id = false (regardless of voter_access)
+#### voter_id=false + Open Election (The Surprising Case!)
 
 ```
-Meaning: No voter identity tracking by ID
+Meaning: "Anyone can vote, system auto-generates voter_ids"
 
-For open elections: A new roll entry with a random voter_id is 
-created each time someone votes (unless email or ip_address 
-tracking is enabled to identify returning voters).
+⚠️ IMPORTANT: When voter_id=false on an open election, the system 
+STILL CREATES a voter_id for each voter - it just auto-generates 
+a random one instead of requiring authentication!
 
-For closed elections: Voters are identified by email instead
-(requires invitation='email').
+How it works:
+1. Voter visits the election (no login required)
+2. System generates a random voter_id like "v-xyz789def012"
+3. A new roll entry is created with this random ID
+4. The vote is submitted
+
+What this means:
+- If NO auth flags are enabled (voter_id=false, email=false, ip_address=false):
+  → The roll entry is NOT saved to the database
+  → Each page load gets a new random voter_id
+  → Same person can vote unlimited times
+  → No way to track or prevent duplicates
+
+- If ip_address=true (but voter_id=false, email=false):
+  → Roll entry IS saved (keyed by IP hash)
+  → Same IP can be identified as returning voter
+  → Still no login required
+
+- If email=true (but voter_id=false):
+  → Must log in (to get email)
+  → Roll entry saved with email as identifier
+  → One vote per email address
+```
+
+#### voter_id=false + Closed Election
+
+```
+Meaning: "Voters identified by email only"
+
+Requires invitation='email' to be set.
+Voters are pre-registered by email, and matched by their 
+logged-in email address rather than a separate voter_id.
+```
+
+### Can voter_id AND email Both Be True?
+
+**Yes!** This is a valid and useful combination.
+
+```
+voter_id=true AND email=true means:
+
+For OPEN elections:
+- User must be logged in (for both flags)
+- voter_id = Keycloak user.sub (their account ID)
+- email = Keycloak user.email (their verified email)
+- Both are stored on the roll entry
+- Lookup can match on either field
+- Provides extra verification: same user = same email
+
+For CLOSED elections:
+- User must provide voter_id (from invitation)
+- User must ALSO be logged in with matching email
+- If voter_id exists but email doesn't match → error
+- This is a form of two-factor auth: "know your voter_id" + "own the email"
 ```
 
 ### Understanding email Authentication
@@ -203,44 +255,90 @@ What the voter experiences:
 - Logged in → email checked and stored → can vote
 ```
 
-### Understanding ip_address Tracking
+### Understanding ip_address Tracking (What Actually Happens)
 
 ```typescript
 ip_address?: boolean;  // Track IP for duplicate detection
 ```
 
-When `ip_address=true`:
-- Voter's IP address is hashed (SHA-256) and stored
-- Used to **detect** potential duplicates, not strictly prevent them
-- If returning voter has different IP → error (in some code paths)
-- This is **tracking**, not hard enforcement
+**When `ip_address=true`, here's the EXACT behavior:**
 
-```
-Behavior:
-- First vote: IP hash stored on roll entry
-- Same voter, same IP: Can vote (or update if ballot_updates enabled)
-- Same voter, different IP: May get error "IP Address does not match"
+#### On First Vote:
+```typescript
+// IP is always hashed for privacy
+const ip_hash = hashString(req.ip);  // SHA-256
 
-Note: This is privacy-sensitive. IP is hashed before storage.
+// If ip_address tracking is enabled:
+const require_ip_hash = election.settings.voter_authentication.ip_address 
+    ? ip_hash 
+    : null;
+
+// IP hash is stored on the roll entry
+roll.ip_hash = ip_hash;  // Always stored, but only USED for lookup if enabled
 ```
+
+#### On Subsequent Votes:
+```typescript
+// System looks up roll by IP hash (among other fields)
+const entries = await ElectionRollModel.getElectionRoll(
+    election.election_id, 
+    voter_id,      // may be null
+    email,         // may be null  
+    require_ip_hash  // IP hash if tracking enabled
+);
+
+// If roll found but IP doesn't match:
+if (election.settings.voter_authentication.ip_address && entries[0].ip_hash) {
+    if (entries[0].ip_hash !== ip_hash) {
+        throw new Unauthorized('IP Address does not match saved voter roll');
+    }
+}
+```
+
+#### What This Means in Practice:
+
+| Scenario | ip_address=true Behavior |
+|----------|--------------------------|
+| First vote from IP 1.2.3.4 | Roll created, IP hash stored |
+| Same voter, same IP | Roll found by IP, can vote/update |
+| Same voter, different IP | **ERROR**: "IP Address does not match" |
+| Different person, same IP | May find same roll entry! (shared IP problem) |
+| VPN/Proxy users | IP changes frequently → may cause errors |
+
+#### Important Gotchas:
+
+1. **IP tracking doesn't prevent duplicates** - it just DETECTS them
+2. **Shared IPs are a problem** - office, school, VPN users share IPs
+3. **Dynamic IPs cause issues** - if your IP changes, you may not be able to vote again
+4. **It's always stored** - even if `ip_address=false`, the IP hash is stored on the roll entry, it's just not used for lookup/validation
+
+#### Recommendation:
+`ip_address=true` is best for:
+- Analytics/audit trail
+- Detecting obvious fraud (same IP voting hundreds of times)
+- NOT for strict duplicate prevention (use `voter_id=true` or `email=true` instead)
 
 ### The Authentication Settings Matrix
 
 Here's what actually works and what each combination means:
 
-| voter_access | voter_id | email | ip_address | Behavior |
-|--------------|:--------:|:-----:|:----------:|----------|
-| `open` | false | false | false | Anyone can vote, no tracking, unlimited votes possible |
-| `open` | false | false | true | Anyone can vote, IP tracked for analytics/review |
-| `open` | false | true | false | Must log in, email stored, one vote per email |
-| `open` | true | false | false | Must log in, Keycloak ID used, one vote per account |
-| `open` | true | true | false | Must log in, both email and account ID tracked |
-| `open` | true | false | true | Must log in, account ID + IP tracked |
-| `closed` | false | - | - | Voters identified by email (requires `invitation='email'`) |
-| `closed` | true | false | false | Voters need assigned voter_id from invitation |
-| `closed` | true | true | false | Voters need voter_id AND matching email |
-| `closed` | true | false | true | Voters need voter_id, IP tracked |
-| `registration` | - | true | - | Voter registers, admin approves, email required |
+| voter_access | voter_id | email | ip_address | Behavior | Roll Saved? |
+|--------------|:--------:|:-----:|:----------:|----------|:-----------:|
+| `open` | false | false | false | Anyone can vote, system auto-generates random voter_id, **UNLIMITED VOTES** | ❌ No |
+| `open` | false | false | true | Anyone can vote, auto-generated voter_id, IP tracked (can detect return visits) | ✅ Yes |
+| `open` | false | true | false | Must log in, email stored, one vote per email | ✅ Yes |
+| `open` | false | true | true | Must log in, email + IP tracked | ✅ Yes |
+| `open` | true | false | false | Must log in, Keycloak ID used, one vote per account | ✅ Yes |
+| `open` | true | true | false | Must log in, both email AND Keycloak ID verified | ✅ Yes |
+| `open` | true | false | true | Must log in, Keycloak ID + IP tracked | ✅ Yes |
+| `open` | true | true | true | Must log in, all three verified (most secure open) | ✅ Yes |
+| `closed` | false | - | - | Voters identified by email (requires `invitation='email'`) | ✅ Yes |
+| `closed` | true | false | false | Voters need assigned voter_id from invitation | ✅ Yes |
+| `closed` | true | true | false | Voters need voter_id AND must log in with matching email | ✅ Yes |
+| `closed` | true | false | true | Voters need voter_id, IP tracked | ✅ Yes |
+| `registration` | - | true | - | Voter registers with email, admin approves | ✅ Yes |
+
+**Key Insight:** The roll entry is only saved to the database if at least ONE of (voter_id, email, ip_address) is enabled. With all three false, each vote is essentially anonymous and untracked.
 
 ### Frontend UI Options
 
@@ -251,16 +349,17 @@ The frontend election creation wizard presents these as simpler options:
 | "One vote per device" | `voter_id: true` | For open elections: requires login |
 | "Email required" | `email: true` | Requires login with verified email |
 | "IP tracking" | `ip_address: true` | Tracks IP address |
-| "No limit" | `{}` (all false) | No authentication required |
+| "No limit" | `{}` (all false) | No authentication, unlimited votes! |
 
-### Where Each ID Comes From
+### Where Each voter_id Comes From
 
-| Scenario | voter_id Source | Format |
-|----------|-----------------|--------|
-| Closed + voter_id auth | Cookie `voter_id` | Base64-encoded, like `di1hYmMxMjM=` |
-| Closed + voter_id in URL | URL param (e.g., `/{election_id}/{voter_id}`) | Plain string like `v-abc123` |
-| Open + voter_id auth | Keycloak JWT | UUID like `a1b2c3d4-e5f6-7890-abcd-ef1234567890` |
-| Open + no voter_id auth | Auto-generated | Random `v-{12 chars}` like `v-xyz789def012` |
+| Scenario | voter_id Source | Format | Who Creates It |
+|----------|-----------------|--------|----------------|
+| Closed + voter_id auth | Cookie `voter_id` | Base64-encoded | Admin (via invitation) |
+| Closed + voter_id in URL | URL param | Plain string like `v-abc123` | Admin (via invitation) |
+| Open + voter_id=true | Keycloak JWT (`user.sub`) | UUID | Keycloak |
+| Open + voter_id=false + (email OR ip_address) | Auto-generated | Random `v-{12 chars}` | **System auto-generates** |
+| Open + ALL auth false | Auto-generated | Random `v-{12 chars}` | **System auto-generates (not saved!)** |
 
 ### The Roll Entry Creation Decision Tree
 
