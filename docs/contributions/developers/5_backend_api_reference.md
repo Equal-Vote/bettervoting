@@ -523,7 +523,7 @@ POST /Election/{id}/vote
       }
     ]
   },
-  "recieptEmail": "voter@example.com"
+  "receiptEmail": "voter@example.com"
 }
 ```
 
