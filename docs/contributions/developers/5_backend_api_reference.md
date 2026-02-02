@@ -418,6 +418,8 @@ POST /Election/{id}/edit
 
 **Authorization:** Requires `canViewBallots` permission (system_admin, owner, admin, auditor)
 
+> **Note:** The code currently uses `canViewBallots` permission, though `canEditElection` would be more semantically appropriate.
+
 **Preconditions for success:**
 - Election must be in `draft` state, OR have a `public_archive_id` (admin upload)
 - Election ID in body must match URL param
