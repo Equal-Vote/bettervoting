@@ -1,15 +1,21 @@
 ---
 layout: default
-title: 🔌 Backend API Reference
-nav_order: 5
+title: 🔌 Backend API (Quick Reference)
+nav_order: 7
 parent: 💻 Developers
 ---
 
-# Backend API Reference
+# Backend API Quick Reference
 
-This document provides a comprehensive reference of all backend API endpoints available in BetterVoting. All endpoints are prefixed with `/API`.
+> **📚 For comprehensive documentation, see the [Backend Developer Guide](./backend/)** which includes:
+> - [Domain Models](./backend/domain-models) - Complete reference for Election, Ballot, ElectionRoll objects
+> - [Authentication & Authorization](./backend/authentication) - Roles, permissions, how access is determined
+> - [Election Lifecycle](./backend/election-lifecycle) - States, transitions, what happens at each stage
+> - [Voting Flow](./backend/voting-flow) - Everything about casting votes, validation, processing
+> - [Election Roll Management](./backend/election-roll-management) - Adding voters, approval workflow
+> - [API Endpoints Reference](./backend/api-endpoints) - Complete endpoint documentation with database operations
 
-> **Interactive Documentation**: The backend also provides auto-generated Swagger documentation at `/API/Docs` when running locally.
+This page provides a quick reference for the most common API operations. All endpoints are prefixed with `/API`.
 
 ---
 
