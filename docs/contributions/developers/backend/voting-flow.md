@@ -187,6 +187,7 @@ happens if cookies are disabled/blocked and temp_id isn't set.
 **Code flow:**
 ```typescript
 // 1. Frontend: Header.tsx creates temp_id cookie on page load
+// useCookie is a React hook that gets/sets browser cookies
 useCookie('temp_id', makeID(ID_PREFIXES.VOTER, ID_LENGTHS.VOTER))
 // e.g., cookie value: "v-a1b2c3d4e5f6"
 
@@ -199,8 +200,8 @@ extractUserFromRequest = (req) => {
     const tempId = req.cookies.temp_id;
     if (tempId) {
         return {
-            'typ': 'TEMP_ID',  // Mark as temp user
-            'sub': tempId      // Use temp_id as the user identifier
+            typ: 'TEMP_ID',  // Mark as temp user (mirrors Keycloak's typ field)
+            sub: tempId      // Use temp_id as the user identifier
         }
     }
     return null;
