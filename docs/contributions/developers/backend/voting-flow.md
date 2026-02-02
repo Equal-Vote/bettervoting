@@ -122,7 +122,7 @@ interface authentication {
     ip_address?: boolean;    // ACTIVE - Track IP for duplicate detection
     phone?: boolean;         // DEPRECATED - Not implemented
     address?: boolean;       // DEPRECATED - Not implemented  
-    registration_data?: [registration_field];  // PARTIALLY IMPLEMENTED - For registration-mode elections
+    registration_data?: registration_field[];  // PARTIALLY IMPLEMENTED - For registration-mode elections
     registration_api_endpoint?: string;         // DEPRECATED - Not implemented
 }
 ```
@@ -258,7 +258,7 @@ The frontend election creation wizard presents these as simpler options:
 | Scenario | voter_id Source | Format |
 |----------|-----------------|--------|
 | Closed + voter_id auth | Cookie `voter_id` | Base64-encoded, like `di1hYmMxMjM=` |
-| Closed + voter_id in URL | URL param `/Election/{id}/{voter_id}` | Plain string like `v-abc123` |
+| Closed + voter_id in URL | URL param (e.g., `/{election_id}/{voter_id}`) | Plain string like `v-abc123` |
 | Open + voter_id auth | Keycloak JWT | UUID like `a1b2c3d4-e5f6-7890-abcd-ef1234567890` |
 | Open + no voter_id auth | Auto-generated | Random `v-{12 chars}` like `v-xyz789def012` |
 
@@ -368,6 +368,7 @@ export async function getOrCreateElectionRoll(req, election, ctx, voter_id_overr
     if (election.settings.voter_authentication.voter_id) {
         if (election.settings.voter_access == 'closed') {
             // Get from cookie (base64 decoded) or URL override
+            // Note: atob() will throw if invalid base64 - actual code handles this
             voter_id = voter_id_override ?? atob(req.cookies?.voter_id);
         } else {
             // Open election: use Keycloak user ID
@@ -424,8 +425,10 @@ export async function getOrCreateElectionRoll(req, election, ctx, voter_id_overr
     if (election.settings.voter_authentication.email && entries[0].email !== email) {
         throw new Unauthorized('Email does not match saved election roll');
     }
+    // Note: voter_id is guaranteed non-null here because we only reach this code
+    // when voter_id auth is enabled AND an entry was found
     if (election.settings.voter_authentication.voter_id && 
-        entries[0].voter_id.trim() !== voter_id.trim()) {
+        entries[0].voter_id.trim() !== voter_id!.trim()) {
         throw new Unauthorized('Voter ID does not match saved voter roll');
     }
     
