@@ -37,25 +37,31 @@ This runs a complete simulation with 8 mock issues in ~5 seconds, showing:
 
 No GitHub API calls, no tokens required! The simulation uses the production defaults (1 week warning, 2 weeks inactive).
 
-### Local Testing with Real GitHub API
+### Local Testing with Real Issues
+
+To test the bot locally against real GitHub issues on your fork:
 
 ```bash
 cd .github/scripts
 
-# Setup
+# Setup (one time)
 npm install
-cp sample.env .env
-# Edit .env and add your GitHub Personal Access Token
+cp sample.env .env.test
+# Edit .env.test and add your GitHub Personal Access Token and fork repo
 
 # Build
 npm run build
 
-# Run in dry-run mode (safe - no changes made)
-npm run issue-mgmt:start
+# Run complete test workflow (creates real test issues, runs bot, shows results)
+npm run issue-mgmt:test:workflow
 
-# Run in production mode (actually makes changes)
-npm run issue-mgmt:prod
+# Clean up test issues when done
+npm run issue-mgmt:test:cleanup
 ```
+
+This creates real issues on your fork, runs the bot script locally, and shows you the actual labels and comments applied.
+
+See the [End-to-End Testing](#-end-to-end-testing) section below for more details.
 
 ## ⚙️ Configuration
 
@@ -250,8 +256,7 @@ src/issue-management/
 1. Edit TypeScript files in `src/issue-management/`
 2. Build: `npm run build`
 3. Test with simulation: `npm run issue-mgmt:simulate`
-4. Test with dry-run: `npm run issue-mgmt:start`
-5. Run full test: `npm run issue-mgmt:test:workflow`
+4. Test with full workflow: `npm run issue-mgmt:test:workflow`
 
 ### Custom Messages
 
