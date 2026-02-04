@@ -11,3 +11,6 @@
 .pre-commit-config.yaml
 .idea
 .gitattributes
+
+# IDE settings
+.vscode/

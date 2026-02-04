@@ -7,15 +7,15 @@ Automated system to manage stale assigned issues using GitHub Actions.
 This feature automatically:
 
 1. **Monitors** all assigned issues daily
-2. **Warns** assignees after 5 weeks of inactivity  
-3. **Unassigns** issues after 6 weeks of inactivity
-4. **Preserves** issue history and allows reassignment
+2. **Warns** assignees after 1 week of inactivity  
+3. **Applies "2 weeks inactive" label** after 2 weeks of inactivity for dev lead check-in
+4. **Preserves** issue history and assignments
 
 ### How It Works
 
 - **Daily Automation**: Runs every day at 9:00 AM UTC
-- **Warning Phase (5 weeks)**: Posts a friendly warning comment, tags assignees, gives 1 week notice
-- **Auto-Unassignment (6 weeks)**: Removes assignees, posts explanation, keeps issue open
+- **Warning Phase (1 week)**: Posts a friendly warning comment, tags assignees, applies "To Update !" label
+- **Check-In Phase (2 weeks)**: Applies "2 weeks inactive" label, posts explanation, keeps assignee for dev lead review
 
 ## 🚀 Quick Start
 
@@ -31,11 +31,11 @@ npm run issue-mgmt:simulate
 ```
 
 This runs a complete simulation with 8 mock issues in ~5 seconds, showing:
-- ✅ 3 issues that would be unassigned (6+ weeks old)
-- ✅ 2 issues that would get warnings (5+ weeks old)
+- ✅ 3 issues that would be marked inactive (2+ weeks old)
+- ✅ 2 issues that would get warnings (1+ weeks old)
 - ✅ 3 active issues (no action needed)
 
-No GitHub API calls, no tokens required!
+No GitHub API calls, no tokens required! The simulation uses the production defaults (1 week warning, 2 weeks inactive).
 
 ### Local Testing with Real GitHub API
 
@@ -61,8 +61,8 @@ npm run issue-mgmt:prod
 
 ### Current Settings
 
-- **Warning threshold**: 5 weeks of inactivity
-- **Unassignment threshold**: 6 weeks of inactivity
+- **Warning threshold**: 1 week of inactivity
+- **Inactive label threshold**: 2 weeks of inactivity
 - **Schedule**: Daily at 9:00 AM UTC
 - **Scope**: All assigned issues in the repository
 
@@ -71,30 +71,30 @@ npm run issue-mgmt:prod
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `TIME_UNIT` | Time unit: 'weeks', 'minutes', or 'seconds' | `weeks` |
-| `WARNING_WEEKS` | Threshold for warning (in TIME_UNIT) | `5` |
-| `UNASSIGN_WEEKS` | Threshold for unassignment (in TIME_UNIT) | `6` |
+| `WARNING_WEEKS` | Threshold for warning (in TIME_UNIT) | `1` |
+| `INACTIVE_WEEKS` | Threshold for inactive label (in TIME_UNIT) | `2` |
 | `DRY_RUN` | Run without making changes | `false` |
 | `GITHUB_TOKEN` | GitHub Personal Access Token | Required |
 | `GITHUB_REPOSITORY` | Repository in format "owner/repo" | Required |
 
 ### Customizing Timeframes (Production)
 
-**Important:** The warning and unassignment thresholds are hardcoded in the workflow file.
+**Important:** The warning and inactive label thresholds are hardcoded in the workflow file.
 
 To change the production timeframes, edit `.github/workflows/issue-management.yml` in **two places**:
 
 **1. Default values for manual triggers (lines ~25-28):**
 ```yaml
 warning_weeks:
-  default: '4'    # Change from '5' to '4'
-unassign_weeks:
-  default: '5'    # Change from '6' to '5'
+  default: '1'    # Change from '1' to desired weeks
+inactive_weeks:
+  default: '2'    # Change from '2' to desired weeks
 ```
 
 **2. Fallback values for scheduled runs (lines ~73-74):**
 ```yaml
-WARNING_WEEKS: ${{ ... || '4' }}    # Change from '5' to '4'
-UNASSIGN_WEEKS: ${{ ... || '5' }}   # Change from '6' to '5'
+WARNING_WEEKS: ${{ ... || '1' }}    # Change from '1' to desired weeks
+INACTIVE_WEEKS: ${{ ... || '2' }}   # Change from '2' to desired weeks
 ```
 
 After editing, commit and push the changes. The new values take effect on the next scheduled run.
@@ -140,11 +140,11 @@ This will:
 1. ✅ Clean up any existing test issues
 2. ✅ Create issues in 3 staggered batches with delays
 3. ✅ Run the script at the perfect time
-4. 📊 Show you **warnings AND unassignments** in the same run!
+4. 📊 Show you **warnings AND inactive labels** in the same run!
 
 **Expected Results:**
-- Batch 1 (~120 seconds old) → **Unassigned** ✅
-- Batch 2 (~30 seconds old) → **Warning comments** ⚠️
+- Batch 1 (~240 seconds old) → **Marked inactive** ✅
+- Batch 2 (~120 seconds old) → **Warning comments** ⚠️
 - Batch 3 (just created) → **No action**
 
 **Note:** The test issue creator automatically creates issues in staggered batches to ensure you can see all behaviors in one test run.
@@ -255,10 +255,10 @@ src/issue-management/
 
 ### Custom Messages
 
-Edit the warning and unassignment messages in `check-stale-issues.ts`:
+Edit the warning and inactive label messages in `check-stale-issues.ts`:
 
 - `postWarningComment()` method for warning messages
-- `unassignIssue()` method for unassignment messages
+- `applyInactiveLabel()` method for inactive label messages
 
 ## 🎮 Manual Triggering (Production)
 
@@ -272,10 +272,10 @@ You can manually trigger the workflow from the GitHub Actions tab:
 |-------|---------|-------------|
 | **dry_run** | `false` | ⚠️ **IMPORTANT:** Default is FALSE, meaning it WILL make real changes! Check this box to preview only. |
 | **time_unit** | `weeks` | Time unit for thresholds (weeks/minutes/seconds) |
-| **warning_weeks** | `5` | Threshold for warnings (in selected time unit) |
-| **unassign_weeks** | `6` | Threshold for unassignments (in selected time unit) |
+| **warning_weeks** | `1` | Threshold for warnings (in selected time unit) |
+| **inactive_weeks** | `2` | Threshold for inactive label (in selected time unit) |
 
-**⚠️ Warning:** Manual triggers with default settings will **actually post comments and unassign issues**. Always check the **dry_run** box if you just want to preview what would happen!
+**⚠️ Warning:** Manual triggers with default settings will **actually post comments and apply labels**. Always check the **dry_run** box if you just want to preview what would happen!
 
 **Common use cases:**
 - **Test after deployment:** Set `dry_run: true` to verify the workflow works

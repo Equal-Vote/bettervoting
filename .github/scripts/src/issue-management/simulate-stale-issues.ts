@@ -12,7 +12,7 @@ interface MockIssue {
 
 interface Config {
   warningWeeks: number;
-  unassignWeeks: number;
+  inactiveWeeks: number;
   dryRun: boolean;
 }
 
@@ -39,7 +39,7 @@ class StaleIssueSimulator {
       return date.toISOString();
     };
 
-    // Issue 1: Very stale (8 weeks) - should be unassigned
+    // Issue 1: Very stale (8 weeks) - should be marked inactive
     issues.push({
       number: 101,
       title: 'Implement user authentication system',
@@ -50,7 +50,7 @@ class StaleIssueSimulator {
       weeksSinceUpdate: 8,
     });
 
-    // Issue 2: Stale (7 weeks) - should be unassigned
+    // Issue 2: Stale (7 weeks) - should be marked inactive
     issues.push({
       number: 102,
       title: 'Fix database connection pooling',
@@ -61,59 +61,59 @@ class StaleIssueSimulator {
       weeksSinceUpdate: 7,
     });
 
-    // Issue 3: At unassign threshold (6 weeks) - should be unassigned
+    // Issue 3: At inactive threshold (2 weeks) - should be marked inactive
     issues.push({
       number: 103,
       title: 'Update API documentation',
       assignees: [{ login: 'developer1' }],
-      updated_at: weeksAgo(6),
+      updated_at: weeksAgo(2),
       created_at: weeksAgo(8),
       html_url: 'https://github.com/example/repo/issues/103',
-      weeksSinceUpdate: 6,
+      weeksSinceUpdate: 2,
     });
 
-    // Issue 4: Warning threshold (5 weeks) - should get warning
+    // Issue 4: Warning threshold (1 week) - should get warning
     issues.push({
       number: 104,
       title: 'Refactor payment processing module',
       assignees: [{ login: 'developer4' }],
-      updated_at: weeksAgo(5),
+      updated_at: weeksAgo(1),
       created_at: weeksAgo(7),
       html_url: 'https://github.com/example/repo/issues/104',
-      weeksSinceUpdate: 5,
+      weeksSinceUpdate: 1,
     });
 
-    // Issue 5: Just past warning (5.5 weeks) - should get warning
+    // Issue 5: Just past warning (1.5 weeks) - should get warning
     issues.push({
       number: 105,
       title: 'Add email notification feature',
       assignees: [{ login: 'developer2' }],
-      updated_at: weeksAgo(5.5),
+      updated_at: weeksAgo(1.5),
       created_at: weeksAgo(9),
       html_url: 'https://github.com/example/repo/issues/105',
-      weeksSinceUpdate: 5.5,
+      weeksSinceUpdate: 1.5,
     });
 
-    // Issue 6: Active (3 weeks) - no action
+    // Issue 6: Active (0.5 weeks) - no action
     issues.push({
       number: 106,
       title: 'Optimize database queries',
       assignees: [{ login: 'developer5' }],
-      updated_at: weeksAgo(3),
+      updated_at: weeksAgo(0.5),
       created_at: weeksAgo(4),
       html_url: 'https://github.com/example/repo/issues/106',
-      weeksSinceUpdate: 3,
+      weeksSinceUpdate: 0.5,
     });
 
-    // Issue 7: Very active (1 week) - no action
+    // Issue 7: Very active (0.2 weeks) - no action
     issues.push({
       number: 107,
       title: 'Fix login redirect bug',
       assignees: [{ login: 'developer3' }],
-      updated_at: weeksAgo(1),
+      updated_at: weeksAgo(0.2),
       created_at: weeksAgo(2),
       html_url: 'https://github.com/example/repo/issues/107',
-      weeksSinceUpdate: 1,
+      weeksSinceUpdate: 0.2,
     });
 
     // Issue 8: Brand new (0 weeks) - no action
@@ -131,55 +131,59 @@ class StaleIssueSimulator {
   }
 
   /**
-   * Simulate posting a warning comment
+   * Simulate posting a warning comment and applying "To Update !" label
    */
   private async postWarningComment(issue: MockIssue): Promise<void> {
     const assigneeLogins = issue.assignees.map(a => `@${a.login}`).join(' ');
     const warningMessage = `
-🤖 **Inactivity Warning**
+🤖 **Check-In Bot Warning**
 
 Hi ${assigneeLogins}! 
 
-This issue has been assigned for ${this.config.warningWeeks} weeks with no recent activity. 
+This issue hasn't had activity in the past ${this.config.warningWeeks} week(s). 
 
-**This task will auto-unassign in 1 week** unless there's activity (comments, commits, or other updates).
+Please add a comment with an update on your progress.
 
-If you're still working on this issue, please leave a comment to keep it assigned to you.
+**A dev lead will check in on this issue** if no update is provided within ${this.config.inactiveWeeks - this.config.warningWeeks} week(s).
 
-<!-- AUTO-UNASSIGN-WARNING -->
+<!-- AUTO-CHECK-IN-WARNING -->
     `.trim();
 
     if (this.config.dryRun) {
       console.log(`[DRY RUN] Would post warning comment on issue #${issue.number}: ${issue.title}`);
+      console.log(`[DRY RUN] Would apply "To Update !" label`);
       console.log(`Message preview:\n${warningMessage}\n`);
       return;
     }
 
     console.log(`✅ Posted warning comment on issue #${issue.number}: ${issue.title}`);
+    console.log(`✅ Applied "To Update !" label`);
   }
 
   /**
-   * Simulate unassigning an issue
+   * Simulate applying "2 weeks inactive" label (instead of unassigning)
    */
-  private async unassignIssue(issue: MockIssue): Promise<void> {
+  private async applyInactiveLabel(issue: MockIssue): Promise<void> {
     const assigneeLogins = issue.assignees.map(a => `@${a.login}`).join(' ');
     
     if (this.config.dryRun) {
-      console.log(`[DRY RUN] Would unassign issue #${issue.number}: ${issue.title}`);
-      console.log(`  Would remove assignees: ${assigneeLogins}`);
+      console.log(`[DRY RUN] Would apply "2 weeks inactive" label to issue #${issue.number}: ${issue.title}`);
+      console.log(`  Assignees remain: ${assigneeLogins}`);
       return;
     }
 
-    const unassignMessage = `
-🤖 **Auto-Unassigned**
+    const inactiveMessage = `
+🤖 **Check-In Bot Notice**
 
-This issue has been automatically unassigned from ${assigneeLogins} due to ${this.config.unassignWeeks} weeks of inactivity.
+This issue has been marked as inactive due to ${this.config.inactiveWeeks} week(s) of inactivity.
 
-The issue remains open and available for anyone to pick up. Feel free to assign yourself if you'd like to work on it!
+${assigneeLogins} - A dev lead will check in on this issue to see if you need any support or if the assignment should be changed.
+
+The issue remains assigned to you for now. Please provide an update when you can!
     `.trim();
 
-    console.log(`✅ Auto-unassigned issue #${issue.number}: ${issue.title}`);
-    console.log(`Message: ${unassignMessage}\n`);
+    console.log(`✅ Applied "2 weeks inactive" label to issue #${issue.number}: ${issue.title}`);
+    console.log(`Message: ${inactiveMessage}\n`);
   }
 
   /**
@@ -190,25 +194,25 @@ The issue remains open and available for anyone to pick up. Feel free to assign 
     console.log('=====================================\n');
     console.log('🚀 Starting stale issue management...');
     console.log(`Configuration:
-      - Warning after: ${this.config.warningWeeks} weeks
-      - Unassign after: ${this.config.unassignWeeks} weeks
+      - Warning after: ${this.config.warningWeeks} week(s)
+      - Inactive label after: ${this.config.inactiveWeeks} week(s)
       - Dry run: ${this.config.dryRun}
     `);
 
     console.log(`\nGenerated ${this.mockIssues.length} mock issues for testing\n`);
     
     let warningCount = 0;
-    let unassignCount = 0;
+    let inactiveCount = 0;
 
     for (const issue of this.mockIssues) {
       console.log(`\nProcessing issue #${issue.number}: ${issue.title}`);
       console.log(`  Last updated: ${issue.updated_at} (${issue.weeksSinceUpdate} weeks ago)`);
       console.log(`  Assignees: ${issue.assignees.map(a => a.login).join(', ')}`);
 
-      if (issue.weeksSinceUpdate >= this.config.unassignWeeks) {
-        // Issue should be unassigned
-        await this.unassignIssue(issue);
-        unassignCount++;
+      if (issue.weeksSinceUpdate >= this.config.inactiveWeeks) {
+        // Issue should get "2 weeks inactive" label
+        await this.applyInactiveLabel(issue);
+        inactiveCount++;
       } else if (issue.weeksSinceUpdate >= this.config.warningWeeks) {
         // Issue should get a warning
         await this.postWarningComment(issue);
@@ -224,7 +228,7 @@ The issue remains open and available for anyone to pick up. Feel free to assign 
     console.log(`\n📊 Summary:
       - Issues processed: ${this.mockIssues.length}
       - Warnings posted: ${warningCount}
-      - Issues unassigned: ${unassignCount}
+      - Issues marked inactive: ${inactiveCount}
     `);
 
     console.log('\n🎭 SIMULATION COMPLETE');
@@ -240,8 +244,8 @@ The issue remains open and available for anyone to pick up. Feel free to assign 
 async function main(): Promise<void> {
   try {
     const config: Config = {
-      warningWeeks: parseInt(process.env.WARNING_WEEKS || '5', 10),
-      unassignWeeks: parseInt(process.env.UNASSIGN_WEEKS || '6', 10),
+      warningWeeks: parseInt(process.env.WARNING_WEEKS || '1', 10),
+      inactiveWeeks: parseInt(process.env.INACTIVE_WEEKS || '2', 10),
       dryRun: process.env.DRY_RUN !== 'false', // Default to true for simulation
     };
 

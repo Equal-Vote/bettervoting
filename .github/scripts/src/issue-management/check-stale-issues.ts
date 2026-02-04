@@ -14,7 +14,7 @@ interface Config {
   owner: string;
   repo: string;
   warningWeeks: number;
-  unassignWeeks: number;
+  inactiveWeeks: number;
   dryRun: boolean;
   timeUnit: 'weeks' | 'minutes' | 'seconds';
 }
@@ -96,23 +96,23 @@ class StaleIssueManager {
     });
 
     return comments.data.some(comment => 
-      comment.body?.includes('This task will auto unassign in 1 week') ||
-      comment.body?.includes('AUTO-UNASSIGN-WARNING')
+      comment.body?.includes('A dev lead will check in on this issue') ||
+      comment.body?.includes('AUTO-CHECK-IN-WARNING')
     );
   }
 
   /**
-   * Post a warning comment on an issue
+   * Post a warning comment on an issue and apply "To Update !" label
    */
   private async postWarningComment(issue: IssueData): Promise<void> {
     const assigneeLogins = issue.assignees.map(a => `@${a.login}`).join(' ');
     
     const warningMessage = `
-🤖 **Auto-Unassign Warning** 
+🤖 **Check-In Bot Warning** 
 
 Hi ${assigneeLogins}! 
 
-This issue hasn't had activity in the past ${this.config.warningWeeks} weeks. 
+This issue hasn't had activity in the past ${this.config.warningWeeks} week(s). 
 
 Please add a comment using the below template (even if you have a pull request).
 
@@ -124,13 +124,14 @@ Please add a comment using the below template (even if you have a pull request).
 
 If you need help, please request for assistance on the #bettervoting slack channel. 
 
-**This task will auto-unassign in ${this.config.unassignWeeks-this.config.warningWeeks} week** unless a comment is added.
+**A dev lead will check in on this issue** if no update is provided within ${this.config.inactiveWeeks-this.config.warningWeeks} week(s).
 
-<!-- AUTO-UNASSIGN-WARNING -->
+<!-- AUTO-CHECK-IN-WARNING -->
     `.trim();
 
     if (this.config.dryRun) {
       console.log(`[DRY RUN] Would post warning comment on issue #${issue.number}: ${issue.title}`);
+      console.log(`[DRY RUN] Would apply "To Update !" label`);
       console.log(`Message: ${warningMessage}`);
       return;
     }
@@ -142,43 +143,55 @@ If you need help, please request for assistance on the #bettervoting slack chann
       body: warningMessage,
     });
 
-    console.log(`✅ Posted warning comment on issue #${issue.number}: ${issue.title}`);
-  }
-
-  /**
-   * Unassign all assignees from an issue
-   */
-  private async unassignIssue(issue: IssueData): Promise<void> {
-    if (this.config.dryRun) {
-      console.log(`[DRY RUN] Would unassign issue #${issue.number}: ${issue.title}`);
-      return;
-    }
-
-    await this.octokit.issues.update({
+    // Apply "To Update !" label
+    await this.octokit.issues.addLabels({
       owner: this.config.owner,
       repo: this.config.repo,
       issue_number: issue.number,
-      assignees: [], // Remove all assignees
+      labels: ['To Update !'],
     });
 
-    // Post a comment explaining the auto-unassignment
+    console.log(`✅ Posted warning comment on issue #${issue.number}: ${issue.title}`);
+    console.log(`✅ Applied "To Update !" label`);
+  }
+
+  /**
+   * Apply "2 weeks inactive" label to an issue (instead of unassigning)
+   */
+  private async applyInactiveLabel(issue: IssueData): Promise<void> {
+    if (this.config.dryRun) {
+      console.log(`[DRY RUN] Would apply "2 weeks inactive" label to issue #${issue.number}: ${issue.title}`);
+      return;
+    }
+
+    // Apply "2 weeks inactive" label
+    await this.octokit.issues.addLabels({
+      owner: this.config.owner,
+      repo: this.config.repo,
+      issue_number: issue.number,
+      labels: ['2 weeks inactive'],
+    });
+
+    // Post a comment explaining the inactive status
     const assigneeLogins = issue.assignees.map(a => `@${a.login}`).join(' ');
-    const unassignMessage = `
-🤖 **Auto-Unassigned**
+    const inactiveMessage = `
+🤖 **Check-In Bot Notice**
 
-This issue has been automatically unassigned from ${assigneeLogins} due to ${this.config.unassignWeeks} weeks of inactivity.
+This issue has been marked as inactive due to ${this.config.inactiveWeeks} week(s) of inactivity.
 
-The issue remains open and available for anyone to pick up. Feel free to assign yourself if you'd like to work on it!
+${assigneeLogins} - A dev lead will check in on this issue to see if you need any support or if the assignment should be changed.
+
+The issue remains assigned to you for now. Please provide an update when you can!
     `.trim();
 
     await this.octokit.issues.createComment({
       owner: this.config.owner,
       repo: this.config.repo,
       issue_number: issue.number,
-      body: unassignMessage,
+      body: inactiveMessage,
     });
 
-    console.log(`✅ Auto-unassigned issue #${issue.number}: ${issue.title}`);
+    console.log(`✅ Applied "2 weeks inactive" label to issue #${issue.number}: ${issue.title}`);
   }
 
   /**
@@ -189,14 +202,14 @@ The issue remains open and available for anyone to pick up. Feel free to assign 
     console.log(`Configuration:
       - Time unit: ${this.config.timeUnit}
       - Warning after: ${this.config.warningWeeks} ${this.config.timeUnit}
-      - Unassign after: ${this.config.unassignWeeks} ${this.config.timeUnit}
+      - Inactive label after: ${this.config.inactiveWeeks} ${this.config.timeUnit}
       - Dry run: ${this.config.dryRun}
     `);
 
     const issues = await this.getAssignedIssues();
     
     let warningCount = 0;
-    let unassignCount = 0;
+    let inactiveCount = 0;
 
     for (const issue of issues) {
       const timeSinceUpdate = this.getTimeSince(issue.updated_at);
@@ -223,10 +236,10 @@ The issue remains open and available for anyone to pick up. Feel free to assign 
       console.log(`  Last updated: ${issue.updated_at} (${ageDisplay})`);
       console.log(`  Assignees: ${issue.assignees.map(a => a.login).join(', ')}`);
 
-      if (timeSinceUpdate >= this.config.unassignWeeks) {
-        // Issue should be unassigned
-        await this.unassignIssue(issue);
-        unassignCount++;
+      if (timeSinceUpdate >= this.config.inactiveWeeks) {
+        // Issue should get "2 weeks inactive" label
+        await this.applyInactiveLabel(issue);
+        inactiveCount++;
       } else if (timeSinceUpdate >= this.config.warningWeeks) {
         // Issue should get a warning (if it doesn't already have one)
         const hasWarning = await this.hasWarningComment(issue.number);
@@ -247,7 +260,7 @@ The issue remains open and available for anyone to pick up. Feel free to assign 
     console.log(`\n📊 Summary:
       - Issues processed: ${issues.length}
       - Warnings posted: ${warningCount}
-      - Issues unassigned: ${unassignCount}
+      - Issues marked inactive: ${inactiveCount}
     `);
   }
 }
@@ -280,8 +293,8 @@ async function main(): Promise<void> {
     const config: Config = {
       owner,
       repo,
-      warningWeeks: parseFloat(process.env.WARNING_WEEKS || '5'),
-      unassignWeeks: parseFloat(process.env.UNASSIGN_WEEKS || '6'),
+      warningWeeks: parseFloat(process.env.WARNING_WEEKS || '1'),
+      inactiveWeeks: parseFloat(process.env.INACTIVE_WEEKS || '2'),
       dryRun,
       timeUnit,
     };

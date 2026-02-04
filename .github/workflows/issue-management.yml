@@ -27,12 +27,12 @@ on:
       warning_weeks:
         description: 'Time before warning (in selected time unit)'
         required: false
-        default: '5'
+        default: '1'
         type: string
-      unassign_weeks:
-        description: 'Time before unassignment (in selected time unit)'
+      inactive_weeks:
+        description: 'Time before marking inactive (in selected time unit)'
         required: false
-        default: '6'
+        default: '2'
         type: string
 
 jobs:
@@ -71,11 +71,11 @@ jobs:
           # Different defaults based on trigger type:
           # - Manual trigger: use input values
           # - Scheduled (cron): production mode with hardcoded defaults below
-          # To change production thresholds, edit the '5' and '6' values on lines 69-70
+          # To change production thresholds, edit the '1' and '2' values on lines 69-70
           DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || 'false' }}
           TIME_UNIT: ${{ github.event_name == 'workflow_dispatch' && inputs.time_unit || 'weeks' }}
-          WARNING_WEEKS: ${{ github.event_name == 'workflow_dispatch' && inputs.warning_weeks || '5' }}
-          UNASSIGN_WEEKS: ${{ github.event_name == 'workflow_dispatch' && inputs.unassign_weeks || '6' }}
+          WARNING_WEEKS: ${{ github.event_name == 'workflow_dispatch' && inputs.warning_weeks || '1' }}
+          INACTIVE_WEEKS: ${{ github.event_name == 'workflow_dispatch' && inputs.inactive_weeks || '2' }}
         run: |
           cd .github/scripts
           node dist/issue-management/check-stale-issues.js
@@ -85,13 +85,13 @@ jobs:
         env:
           DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || 'false' }}
           TIME_UNIT: ${{ github.event_name == 'workflow_dispatch' && inputs.time_unit || 'weeks' }}
-          WARNING_WEEKS: ${{ github.event_name == 'workflow_dispatch' && inputs.warning_weeks || '5' }}
-          UNASSIGN_WEEKS: ${{ github.event_name == 'workflow_dispatch' && inputs.unassign_weeks || '6' }}
+          WARNING_WEEKS: ${{ github.event_name == 'workflow_dispatch' && inputs.warning_weeks || '1' }}
+          INACTIVE_WEEKS: ${{ github.event_name == 'workflow_dispatch' && inputs.inactive_weeks || '2' }}
         run: |
           echo "## Issue Management Summary" >> $GITHUB_STEP_SUMMARY
           echo "- Repository: ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
           echo "- Dry Run: $DRY_RUN" >> $GITHUB_STEP_SUMMARY
           echo "- Time Unit: $TIME_UNIT" >> $GITHUB_STEP_SUMMARY
           echo "- Warning Threshold: $WARNING_WEEKS $TIME_UNIT" >> $GITHUB_STEP_SUMMARY
-          echo "- Unassign Threshold: $UNASSIGN_WEEKS $TIME_UNIT" >> $GITHUB_STEP_SUMMARY
+          echo "- Inactive Threshold: $INACTIVE_WEEKS $TIME_UNIT" >> $GITHUB_STEP_SUMMARY
           echo "- Triggered by: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY

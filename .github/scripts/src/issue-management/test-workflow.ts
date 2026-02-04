@@ -7,7 +7,7 @@ import { execSync } from 'child_process';
 /**
  * Test Workflow Script
  * This script orchestrates the complete test workflow to demonstrate
- * warnings and unassignments in the same run
+ * warnings and inactive labels in the same run
  */
 
 interface TestIssue {
@@ -112,26 +112,26 @@ class LocalTestWorkflow {
   }
 
   /**
-   * Create Batch 1: Issues that should be unassigned
+   * Create Batch 1: Issues that should be marked inactive
    */
   private async createBatch1(): Promise<void> {
-    console.log('📦 Batch 1: Creating issues that should be UNASSIGNED');
+    console.log('📦 Batch 1: Creating issues that should be MARKED INACTIVE');
     console.log('────────────────────────────────────────────────────');
     
     this.issueNumbers = [];
     
     this.issueNumbers.push(
       await this.createIssue(
-        '[TEST-BATCH1] Old issue #1 - should be unassigned',
-        '🧪 Test issue - Batch 1 (oldest)\n\nExpected: Unassigned\n\n<!-- TEST-ISSUE-MARKER -->',
+        '[TEST-BATCH1] Old issue #1 - should be marked inactive',
+        '🧪 Test issue - Batch 1 (oldest)\n\nExpected: Marked inactive\n\n<!-- TEST-ISSUE-MARKER -->',
         ['test', 'batch-1', 'stale-test']
       )
     );
     
     this.issueNumbers.push(
       await this.createIssue(
-        '[TEST-BATCH1] Old issue #2 - should be unassigned',
-        '🧪 Test issue - Batch 1 (oldest)\n\nExpected: Unassigned\n\n<!-- TEST-ISSUE-MARKER -->',
+        '[TEST-BATCH1] Old issue #2 - should be marked inactive',
+        '🧪 Test issue - Batch 1 (oldest)\n\nExpected: Marked inactive\n\n<!-- TEST-ISSUE-MARKER -->',
         ['test', 'batch-1', 'stale-test']
       )
     );
@@ -216,36 +216,36 @@ class LocalTestWorkflow {
     console.log('=========================');
     console.log('');
     console.log('This will demonstrate:');
-    console.log('  - Issues being unassigned (oldest)');
+    console.log('  - Issues being marked inactive (oldest)');
     console.log('  - Issues getting warnings (middle age)');
     console.log('  - Issues staying active (newest)');
     console.log('');
-    console.log('⏱️  Total time: ~2-3 minutes');
+    console.log('⏱️  Total time: ~4-5 minutes');
     console.log('');
 
     const repository = process.env.GITHUB_REPOSITORY || '';
     const warningWeeks = process.env.WARNING_WEEKS || '';
-    const unassignWeeks = process.env.UNASSIGN_WEEKS || '';
+    const inactiveWeeks = process.env.INACTIVE_WEEKS || '';
     const dryRun = process.env.DRY_RUN || '';
 
     console.log('⚙️  Configuration:');
     console.log(`   Repository: ${repository}`);
     console.log(`   WARNING_WEEKS: ${warningWeeks}`);
-    console.log(`   UNASSIGN_WEEKS: ${unassignWeeks}`);
+    console.log(`   INACTIVE_WEEKS: ${inactiveWeeks}`);
     console.log(`   DRY_RUN: ${dryRun}`);
     console.log('');
 
     // Clean up old test issues
     await this.cleanup();
 
-    // Batch 1: Create issues that should be unassigned
+    // Batch 1: Create issues that should be marked inactive
     await this.createBatch1();
-    await this.countdown(90, 'Waiting 90 seconds for Batch 1 to age...');
+    await this.countdown(120, 'Waiting 2 minutes for Batch 1 to age...');
     console.log('');
 
     // Batch 2: Create issues that should get warnings
     await this.createBatch2();
-    await this.countdown(30, 'Waiting 30 seconds for Batch 2 to age...');
+    await this.countdown(120, 'Waiting 2 minutes for Batch 2 to age...');
     console.log('');
 
     // Batch 3: Create issues that should stay active
@@ -255,9 +255,9 @@ class LocalTestWorkflow {
     console.log('✅ All test issues created!');
     console.log('');
     console.log('📊 Summary:');
-    console.log('  - Batch 1 (2 issues): ~2 minutes old → Should be UNASSIGNED');
-    console.log('  - Batch 2 (2 issues): ~30 seconds old → Should get WARNINGS');
-    console.log('  - Batch 3 (2 issues): Just created → Should stay ACTIVE');
+    console.log('  - Batch 1 (2 issues): ~4 minutes old → Should be MARKED INACTIVE (200+ seconds)');
+    console.log('  - Batch 2 (2 issues): ~2 minutes old → Should get WARNINGS (40+ seconds)');
+    console.log('  - Batch 3 (2 issues): Just created → Should stay ACTIVE (<40 seconds)');
     console.log('');
 
     // Run the script

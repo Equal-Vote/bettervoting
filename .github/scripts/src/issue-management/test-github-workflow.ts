@@ -128,13 +128,13 @@ class GitHubWorkflowTester {
     const dryRun = process.env.DRY_RUN || 'false';
     const timeUnit = process.env.TIME_UNIT || 'seconds';
     const warningWeeks = process.env.WARNING_WEEKS || '20';
-    const unassignWeeks = process.env.UNASSIGN_WEEKS || '60';
+    const inactiveWeeks = process.env.INACTIVE_WEEKS || '60';
 
     console.log('Triggering workflow with parameters:');
     console.log(`  - dry_run: ${dryRun}`);
     console.log(`  - time_unit: ${timeUnit}`);
     console.log(`  - warning_weeks: ${warningWeeks}`);
-    console.log(`  - unassign_weeks: ${unassignWeeks}`);
+    console.log(`  - inactive_weeks: ${inactiveWeeks}`);
     console.log('');
 
     // Set GH_TOKEN environment variable for gh CLI to use
@@ -148,11 +148,11 @@ class GitHubWorkflowTester {
       [
         'workflow', 'run', 'issue-management.yml',
         '--repo', this.repository,
-        '--ref', 'feat/chat-bot-auto-assign',
+        '--ref', 'fix/issue-1120-check-in-bot-labels',
         '-f', `dry_run=${dryRun}`,
         '-f', `time_unit=${timeUnit}`,
         '-f', `warning_weeks=${warningWeeks}`,
-        '-f', `unassign_weeks=${unassignWeeks}`,
+        '-f', `inactive_weeks=${inactiveWeeks}`,
       ],
       { encoding: 'utf8', stdio: 'inherit', env }
     );
@@ -350,14 +350,14 @@ class GitHubWorkflowTester {
     console.log('');
 
     const warningWeeks = process.env.WARNING_WEEKS || '';
-    const unassignWeeks = process.env.UNASSIGN_WEEKS || '';
+    const inactiveWeeks = process.env.INACTIVE_WEEKS || '';
     const timeUnit = process.env.TIME_UNIT || '';
     const dryRun = process.env.DRY_RUN || '';
 
     console.log('⚙️  Configuration:');
     console.log(`   Repository: ${this.repository}`);
     console.log(`   WARNING_WEEKS: ${warningWeeks}`);
-    console.log(`   UNASSIGN_WEEKS: ${unassignWeeks}`);
+    console.log(`   INACTIVE_WEEKS: ${inactiveWeeks}`);
     console.log(`   TIME_UNIT: ${timeUnit}`);
     console.log(`   DRY_RUN: ${dryRun}`);
     console.log('');

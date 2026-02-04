@@ -9,7 +9,8 @@
     "clean": "rm -rf dist",
 
     "issue-mgmt:start": "node dist/issue-management/check-stale-issues.js",
-    "issue-mgmt:simulate": "node dist/issue-management/simulate-stale-issues.js",
+    "issue-mgmt:simulate": "WARNING_WEEKS=1 INACTIVE_WEEKS=2 node dist/issue-management/simulate-stale-issues.js",
+    "issue-mgmt:prod": "DRY_RUN=false node dist/issue-management/check-stale-issues.js",
 
     "issue-mgmt:test:create": "node -r dotenv/config dist/issue-management/create-test-issues.js dotenv_config_path=.env.test",
     "issue-mgmt:test:run": "node -r dotenv/config dist/issue-management/check-stale-issues.js dotenv_config_path=.env.test",

@@ -62,16 +62,16 @@ class StaggeredTestIssueCreator {
    */
   private async generateTestIssues(username: string): Promise<TestIssue[]> {
     return [
-      // Batch 1: Issues that should be UNASSIGNED (created first, oldest)
+      // Batch 1: Issues that should be MARKED INACTIVE (created first, oldest)
       {
-        title: '[TEST] Very stale issue - should be unassigned',
+        title: '[TEST] Very stale issue - should be marked inactive',
         body: `🧪 **This is a test issue created by the staggered test script**
 
 This issue was created FIRST and should be the oldest.
-With WARNING_WEEKS=0 and UNASSIGN_WEEKS=1, this should be **auto-unassigned**.
+With WARNING_WEEKS=0 and INACTIVE_WEEKS=1, this should be **marked inactive**.
 
 Batch: 1 (oldest)
-Expected action: Unassign
+Expected action: Apply "2 weeks inactive" label
 
 <!-- TEST-ISSUE-MARKER -->`,
         assignees: [username],
@@ -79,14 +79,14 @@ Expected action: Unassign
         delayMinutes: 0, // No delay after this one
       },
       {
-        title: '[TEST] Stale issue #2 - should be unassigned',
+        title: '[TEST] Stale issue #2 - should be marked inactive',
         body: `🧪 **This is a test issue created by the staggered test script**
 
 This issue was created in the first batch (oldest).
-With WARNING_WEEKS=0 and UNASSIGN_WEEKS=1, this should be **auto-unassigned**.
+With WARNING_WEEKS=0 and INACTIVE_WEEKS=1, this should be **marked inactive**.
 
 Batch: 1 (oldest)
-Expected action: Unassign
+Expected action: Apply "2 weeks inactive" label
 
 <!-- TEST-ISSUE-MARKER -->`,
         assignees: [username],
@@ -94,14 +94,14 @@ Expected action: Unassign
         delayMinutes: 0, // No delay after this one
       },
       {
-        title: '[TEST] Stale issue #3 - should be unassigned',
+        title: '[TEST] Stale issue #3 - should be marked inactive',
         body: `🧪 **This is a test issue created by the staggered test script**
 
 This issue was created in the first batch (oldest).
-With WARNING_WEEKS=0 and UNASSIGN_WEEKS=1, this should be **auto-unassigned**.
+With WARNING_WEEKS=0 and INACTIVE_WEEKS=1, this should be **marked inactive**.
 
 Batch: 1 (oldest)
-Expected action: Unassign
+Expected action: Apply "2 weeks inactive" label
 
 <!-- TEST-ISSUE-MARKER -->`,
         assignees: [username],
@@ -115,10 +115,10 @@ Expected action: Unassign
         body: `🧪 **This is a test issue created by the staggered test script**
 
 This issue was created in the SECOND batch (middle age).
-With WARNING_WEEKS=0 and UNASSIGN_WEEKS=1, this should get a **warning comment**.
+With WARNING_WEEKS=0 and INACTIVE_WEEKS=1, this should get a **warning comment**.
 
 Batch: 2 (middle)
-Expected action: Warning comment
+Expected action: Warning comment + "To Update !" label
 
 <!-- TEST-ISSUE-MARKER -->`,
         assignees: [username],
@@ -130,10 +130,10 @@ Expected action: Warning comment
         body: `🧪 **This is a test issue created by the staggered test script**
 
 This issue was created in the SECOND batch (middle age).
-With WARNING_WEEKS=0 and UNASSIGN_WEEKS=1, this should get a **warning comment**.
+With WARNING_WEEKS=0 and INACTIVE_WEEKS=1, this should get a **warning comment**.
 
 Batch: 2 (middle)
-Expected action: Warning comment
+Expected action: Warning comment + "To Update !" label
 
 <!-- TEST-ISSUE-MARKER -->`,
         assignees: [username],
@@ -232,7 +232,7 @@ Expected action: None (still active)
     
     console.log(`Creating ${testIssues.length} test issues in 3 batches...\n`);
     console.log('⏱️  Timeline:');
-    console.log('  - Batch 1 (3 issues): Created first → Should be UNASSIGNED');
+    console.log('  - Batch 1 (3 issues): Created first → Should be MARKED INACTIVE');
     console.log('  - Wait 2 minutes');
     console.log('  - Batch 2 (2 issues): Created second → Should get WARNINGS');
     console.log('  - Wait 2 minutes');
@@ -253,7 +253,7 @@ Expected action: None (still active)
         console.log('───────────────────────────────────────\n');
         batchNumber = 3;
       } else if (i === 0) {
-        console.log('📦 Batch 1 (Oldest - should be unassigned)');
+        console.log('📦 Batch 1 (Oldest - should be marked inactive)');
         console.log('──────────────────────────────────────────\n');
       }
 
@@ -272,7 +272,7 @@ Expected action: None (still active)
     console.log('\n✅ All test issues created!\n');
     console.log('📊 Summary:');
     console.log(`  - Total issues: ${this.createdIssues.length}`);
-    console.log(`  - Batch 1 (oldest): 3 issues → Should be unassigned`);
+    console.log(`  - Batch 1 (oldest): 3 issues → Should be marked inactive`);
     console.log(`  - Batch 2 (middle): 2 issues → Should get warnings`);
     console.log(`  - Batch 3 (newest): 3 issues → Should stay active`);
     
@@ -287,7 +287,7 @@ Expected action: None (still active)
     console.log('  1. Run: npm run test:run');
     console.log('  2. Check GitHub to see the results');
     console.log('  3. You should see:');
-    console.log('     - 3 issues unassigned (Batch 1)');
+    console.log('     - 3 issues marked inactive (Batch 1)');
     console.log('     - 2 issues with warning comments (Batch 2)');
     console.log('     - 3 issues unchanged (Batch 3)');
     console.log('  4. Clean up: npm run test:cleanup');
@@ -321,8 +321,8 @@ async function main(): Promise<void> {
     }
 
     console.log('⚙️  Configuration:');
-    console.log(`   WARNING_WEEKS: ${process.env.WARNING_WEEKS || '5'}`);
-    console.log(`   UNASSIGN_WEEKS: ${process.env.UNASSIGN_WEEKS || '6'}`);
+    console.log(`   WARNING_WEEKS: ${process.env.WARNING_WEEKS || '1'}`);
+    console.log(`   INACTIVE_WEEKS: ${process.env.INACTIVE_WEEKS || '2'}`);
     console.log(`   DRY_RUN: ${process.env.DRY_RUN || 'false'}\n`);
 
     const creator = new StaggeredTestIssueCreator(token, repository);
