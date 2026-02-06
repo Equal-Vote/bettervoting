@@ -8,6 +8,8 @@ import dotenv from 'dotenv';
 import path from 'path';
 dotenv.config({ path: path.resolve(__dirname, '.env') });
 
+if(!process.env.FRONTEND_URL) throw "Couldn't find FRONTEND_URL environment variable, have you copied sample.env into .env yet?"
+
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
