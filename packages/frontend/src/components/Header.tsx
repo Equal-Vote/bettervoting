@@ -14,7 +14,6 @@ import { ReturnToClassicContext } from './ReturnToClassicDialog';
 import { useCookie } from '~/hooks/useCookie';
 import NavMenu from './NavMenu';
 import { PrimaryButton } from './styles';
-import { useLocation } from 'react-router';
 
 const Header = () => {
     const flags = useFeatureFlags();
@@ -24,16 +23,6 @@ const Header = () => {
     useCookie('temp_id', makeID(ID_PREFIXES.VOTER, ID_LENGTHS.VOTER))
     const {t} = useSubstitutedTranslation();
     
-    const checkUrl = useLocation();
-    let isLandingPage = checkUrl.pathname == '/feedback' || checkUrl.pathname == '/new_election' || checkUrl.pathname == '/';
-
-    let electionCreationProps = isLandingPage ? {
-        onClick: () => scrollToElement(document.querySelector(`.wizard`)),
-    } : {
-        href: '/new_election',
-        target: '_self',
-    }
-
     const navItems = [
         {
             text: t('nav.about'),
@@ -80,7 +69,7 @@ const Header = () => {
             items: [
                 {
                     text: 'E-Voting w/ Paper Receipts',
-                    ...electionCreationProps,
+                    onClick: () => scrollToElement(document.querySelector(`.wizard`)),
                 },
                 {
                     text: 'Print Ballots',
@@ -106,7 +95,7 @@ const Header = () => {
         },
         {
             text: 'Create Election' ,
-            ...electionCreationProps,
+            onClick: () => scrollToElement(document.querySelector(`.wizard`)),
         },
     ];
 
