@@ -63,6 +63,8 @@ const LandingPage = () => {
                 </Typography>
             </Box>
             <LandingPageStats/>
+            {/* putting the anchor on the Wizard component scrolls too far */}
+            <div id='wizard'></div>
             <Wizard/>
             {featuredElectionIds.length > 0 && <LandingPageFeaturedElections electionIds={featuredElectionIds}/>}
             <LandingPageFeatures/>
