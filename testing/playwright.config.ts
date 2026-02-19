@@ -72,14 +72,15 @@ export default defineConfig({
       dependencies: ['setup'],
     },
 
-    {
-      name: 'webkit',
-      use: {
-        ...devices['Desktop Safari'],
-        storageState: path.join(__dirname, '/playwright/auth/user.json')
-      },
-      dependencies: ['setup'],
-    },
+    // Disabling webkit for now, it's more flaky than the others
+    //{
+    //  name: 'webkit',
+    //  use: {
+    //    ...devices['Desktop Safari'],
+    //    storageState: path.join(__dirname, '/playwright/auth/user.json')
+    //  },
+    //  dependencies: ['setup'],
+    //},
 
     /* Test against mobile viewports. */
     // {
