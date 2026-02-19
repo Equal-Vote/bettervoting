@@ -106,7 +106,7 @@ const Header = () => {
             target: '_self',
         },
         createWizardNav('Create Election', isLandingPage),
-    ];
+    ] as any[];
 
     const returnToClassicContext = useContext(ReturnToClassicContext);
 
