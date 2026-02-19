@@ -62,12 +62,25 @@ const About = () => {
           {t('about.donate_description')}
         </Typography>
 
-        <PrimaryButton 
+        <PrimaryButton
           sx={{m: 3}}
           href={t('about.donate_link')}
         >
           {t('about.donate_button')}
         </PrimaryButton>
+
+{process.env.REACT_APP_COMMIT_SHA && (
+          <Typography
+            sx={{
+              textAlign: 'right',
+              color: 'gray',
+              fontSize: '0.75rem',
+              mt: 4,
+            }}
+          >
+            {process.env.REACT_APP_COMMIT_SHA}
+          </Typography>
+        )}
       </Paper>
     </Container>
   );
