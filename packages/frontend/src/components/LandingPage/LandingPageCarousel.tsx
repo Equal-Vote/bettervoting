@@ -160,6 +160,7 @@ const LandingPageCarousel = () => {
                         onClick={() => scrollToElement(document.querySelector(`.wizard`))}
                     >
                         Create Election
+
                     </PrimaryButton>
                 </Box>}
             </Box>
