@@ -14,7 +14,7 @@ const stepIndex = {
     'done': 4
 };
 
-export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceUpdate}) => {
+export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceUpdate, open}) => {
     const { t } = useSubstitutedTranslation();
     const PR_METHODS = ['STV', 'STAR_PR'];
     const [methodStep, innerSetMethodStep] = useState<MethodStep>(editedRace.voting_method == undefined? 'unset' : 'done');
@@ -35,6 +35,12 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
                 )
         )
     )
+
+    useEffect(() => {
+        if(open){
+            setMethodStep(editedRace.voting_method == undefined? 'unset' : 'done')
+        }
+    }, [open])
 
     const setMethodStep = (step: MethodStep) => {
         setErrors({...errors, votingMethod: ''})
