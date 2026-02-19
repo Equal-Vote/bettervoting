@@ -3,190 +3,148 @@ import { test, expect } from '@playwright/test';
 
 let electionId = '';
 test.describe('Create Election', () => {
-    test('create poll', async ({ page }) => {
-        page.goto('/');
-        await page.getByRole('link', { name: 'Create Election' }).click();
-        await page.getByLabel('Poll', { exact: true }).click();
-        await page.getByRole('textbox', { name: 'Title'}).fill('Playwright Test Poll');
-         await page.getByRole('textbox', { name: 'Title'}).fill('Playwright Test Poll');
-        //wait until there is only one continue button
-        while ((await page.getByRole('button', { name: 'Continue' }).evaluateAll((el) => el)).length > 1) {
-        continue
-        }
-        await page.getByRole('button', { name: 'Continue' }).click();
-        await page.getByLabel('No').click();
-        await page.getByRole('button', { name: 'Continue' }).click();
-        await page.getByText('Allows multiple votes per device').click();
-
-        const url = await page.url();
-        const urlArray = url.split('/');
-        electionId = urlArray[urlArray.length - 2];
-
-        await expect(page.getByLabel('no limit')).toBeChecked({ timeout: 2000});
-    });
-
-    test('create election with email list', async ({ page }) => {
-        await page.goto('/');
-        await page.getByRole('link', { name: 'Create Election' }).click();
-        await page.getByLabel('Election', { exact: true }).click();
-         await page.getByRole('textbox', { name: 'Title'}).fill('Playwright Test Poll');
-        //wait until there is only one continue button
-        while ((await page.getByRole('button', { name: 'Continue' }).evaluateAll((el) => el)).length > 1) {
-        continue
-        }
-        await page.getByRole('button', { name: 'Continue' }).click();
-        await page.getByLabel('Yes').click();
-        await page.getByRole('button', { name: 'Continue' }).click();
-        await page.getByRole('button', { name: 'Email List' }).click();
-        // await page.pause();
-        await expect(page.getByText('draft')).toBeVisible({ timeout: 2000 });
-        const url = await page.url();
-        const urlArray = url.split('/');
-        electionId = urlArray[urlArray.length - 2];
-        await page.getByRole('link', { name: 'Voters' }).click();
-        await page.waitForURL(`**/${electionId}/admin/voters`)
-        await page.getByRole('button', { name: 'Add Voters' }).click();
-    });
-
-    test('create election with ID List', async ({ page }) => {
-            await page.goto('/');
-        await page.getByRole('link', { name: 'Create Election' }).click();
-        await page.getByLabel('Election', { exact: true }).click();
-         await page.getByRole('textbox', { name: 'Title'}).fill('Playwright Test Poll');
-        //wait until there is only one continue button
-        while ((await page.getByRole('button', { name: 'Continue' }).evaluateAll((el) => el)).length > 1) {
-        continue
-        }
-        await page.getByRole('button', { name: 'Continue' }).click();
-        await page.getByLabel('Yes').click();
-        await page.getByRole('button', { name: 'Continue' }).click();
-        await page.getByText('ID List').click();
-        await expect(page.getByText('draft')).toBeVisible({ timeout: 2000 });
-        const url = await page.url();
-        const urlArray = url.split('/');
-        electionId = urlArray[urlArray.length - 2];
-        await page.getByRole('link', { name: 'Voters' }).click();
-
-
-    });
-
-    test('create election with one per device', async ({ page }) => {
-        await page.goto('/');
-        await page.getByRole('link', { name: 'Create Election' }).click();
-        await page.getByLabel('Election', { exact: true }).click();
-         await page.getByRole('textbox', { name: 'Title'}).fill('Playwright Test Poll');
-        //wait until there is only one continue button
-        while ((await page.getByRole('button', { name: 'Continue' }).evaluateAll((el) => el)).length > 1) {
-        continue
-        }
-        await page.getByRole('button', { name: 'Continue' }).click();
-        await page.getByLabel('No').click();
-        await page.getByRole('button', { name: 'Continue' }).click();
-        await page.getByText('one person, one vote').click();
-        await expect(page.getByText('draft')).toBeVisible({ timeout: 2000 });
-        const url = await page.url();
-        const urlArray = url.split('/');
-        electionId = urlArray[urlArray.length - 2];
-
-        await expect(page.getByLabel('device')).toBeChecked({ timeout: 2000});
-    });
-
-    test('create election with whitespace title', async ({ page }) => {
-        await page.goto('/');
-        await page.getByRole('link', { name: 'Create Election' }).click();
-        await page.getByLabel('Election', { exact: true }).click();
-        await page.getByRole('textbox', { name: 'Title'}).fill(' ');
-        await expect(page.getByRole('button', { name: 'Continue' }).first()).toBeDisabled({ timeout: 2000});
-    });
-
-    test('create poll: Favorite Fruit', async ({ page }) => {
+    test('Poll, Single Race, Publish Now', async ({ page }) => {
         await page.goto('/', { waitUntil: 'networkidle' });
-        // Click the Create Election link or New Election button depending on UI state
-        const createLink = page.getByRole('link', { name: 'Create Election' });
-        const newButton = page.getByRole('button', { name: 'New Election' });
-        if ((await createLink.count()) > 0) {
-            await createLink.click();
-        } else if ((await newButton.count()) > 0) {
-            await newButton.click();
-        } else {
-            // fallback: try a text click
-            await page.click('text=Create Election', { timeout: 10000 });
-        }
-        await page.getByLabel('Poll', { exact: true }).waitFor({ state: 'visible', timeout: 5000 });
-        await page.getByLabel('Poll', { exact: true }).click();
-        // click the first Continue to reach title input, then fill title
-        const firstContinue = page.getByRole('button', { name: 'Continue' }).first();
-        if ((await firstContinue.count()) > 0) {
-            await firstContinue.click().catch(() => {});
-        }
-        await page.fill('input[name="election-title"]', 'Favorite Fruit').catch(() => {});
-        await page.getByRole('textbox', { name: 'Title' }).fill('Favorite Fruit').catch(() => {});
-        await page.fill('#election-title', 'Favorite Fruit').catch(() => {});
-        // trigger blur/validation
-        await page.keyboard.press('Tab');
-         //wait until there is only one continue button
-         while ((await page.getByRole('button', { name: 'Continue' }).evaluateAll((el) => el)).length > 1) {
-             await page.waitForTimeout(100);
-         }
-        // find the enabled Continue button among any duplicates and click it
-        const enabledIndex = await page.getByRole('button', { name: 'Continue' }).evaluateAll((els) => {
-            for (let i = 0; i < els.length; i++) {
-                if (!els[i].hasAttribute('disabled') && !els[i].className.includes('Mui-disabled')) return i;
-            }
-            return -1;
-        });
-        if (enabledIndex >= 0) {
-            await page.getByRole('button', { name: 'Continue' }).nth(enabledIndex).click();
-        } else {
-            // fallback: wait until first Continue is enabled
-            const continueBtn = page.getByRole('button', { name: 'Continue' }).first();
-            await expect(continueBtn).toBeEnabled({ timeout: 20000 });
-            await continueBtn.click();
-        }
-        // choose not restricted voters
-        await page.getByLabel('No').waitFor({ state: 'visible', timeout: 5000 });
-        await page.getByLabel('No').click();
-        await page.getByRole('button', { name: 'Continue' }).click();
 
-        // add a single question (race) and set voting method to STAR
-        await page.getByRole('button', { name: 'Edit Election Details' }).waitFor({ state: 'visible', timeout: 5000 });
-        await page.getByRole('button', { name: 'Edit Election Details' }).click();
-        await page.getByRole('button', { name: 'Add' }).click();
-        const raceDialog = page.getByRole('dialog', { name: 'Edit Race' });
-
-        await raceDialog.getByRole('textbox', { name: 'Title' }).fill('Favorite Fruit');
-        await raceDialog.getByRole('button', { name: 'Voting Method' }).click();
-        await raceDialog.getByRole('radio', { name: 'STAR Voting' }).click();
-
-        // fill candidate/options
-        await raceDialog.getByRole('textbox', { name: 'Candidate 1 Name' }).fill('Strawberry');
-        await raceDialog.getByRole('textbox', { name: 'Candidate 2 Name' }).fill('Banana');
-        // ensure candidate 3 exists, if not add one
-        const cand3 = raceDialog.getByRole('textbox', { name: 'Candidate 3 Name' });
-        if ((await cand3.count()) === 0) {
-            // dialog may use 'Add Candidate' or just 'Add' inside the dialog
-            await raceDialog.getByRole('button', { name: 'Add Candidate' }).click().catch(async () => {
-                await raceDialog.getByRole('button', { name: 'Add' }).click();
-            });
-        }
-        await raceDialog.getByRole('textbox', { name: 'Candidate 3 Name' }).fill('Pear');
-
-        await raceDialog.getByRole('button', { name: 'Save' }).click();
-
-        // proceed to publish: Next -> Publish Now
-        await page.getByRole('button', { name: 'Next' }).waitFor({ state: 'visible', timeout: 5000 });
-        await page.getByRole('button', { name: 'Next' }).click();
-        await page.getByRole('button', { name: 'Publish Now' }).waitFor({ state: 'visible', timeout: 5000 });
+        // Fill out form
+        await page.getByRole('button', { name: 'Create Election' }).click();
+        const pollButton = page.getByRole('radio', { name: 'Poll' })
+        await expect(pollButton).toBeInViewport({timeout: 500});
+        await pollButton.check();
+        expect(page.getByText('How many questions will your poll include?')).toBeVisible(); // confirm the election switched to races language
+        await page.getByRole('radio', { name: 'Just one' }).check();
+        await page.getByRole('textbox', { name: 'Question Title' }).click();
+        await page.getByRole('textbox', { name: 'Question Title' }).fill('Favorite Fruit');
+        await page.getByRole('button', { name: 'Voting Method', exact: true }).click();
+        await page.getByRole('radio', { name: 'Single-Winner' }).check();
+        await page.getByRole('radio', { name: 'STAR Voting' }).check();
+        await page.getByRole('button', { name: 'Choices' }).click();
+        await page.getByRole('textbox', { name: 'Candidate 1 Name' }).click();
+        await page.getByRole('textbox', { name: 'Candidate 1 Name' }).fill('Pear');
+        await page.getByRole('textbox', { name: 'Candidate 2 Name' }).click();
+        await page.getByRole('textbox', { name: 'Candidate 2 Name' }).fill('Apple');
+        await page.getByRole('textbox', { name: 'Candidate 3 Name' }).click();
+        await page.getByRole('textbox', { name: 'Candidate 3 Name' }).fill('Strawberry');
+        await page.getByRole('button', { name: 'Next' }).nth(2).click();
         await page.getByRole('button', { name: 'Publish Now' }).click();
 
-        // verify the Vote button/link is visible
-        await expect(page.getByRole('link', { name: 'Vote', exact: true })).toBeVisible({ timeout: 5000 });
+        // Confirm Title
+        await expect(page.getByRole('heading', { name: 'Favorite Fruit' })).toBeVisible({timeout: 1200})
+        await page.getByRole('link', { name: 'Vote', exact: true }).click();
 
-        // capture election id for cleanup
-        const url = await page.url();
-        const urlArray = url.split('/');
-        electionId = urlArray[urlArray.length - 2];
+        // Confirm Candidates
+        await page.getByRole('checkbox', { name: 'I have read the instructions' }).check();
+        await expect(page.getByRole('heading', { name: 'Pear', exact: true })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Apple', exact: true })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Strawberry', exact: true })).toBeVisible();
     });
+
+    test('From About Us, Election, More than one race, Email List ', async ({ page }) => {
+        await page.goto('/', { waitUntil: 'networkidle' });
+        
+        // Start from About Page (to test nav)
+        await page.getByRole('link', { name: 'About Us' }).click();
+        await page.getByRole('link', { name: 'Create Election' }).click();
+        const electionButton = page.getByRole('radio', { name: 'Election' })
+        await expect(electionButton).toBeInViewport({timeout: 2000}); // larger timeout since this will require navigating to a different page
+        await electionButton.check();
+
+        // Fill out form
+        expect(page.getByText('How many races will your election include?')).toBeVisible(); // confirm the election switched to races language
+        await page.getByRole('radio', { name: 'More than one' }).check();
+        await page.getByRole('button', { name: 'Next' }).first().click();
+        await page.getByRole('textbox', { name: 'Title', exact: true }).click();
+        await page.getByRole('textbox', { name: 'Title', exact: true }).fill('Multiple Races');
+        await page.getByRole('button', { name: 'Continue' }).click();
+        await page.getByRole('radio', { name: 'Yes' }).check();
+        await page.getByRole('textbox', { name: 'Election Support Email' }).click();
+        await page.getByRole('textbox', { name: 'Election Support Email' }).fill('test@gmail.com');
+        await page.getByRole('button', { name: 'Continue' }).click();
+        await page.getByRole('button', { name: 'Email List' }).click();
+
+        // Confirm title
+        await expect(page.getByText('Multiple Racesdraft')).toBeVisible();
+
+        // Confirm support email
+        await page.getByRole('button', { name: 'Edit Settings' }).click();
+        await expect(page.getByRole('textbox', { name: 'Election Support Email' })).toHaveValue('test@gmail.com')
+        await page.getByRole('button', { name: 'Save' }).click();
+
+        // Confirm email list
+        await page.getByRole('link', { name: 'Voters' }).click();
+        await page.getByRole('button', { name: 'Add Voters' }).click();
+        await expect(page.getByText('Voter ID', { exact: true })).toBeHidden();
+    });
+
+    test('Poll, Single Race, ID List', async ({ page }) => {
+        await page.goto('/', { waitUntil: 'networkidle' });
+
+        // Fill out form
+        await page.getByRole('button', { name: 'Create Election' }).click();
+        await page.getByRole('radio', { name: 'Poll' }).check();
+        await page.getByRole('radio', { name: 'Just one' }).check();
+        await page.getByRole('textbox', { name: 'Question Title' }).click();
+        await page.getByRole('textbox', { name: 'Question Title' }).fill('Poll + Single Race + ID List');
+        await page.getByRole('button', { name: 'Voting Method', exact: true }).click();
+        await page.getByRole('radio', { name: 'Basic Multi-Winner' }).check();
+        await page.getByRole('button', { name: 'Next' }).nth(1).click();
+        await page.getByRole('radio', { name: 'STAR Voting' }).check();
+        await page.getByRole('button', { name: 'Choices' }).click();
+        await page.getByRole('textbox', { name: 'Candidate 1 Name' }).fill('A');
+        await page.getByRole('textbox', { name: 'Candidate 1 Name' }).press('Tab');
+        await page.getByRole('textbox', { name: 'Candidate 2 Name' }).fill('B');
+        await page.getByRole('button', { name: 'Next' }).nth(2).click();
+        await page.getByRole('button', { name: 'See more options' }).click();
+        await page.getByRole('radio', { name: 'Yes' }).check();
+        await page.getByRole('textbox', { name: 'Election Support Email' }).click();
+        await page.getByRole('textbox', { name: 'Election Support Email' }).fill('test@gmail.com');
+        await page.getByRole('button', { name: 'Continue' }).click();
+        await page.getByRole('button', { name: 'ID List' }).click();
+
+        // Confirm support email
+        await page.getByRole('button', { name: 'Edit Settings' }).click();
+        await expect(page.getByRole('textbox', { name: 'Election Support Email' })).toHaveValue('test@gmail.com')
+        await page.getByRole('button', { name: 'Save' }).click();
+
+        // Confirm voter ID list
+        await page.getByRole('link', { name: 'Voters' }).click();
+        await page.getByRole('button', { name: 'Add Voters' }).click();
+        await expect(page.getByText('Voter ID', { exact: true })).toBeVisible();
+    })
+    test('Poll, Multi Race, One vote per Device', async ({ page }) => {
+        await page.goto('/', { waitUntil: 'networkidle' });
+
+        // Fill out form
+        await page.getByRole('button', { name: 'Create Election' }).click();
+        await page.getByRole('radio', { name: 'Poll' }).check();
+        await page.getByRole('radio', { name: 'More than one' }).check();
+        await page.getByRole('button', { name: 'Next' }).first().click();
+        await page.getByRole('textbox', { name: 'Title', exact: true }).fill('Poll + Multi Race + One Vote Per Person');
+        await page.getByRole('button', { name: 'Continue' }).click();
+        await page.getByRole('radio', { name: 'No' }).check();
+        await page.getByRole('button', { name: 'Continue' }).click();
+        await page.getByRole('button', { name: 'one person, one vote' }).click();
+
+        // Confirm One Person One Vote
+        await expect(page.getByRole('radio', { name: 'device' })).toBeChecked();
+    })
+    test('Election, Multi Race, Multiple per Device', async ({ page }) => {
+        await page.goto('/', { waitUntil: 'networkidle' });
+
+        // Fill out form
+        await page.getByRole('button', { name: 'Create Election' }).click();
+        await page.getByRole('radio', { name: 'Poll' }).check();
+        await page.getByRole('radio', { name: 'More than one' }).check();
+        await page.getByRole('button', { name: 'Next' }).first().click();
+        await page.getByRole('textbox', { name: 'Title', exact: true }).fill('Poll + Multi Race + Multiple per Device');
+        await page.getByRole('button', { name: 'Continue' }).click();
+        await page.getByRole('radio', { name: 'No' }).check();
+        await page.getByRole('button', { name: 'Continue' }).click();
+        await page.getByRole('button', { name: 'Allows multiple votes per device' }).click();
+
+        // Confirm One Person One Vote
+        await expect(page.getByRole('radio', { name: 'no limit' })).toBeChecked();
+    })
 
     test.afterEach(async ({ page }) => {
         //delete election when finished
