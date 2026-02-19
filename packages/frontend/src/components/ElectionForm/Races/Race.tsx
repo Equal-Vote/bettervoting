@@ -5,8 +5,6 @@ import IconButton from '@mui/material/IconButton'
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import RaceDialog from './RaceDialog';
-import { useEditRace } from './useEditRace';
 import RaceForm from './RaceForm';
 import useElection from '../../ElectionContextProvider';
 import { ContentCopy } from '@mui/icons-material';
