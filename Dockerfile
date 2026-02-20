@@ -39,7 +39,9 @@ RUN npm run build -ws
 ####################
 
 FROM node:20.11.1-bullseye-slim
+ARG COMMIT_SHA
 ENV NODE_ENV=production
+ENV COMMIT_SHA=${COMMIT_SHA}
 COPY --from=build /usr/bin/dumb-init /usr/bin/dumb-init
 USER node
 WORKDIR /usr/src/app

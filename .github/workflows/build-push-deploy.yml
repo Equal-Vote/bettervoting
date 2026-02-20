@@ -66,7 +66,6 @@ jobs:
       - name: Update argocd repo
         run: |
           yq -i ".image.tag = \"sha-${GITHUB_SHA::7}\"" applications/star-server/values.yaml
-          yq -i 'del(.env[] | select(.name == "COMMIT_SHA")) | .env += [{"name": "COMMIT_SHA", "value": "${{ github.sha }}"}]' applications/star-server/values.yaml
           git config user.name github-actions
           git config user.email github-actions@github.com
           git commit -am "Automatically updating bettervoting image."
