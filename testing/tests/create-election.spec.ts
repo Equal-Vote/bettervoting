@@ -27,9 +27,10 @@ test.describe('Create Election', () => {
         await page.getByRole('textbox', { name: 'Candidate 3 Name' }).fill('Strawberry');
         await page.getByRole('button', { name: 'Next' }).nth(2).click();
         await page.getByRole('button', { name: 'Publish Now' }).click();
+        await page.waitForLoadState('networkidle')
 
         // Confirm Title
-        await expect(page.getByRole('heading', { name: 'Favorite Fruit' })).toBeVisible({timeout: 1200})
+        await expect(page.getByRole('heading', { name: 'Favorite Fruit' })).toBeVisible()
         await page.getByRole('link', { name: 'Vote', exact: true }).click();
 
         // Confirm Candidates
@@ -61,6 +62,7 @@ test.describe('Create Election', () => {
         await page.getByRole('textbox', { name: 'Election Support Email' }).fill('test@gmail.com');
         await page.getByRole('button', { name: 'Continue' }).click();
         await page.getByRole('button', { name: 'Email List' }).click();
+        await page.waitForLoadState('networkidle')
 
         // Confirm title
         await expect(page.getByText('Multiple Racesdraft')).toBeVisible();
@@ -100,6 +102,7 @@ test.describe('Create Election', () => {
         await page.getByRole('textbox', { name: 'Election Support Email' }).fill('test@gmail.com');
         await page.getByRole('button', { name: 'Continue' }).click();
         await page.getByRole('button', { name: 'ID List' }).click();
+        await page.waitForLoadState('networkidle')
 
         // Confirm support email
         await page.getByRole('button', { name: 'Edit Settings' }).click();
@@ -124,6 +127,7 @@ test.describe('Create Election', () => {
         await page.getByRole('radio', { name: 'No' }).check();
         await page.getByRole('button', { name: 'Continue' }).click();
         await page.getByRole('button', { name: 'one person, one vote' }).click();
+        await page.waitForLoadState('networkidle')
 
         // Confirm One Person One Vote
         await expect(page.getByRole('radio', { name: 'device' })).toBeChecked();
@@ -141,6 +145,7 @@ test.describe('Create Election', () => {
         await page.getByRole('radio', { name: 'No' }).check();
         await page.getByRole('button', { name: 'Continue' }).click();
         await page.getByRole('button', { name: 'Allows multiple votes per device' }).click();
+        await page.waitForLoadState('networkidle')
 
         // Confirm One Person One Vote
         await expect(page.getByRole('radio', { name: 'no limit' })).toBeChecked();
