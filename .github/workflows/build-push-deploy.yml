@@ -42,6 +42,8 @@ jobs:
       - name: Build and push Docker images
         uses: docker/build-push-action@v5
         with:
+          build-args: |
+            COMMIT_SHA=${{ github.sha }}
           cache-from: type=registry,ref=ghcr.io/${{ env.REPO }}:${{ github.ref_name }}
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
@@ -65,7 +67,6 @@ jobs:
         run: |
           yq -i ".image.tag = \"sha-${GITHUB_SHA::7}\"" applications/star-server/values.yaml
           yq -i 'del(.env[] | select(.name == "COMMIT_SHA")) | .env += [{"name": "COMMIT_SHA", "value": "${{ github.sha }}"}]' applications/star-server/values.yaml
-          yq -i 'del(.env[] | select(.name == "REACT_APP_COMMIT_SHA")) | .env += [{"name": "REACT_APP_COMMIT_SHA", "value": "${{ github.sha }}"}]' applications/star-server/values.yaml
           git config user.name github-actions
           git config user.email github-actions@github.com
           git commit -am "Automatically updating bettervoting image."
