@@ -191,7 +191,7 @@ export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled
     const flags = useFeatureFlags();
 
     return (
-        <Paper elevation={4} sx={{ width: '100%' }} aria-label={`Candidate ${index + 1} Form`}>
+        <Paper elevation={4} sx={{ width: '100%', '&:hover .candidate-actions': { opacity: 1 } }} aria-label={`Candidate ${index + 1} Form`}>
             <Box
                 sx={{ display: 'flex', justifyContent: 'space-between', bgcolor: 'background.paper', borderRadius: 10 }}
                 alignItems={'center'}
@@ -217,20 +217,22 @@ export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled
                     />
                 </Box>                    
                 {!special && <>
-                    <IconButton
-                        aria-label={`Edit Candidate Photo ${index + 1}`}
-                        color={candidate.photo_filename ? 'info' : 'default'}
-                        onClick={() => setOpen(true)}
-                        disabled={disabled}>
-                        <PhotoCameraIcon />
-                    </IconButton>
-                    <IconButton
-                        aria-label={`Update Link for Candidate Number ${index + 1}`}
-                        color={candidate.candidate_url ? 'info' : 'default'}
-                        onClick={() => setLinkOpen(true)}
-                        disabled={disabled}>
-                        < LinkIcon/>
-                    </IconButton>
+                    <Box className="candidate-actions" sx={{ display: 'flex', alignItems: 'center', gap: 1, opacity: 0, transition: 'opacity 150ms ease' }}>
+                        <IconButton
+                            aria-label={`Edit Candidate Photo ${index + 1}`}
+                            color={candidate.photo_filename ? 'info' : 'default'}
+                            onClick={() => setOpen(true)}
+                            disabled={disabled}>
+                            <PhotoCameraIcon />
+                        </IconButton>
+                        <IconButton
+                            aria-label={`Update Link for Candidate Number ${index + 1}`}
+                            color={candidate.candidate_url ? 'info' : 'default'}
+                            onClick={() => setLinkOpen(true)}
+                            disabled={disabled}>
+                            < LinkIcon/>
+                        </IconButton>
+                    </Box>
                 </>}
                 <IconButton
                     aria-label={`Delete Candidate Number ${index + 1}`}
