@@ -67,16 +67,11 @@ export function SortableItem({ children, id }: PropsWithChildren<Props>) {
     </SortableItemContext.Provider>
   );
 }
-interface DragHandleProps {
-    style?: CSSProperties;
-    disabled?: boolean;
-    ariaLabel?: string;
-}
-export function DragHandle({ style, disabled, ariaLabel }: DragHandleProps) {
+export function DragHandle({ disabled, ariaLabel, ...props }) {
   const { attributes, listeners, ref } = useContext(SortableItemContext);
 
   return (
-    <IconButton  {...attributes} {...listeners} ref={ref} style={style} disabled={disabled} aria-label={ariaLabel}>
+    <IconButton  {...attributes} {...listeners} {...props} ref={ref} disabled={disabled} aria-label={ariaLabel}>
         <DragIndicatorIcon />
     </IconButton>
   );
