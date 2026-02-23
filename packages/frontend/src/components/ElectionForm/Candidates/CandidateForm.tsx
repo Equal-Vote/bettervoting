@@ -100,6 +100,7 @@ interface CandidateFormProps {
     index: number,
     onDeleteCandidate: () => void,
     disabled: boolean,
+    special: boolean, // special candidates include none of the above and write in, and they can be deleted, but not edited
     inputRef: (el: React.MutableRefObject<HTMLInputElement[]>) => React.MutableRefObject<HTMLInputElement[]>,
     onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void,
     electionState: string
@@ -183,7 +184,7 @@ const LinkDialog = ({ onEditCandidate, candidate, open, handleClose }) => {
     )
 }
 
-export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled, inputRef, onKeyDown, electionState}: CandidateFormProps) => {
+export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled, special, inputRef, onKeyDown, electionState}: CandidateFormProps) => {
 
     const [open, setOpen] = React.useState(false);
     const [linkOpen, setLinkOpen] = React.useState(false);
@@ -202,7 +203,8 @@ export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled
                         id={`candidate-name-${index + 1}`}
                         inputProps={{ "aria-label": `Candidate ${index + 1} Name` }}
                         // data-testid={`candidate-name-${index + 1}`}
-                        disabled={electionState !== 'draft' || candidate.candidate_id == NOTA_ID}
+                        // I can't use disabled here, since the new candidates in draft mode and disabled with their textboxes enabled
+                        disabled={electionState !== 'draft' || special}
                         type="text"
                         value={candidate.candidate_name}
                         fullWidth
@@ -214,7 +216,7 @@ export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled
                         multiline
                     />
                 </Box>                    
-                {candidate.candidate_id != NOTA_ID && <>
+                {!special && <>
                     <IconButton
                         aria-label={`Edit Candidate Photo ${index + 1}`}
                         color={candidate.photo_filename ? 'info' : 'default'}
@@ -234,7 +236,7 @@ export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled
                     aria-label={`Delete Candidate Number ${index + 1}`}
                     color="error"
                     onClick={onDeleteCandidate}
-                    disabled={disabled && candidate.candidate_id != NOTA_ID}>
+                    disabled={disabled}>
                     <DeleteIcon />
                 </IconButton>
             </Box>

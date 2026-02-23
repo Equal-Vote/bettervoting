@@ -81,7 +81,6 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
 
         const hasCollision = (id: string) => existingIds.has(id);
 
-        console.log('NEW ID')
         const newId = makeUniqueIDSync(
             ID_PREFIXES.CANDIDATE,
             ID_LENGTHS.CANDIDATE,
@@ -117,10 +116,8 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleChangeCandidates = useCallback((newCandidateList: any[]) => {
-        //remove the last candidate if it is empty
-        if (newCandidateList.length > 1 && newCandidateList[newCandidateList.length - 1].candidate_name === '') {
-            newCandidateList.pop();
-        }
+        // removing the newCandidateIndex will update the ephemeral order to match the actual one
+        newCandidateList.splice(newCandidateIndex, 1)
         applyRaceUpdate(race => {
             race.candidates = newCandidateList;
         }
@@ -277,6 +274,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
                         <SortableList
                             items={candidateItems}
                             identifierKey="candidate_id"
+                            indexIsValid={index => index < newCandidateIndex}
                             onChange={handleChangeCandidates}
                             renderItem={(candidate, index) => (
                                 <SortableList.Item id={candidate.candidate_id}>
@@ -287,6 +285,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
                                         index={index}
                                         onDeleteCandidate={() => onDeleteCandidate(index)}
                                         disabled={index == newCandidateIndex || election.state !== 'draft'}
+                                        special={index > newCandidateIndex}
                                         inputRef={(el: React.MutableRefObject<HTMLInputElement[]>) => inputRefs.current[index] = el}
                                         onKeyDown={(event: React.KeyboardEvent<HTMLInputElement>) => handleKeyDown(event, index)}
                                         electionState={election.state} />
