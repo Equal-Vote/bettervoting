@@ -101,7 +101,6 @@ interface CandidateFormProps {
     onDeleteCandidate: () => void,
     disabled: boolean,
     special: boolean, // special candidates include none of the above and write in, and they can be deleted, but not edited
-    newCandidate: boolean, // this is an empty candidate on the UI for the purposes of adding new candidates
     inputRef: (el: React.MutableRefObject<HTMLInputElement[]>) => React.MutableRefObject<HTMLInputElement[]>,
     onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void,
     electionState: string
@@ -185,17 +184,18 @@ const LinkDialog = ({ onEditCandidate, candidate, open, handleClose }) => {
     )
 }
 
-export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled, newCandidate, special, inputRef, onKeyDown, electionState}: CandidateFormProps) => {
+export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled, special, inputRef, onKeyDown, electionState}: CandidateFormProps) => {
 
     const [open, setOpen] = React.useState(false);
     const [linkOpen, setLinkOpen] = React.useState(false);
     // Note: I'm using setHovered for underline since there's no css option. That said, css is prefered since it allows for a transition animation
     const [hovered, setHovered] = React.useState(false);
+    const isEmpty = candidate.candidate_name == '';
 
     return (
         <Paper
             elevation={4}
-            sx={{ width: '100%', '&:hover .candidate-actions': { opacity: newCandidate || special ? 0 : 1 } }}
+            sx={{ width: '100%', '&:hover .candidate-actions': { opacity: (isEmpty || special) ? 0 : 1 } }}
             aria-label={`Candidate ${index + 1} Form`}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
@@ -205,7 +205,7 @@ export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled
                 alignItems={'center'}
             >
                 <Box className="candidate-actions" sx={{ opacity: 0, transition: 'opacity 150ms ease' }}>
-                    <DragHandle disabled={disabled || special || newCandidate} ariaLabel={`Drag Candidate Number ${index + 1}`}/>
+                    <DragHandle disabled={disabled || special || isEmpty} ariaLabel={`Drag Candidate Number ${index + 1}`}/>
                 </Box>
 
                 <Box sx={{ overflow: 'hidden', textOverflow: 'ellipsis', width: '100%' }}>
@@ -245,9 +245,9 @@ export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled
                 <IconButton
                     aria-label={`Delete Candidate Number ${index + 1}`}
                     onClick={onDeleteCandidate}
-                    disabled={disabled || newCandidate}
+                    disabled={disabled || isEmpty}
                     sx={{
-                        opacity: newCandidate ? 0 : 1
+                        opacity: isEmpty ? 0 : 1
                     }}
                 >
                     <CloseIcon />
