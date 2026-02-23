@@ -284,7 +284,8 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
                                         candidate={candidate}
                                         index={index}
                                         onDeleteCandidate={() => onDeleteCandidate(index)}
-                                        disabled={index == newCandidateIndex || election.state !== 'draft'}
+                                        disabled={election.state !== 'draft'}
+                                        newCandidate={index == newCandidateIndex}
                                         special={index > newCandidateIndex}
                                         inputRef={(el: React.MutableRefObject<HTMLInputElement[]>) => inputRefs.current[index] = el}
                                         onKeyDown={(event: React.KeyboardEvent<HTMLInputElement>) => handleKeyDown(event, index)}

@@ -101,6 +101,7 @@ interface CandidateFormProps {
     onDeleteCandidate: () => void,
     disabled: boolean,
     special: boolean, // special candidates include none of the above and write in, and they can be deleted, but not edited
+    newCandidate: boolean, // this is an empty candidate on the UI for the purposes of adding new candidates
     inputRef: (el: React.MutableRefObject<HTMLInputElement[]>) => React.MutableRefObject<HTMLInputElement[]>,
     onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void,
     electionState: string
@@ -184,7 +185,7 @@ const LinkDialog = ({ onEditCandidate, candidate, open, handleClose }) => {
     )
 }
 
-export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled, special, inputRef, onKeyDown, electionState}: CandidateFormProps) => {
+export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled, newCandidate, special, inputRef, onKeyDown, electionState}: CandidateFormProps) => {
 
     const [open, setOpen] = React.useState(false);
     const [linkOpen, setLinkOpen] = React.useState(false);
@@ -196,15 +197,16 @@ export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled
                 sx={{ display: 'flex', justifyContent: 'space-between', bgcolor: 'background.paper', borderRadius: 10 }}
                 alignItems={'center'}
             >
-                <DragHandle style={{marginLeft: 5}} disabled={disabled || special} ariaLabel={`Drag Candidate Number ${index + 1}`}/>
+                <Box className="candidate-actions" sx={{ display: 'flex', alignItems: 'center', gap: 1, opacity: 0, transition: 'opacity 150ms ease' }}>
+                    <DragHandle style={{marginLeft: 5}} disabled={disabled || special || newCandidate} ariaLabel={`Drag Candidate Number ${index + 1}`}/>
+                </Box>
 
                 <Box sx={{ overflow: 'hidden', textOverflow: 'ellipsis', width: '100%', pl: 2 }}>
                     <TextField
                         id={`candidate-name-${index + 1}`}
                         inputProps={{ "aria-label": `Candidate ${index + 1} Name` }}
                         // data-testid={`candidate-name-${index + 1}`}
-                        // I can't use disabled here, since the new candidates in draft mode and disabled with their textboxes enabled
-                        disabled={electionState !== 'draft' || special}
+                        disabled={disabled || special}
                         type="text"
                         value={candidate.candidate_name}
                         fullWidth
@@ -213,32 +215,30 @@ export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled
                         onChange={(e) => onEditCandidate({ ...candidate, candidate_name: e.target.value })}
                         inputRef={inputRef}
                         onKeyDown={onKeyDown}
+                        InputProps={{disableUnderline: true}}
                         multiline
                     />
                 </Box>                    
-                {!special && <>
-                    <Box className="candidate-actions" sx={{ display: 'flex', alignItems: 'center', gap: 1, opacity: 0, transition: 'opacity 150ms ease' }}>
-                        <IconButton
-                            aria-label={`Edit Candidate Photo ${index + 1}`}
-                            color={candidate.photo_filename ? 'info' : 'default'}
-                            onClick={() => setOpen(true)}
-                            disabled={disabled}>
-                            <PhotoCameraIcon />
-                        </IconButton>
-                        <IconButton
-                            aria-label={`Update Link for Candidate Number ${index + 1}`}
-                            color={candidate.candidate_url ? 'info' : 'default'}
-                            onClick={() => setLinkOpen(true)}
-                            disabled={disabled}>
-                            < LinkIcon/>
-                        </IconButton>
-                    </Box>
-                </>}
+                <Box className="candidate-actions" sx={{ display: 'flex', alignItems: 'center', gap: 1, opacity: 0, transition: 'opacity 150ms ease' }}>
+                    <IconButton
+                        aria-label={`Edit Candidate Photo ${index + 1}`}
+                        color={candidate.photo_filename ? 'info' : 'default'}
+                        onClick={() => setOpen(true)}
+                        disabled={disabled || special}>
+                        <PhotoCameraIcon />
+                    </IconButton>
+                    <IconButton
+                        aria-label={`Update Link for Candidate Number ${index + 1}`}
+                        color={candidate.candidate_url ? 'info' : 'default'}
+                        onClick={() => setLinkOpen(true)}
+                        disabled={disabled || special}>
+                        < LinkIcon/>
+                    </IconButton>
+                </Box>
                 <IconButton
                     aria-label={`Delete Candidate Number ${index + 1}`}
-                    color="error"
                     onClick={onDeleteCandidate}
-                    disabled={disabled}>
+                    disabled={disabled || newCandidate}>
                     <DeleteIcon />
                 </IconButton>
             </Box>

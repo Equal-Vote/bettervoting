@@ -208,14 +208,8 @@ export const SecondaryButton = (props: ButtonProps) => (
     </Button>
 )
 
-export const LinkButton = (props) => {
-    console.log({
-        color: 'var(--brand-pop)',
-        textDecoration: 'underline',
-        cursor: 'pointer', // this will automatically apply if there's an href, but we set it here in case of onClick
-        ...props.sx,
-    })
-    return <Link
+export const LinkButton = (props) => (
+    <Link
         {...props}
         sx={{
             color: 'var(--brand-pop)',
@@ -226,7 +220,7 @@ export const LinkButton = (props) => {
     >
         {props.children}
     </Link>
-}
+)
 
 export const StyledTextField = (props: TextFieldProps) => (
     <TextField
