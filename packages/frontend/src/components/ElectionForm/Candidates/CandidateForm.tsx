@@ -7,7 +7,7 @@ import Typography from '@mui/material/Typography';
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle, FormHelperText, IconButton, Link, Paper } from '@mui/material';
 import Cropper from 'react-easy-crop';
 import {getImage, postImage} from './PhotoUtil';
-import DeleteIcon from '@mui/icons-material/Delete';
+import CloseIcon from '@mui/icons-material/Close';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import { CandidatePhoto, FileDropBox, PrimaryButton, SecondaryButton } from '../../styles';
 import useFeatureFlags from '../../FeatureFlagContextProvider';
@@ -189,19 +189,26 @@ export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled
 
     const [open, setOpen] = React.useState(false);
     const [linkOpen, setLinkOpen] = React.useState(false);
-    const flags = useFeatureFlags();
+    // Note: I'm using setHovered for underline since there's no css option. That said, css is prefered since it allows for a transition animation
+    const [hovered, setHovered] = React.useState(false);
 
     return (
-        <Paper elevation={4} sx={{ width: '100%', '&:hover .candidate-actions': { opacity: 1 } }} aria-label={`Candidate ${index + 1} Form`}>
+        <Paper
+            elevation={4}
+            sx={{ width: '100%', '&:hover .candidate-actions': { opacity: newCandidate || special ? 0 : 1 } }}
+            aria-label={`Candidate ${index + 1} Form`}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+        >
             <Box
                 sx={{ display: 'flex', justifyContent: 'space-between', bgcolor: 'background.paper', borderRadius: 10 }}
                 alignItems={'center'}
             >
-                <Box className="candidate-actions" sx={{ display: 'flex', alignItems: 'center', gap: 1, opacity: 0, transition: 'opacity 150ms ease' }}>
-                    <DragHandle style={{marginLeft: 5}} disabled={disabled || special || newCandidate} ariaLabel={`Drag Candidate Number ${index + 1}`}/>
+                <Box className="candidate-actions" sx={{ opacity: 0, transition: 'opacity 150ms ease' }}>
+                    <DragHandle disabled={disabled || special || newCandidate} ariaLabel={`Drag Candidate Number ${index + 1}`}/>
                 </Box>
 
-                <Box sx={{ overflow: 'hidden', textOverflow: 'ellipsis', width: '100%', pl: 2 }}>
+                <Box sx={{ overflow: 'hidden', textOverflow: 'ellipsis', width: '100%' }}>
                     <TextField
                         id={`candidate-name-${index + 1}`}
                         inputProps={{ "aria-label": `Candidate ${index + 1} Name` }}
@@ -215,11 +222,11 @@ export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled
                         onChange={(e) => onEditCandidate({ ...candidate, candidate_name: e.target.value })}
                         inputRef={inputRef}
                         onKeyDown={onKeyDown}
-                        InputProps={{disableUnderline: true}}
+                        InputProps={{ disableUnderline: !(hovered || candidate.candidate_name == '') || special}}
                         multiline
                     />
                 </Box>                    
-                <Box className="candidate-actions" sx={{ display: 'flex', alignItems: 'center', gap: 1, opacity: 0, transition: 'opacity 150ms ease' }}>
+                <Box className="candidate-actions" sx={{ display: 'flex', alignItems: 'center', gap: 0, opacity: 0, transition: 'opacity 150ms ease' }}>
                     <IconButton
                         aria-label={`Edit Candidate Photo ${index + 1}`}
                         color={candidate.photo_filename ? 'info' : 'default'}
@@ -238,8 +245,12 @@ export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled
                 <IconButton
                     aria-label={`Delete Candidate Number ${index + 1}`}
                     onClick={onDeleteCandidate}
-                    disabled={disabled || newCandidate}>
-                    <DeleteIcon />
+                    disabled={disabled || newCandidate}
+                    sx={{
+                        opacity: newCandidate ? 0 : 1
+                    }}
+                >
+                    <CloseIcon />
                 </IconButton>
             </Box>
             <CandidatePhotoDialog onEditCandidate={onEditCandidate} candidate={candidate} open={open} handleClose={() => setOpen(false)} />
