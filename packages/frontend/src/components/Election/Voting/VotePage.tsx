@@ -19,6 +19,7 @@ import { useSubstitutedTranslation } from "~/components/util";
 import DraftWarning from "../DraftWarning";
 import SupportBlurb from "../SupportBlurb";
 import ElectionStateWarning from "../ElectionStateWarning"
+import { NOTA_ID } from "@equal-vote/star-vote-shared/utils/makeID";
 
 // I'm using the icon codes instead of an import because there was padding I couldn't get rid of
 // https://stackoverflow.com/questions/65721218/remove-material-ui-icon-margin
@@ -86,9 +87,14 @@ const VotePage = () => {
     // generate ballot pages
     const pages = election.races.map((race, raceIndex) => {
       const candidates = race.candidates.map(candidate => ({ ...candidate, score: null }))
+      // Special candidates like "None of the Above" or Write-ins (todo) should stay at the end
+      const numSpecialCandidates = race.candidates.filter(c => c.candidate_id == NOTA_ID).length;
       return {
         instructionsRead: (flags.isSet('FORCE_DISABLE_INSTRUCTION_CONFIRMATION') || !election.settings.require_instruction_confirmation)? true : false, // I could just do !require_... , but this is more clear
-        candidates: (flags.isSet('FORCE_DISABLE_RANDOM_CANDIDATES') || !election.settings.random_candidate_order) ? candidates : shuffle(candidates),
+        candidates: (flags.isSet('FORCE_DISABLE_RANDOM_CANDIDATES') || !election.settings.random_candidate_order) ? candidates : [
+          ...shuffle(candidates.slice(0,-numSpecialCandidates)),
+          ...candidates.slice(-numSpecialCandidates),
+        ],
         voting_method: race.voting_method,
         race_index: raceIndex,
         hasAlert: false

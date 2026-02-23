@@ -196,7 +196,7 @@ export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled
                 sx={{ display: 'flex', justifyContent: 'space-between', bgcolor: 'background.paper', borderRadius: 10 }}
                 alignItems={'center'}
             >
-                <DragHandle style={{marginLeft: 5}} disabled={disabled} ariaLabel={`Drag Candidate Number ${index + 1}`}/>
+                <DragHandle style={{marginLeft: 5}} disabled={disabled || special} ariaLabel={`Drag Candidate Number ${index + 1}`}/>
 
                 <Box sx={{ overflow: 'hidden', textOverflow: 'ellipsis', width: '100%', pl: 2 }}>
                     <TextField
