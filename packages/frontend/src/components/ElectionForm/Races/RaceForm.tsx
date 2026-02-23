@@ -190,6 +190,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
 
     // special candidates are "none of the above", and in the future this will also include write in
     // these candidates are listed below the new candidate in the ephemeral list
+    const maxSpecialCandidates = 1;
     const numSpecialCandidates = editedRace.candidates.filter((c) => c.candidate_id == NOTA_ID).length; 
     const newCandidateIndex = election.state === 'draft' ? ephemeralCandidates.length - 1 - numSpecialCandidates : undefined;
 
@@ -266,7 +267,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
 
             <Box sx={{
                 position: 'relative',
-                height: candidatesExpaneded? `${candidateItems.length*66 - 11 + 20}px` : 0,
+                height: candidatesExpaneded? `${candidateItems.length*66 - 11 + 40*(maxSpecialCandidates-numSpecialCandidates)}px` : 0,
                 transition: 'height 0.5s',
             }}>
                 <TransitionBox absolute enabled={candidatesExpaneded}>
