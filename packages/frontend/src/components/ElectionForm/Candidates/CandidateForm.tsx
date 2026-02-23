@@ -4,7 +4,7 @@ import React from 'react'
 import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
 import Typography from '@mui/material/Typography';
-import { Box, Dialog, DialogActions, DialogContent, DialogTitle, FormHelperText, IconButton, Paper } from '@mui/material';
+import { Box, Dialog, DialogActions, DialogContent, DialogTitle, FormHelperText, IconButton, Link, Paper } from '@mui/material';
 import Cropper from 'react-easy-crop';
 import {getImage, postImage} from './PhotoUtil';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -13,6 +13,7 @@ import { CandidatePhoto, FileDropBox, PrimaryButton, SecondaryButton } from '../
 import useFeatureFlags from '../../FeatureFlagContextProvider';
 import { DragHandle } from '~/components/DragAndDrop';
 import LinkIcon from '@mui/icons-material/Link';
+import { NOTA_ID } from '@equal-vote/star-vote-shared/utils/makeID';
 
 interface CandidatePhotoDialogProps {
     onEditCandidate: (newCandidate: Candidate) => void,
@@ -201,6 +202,7 @@ export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled
                         id={`candidate-name-${index + 1}`}
                         inputProps={{ "aria-label": `Candidate ${index + 1} Name` }}
                         // data-testid={`candidate-name-${index + 1}`}
+                        disabled={electionState !== 'draft' || candidate.candidate_id == NOTA_ID}
                         type="text"
                         value={candidate.candidate_name}
                         fullWidth
@@ -210,29 +212,29 @@ export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled
                         inputRef={inputRef}
                         onKeyDown={onKeyDown}
                         multiline
-                        disabled={electionState !== 'draft'}
                     />
                 </Box>                    
-
-                <IconButton
-                    aria-label={`Edit Candidate Photo ${index + 1}`}
-                    color={candidate.photo_filename ? 'info' : 'default'}
-                    onClick={() => setOpen(true)}
-                    disabled={disabled}>
-                    <PhotoCameraIcon />
-                </IconButton>
-                <IconButton
-                    aria-label={`Update Link for Candidate Number ${index + 1}`}
-                    color={candidate.candidate_url ? 'info' : 'default'}
-                    onClick={() => setLinkOpen(true)}
-                    disabled={disabled}>
-                    < LinkIcon/>
-                </IconButton>
+                {candidate.candidate_id != NOTA_ID && <>
+                    <IconButton
+                        aria-label={`Edit Candidate Photo ${index + 1}`}
+                        color={candidate.photo_filename ? 'info' : 'default'}
+                        onClick={() => setOpen(true)}
+                        disabled={disabled}>
+                        <PhotoCameraIcon />
+                    </IconButton>
+                    <IconButton
+                        aria-label={`Update Link for Candidate Number ${index + 1}`}
+                        color={candidate.candidate_url ? 'info' : 'default'}
+                        onClick={() => setLinkOpen(true)}
+                        disabled={disabled}>
+                        < LinkIcon/>
+                    </IconButton>
+                </>}
                 <IconButton
                     aria-label={`Delete Candidate Number ${index + 1}`}
                     color="error"
                     onClick={onDeleteCandidate}
-                    disabled={disabled}>
+                    disabled={disabled && candidate.candidate_id != NOTA_ID}>
                     <DeleteIcon />
                 </IconButton>
             </Box>

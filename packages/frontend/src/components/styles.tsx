@@ -1,4 +1,4 @@
-import { Box, Button, ClickAwayListener, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Paper, TextFieldProps, Tooltip, Typography } from "@mui/material"
+import { Box, Button, ClickAwayListener, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Link, Paper, TextFieldProps, Tooltip, Typography } from "@mui/material"
 import { TextField } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { ReactNode, useState, isValidElement } from "react";
@@ -208,6 +208,25 @@ export const SecondaryButton = (props: ButtonProps) => (
     </Button>
 )
 
+export const LinkButton = (props) => {
+    console.log({
+        color: 'var(--brand-pop)',
+        textDecoration: 'underline',
+        cursor: 'pointer', // this will automatically apply if there's an href, but we set it here in case of onClick
+        ...props.sx,
+    })
+    return <Link
+        {...props}
+        sx={{
+            color: 'var(--brand-pop)',
+            textDecoration: 'underline',
+            cursor: 'pointer', // this will automatically apply if there's an href, but we set it here in case of onClick
+            ...props.sx,
+        }}
+    >
+        {props.children}
+    </Link>
+}
 
 export const StyledTextField = (props: TextFieldProps) => (
     <TextField
