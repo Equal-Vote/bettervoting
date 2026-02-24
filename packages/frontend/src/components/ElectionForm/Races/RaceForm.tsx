@@ -11,7 +11,7 @@ import { makeDefaultRace, RaceErrors, useEditRace } from './useEditRace';
 import { makeUniqueIDSync, ID_PREFIXES, ID_LENGTHS, NOTA_ID } from '@equal-vote/star-vote-shared/utils/makeID';
 import VotingMethodSelector from './VotingMethodSelector';
 import useElection from '~/components/ElectionContextProvider';
-import { SecondaryButton, PrimaryButton, FileDropBox, LinkButton } from '~/components/styles';
+import { SecondaryButton, PrimaryButton, FileDropBox, LinkButton, Tip } from '~/components/styles';
 import RaceDialog from './RaceDialog';
 import { Candidate } from '@equal-vote/star-vote-shared/domain_model/Candidate';
 import { getImage, postImage } from '../Candidates/PhotoUtil';
@@ -299,7 +299,8 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
                                 candidate_name: 'None of the Above',
                             }, candidateItems.length-1)}} sx={{
                                 ml: 1,
-                            }}>add "None of the Above"</LinkButton>
+                            }}>Add "None of the Above"</LinkButton>
+                            <Tip name='nota'/>
                         </Box>}
                     </Stack>
                 </TransitionBox>
