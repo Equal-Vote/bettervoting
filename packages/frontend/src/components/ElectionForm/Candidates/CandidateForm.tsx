@@ -189,7 +189,7 @@ export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled
     // Track hover and focus so the UI (actions + textarea underline) appears on hover or when the textbox is focused
     const [hovered, setHovered] = useState(false);
     const [focused, setFocused] = useState(false);
-    const isEmpty = candidate.candidate_name == '';
+    const isEmpty = candidate.candidate_name === '';
  
     return (
         <Paper

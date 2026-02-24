@@ -88,18 +88,18 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
         );
 
         return [
-            ...editedRace.candidates.filter(c => c.candidate_id != NOTA_ID),
+            ...editedRace.candidates.filter(c => c.candidate_id !== NOTA_ID),
             {
                 candidate_id: newId,
                 candidate_name: ''
             },
-            ...editedRace.candidates.filter(c => c.candidate_id == NOTA_ID),
+            ...editedRace.candidates.filter(c => c.candidate_id === NOTA_ID),
         ];
     }, [editedRace.candidates]);
 
     const onEditCandidate = useCallback((candidate, uiIndex) => {
         applyRaceUpdate(race => {
-            if(uiIndex == newCandidateIndex){
+            if(uiIndex === newCandidateIndex){
                 race.candidates.splice(newCandidateIndex, 0, candidate) // this could be a push, or if there's nota or write in then this would be an insert
             }else{
                 // the uiIndexToActualIndex is unnecessary here since we know uiIndex and index will always match for this case, but I'm still adding the function for clarity
@@ -191,13 +191,13 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
     // special candidates are "none of the above", and in the future this will also include write in
     // these candidates are listed below the new candidate in the ephemeral list
     const maxSpecialCandidates = 1;
-    const numSpecialCandidates = editedRace.candidates.filter((c) => c.candidate_id == NOTA_ID).length; 
+    const numSpecialCandidates = editedRace.candidates.filter((c) => c.candidate_id === NOTA_ID).length; 
     const newCandidateIndex = election.state === 'draft' ? ephemeralCandidates.length - 1 - numSpecialCandidates : undefined;
 
     const uiIndexToActualIndex = (uiIndex) => {
         // we only use the ephemeral list when we're in draft, otherwise the ui will match editedRace.candidates
         if(election.state != 'draft') return uiIndex;
-        if(uiIndex == newCandidateIndex) throw "There is no mapping for the new candidate, this function shouldn't be used for that case"
+        if(uiIndex === newCandidateIndex) throw "There is no mapping for the new candidate, this function shouldn't be used for that case"
         // the ephemeral list has a temp candidate inserted at the end before nota, so we need to offset accordingly
         if(uiIndex > newCandidateIndex) return uiIndex-1;
         return uiIndex;
@@ -293,7 +293,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
                                 </SortableList.Item>
                             )}
                         />
-                        {election.state == 'draft' && !editedRace.candidates.some((c) => c.candidate_id == NOTA_ID) && <Box>
+                        {election.state == 'draft' && !editedRace.candidates.some((c) => c.candidate_id === NOTA_ID) && <Box>
                             <LinkButton onClick={()=>{onEditCandidate({
                                 candidate_id: NOTA_ID,
                                 candidate_name: 'None of the Above',

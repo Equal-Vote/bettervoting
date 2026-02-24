@@ -88,7 +88,7 @@ const VotePage = () => {
     const pages = election.races.map((race, raceIndex) => {
       const candidates = race.candidates.map(candidate => ({ ...candidate, score: null }))
       // Special candidates like "None of the Above" or Write-ins (todo) should stay at the end
-      const numSpecialCandidates = race.candidates.filter(c => c.candidate_id == NOTA_ID).length;
+      const numSpecialCandidates = race.candidates.filter(c => c.candidate_id === NOTA_ID).length;
       return {
         instructionsRead: (flags.isSet('FORCE_DISABLE_INSTRUCTION_CONFIRMATION') || !election.settings.require_instruction_confirmation)? true : false, // I could just do !require_... , but this is more clear
         candidates: (flags.isSet('FORCE_DISABLE_RANDOM_CANDIDATES') || !election.settings.random_candidate_order) ? candidates : [
