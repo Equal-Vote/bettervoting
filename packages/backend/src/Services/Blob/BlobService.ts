@@ -1,3 +1,5 @@
+let blobServiceClient: any = null;
+
 export default class BlobService {
     client;
 
