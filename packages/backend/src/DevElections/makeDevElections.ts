@@ -2,7 +2,7 @@ import * as path from 'path'
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') })
 
 import servicelocator from '../ServiceLocator'
-import { DevElectionDefinition } from './types'
+import { DevElectionDefinition, validateDefinition } from './types'
 
 // Import all dev election definitions here
 import wizardstar from './elections/wizardstar'
@@ -16,6 +16,11 @@ async function main() {
     const forceRecreate = args.includes('--force');
 
     const db = servicelocator.database();
+
+    // Validate all definitions before touching the database
+    for (const def of allDefinitions) {
+        validateDefinition(def);
+    }
 
     console.info(`makedevelections: ${allDefinitions.length} election(s) to process`);
     console.info(`  --force flag: ${forceRecreate ? 'ON (will delete and recreate existing)' : 'OFF (will leave existing alone)'}`);

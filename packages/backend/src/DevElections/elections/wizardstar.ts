@@ -1,6 +1,6 @@
 import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { Ballot } from '@equal-vote/star-vote-shared/domain_model/Ballot';
-import { DevElectionDefinition } from '../types';
+import { DevElectionDefinition, devBallotId } from '../types';
 
 const ELECTION_ID = 'devtestwizardstar';
 const RACE_ID = 'devtestwizardstar_race0';
@@ -56,7 +56,7 @@ const ballotPatterns: number[][] = [
 
 function makeBallots(): Ballot[] {
     return ballotPatterns.map((scores, i) => ({
-        ballot_id: `${ELECTION_ID}_ballot${i}`,
+        ballot_id: devBallotId(ELECTION_ID, i),
         election_id: ELECTION_ID,
         status: 'submitted',
         date_submitted: Date.now(),
