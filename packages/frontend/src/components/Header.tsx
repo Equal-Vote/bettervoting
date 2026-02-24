@@ -9,6 +9,7 @@ import { useThemeSelector } from '../theme';
 import useFeatureFlags from './FeatureFlagContextProvider';
 import { openFeedback, scrollToElement, useSubstitutedTranslation } from './util';
 import { makeID, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { ReturnToClassicContext } from './ReturnToClassicDialog';
 import { useCookie } from '~/hooks/useCookie';
@@ -17,6 +18,15 @@ import { PrimaryButton } from './styles';
 
 const Header = () => {
     const flags = useFeatureFlags();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const goToCreateElection = () => {
+        if (location.pathname === '/' || location.pathname === '/new_election') {
+            scrollToElement(document.querySelector(`.wizard`));
+        } else {
+            navigate('/new_election');
+        }
+    };
     const themeSelector = useThemeSelector()
     const authSession = useAuthSession()
     // this is important for setting the default value
@@ -69,7 +79,7 @@ const Header = () => {
             items: [
                 {
                     text: 'E-Voting w/ Paper Receipts',
-                    onClick: () => scrollToElement(document.querySelector(`.wizard`)),
+                    onClick: () => goToCreateElection(),
                 },
                 {
                     text: 'Print Ballots',
@@ -95,7 +105,7 @@ const Header = () => {
         },
         {
             text: 'Create Election' ,
-            onClick: () => scrollToElement(document.querySelector(`.wizard`)),
+            onClick: () => goToCreateElection(),
         },
     ];
 
@@ -187,7 +197,7 @@ const Header = () => {
                             <MenuItem component={Link} href={authSession.accountUrl} target='_blank'>
                                 {t('nav.your_account')}
                             </MenuItem>
-                            <MenuItem component={Link} onClick={() => scrollToElement(document.querySelector(`.wizard`))}>
+                            <MenuItem component={Link} onClick={() => goToCreateElection()}>
                                 {t('nav.new_election')}
                             </MenuItem>
                             <MenuItem component={Link} href='/manage'>
