@@ -13,6 +13,7 @@
     "migrate:up": "node ./build/src/Migrators/migrate-up.js",
     "migrate:down": "node ./build/src/Migrators/migrate-down.js",
     "db_sandbox": "npm run-script build && node ./build/src/test/database_sandbox.js",
+    "makedevelections": "tsx ./src/DevElections/makeDevElections.ts",
     "generate:openapi": "ts-node ./src/OpenApi/generateSwaggerJSON.ts"
   },
   "keywords": [],
