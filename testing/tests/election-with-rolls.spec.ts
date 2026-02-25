@@ -14,10 +14,9 @@ const makeVotes = (numVotes: number, minRank:number) => {
 }
 
 test.describe('Add Voters', () => {
-    test.beforeEach(async ({page, context}) => {
-        const apiContext =  page.request;
+    test.beforeEach(async ({ context, request }) => {
         const sub = await getSub(context);
-        const response = await apiContext.post(`${API_BASE_URL}/elections`, {
+        const response = await request.post(`${API_BASE_URL}/elections`, {
             data: {
                 "Election": {
                     "title": "Playwright Test Election",
@@ -129,6 +128,7 @@ test.describe('Add Voters', () => {
                 }
             }
         })
+        await expect(response).toBeOK();
         const responseBody = await response.json();
         const election = responseBody.election as Election;
         electionId = election.election_id;
@@ -143,9 +143,9 @@ test.describe('Add Voters', () => {
 
 
     });
-    test('vote in election restricted by ID', async ({page, context}) => {
+    test('vote in election restricted by ID', async ({ page, request }) => {
         await page.goto(`/`);
-        const response = await page.request.post(`${API_BASE_URL}/Election/${electionId}/rolls`, {
+        const response = await request.post(`${API_BASE_URL}/Election/${electionId}/rolls`, {
             data: {
                 "electionRoll": [
                     {
@@ -262,10 +262,10 @@ test.describe('Add Voters', () => {
     });
 
 
-    test.afterEach(async ({ page }) => {
+    test.afterEach(async ({ request }) => {
         //delete election when finished
         if (electionId) {
-        await page.request.delete(`${API_BASE_URL}/election/${electionId}`);
+        await request.delete(`${API_BASE_URL}/election/${electionId}`);
         console.log(`deleted election: ${electionId}`);
     }})
 });

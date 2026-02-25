@@ -104,7 +104,6 @@ services:
       - ./testing/test-results:/app/test-results
       - ./testing/playwright-report:/app/playwright-report
     environment:
-      - BACKEND_URL=http://web:5000
       - FRONTEND_URL=https://proxy
       - OPEN_REPORT=never
       - CI=true

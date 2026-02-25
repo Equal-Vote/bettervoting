@@ -5,10 +5,9 @@ import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
 
 
 let electionId = '';
-test.beforeEach(async ({page, context}) => {
-    const apiContext =  page.request;
+test.beforeEach(async ({ context, request }) => {
     const sub = await getSub(context);
-    const response = await apiContext.post(`${API_BASE_URL}/elections`, {
+    const response = await request.post(`${API_BASE_URL}/elections`, {
         data: {
             "Election": {
                 "title": "Playwright Test Election",
@@ -118,6 +117,7 @@ test.beforeEach(async ({page, context}) => {
             }
         }
     })
+    await expect(response).toBeOK();
     const responseBody = await response.json();
     const election = responseBody.election as Election;
     electionId = election.election_id;
@@ -181,6 +181,7 @@ test('vote in election restricted by account', async ({page}) => {
     await page.getByLabel('Username or email').press('Tab');
     await page.getByLabel('Password', { exact: true }).fill('test');
     await page.getByRole('button', { name: 'Sign In' }).click();
+    await expect(page.getByRole('button', { name: 'Hello, Test' })).toBeVisible();
     await page.goto(`/${electionId}/vote`, { waitUntil: 'networkidle' });
     await page.getByLabel('I have read the instructions').check();
 
@@ -193,7 +194,14 @@ test('vote in election restricted by account', async ({page}) => {
     await page.getByRole('button', { name: 'Next' }).click();
     await page.getByLabel('I have read the instructions').check();
     await page.getByRole('button', { name: 'Submit' }).click();
+    const finalVoteResponsePromise = page.waitForResponse(
+        (response) =>
+            response.url().includes(`/API/Election/${electionId}/vote`) &&
+            response.request().method() === 'POST'
+    );
     await page.getByRole('button', { name: 'Submit' }).click();
+    const finalVoteResponse = await finalVoteResponsePromise;
+    expect(finalVoteResponse.status(), await finalVoteResponse.text()).toBe(200);
     await expect(page.getByRole('heading', { name: 'Thank you for voting!' })).toBeVisible();
 });
 // test('clean up all elections', async ({page}) => {
@@ -211,7 +219,7 @@ test('vote in election restricted by account', async ({page}) => {
 // });
 
 
-test.afterEach(async ({page}) => {
-    await page.request.delete(`${API_BASE_URL}/election/${electionId}`);
+test.afterEach(async ({ request }) => {
+    await request.delete(`${API_BASE_URL}/election/${electionId}`);
     console.log(`deleted election: ${electionId}`);
 });

@@ -25,7 +25,11 @@ export const createElection = async (
     return urlArray[urlArray.length - 2];
   }
 
-export const API_BASE_URL = process.env.BACKEND_URL + '/API';
+const frontendUrl = process.env.FRONTEND_URL;
+if (!frontendUrl) {
+  throw new Error('FRONTEND_URL is not set');
+}
+export const API_BASE_URL = new URL('/API', frontendUrl).toString();
 
 export const getSub = async ( context: BrowserContext ) => {
   const cookies = await context.cookies();

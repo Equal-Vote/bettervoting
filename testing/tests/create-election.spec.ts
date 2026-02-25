@@ -224,10 +224,10 @@ test.describe('Create Election', () => {
         electionId = urlArray[urlArray.length - 2];
     });
 
-    test.afterEach(async ({ page }) => {
+    test.afterEach(async ({ request }) => {
         //delete election when finished
         if (electionId) {
-        await page.request.delete(`${API_BASE_URL}/election/${electionId}`);
+        await request.delete(`${API_BASE_URL}/election/${electionId}`);
         console.log(`deleted election: ${electionId}`);
         }
     });
