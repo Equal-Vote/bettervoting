@@ -3,6 +3,42 @@ import { test, expect } from '@playwright/test';
 
 let electionId = '';
 test.describe('Create Election', () => {
+    test('Poll, Single Race, Publish Now', async ({ page }) => {
+        await page.goto('/', { waitUntil: 'networkidle' });
+
+        // Fill out form
+        await page.getByRole('button', { name: 'Create Election' }).click();
+        const pollButton = page.getByRole('radio', { name: 'Poll' })
+        await expect(pollButton).toBeInViewport({timeout: 500});
+        await pollButton.check();
+        expect(page.getByText('How many questions will your poll include?')).toBeVisible(); // confirm the election switched to races language
+        await page.getByRole('radio', { name: 'Just one' }).check();
+        await page.getByRole('textbox', { name: 'Question Title' }).click();
+        await page.getByRole('textbox', { name: 'Question Title' }).fill('Favorite Fruit');
+        await page.getByRole('button', { name: 'Voting Method', exact: true }).click();
+        await page.getByRole('radio', { name: 'Single-Winner' }).check();
+        await page.getByRole('radio', { name: 'STAR Voting' }).check();
+        await page.getByRole('button', { name: 'Choices' }).click();
+        await page.getByRole('textbox', { name: 'Candidate 1 Name' }).click();
+        await page.getByRole('textbox', { name: 'Candidate 1 Name' }).fill('Pear');
+        await page.getByRole('textbox', { name: 'Candidate 2 Name' }).click();
+        await page.getByRole('textbox', { name: 'Candidate 2 Name' }).fill('Apple');
+        await page.getByRole('textbox', { name: 'Candidate 3 Name' }).click();
+        await page.getByRole('textbox', { name: 'Candidate 3 Name' }).fill('Strawberry');
+        await page.getByRole('button', { name: 'Next' }).nth(2).click();
+        await page.getByRole('button', { name: 'Publish Now' }).click();
+
+        // Confirm Title
+        await expect(page.getByRole('heading', { name: 'Favorite Fruit' })).toBeVisible({timeout: 2000})
+        await page.getByRole('link', { name: 'Vote', exact: true }).click();
+
+        // Confirm Candidates
+        await page.getByRole('checkbox', { name: 'I have read the instructions' }).check();
+        await expect(page.getByRole('heading', { name: 'Pear', exact: true })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Apple', exact: true })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Strawberry', exact: true })).toBeVisible();
+    });
+
     test('create poll', async ({ page }) => {
         page.goto('/');
         await page.getByRole('link', { name: 'Create Election' }).click();

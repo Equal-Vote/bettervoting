@@ -30,6 +30,7 @@ export default defineConfig({
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
     baseURL: process.env.FRONTEND_URL,
+    ignoreHTTPSErrors: true,
     launchOptions: {
       slowMo: 100
     },
