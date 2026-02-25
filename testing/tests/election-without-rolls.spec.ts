@@ -166,7 +166,7 @@ test('vote in election restricted by account', async ({page}) => {
     await expect(page.locator('#root')).toContainText('Ballot Submitted');
     await page.getByRole('button', { name: 'Hello, Test' }).click();
     await page.getByRole('menuitem', { name: 'Logout' }).click();
-    await page.goto(`/${electionId}/vote`, { waitUntil: 'networkidle' });
+    await page.goto(`/${electionId}/vote`);
     await page.getByLabel('I have read the instructions').check();
     await page.getByRole('button', { name: 'Score Candidate 1 0' }).click();
     await page.getByRole('button', { name: 'Next' }).click();
@@ -182,7 +182,7 @@ test('vote in election restricted by account', async ({page}) => {
     await page.getByLabel('Password', { exact: true }).fill('test');
     await page.getByRole('button', { name: 'Sign In' }).click();
     await expect(page.getByRole('button', { name: 'Hello, Test' })).toBeVisible();
-    await page.goto(`/${electionId}/vote`, { waitUntil: 'networkidle' });
+    await page.goto(`/${electionId}/vote`);
     await page.getByLabel('I have read the instructions').check();
 
     await page.getByRole('button', { name: 'Score Candidate 1 0' }).click();
