@@ -91,10 +91,12 @@ const VotePage = () => {
       const numSpecialCandidates = race.candidates.filter(c => c.candidate_id === NOTA_ID).length;
       return {
         instructionsRead: (flags.isSet('FORCE_DISABLE_INSTRUCTION_CONFIRMATION') || !election.settings.require_instruction_confirmation)? true : false, // I could just do !require_... , but this is more clear
-        candidates: (flags.isSet('FORCE_DISABLE_RANDOM_CANDIDATES') || !election.settings.random_candidate_order) ? candidates : [
-          ...shuffle(candidates.slice(0,-numSpecialCandidates)),
-          ...candidates.slice(-numSpecialCandidates),
-        ],
+        candidates: (flags.isSet('FORCE_DISABLE_RANDOM_CANDIDATES') || !election.settings.random_candidate_order) ? candidates : (
+          numSpecialCandidates == 0 ? shuffle(candidates) : [
+            ...shuffle(candidates.slice(0,-numSpecialCandidates)),
+            ...candidates.slice(-numSpecialCandidates),
+          ]
+        ),
         voting_method: race.voting_method,
         race_index: raceIndex,
         hasAlert: false
