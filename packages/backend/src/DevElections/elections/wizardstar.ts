@@ -1,8 +1,9 @@
 import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { Ballot } from '@equal-vote/star-vote-shared/domain_model/Ballot';
 import { DevElectionDefinition, devBallotId } from '../types';
+import { devElectionId } from '@equal-vote/star-vote-shared/utils/makeID';
 
-const ELECTION_ID = 'devtestwizardstar';
+const ELECTION_ID = devElectionId('wizardstar');
 const RACE_ID = 'devtestwizardstar_race0';
 
 const candidates = [
