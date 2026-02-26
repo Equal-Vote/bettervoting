@@ -1,15 +1,12 @@
-import Logger from "../Logging/Logger";
-
 let blobServiceClient: any = null;
 
 export default class BlobService {
-    client; 
+    client;
 
     constructor() {
         const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING || '';
         if (!connectionString) {
-            Logger.info({}, 'AZURE_STORAGE_CONNECTION_STRING is not set. Set it in your environment or use the mock BlobService in tests.')
-            return;
+            throw new Error('AZURE_STORAGE_CONNECTION_STRING is not set. Set it in your environment or use the mock BlobService in tests.');
         }
         // require lazily to avoid loading the azure sdk during build/generate steps
         const { BlobServiceClient } = require('@azure/storage-blob');

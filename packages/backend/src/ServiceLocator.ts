@@ -142,7 +142,13 @@ function emailService(): EmailService {
 
 function blobService(): BlobService {
     if (_blobService == null) {
-        _blobService = new BlobService();
+        if (process.env.AZURE_STORAGE_CONNECTION_STRING) {
+            _blobService = new BlobService();
+        } else {
+            Logger.info({}, 'AZURE_STORAGE_CONNECTION_STRING is not set. Using mock BlobService (image uploads will be no-ops).');
+            const MockBlobService = require("./Services/Blob/__mocks__/BlobService").default;
+            _blobService = new MockBlobService();
+        }
     }
     return _blobService ;
 }
