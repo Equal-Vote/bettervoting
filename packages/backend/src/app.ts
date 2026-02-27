@@ -49,6 +49,10 @@ export default function makeApp() {
     // app.use('/debug',debugRouter)
     app.use('/API/Docs', swaggerUi.serve, swaggerUi.setup(swagger));
     app.post('/API/Token', asyncHandler(getUserToken));
+    app.post('/API/SendGridWebhook', (req: IRequest, res) => {
+        Logger.info(req, `SendGridWebhook received ${JSON.stringify(req.body)}`);
+        res.status(200).send('OK');
+    });
 
     // NOTE: I've removed express.static because it doesn't allow me to inject meta tags
     // https://stackoverflow.com/questions/51120214/how-to-modify-static-file-content-with-express-static
