@@ -23,17 +23,11 @@ import { makeUniqueID, ID_LENGTHS, ID_PREFIXES } from "@equal-vote/star-vote-sha
 const ElectionsModel = ServiceLocator.electionsDb();
 const ElectionRollModel = ServiceLocator.electionRollDb();
 const BallotModel = ServiceLocator.ballotsDb();
+import { CastVoteEvent } from "../../Models/CastVoteStore";
 const EventQueue = ServiceLocator.eventQueue();
 const EmailService = ServiceLocator.emailService();
 const AccountService = ServiceLocator.accountService();
 
-export type CastVoteEvent = {
-    requestId: Uid,
-    inputBallot: Ballot,
-    roll?: ElectionRoll,
-    userEmail?: string,
-    isBallotUpdate: boolean,
-}
 
 // NOTE: discord isn't implemented yet, but that's the plan for the future
 type BallotSubmitType = 'submitted_via_browser' | 'submitted_via_admin' | 'submitted_via_discord';

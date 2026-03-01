@@ -4,8 +4,16 @@ import { ILoggingContext } from "../Services/Logging/ILogger";
 import Logger from "../Services/Logging/Logger";
 import { Kysely } from "kysely";
 import { Database } from "./Database";
-import { CastVoteEvent } from "../Controllers/Ballot/castVoteController";
+import { Uid } from "@equal-vote/star-vote-shared/domain_model/Uid";
 import ServiceLocator from "../ServiceLocator";
+
+export type CastVoteEvent = {
+    requestId: Uid,
+    inputBallot: Ballot,
+    roll?: ElectionRoll,
+    userEmail?: string,
+    isBallotUpdate: boolean,
+}
 var pgFormat = require("pg-format");
 
 export default class CastVoteStore {
