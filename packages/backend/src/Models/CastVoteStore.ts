@@ -2,17 +2,70 @@ import { Ballot } from "@equal-vote/star-vote-shared/domain_model/Ballot";
 import { ElectionRoll } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll";
 import { ILoggingContext } from "../Services/Logging/ILogger";
 import Logger from "../Services/Logging/Logger";
+import { Kysely } from "kysely";
+import { Database } from "./Database";
+import { CastVoteEvent } from "../Controllers/Ballot/castVoteController";
+import ServiceLocator from "../ServiceLocator";
 var pgFormat = require("pg-format");
 
 export default class CastVoteStore {
     _postgresClient;
+    _db: Kysely<Database>;
     _ballotTableName: string;
     _rollTableName: string;
 
-    constructor(postgresClient: any) {
+    constructor(postgresClient: any, db: Kysely<Database>) {
         this._postgresClient = postgresClient;
+        this._db = db;
         this._ballotTableName = "ballotDB";
         this._rollTableName = "electionRollDB";
+    }
+
+    async submitBallotEvent(event: CastVoteEvent, ctx: ILoggingContext): Promise<void> {
+        return this._db.transaction().execute(async (trx) => {
+            if (event.roll) {
+                const currentRoll = await trx.selectFrom('electionRollDB')
+                    .select(['submitted'])
+                    .where('election_id', '=', event.roll.election_id)
+                    .where('voter_id', '=', event.roll.voter_id)
+                    .where('head', '=', true)
+                    .forUpdate()
+                    .executeTakeFirst();
+
+                if (currentRoll && currentRoll.submitted && !event.isBallotUpdate) {
+                    throw new Error("ALREADY_VOTED");
+                }
+
+                if (!currentRoll) {
+                    // Rescan to catch newly committed rows if a concurrent transaction modified our locked row while we waited.
+                    const doubleCheckRoll = await trx.selectFrom('electionRollDB')
+                        .select(['submitted'])
+                        .where('election_id', '=', event.roll.election_id)
+                        .where('voter_id', '=', event.roll.voter_id)
+                        .where('head', '=', true)
+                        .forUpdate()
+                        .executeTakeFirst();
+
+                    if (doubleCheckRoll && doubleCheckRoll.submitted && !event.isBallotUpdate) {
+                        throw new Error("ALREADY_VOTED");
+                    }
+                }
+            }
+
+            const BallotModel = ServiceLocator.ballotsDb();
+            const ElectionRollModel = ServiceLocator.electionRollDb();
+
+            if (event.isBallotUpdate) {
+                await BallotModel.updateBallot(event.inputBallot, ctx, `User updates a ballot`, trx);
+            } else {
+                await BallotModel.submitBallot(event.inputBallot, ctx, `User submits a ballot`, trx);
+            }
+
+            if (event.roll != null) {
+                event.roll.submitted = true;
+                await ElectionRollModel.update(event.roll, ctx, `User submits a ballot`, trx);
+            }
+        });
     }
 
     submitBallot(

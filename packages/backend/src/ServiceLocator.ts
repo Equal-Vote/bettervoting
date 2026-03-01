@@ -127,7 +127,7 @@ function electionRollDb(): ElectionRollDB {
 
 function castVoteStore(): CastVoteStore {
     if (_castVoteStore == null) {
-        _castVoteStore = new CastVoteStore(postgres());
+        _castVoteStore = new CastVoteStore(postgres(), database());
     }
     return _castVoteStore;
 }
