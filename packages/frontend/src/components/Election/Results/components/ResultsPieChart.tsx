@@ -1,9 +1,17 @@
-import { Box } from "@mui/material";
 import { useState } from "react";
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer } from "recharts";
 import { CHART_COLORS, truncName } from "~/components/util";
 
-export default ({ data, colorOffset = 0, star = false, runoff = false, noLegend = false }) => {
+
+interface ResultsPieChartProps {
+  data: { name: string; votes: number; color?: string }[];
+  colorOffset?: number;
+  star?: boolean;
+  runoff?: boolean;
+  noLegend?: boolean;
+}
+
+const ResultsPieChart = ({ data, colorOffset = 0, star = false, runoff = false, noLegend = false }: ResultsPieChartProps) => {
   const [rawNumbers, setRawNumbers] = useState(false);
 
   const renderCustomizedLabel = ({
@@ -45,7 +53,7 @@ export default ({ data, colorOffset = 0, star = false, runoff = false, noLegend 
 
   const pieAngle = 90;
 
-  let rawData = data;
+  const rawData = data;
 
   // Truncate names
   data = rawData.map((d, i) => ({
@@ -96,3 +104,5 @@ export default ({ data, colorOffset = 0, star = false, runoff = false, noLegend 
     </div>
   );
 };
+
+export default ResultsPieChart;

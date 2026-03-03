@@ -1,8 +1,7 @@
 import { Box, Typography } from '@mui/material'
-import React from 'react'
 import { useSubstitutedTranslation } from '../util'
 
-export default () => {
+const LandingPageTestimonials = () => {
     const {t} = useSubstitutedTranslation();
     const testimonials = t('landing_page.testimonials.items')
     return <Box sx={{
@@ -28,7 +27,7 @@ export default () => {
             justifyContent: 'center',
             flexWrap: 'wrap',
         }}>
-            {testimonials.map(testimonial => <Box sx={{
+            {testimonials.map(testimonial => <Box key={testimonial.image_url} sx={{
                 display: 'flex',
                 flexDirection: 'column',
             }}>
@@ -41,10 +40,11 @@ export default () => {
                     margin: 'auto',
                 }}/>
                 <Typography variant='h5' color={'darkShade.contrastText'} sx={{textAlign: 'center'}}>
-                    <i>"{testimonial.quote}"<br/>-{testimonial.name}</i>
+                    <i>&quot;{testimonial.quote}&quot;<br/>-{testimonial.name}</i>
                 </Typography>
             </Box>
             )}
         </Box>
     </Box>
 }
+export default LandingPageTestimonials

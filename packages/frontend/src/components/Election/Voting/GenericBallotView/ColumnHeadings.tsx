@@ -10,7 +10,7 @@ interface ColumnHeadingsProps {
 }
 export default function ColumnHeadings({ columnIndex, columnTitle, gridArea, starHeadings, fontSX }: ColumnHeadingsProps) {
     return (
-        <Box key={columnIndex} sx={{ gridArea: gridArea }}>
+        <Box key={columnIndex} sx={{ gridArea: gridArea }}className='column-headings'>
             {starHeadings &&
                 <ScoreIcon
                     // NOTE: I tried doing this in CSS with :first-child but it didn't work

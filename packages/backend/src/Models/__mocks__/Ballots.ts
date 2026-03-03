@@ -13,6 +13,12 @@ export default class BallotsDB implements IBallotStore {
         return Promise.resolve(JSON.parse(JSON.stringify(copy)));
     }
 
+    updateBallot(ballot: Ballot, ctx:ILoggingContext, reason:string): Promise<Ballot> {
+        var copy = JSON.parse(JSON.stringify(ballot));
+        this.ballots.push(copy);
+        return Promise.resolve(JSON.parse(JSON.stringify(copy)));
+    }
+
     // place holder bulkSubmitBallots for now
     bulkSubmitBallots(ballots: Ballot[], ctx:ILoggingContext, reason:string): Promise<Ballot[]>{
         return Promise.resolve(JSON.parse(JSON.stringify([] as Ballot[])));
@@ -29,15 +35,26 @@ export default class BallotsDB implements IBallotStore {
         return Promise.resolve(resBallots);
     }
 
-    getBallotByID(ballot_id: string, ctx:ILoggingContext): Promise<Ballot | null> {
+    getBallotByVoterID(voter_id: string, election_id: string, ctx:ILoggingContext): Promise<Ballot | undefined> {
         const ballots = this.ballots.filter(
-            (ballot) => ballot.ballot_id === ballot_id
+            (ballot) => ballot.user_id === voter_id
         );
         if (!ballots) {
-            return Promise.resolve(null);
+            return Promise.resolve(undefined);
         }
         var resBallots = JSON.parse(JSON.stringify(ballots));
         return Promise.resolve(resBallots);
+    }
+
+    getBallotByID(ballot_id: string, ctx:ILoggingContext): Promise<Ballot | null> {
+        const ballot = this.ballots.find(
+            (ballot) => ballot.ballot_id === ballot_id
+        );
+        if (!ballot) {
+            return Promise.resolve(null);
+        }
+        var resBallot = JSON.parse(JSON.stringify(ballot));
+        return Promise.resolve(resBallot);
     }
 
     deleteAllBallotsForElectionID(election_id: string, ctx: ILoggingContext): Promise<boolean> {

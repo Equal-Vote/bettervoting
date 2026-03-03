@@ -7,17 +7,19 @@ $star-red: #E13458;
 $star-black: #000000;
 $star-gray: #272727;
 $star-green: #6AA84F;
+// not sure where this other green came from (shrug)
+$link-green: rgb(134,198,106);
 
 $body-background-color: $star-white;
-$sidebar-color: #2B344A;
+$sidebar-color: rgb(40,40,40); // #2B344A;
 $border-color: $star-black;
 
 $body-text-color: $star-gray;
-$body-heading-color: $star-dkblue;
-$nav-child-link-color: $star-ltblue;
+$body-heading-color: $star-black;
+$nav-child-link-color: $link-green;
 $search-result-preview-color: $star-dkblue;
 
-$link-color: $star-ltblue;
+$link-color: $link-green;
 $btn-primary-color: $star-red;
 $base-button-color: $star-ltblue;
 

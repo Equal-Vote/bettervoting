@@ -4,6 +4,7 @@ import ElectionsDB from "./Models/Elections";
 import ElectionRollDB from "./Models/ElectionRolls";
 import CastVoteStore from "./Models/CastVoteStore";
 import EmailService from "./Services/Email/EmailService";
+import BlobService from "./Services/Blob/BlobService";
 import { IBallotStore } from "./Models/IBallotStore";
 import { IEventQueue } from "./Services/EventQueue/IEventQueue";
 import PGBossEventQueue from "./Services/EventQueue/PGBossEventQueue";
@@ -24,9 +25,8 @@ var _electionsDb: ElectionsDB;
 var _electionRollDb: ElectionRollDB;
 var _castVoteStore: CastVoteStore;
 var _emailService: EmailService
+var _blobService: BlobService
 var _eventQueue: IEventQueue;
-
-var _emailService: EmailService;
 var _accountService: AccountService;
 var _globalData: GlobalData;
 
@@ -140,6 +140,19 @@ function emailService(): EmailService {
     return _emailService;
 }
 
+function blobService(): BlobService {
+    if (_blobService == null) {
+        if (process.env.AZURE_STORAGE_CONNECTION_STRING) {
+            _blobService = new BlobService();
+        } else {
+            Logger.info({}, 'AZURE_STORAGE_CONNECTION_STRING is not set. Using mock BlobService (image uploads will be no-ops).');
+            const MockBlobService = require("./Services/Blob/__mocks__/BlobService").default;
+            _blobService = new MockBlobService();
+        }
+    }
+    return _blobService ;
+}
+
 function accountService(): AccountService {
     if (_accountService == null) {
         _accountService = new AccountService();
@@ -154,4 +167,4 @@ function globalData(): GlobalData {
     return _globalData;
 }
 
-export default { ballotsDb, electionsDb, electionRollDb, emailService, accountService, castVoteStore, globalData, eventQueue, database };
+export default { ballotsDb, electionsDb, electionRollDb, emailService, accountService, castVoteStore, globalData, eventQueue, database, blobService };

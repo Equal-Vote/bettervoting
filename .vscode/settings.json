@@ -1,1 +1,5 @@
-{}
+{
+    "github-actions.workflows.pinned.workflows": [
+        ".github/workflows/end-to-end-tests.yml"
+    ]
+}

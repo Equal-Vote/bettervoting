@@ -1,16 +1,14 @@
-import { createContext, useCallback, useMemo, useState } from "react"
+import { createContext, useCallback, useState, useEffect } from "react"
 import BallotPageSelector from "./BallotPageSelector";
 import { useParams } from "react-router";
 import React from 'react'
-import CheckBoxOutlineBlankOutlinedIcon from '@mui/icons-material/CheckBoxOutlineBlankOutlined';
 import { useNavigate } from "react-router";
-import { Box, Checkbox, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControlLabel, Step, StepConnector, StepLabel, Stepper, SvgIcon, TextField, Typography } from "@mui/material";
-import { Ballot, NewBallot } from "@equal-vote/star-vote-shared/domain_model/Ballot";
+import { Box, Checkbox, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControlLabel, Step, StepLabel, Stepper, SvgIcon, TextField, Typography } from "@mui/material";
+import { NewBallot } from "@equal-vote/star-vote-shared/domain_model/Ballot";
 import { Vote } from "@equal-vote/star-vote-shared/domain_model/Vote";
 import { Score } from "@equal-vote/star-vote-shared/domain_model/Score";
-import Button from "@mui/material/Button";
-import { usePostBallot } from "../../../hooks/useAPI";
-import FiberManualRecordOutlinedIcon from '@mui/icons-material/FiberManualRecordOutlined';
+import { usePostBallot, useGetRoll } from "../../../hooks/useAPI";
+import { useCookie } from "../../../hooks/useCookie";
 import useElection from "../../ElectionContextProvider";
 import useAuthSession from "../../AuthSessionContextProvider";
 import { PrimaryButton, SecondaryButton } from "../../styles";
@@ -19,20 +17,16 @@ import { Candidate } from "@equal-vote/star-vote-shared/domain_model/Candidate";
 import { Race, VotingMethod } from "@equal-vote/star-vote-shared/domain_model/Race";
 import { useSubstitutedTranslation } from "~/components/util";
 import DraftWarning from "../DraftWarning";
-import { set } from "date-fns";
 import SupportBlurb from "../SupportBlurb";
+import ElectionStateWarning from "../ElectionStateWarning"
 
 // I'm using the icon codes instead of an import because there was padding I couldn't get rid of
 // https://stackoverflow.com/questions/65721218/remove-material-ui-icon-margin
-const INFO_ICON = "M 11 7 h 2 v 2 h -2 Z m 0 4 h 2 v 6 h -2 Z m 1 -9 C 6.48 2 2 6.48 2 12 s 4.48 10 10 10 s 10 -4.48 10 -10 S 17.52 2 12 2 Z m 0 18 c -4.41 0 -8 -3.59 -8 -8 s 3.59 -8 8 -8 s 8 3.59 8 8 s -3.59 8 -8 8 Z"
+// const INFO_ICON = "M 11 7 h 2 v 2 h -2 Z m 0 4 h 2 v 6 h -2 Z m 1 -9 C 6.48 2 2 6.48 2 12 s 4.48 10 10 10 s 10 -4.48 10 -10 S 17.52 2 12 2 Z m 0 18 c -4.41 0 -8 -3.59 -8 -8 s 3.59 -8 8 -8 s 8 3.59 8 8 s -3.59 8 -8 8 Z"
 const CHECKED_BOX = "M 19 3 H 5 c -1.11 0 -2 0.9 -2 2 v 14 c 0 1.1 0.89 2 2 2 h 14 c 1.11 0 2 -0.9 2 -2 V 5 c 0 -1.1 -0.89 -2 -2 -2 Z m -9 14 l -5 -5 l 1.41 -1.41 L 10 14.17 l 7.59 -7.59 L 19 8 l -9 9 Z"
 //const UNCHECKED_BOX = "M 19 5 v 14 H 5 V 5 h 14 m 0 -2 H 5 c -1.1 0 -2 0.9 -2 2 v 14 c 0 1.1 0.9 2 2 2 h 14 c 1.1 0 2 -0.9 2 -2 V 5 c 0 -1.1 -0.9 -2 -2 -2 Z"
 const DOT_ICON = "M12 6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6 2.69-6 6-6m0-2c-4.42 0-8 3.58-8 8s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8z"
 const WARNING_ICON = "M12,5.99L19.53,19H4.47L12,5.99 M12,2L1,21h22L12,2L12,2z"
-type receiptEmail = {
-  sendReceipt: boolean,
-  email: string
-}
 
 export interface BallotCandidate extends Candidate {
   score: number
@@ -44,8 +38,8 @@ export interface IBallotContext {
   candidates: BallotCandidate[],
   race: Race,
   onUpdate: (any) => void,
-  receiptEmail: receiptEmail,
-  setReceiptEmail: React.Dispatch<receiptEmail>
+  receiptEmail: string,
+  setReceiptEmail: React.Dispatch<string>
   maxRankings?: number,
   warningColumns?: number[],
   setWarningColumns?: (warningColumns: number[]) => void,
@@ -90,8 +84,8 @@ const VotePage = () => {
   const authSession = useAuthSession()
   const makePages = ():IPage[] => {
     // generate ballot pages
-    let pages = election.races.map((race, raceIndex) => {
-      let candidates = race.candidates.map(candidate => ({ ...candidate, score: null }))
+    const pages = election.races.map((race, raceIndex) => {
+      const candidates = race.candidates.map(candidate => ({ ...candidate, score: null }))
       return {
         instructionsRead: (flags.isSet('FORCE_DISABLE_INSTRUCTION_CONFIRMATION') || !election.settings.require_instruction_confirmation)? true : false, // I could just do !require_... , but this is more clear
         candidates: (flags.isSet('FORCE_DISABLE_RANDOM_CANDIDATES') || !election.settings.random_candidate_order) ? candidates : shuffle(candidates),
@@ -104,10 +98,15 @@ const VotePage = () => {
   }
 
   const { id } = useParams();
-  const [pages, setPages] = useState(makePages())
+  const [pages, setPages] = useState(makePages());
   const navigate = useNavigate();
+  const voterId = atob(useCookie('voter_id', '')[0]);
+  const { data: rollData, makeRequest: fetchRoll } = useGetRoll(election.election_id, voterId);
+  const [receiptEmail, setReceiptEmail] = useState(undefined);
+  const [inputEmail, setInputEmail] = useState(undefined);
+  useEffect(() => { voterId && fetchRoll() }, [voterId]);
+  useEffect(() => { setReceiptEmail(rollData?.electionRollEntry?.email ?? authSession.getIdField('email')) }, [authSession, rollData]);
   const [currentPage, setCurrentPage] = useState(0)
-  const [receiptEmail, setReceiptEmail] = useState<receiptEmail>(authSession.isLoggedIn() ? { sendReceipt: true, email: authSession.getIdField('email') } : { sendReceipt: false, email: '' })
   const setInstructionsRead = () => {
     pages[currentPage].instructionsRead = true;
     // shallow copy to trigger a refresh
@@ -144,15 +143,24 @@ const VotePage = () => {
     setPages([...pages])
   }, [pages, currentPage])
 
-  const { data, isPending, error, makeRequest: postBallot } = usePostBallot(election.election_id)
+  const { isPending, makeRequest: postBallot } = usePostBallot(election.election_id)
   const onUpdate = (pageIndex, newRaceScores) => {
-    var newPages = [...pages]
-    newPages[pageIndex].candidates.forEach((candidate, candidateIndex) => candidate.score = newRaceScores[candidateIndex])
-    // newPages[pageIndex].scores = newRaceScores
-    setPages(newPages)
+    setPages(prevPages => {
+      const nextPages = [...prevPages];
+      const prevPage = prevPages[pageIndex];
+      const nextCandidates = prevPage.candidates.map((candidate, idx) => ({
+        ...candidate,
+        score: newRaceScores[idx]
+      }));
+      nextPages[pageIndex] = {
+        ...prevPage,
+        candidates: nextCandidates
+      };
+      return nextPages;
+    });
   }
   const submit = async () => {
-    var candidateScores = pages.map((p) => p.candidates)
+    const candidateScores = pages.map((p) => p.candidates)
     // create arrays of candidate IDs for each race. Ballots will be sorted into this order
     const candidateIDs = election.races.map(race => race.candidates.map(candidate => candidate.candidate_id))
 
@@ -172,10 +180,7 @@ const VotePage = () => {
       status: 'submitted',
     }
     // post ballot, if response ok navigate back to election home
-    if (!(await postBallot({ 
-      ballot: ballot, 
-      receiptEmail: receiptEmail.sendReceipt ? receiptEmail.email : undefined }
-      ))) {
+    if (!(await postBallot({ ballot, receiptEmail: receiptEmail ?? inputEmail}))) {
       return
     }
     navigate(`/${id}/thanks`)
@@ -188,13 +193,23 @@ const VotePage = () => {
     return <Container disableGutters={true} maxWidth="sm"><h3>No races created for election</h3></Container>
   }
 
-  let pageIsUnderVote = (page) => {
-    return page.candidates.reduce((prev, c) => prev && (c.score == 0 || c.score == null), true)
+  const ALL_EQUAL_IS_ABSTENTION_VOTING_METHODS = new Set(['STAR', 'STAR_PR']);
+  const allEqualIsAbstention = (page) => {
+    return ALL_EQUAL_IS_ABSTENTION_VOTING_METHODS.has(page.voting_method);
   }
+  const pageIsUnderVote = (page) => {
+    return page.candidates.every(c => c.score === (allEqualIsAbstention(page) ? page.candidates[0].score : null));
+  }
+
+  const isLastPage = (currentPage === pages.length-1)
 
   return (
     <Container disableGutters={true} maxWidth="sm">
       <DraftWarning/>
+      <ElectionStateWarning
+        state="archived"
+        title="archived_warning.title"
+        description="archived_warning.description"/>
       <BallotContext.Provider value={{
         instructionsRead: pages[currentPage].instructionsRead,
         setInstructionsRead: setInstructionsRead,
@@ -247,9 +262,11 @@ const VotePage = () => {
           </Stepper>
         }
         <PrimaryButton
-          onClick={() => (currentPage === pages.length-1)? setIsOpen(true) : setCurrentPageAndScroll(count => count + 1)}
-          sx={{ marginLeft: {xs: '10px', md: '40px'}}}>
-            {t((currentPage === pages.length-1)? 'ballot.submit_ballot' : 'ballot.next')}
+          onClick={() => isLastPage? setIsOpen(true) : setCurrentPageAndScroll(count => count + 1)}
+          sx={{ marginLeft: {xs: '10px', md: '40px'}}}
+          disabled={isLastPage && (election.state === "archived")}
+          >
+            {t(isLastPage? 'ballot.submit_ballot' : 'ballot.next')}
         </PrimaryButton>
       </Box>
       <SupportBlurb/>
@@ -263,30 +280,22 @@ const VotePage = () => {
         <DialogContent>
           <DialogContentText>
 
-            <FormControlLabel control={
-              <Checkbox
-                id="send-ballot-receipt"
-                name="Send Ballot Receipt Email"
-                checked={receiptEmail.sendReceipt}
-                onChange={(e) => setReceiptEmail({...receiptEmail, sendReceipt: e.target.checked})}
-              />}
-              label={t('ballot.dialog_send_receipt')}
-            />
-          <TextField
-                    id="receipt-email"
-                    name="receiptEmail"
-                    label={t('ballot.dialog_email_placeholder')}
-                    fullWidth
-                    type="text"
-                    value={receiptEmail.email}
-                    disabled={!receiptEmail.sendReceipt}
-                    sx={{
-                        mx: { xs: 0, },
-                        my: { xs: 1 },
-                        boxShadow: 2,
-                    }}
-                    onChange={(e) => setReceiptEmail({...receiptEmail, email: e.target.value})}
-                />
+            {!receiptEmail &&
+              <TextField
+                        id="receipt-email"
+                        inputProps={{ "aria-label": "Receipt Email" }}
+                        label={t('ballot.dialog_email_placeholder')}
+                        fullWidth
+                        type="text"
+                        value={inputEmail}
+                        sx={{
+                            mx: { xs: 0, },
+                            my: { xs: 1 },
+                            boxShadow: 2,
+                        }}
+                        onChange={(e) => setInputEmail(e.target.value)}
+                />}
+            {receiptEmail && <Typography>{`Receipt will be sent to ${receiptEmail}`}</Typography>}
             {pages.map((page, pageIndex) => (
               <Box key={pageIndex}>
                 <Typography variant="h6">
@@ -294,11 +303,11 @@ const VotePage = () => {
                 </Typography>
                 {pageIsUnderVote(page) ?
                   <Typography variant="body1" color='var(--ltbrand-blue)'>
-                    <b>Abstained</b>
+                    <b>{t("ballot.dialog_abstention")}</b>
                   </Typography>
                   :
                   page.candidates.map(candidate => (
-                    <Typography variant="body1">
+                    <Typography key={candidate.candidate_id} variant="body1">
                       {`${candidate.candidate_name}: ${candidate.score ? candidate.score : 0}`}
                     </Typography>
                   ))
@@ -323,4 +332,3 @@ const VotePage = () => {
 }
 
 export default VotePage
-

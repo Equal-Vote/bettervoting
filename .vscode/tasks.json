@@ -7,18 +7,9 @@
         "command": "npm run build -w @equal-vote/star-vote-shared",
       },
       {
-        "label": "Port-Forward PostgreSQL",
+        "label": "Full Build",
         "type": "shell",
-        "command": "kubectl port-forward service/postgresql -n starvote 5432:5432",
-        "isBackground": true,
-        "problemMatcher": {
-          "base": "$tsc-watch",
-          "background": {
-            "activeOnStart": true,
-            "beginsPattern": ".",
-            "endsPattern": "Forwarding from"
-          }
-        }
+        "command": "npm run build -ws",
       },
       {
         "label": "Start Frontend",

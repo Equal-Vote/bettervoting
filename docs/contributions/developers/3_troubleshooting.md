@@ -26,7 +26,7 @@ Don't panic! This guide is here to help you through it
 > NOTE: This assumes you've completed the Azure onboarding under Infrastructure
 
 1. Open the "Container Apps" service
-1. Open star-server > Monitoring > Log Stream
+1. Open bettervoting > Monitoring > Log Stream
 1. Scroll through the recent logs, and find the matching request id
 
 > TODO: There's also Monitoring > Logs where you can query the request id. That would be handy but we haven't figured out how to do that yet

@@ -1,6 +1,6 @@
 import { Box } from "@mui/material";
 
-export default ({ children }) => <Box
+const WidgetContainer = ({ children }: { children: React.ReactNode }) => <Box
   display="flex"
   flexDirection="row"
   flexWrap="wrap"
@@ -12,3 +12,4 @@ export default ({ children }) => <Box
   {children}
 </Box>
 
+export default WidgetContainer;

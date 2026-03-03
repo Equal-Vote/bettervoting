@@ -1,0 +1,28 @@
+{
+  "name": "github-scripts",
+  "version": "1.0.0",
+  "description": "GitHub Actions scripts for repository automation",
+  "main": "dist/issue-management/check-stale-issues.js",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "clean": "rm -rf dist",
+
+    "issue-mgmt:start": "node dist/issue-management/check-stale-issues.js",
+    "issue-mgmt:simulate": "node dist/issue-management/simulate-stale-issues.js",
+
+    "issue-mgmt:test:create": "node -r dotenv/config dist/issue-management/create-test-issues.js dotenv_config_path=.env.test",
+    "issue-mgmt:test:run": "node -r dotenv/config dist/issue-management/check-stale-issues.js dotenv_config_path=.env.test",
+    "issue-mgmt:test:cleanup": "node -r dotenv/config dist/issue-management/cleanup-test-issues.js dotenv_config_path=.env.test",
+    "issue-mgmt:test:workflow": "node -r dotenv/config dist/issue-management/test-workflow.js dotenv_config_path=.env.test",
+    "issue-mgmt:test:github": "node -r dotenv/config dist/issue-management/test-github-workflow.js dotenv_config_path=.env.test"
+  },
+  "dependencies": {
+    "@octokit/rest": "^20.0.2",
+    "@types/node": "^20.10.0",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  }
+}

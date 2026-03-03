@@ -1,25 +1,16 @@
 import { useState } from "react"
-import React from 'react'
 import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import PermissionHandler from "../../PermissionHandler";
 import { usePutElectionRoles } from "../../../hooks/useAPI";
-import { Election } from "@equal-vote/star-vote-shared/domain_model/Election";
 import { PrimaryButton } from "../../styles";
-import useAuthSession from "../../AuthSessionContextProvider";
 import useElection from "../../ElectionContextProvider";
 
-type Props = {
-    election: Election,
-    permissions: string[],
-    fetchElection: Function,
-}
 
 const EditRoles = () => {
-    const authSession = useAuthSession()
-    const { election, voterAuth, refreshElection, permissions, updateElection } = useElection()
+    const { election, refreshElection, permissions } = useElection()
 
     const [adminList, setAdminList] = useState(() => {
         if (election.admin_ids === null) return ''
@@ -61,7 +52,6 @@ const EditRoles = () => {
                     <Grid item sx={{ p: 2 }}>
                         <TextField
                             id="admin-list"
-                            name="admin-list"
                             label="Admin List"
                             InputLabelProps={{
                                 shrink: true
@@ -79,7 +69,6 @@ const EditRoles = () => {
                     <Grid item sx={{ p: 2 }}>
                         <TextField
                             id="auditor-list"
-                            name="id-list"
                             label="Auditor List"
                             InputLabelProps={{
                                 shrink: true

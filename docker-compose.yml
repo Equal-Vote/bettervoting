@@ -1,35 +1,113 @@
 # I stole this from Scott and haven't tested it yet. -Evans
-version: "3.9"
+# version: "3.9"
 services:
   web:
-    build: .
+    build: . 
     ports:
       - "5000:5000"
     networks:
       - star-net
     environment:
-      - DATABASE_URL=postgresql://postgres:ChangeMeOrDontTest2020@my-db:5432/postgres
+        - REACT_APP_FEATURED_ELECTIONS=4xtfb4 #We've got the postgres database restoring from a backup that creates an election with this ID
+        - REACT_APP_MAX_BALLOT_RANKS=10
+        - REACT_APP_DEFAULT_BALLOT_RANKS=6
+        - REACT_APP_BACKEND_URL=http://web:5000
+        - REACT_APP_KEYCLOAK_URL=http://keycloak:8080/realms/Dev/protocol/openid-connect
+        - DANGEROUSLY_DISABLE_HOST_CHECK=true
+        - REACT_APP_FRONTEND_PORT=5000
+        - DATABASE_URL=postgresql://postgres:ChangeMeOrDontTest2020@my-db:5432/postgres
+        - DEV_DATABASE=FALSE
+        - KEYCLOAK_SECRET=DefaultKeycloakSecret
+        - KEYCLOAK_URL=http://keycloak:8080/realms/Dev/protocol/openid-connect
+        - CLASSIC_ELECTION_COUNT=0
+        - CLASSIC_VOTE_COUNT=0
+        - SENDGRID_API_KEY='SG.<insert api key>' 
+        - SENDGRID_GROUP_ID='<insert group id>'
+        - EMAIL_TEST_MODE=if defined will prevent emails from being sent from email service while testing
+        - FROM_EMAIL_ADDRESS=elections@star.vote
+    depends_on: 
+      my-db:
+        condition: service_started
+      keycloak:
+        #If we don't specify this condition, the web service will start before keycloak is ready to accept requests.
+        condition: service_healthy
+        restart: true
+
+  proxy:
+    image: nginx:alpine
+    networks:
+      - star-net
+    depends_on:
+      - web
+    volumes:
+      - ./testing/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./testing/certs:/etc/nginx/certs:ro
+
   my-db:
     image: postgres
     ports:
       - "5432:5432"
+    volumes:
+    # Any sql file at docker-entrypoint-initdb.d will automatically be run
+    # If you would like to create a new backup run the following command:
+    # docker exec bettervoting-my-db-1 pg_dump -U postgres postgres > test-data.sql
+      - ./test-data.sql:/docker-entrypoint-initdb.d/test-data.sql
     networks:
       - star-net
     environment:
       - POSTGRES_PASSWORD=ChangeMeOrDontTest2020
     restart:
       always
+
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.1
+    volumes:
+      - ./dev-realm.json:/opt/keycloak/data/import/realm.json
     command:
       - start-dev
       - --import-realm
     ports:
       - '8080:8080'
+    networks:
+      - star-net
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_HEALTH_ENABLED=true
+    healthcheck:
+     #keycloak doesn't do curl -f internally so we have to use a shell command to check the health of the service. Found at https://gist.github.com/sarath-soman/5d9aec06953bbd0990c648605d4dba07
+     #Note that if we update to v25 we will need to update the port to 9000
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080;echo -e \"GET /health/ready HTTP/1.1\r\nhost: http://localhost\r\nConnection: close\r\n\r\n\" >&3;grep \"HTTP/1.1 200 OK\" <&3"]
+      interval: 15s
+      retries: 5
+      start_period: 60s
     restart:
       always
+  playwright:
+    container_name: playwright
+    build: ./testing
+    ipc: host
+    tty: true
+    ports: 
+      - "9323:9223"
+    networks:
+      - star-net
+    # Uncomment the following line to keep the container running after it starts:
+    # command: ["tail", "-f", "/dev/null"]
+    depends_on:
+      - web
+      - proxy
+    volumes:
+      - ./testing/tests:/app/tests
+      - ./testing/playwright.config.ts:/app/playwright.config.ts
+      - ./testing/playwright:/app/playwright
+      - ./testing/test-results:/app/test-results
+      - ./testing/playwright-report:/app/playwright-report
+    environment:
+      - FRONTEND_URL=https://proxy
+      - OPEN_REPORT=never
+      - CI=true
+
+    
 networks:
   star-net: {}

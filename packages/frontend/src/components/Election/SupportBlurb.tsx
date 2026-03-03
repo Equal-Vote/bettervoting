@@ -1,8 +1,8 @@
-import { Box, Paper, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import useElection from "../ElectionContextProvider";
-import { Support, SupportAgent, SupportAgentOutlined, SupportAgentRounded } from "@mui/icons-material";
+import { SupportAgent } from "@mui/icons-material";
 
-export default () => {
+const SupportBlurb = () => {
     const { t, election } = useElection();
 
     if(election.settings.contact_email === undefined || election.settings.contact_email === '') return <></>
@@ -14,3 +14,5 @@ export default () => {
         <Typography>{t('support_blurb', {email: election.settings.contact_email})}</Typography>
     </Box>
 }
+
+export default SupportBlurb;

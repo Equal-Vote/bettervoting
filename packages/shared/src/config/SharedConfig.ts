@@ -6,8 +6,12 @@ export const sharedConfig = {
         '7tcryp': 3000, // DSA-LA 2025 Local Officer Election
         'j87vqp': 5000, // DSA-LA 2025 Local Officer Election #2
         'g3mvqw': 5000, // DSA-LA 2025 Subgroup Officer Election
+        'x36qt9': 400, // Thijs Kleinpaste, Bike farm
+        't7dyvf': 400, // Thijs Kleinpaste, Bike farm #2
+        'g8jf8t': 200, // Python Steering Election
     },
-    CLASSIC_DOMAIN: 'https://star.vote',
+    TEMPORARY_ACCESS_HOURS: 10,
+    CLASSIC_DOMAIN: 'https://classic.star.vote',
     FF_ELECTION_ROLES: 'false',
     FF_CANDIDATE_DETAILS: 'false',
     FF_CANDIDATE_PHOTOS: 'false',

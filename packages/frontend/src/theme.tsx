@@ -166,20 +166,20 @@ const brandTypography: TypographyOptions = {
   // fontFamily: 'Montserrat',
   fontFamily: 'Verdana, sans-serif',
   button:{
-    fontFamily: 'Montserrat, Verdana, sans-serif',
+    fontFamily: '\'Montserrat\', Verdana, sans-serif',
   },
   h1: {
-    fontFamily: 'Montserrat, Verdana, sans-serif',
+    fontFamily: '\'Montserrat\', Verdana, sans-serif',
     marginTop: '1rem',
     marginBottom: '1rem',
   },
   h2: {
-    fontFamily: 'Montserrat, Verdana, sans-serif',
+    fontFamily: '\'Montserrat\', Verdana, sans-serif',
     marginTop: '1rem',
     marginBottom: '1rem',
   },
   h3: {
-    fontFamily: 'Montserrat, Verdana, sans-serif',
+    fontFamily: '\'Montserrat\', Verdana, sans-serif',
     marginTop: '1rem',
     marginBottom: '1rem',
     // display: 'inline',
@@ -187,17 +187,17 @@ const brandTypography: TypographyOptions = {
     margin: 'auto'
   },
   h4: {
-    fontFamily: 'Montserrat, Verdana, sans-serif',
+    fontFamily: '\'Montserrat\', Verdana, sans-serif',
     marginTop: '1rem',
     marginBottom: '1rem',
   },
   h5: {
-    fontFamily: 'Montserrat, Verdana, sans-serif',
+    fontFamily: '\'Montserrat\', Verdana, sans-serif',
     marginTop: '1rem',
     marginBottom: '1rem',
   },
   h6: {
-    fontFamily: 'Montserrat, Verdana, sans-serif',
+    fontFamily: '\'Montserrat\', Verdana, sans-serif',
     marginTop: '1rem',
     marginBottom: '1rem',
   },
@@ -262,8 +262,10 @@ type ThemeContextType = {
 }
 
 export const ThemeContext = createContext<ThemeContextType>({ mode: 'base', modes: Object.keys(themes) as mode[], selectColorMode: () => { }, theme: themes.turquoise })
-
-export const ThemeContextProvider = ({ children }) => {
+interface ThemeContextProviderProps {
+  children: React.ReactNode
+}
+export const ThemeContextProvider = ({ children }:ThemeContextProviderProps) => {
   const flags = useFeatureFlags();
   // https://mui.com/material-ui/customization/dark-mode/#system-preference
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');

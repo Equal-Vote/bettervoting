@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useMemo } from "react";
+import { createContext, useContext, useMemo } from "react";
 import type { CSSProperties, PropsWithChildren } from "react";
 import type {
+  DraggableAttributes,
   DraggableSyntheticListeners,
   UniqueIdentifier
 } from "@dnd-kit/core";
@@ -16,13 +17,20 @@ interface Props {
 }
 
 interface Context {
-  attributes: Record<string, any>;
+  attributes: DraggableAttributes;
   listeners: DraggableSyntheticListeners;
   ref(node: HTMLElement | null): void;
 }
 
 const SortableItemContext = createContext<Context>({
-  attributes: {},
+  attributes: {
+    role: "button",
+    tabIndex: 0,
+    "aria-disabled": false,
+    "aria-pressed": false,
+    "aria-roledescription": "sortable",
+    "aria-describedby": ""
+  },
   listeners: undefined,
   ref() {}
 });
@@ -62,12 +70,13 @@ export function SortableItem({ children, id }: PropsWithChildren<Props>) {
 interface DragHandleProps {
     style?: CSSProperties;
     disabled?: boolean;
+    ariaLabel?: string;
 }
-export function DragHandle({ style, disabled }: DragHandleProps) {
+export function DragHandle({ style, disabled, ariaLabel }: DragHandleProps) {
   const { attributes, listeners, ref } = useContext(SortableItemContext);
 
   return (
-    <IconButton  {...attributes} {...listeners} ref={ref} style={style} disabled={disabled}>
+    <IconButton  {...attributes} {...listeners} ref={ref} style={style} disabled={disabled} aria-label={ariaLabel}>
         <MuiDragHandle />
     </IconButton>
   );

@@ -1,24 +1,24 @@
 import useAnonymizedBallots from "~/components/AnonymizedBallotsContextProvider";
 import Widget from "./Widget";
 import useRace from "~/components/RaceContextProvider";
-import { Divider, Typography } from "@mui/material";
+import { Typography } from "@mui/material";
 import ResultsBarChart from "./ResultsBarChart";
 import useFeatureFlags from "~/components/FeatureFlagContextProvider";
 
 // candidates helps define the order
-export default () => {
+const NameRecognitionWidget = () => {
     const {ballotsForRace} = useAnonymizedBallots();
     const {t, race} = useRace();
 
     const flags = useFeatureFlags();
     if(!flags.isSet('ALL_STATS')) return <></>
 
-    let numActive = Object.fromEntries(race.candidates.map(c => [c.candidate_id, {
+    const numActive = Object.fromEntries(race.candidates.map(c => [c.candidate_id, {
         name: c.candidate_name,
         count: 0,
     }]))
 
-    let b = ballotsForRace()
+    const b = ballotsForRace()
     b.forEach((scores) => {
         scores.forEach(score => {
             if(score.score == null || score.score == undefined) return;
@@ -32,3 +32,5 @@ export default () => {
         <Typography>{t(`results_ext.name_recognition_blank_warning`)}</Typography>
     </Widget>
 }
+
+export default NameRecognitionWidget;

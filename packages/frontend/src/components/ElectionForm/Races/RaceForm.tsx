@@ -1,50 +1,97 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react'
-import { useState } from "react"
-import { Candidate } from "@equal-vote/star-vote-shared/domain_model/Candidate"
-import AddCandidate, { CandidateForm } from "../Candidates/AddCandidate"
-import EditIcon from '@mui/icons-material/Edit';
-import Grid from "@mui/material/Grid";
+import React, { MouseEventHandler, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import CandidateForm from "../Candidates/CandidateForm";
 import TextField from "@mui/material/TextField";
-import FormControl from "@mui/material/FormControl";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import Typography from '@mui/material/Typography';
-import { Box, FormHelperText, Radio, RadioGroup, Stack, Step, StepButton, StepConnector, StepContent, StepLabel, Stepper } from "@mui/material"
-import IconButton from '@mui/material/IconButton'
-import ExpandLess from '@mui/icons-material/ExpandLess'
-import ExpandMore from '@mui/icons-material/ExpandMore'
-import { methodValueToTextKey, scrollToElement, useSubstitutedTranslation } from '../../util';
-import useElection from '../../ElectionContextProvider';
-import { v4 as uuidv4 } from 'uuid';
+import { Box, Button, FormHelperText, Stack } from "@mui/material";
+import { AddIcon, MinusIcon, TransitionBox, useSubstitutedTranslation } from '../../util';
 import useConfirm from '../../ConfirmationDialogProvider';
 import useFeatureFlags from '../../FeatureFlagContextProvider';
 import { SortableList } from '~/components/DragAndDrop';
-import useSnackbar from '~/components/SnackbarContext';
+import { makeDefaultRace, RaceErrors, useEditRace } from './useEditRace';
+import { makeUniqueIDSync, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
+import VotingMethodSelector from './VotingMethodSelector';
+import useElection from '~/components/ElectionContextProvider';
+import { SecondaryButton, PrimaryButton, FileDropBox } from '~/components/styles';
+import RaceDialog from './RaceDialog';
+import { Candidate } from '@equal-vote/star-vote-shared/domain_model/Candidate';
+import { getImage, postImage } from '../Candidates/PhotoUtil';
+
+interface RaceFormProps {
+    raceIndex?: number,
+    styling: 'Wizard' | 'Dialog',
+    onConfirm?: Function,
+    onCancel?: Function,
+    dialogOpen?: boolean,
+}
+
+export const RACE_FORM_GAP = 2;
 
 export default function RaceForm({
-  race_index, editedRace, errors, setErrors, applyRaceUpdate,
-  activeStep, setActiveStep
-}) {
-    const {t} = useSubstitutedTranslation();
-    const flags = useFeatureFlags();
-    const [showsAllMethods, setShowsAllMethods] = useState(false)
-    const { election } = useElection()
-    const PR_METHODS = ['STV', 'STAR_PR'];
-    const [methodFamily, setMethodFamily] = useState(
-        editedRace.num_winners == 1?
-            'single_winner'
-        : (
-            PR_METHODS.includes(editedRace.voting_method)?
-                'proportional_multi_winner'
-            :
-                'bloc_multi_winner'
-        )
+    raceIndex=undefined,
+    styling,
+    onConfirm=() => {},
+    onCancel=() => {},
+    dialogOpen=undefined,
+}: RaceFormProps) {
+    const {election} = useElection();
+    const editRace = useEditRace(
+        raceIndex == undefined ? null : election.races[raceIndex],
+        0,
+        dialogOpen,
     )
+
+    return (
+        <>
+            {styling == 'Dialog' &&
+                <RaceDialog
+                    onSaveRace={() => editRace.validateRace() && onConfirm(editRace.editedRace)}
+                    open={dialogOpen}
+                    handleClose={() => onCancel()}
+                >
+                    {/* I can't absorb it into FormComponent because of Component Identity Instability*/}
+                    <Box sx={{width: {xs: '250px', sm: '500px'}, padding: 1, minHeight: '500px'}}>
+                        <InnerRaceForm {...editRace} open={dialogOpen}/>
+                    </Box>
+                </RaceDialog>
+            }
+            {styling == 'Wizard' && <>
+                <InnerRaceForm {...editRace}/>
+                <Box display='flex' flexDirection='row' justifyContent='flex-end' gap={1} sx={{mt: 3}}>
+                    <PrimaryButton onClick={() => editRace.validateRace() && onConfirm(editRace.editedRace)}>Next</PrimaryButton>
+                </Box>
+            </>}
+        </>
+    )
+}
+
+const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=true}) => {
+    const flags = useFeatureFlags();
+    const { election, t } = useElection()
+    const isDisabled = election.state !== 'draft';
+    const [] = useState(false);
+
+    // Dialog should default to candidates being expanded, Wizard should not
+    const [candidatesExpaneded, setCandidatesExpanded] = useState(editedRace.candidates.length > 0);
+
     const confirm = useConfirm();
     const inputRefs = useRef([]);
-    const ephemeralCandidates = useMemo(() => 
-        [...editedRace.candidates, { candidate_id: uuidv4(), candidate_name: '' }], 
-        [editedRace.candidates]
-    );   
+    const ephemeralCandidates = useMemo(() => {
+        // Get all existing candidate IDs
+        const existingIds = new Set(editedRace.candidates.map(c => c.candidate_id));
+
+        const hasCollision = (id: string) => existingIds.has(id);
+
+        const newId = makeUniqueIDSync(
+            ID_PREFIXES.CANDIDATE,
+            ID_LENGTHS.CANDIDATE,
+            hasCollision
+        );
+
+        return [...editedRace.candidates, {
+            candidate_id: newId,
+            candidate_name: ''
+        }];
+    }, [editedRace.candidates]);
 
     const onEditCandidate = useCallback((candidate, index) => {
         applyRaceUpdate(race => {
@@ -55,9 +102,14 @@ export default function RaceForm({
             }
         });
 
-        setErrors(prev => ({ ...prev, candidates: '', raceNumWinners: '' }));
+        setErrors((prev: RaceErrors) => ({ ...prev, candidates: ''}));
     }, [applyRaceUpdate, setErrors]);
 
+    useEffect(() => {
+        setCandidatesExpanded(editedRace.candidates.length > 1)
+    }, [open])
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleChangeCandidates = useCallback((newCandidateList: any[]) => {
         //remove the last candidate if it is empty
         if (newCandidateList.length > 1 && newCandidateList[newCandidateList.length - 1].candidate_name === '') {
@@ -82,9 +134,10 @@ export default function RaceForm({
             });
         }
     }, [confirm, editedRace.candidates.length, applyRaceUpdate, setErrors]);
+
     // Handle tab and shift+tab to move focus between candidates
-    const handleKeyDown = useCallback((event, index) => {
-        
+    const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+        const target = event.target as HTMLInputElement;
         if (event.key === 'Tab' && event.shiftKey) {
             // Move focus to the previous candidate
             event.preventDefault();
@@ -98,312 +151,199 @@ export default function RaceForm({
             if (nextIndex < ephemeralCandidates.length && inputRefs.current[nextIndex]) {
                 inputRefs.current[nextIndex].focus();
             }
-        } else if (event.key === 'Backspace' && event.target.value === '' && index > 0) {
+        } else if (event.key === 'Backspace' && target.value === '' && index > 0) {
             // Move focus to the previous candidate when backspacing on an empty candidate
             event.preventDefault();
             inputRefs.current[index - 1].focus();
             //this makes it so the candidate is deleted without the "are you sure?" dialog when backspacing on an empty candidate
             applyRaceUpdate(race => {
                 race.candidates.splice(index, 1);
-            }
-            )
+            })
         }
     }, [ephemeralCandidates.length, applyRaceUpdate]);
 
-    const MethodBullet = ({value}) => <>
-        <FormControlLabel value={value} control={<Radio />} label={t(`edit_race.methods.${methodValueToTextKey[value]}.title`)} sx={{ mb: 0, pb: 0 }} />
-        <FormHelperText sx={{ pl: 4, mt: -1 }}>
-            {t(`edit_race.methods.${methodValueToTextKey[value]}.description`)}
-        </FormHelperText>
+    const Precincts = () => <>
+        <TextField
+            id={`race-precincts`}
+            name="precincts"
+            label="Precincts"
+            disabled={isDisabled}
+            fullWidth
+            multiline
+            type="text"
+            value={editedRace.precincts ? editedRace.precincts.join('\n') : ''}
+            sx={{
+                m: 1,
+                boxShadow: 2,
+            }}
+            onChange={(e) => applyRaceUpdate(race => {
+                race.precincts = e.target.value ? e.target.value.split('\n') : undefined;
+            })}
+        />
     </>
 
-    return (
-        <>
-            <Grid container sx={{ m: 0, p: 1 }} >
-                <Grid item xs={12} sx={{ m: 0, p: 1 }}>
-                    <TextField
-                        id={`race-title-${String(race_index)}`}
-                        name="title"
-                        label="Title"
-                        type="text"
-                        error={errors.raceTitle !== ''}
-                        value={editedRace.title}
-                        sx={{
-                            m: 0,
-                            boxShadow: 2,
-                        }}
-                        fullWidth
-                        onChange={(e) => {
-                            setErrors({ ...errors, raceTitle: '' })
-                            applyRaceUpdate(race => { race.title = e.target.value })
-                        }
-                    }
-                    />
-                    <FormHelperText error sx={{ pl: 1, pt: 0 }}>
-                        {errors.raceTitle}
-                    </FormHelperText>
-                </Grid>
+    const candidateItems = election.state === 'draft' ? ephemeralCandidates : editedRace.candidates;
 
-                <Grid item xs={12} sx={{ m: 0, p: 1 }}>
-                    <TextField
-                        id={`race-description-${String(race_index)}`}
-                        name="description"
-                        label="Description"
-                        multiline
-                        fullWidth
-                        type="text"
-                        error={errors.raceDescription !== ''}
-                        value={editedRace.description}
-                        sx={{
-                            m: 0,
-                            boxShadow: 2,
-                        }}
-                        onChange={(e) => {
-                            setErrors({ ...errors, raceDescription: '' })
-                            applyRaceUpdate(race => { race.description = e.target.value })
-                        }}
-                    />
-                    <FormHelperText error sx={{ pl: 1, pt: 0 }}>
-                        {errors.raceDescription}
-                    </FormHelperText>
-                </Grid>
+    const handlePhotoDrop = async (e) =>  {
+        // load file data
+        let names = []
+        let promises = []
+        // forEach doesn't exist on fileList type
+        // I'm keeping the loops separate since all the files need to be retrieved from dataTransfer before any await functions are called
+        for(let i = 0; i < e.dataTransfer.files.length; i++){ 
+            let f = e.dataTransfer.files[i];
 
-                {
-                    flags.isSet('PRECINCTS') && election.settings.voter_access !== 'open' &&
-                    <Grid item xs={12}>
-                        <TextField
-                            id={`race-precincts-${String(race_index)}`}
-                            name="precincts"
-                            label="Precincts"
-                            fullWidth
-                            multiline
-                            type="text"
-                            value={editedRace.precincts ? editedRace.precincts.join('\n') : ''}
-                            sx={{
-                                m: 1,
-                                boxShadow: 2,
-                            }}
-                            onChange={(e) => applyRaceUpdate(race => {
-                                if (e.target.value === '') {
-                                    race.precincts = undefined
-                                }
-                                else {
-                                    race.precincts = e.target.value.split('\n')
-                                }
-                            })}
+            let parts = f.name.split('\.');
+            parts.pop(); // drop extension
+            names.push(parts.join('.'))
+
+            promises.push(getImage(URL.createObjectURL(f)).then(img => postImage(img)))
+        }
+
+        // get photos
+        let photos = (await Promise.all(promises)).map(res => res.photo_filename);
+
+        // create candidates
+        const existingIds = new Set(editedRace.candidates.map(c => c.candidate_id));
+        let newCandidates = names.map((n, i) => {
+            const hasCollision = (id: string) => existingIds.has(id);
+
+            const newId = makeUniqueIDSync(
+                ID_PREFIXES.CANDIDATE,
+                ID_LENGTHS.CANDIDATE,
+                hasCollision
+            );
+
+            return {
+                candidate_id: newId,
+                candidate_name: names[i],
+                photo_filename: photos[i],
+            } as Candidate;
+        })
+
+        // I can't use onEditCandidate since it can't be called multiple times
+        applyRaceUpdate(race => {
+            if(race.candidates.length == 1 && race.candidates[0].candidate_name == '') race.candidates.pop();
+            newCandidates.forEach(c => race.candidates.push(c))
+        });
+    }
+
+    return <Box display='flex' flexDirection='column' alignItems='stretch' gap={RACE_FORM_GAP} sx={{textAlign: 'left'}}>
+        <TitleAndDescription setErrors={setErrors} errors={errors} editedRace={editedRace} applyRaceUpdate={applyRaceUpdate} open={open}/>
+
+        <VotingMethodSelector election={election} editedRace={editedRace} isDisabled={isDisabled} setErrors={setErrors} errors={errors} applyRaceUpdate={applyRaceUpdate} open={open}/>
+
+        <FileDropBox onlyShowOnDrag helperText={'Add from photo(s)'} onDrop={handlePhotoDrop}>
+            <Button
+                // it's hacky, but opacity 0.8 does helps take the edge off the bold a bit
+                sx={{mr: "auto", textDecoration: 'none', textTransform: 'none', color: 'black', fontSize: '1.125rem', opacity: 0.86}}
+                onClick={() => setCandidatesExpanded((e) => !e)}
+            >
+                {candidatesExpaneded? <MinusIcon prefix/> :<AddIcon prefix/>} {t('race_form.candidates_title')}
+            </Button>
+            <FormHelperText error sx={{ pl: 1, pt: 0 }}>
+                {errors.candidates}
+            </FormHelperText>
+
+            <Box sx={{
+                position: 'relative',
+                height: candidatesExpaneded? `${candidateItems.length*66 - 11}px` : 0,
+                transition: 'height 0.5s',
+            }}>
+                <TransitionBox absolute enabled={candidatesExpaneded}>
+                    <Stack spacing={2}>
+                        <SortableList
+                            items={candidateItems}
+                            identifierKey="candidate_id"
+                            onChange={handleChangeCandidates}
+                            renderItem={(candidate, index) => (
+                                <SortableList.Item id={candidate.candidate_id}>
+                                    <CandidateForm
+                                        key={candidate.candidate_id}
+                                        onEditCandidate={(newCandidate) => onEditCandidate(newCandidate, index)}
+                                        candidate={candidate}
+                                        index={index}
+                                        onDeleteCandidate={() => onDeleteCandidate(index)}
+                                        disabled={ephemeralCandidates.length - 1 === index || election.state !== 'draft'}
+                                        inputRef={(el: React.MutableRefObject<HTMLInputElement[]>) => inputRefs.current[index] = el}
+                                        onKeyDown={(event: React.KeyboardEvent<HTMLInputElement>) => handleKeyDown(event, index)}
+                                        electionState={election.state} />
+                                </SortableList.Item>
+                            )}
                         />
-                    </Grid>
-                }
-            </Grid>
+                    </Stack>
+                </TransitionBox>
+            </Box>
+        </FileDropBox>
+    </Box>
+}
 
-            <Stepper nonLinear activeStep={activeStep} orientation="vertical" sx={{my: 3}}>
-                <Step>
-                    <StepButton onClick={() => setActiveStep(0)}>
-                        {t('edit_race.how_many_winners')}
-                        &nbsp;
-                        {editedRace.num_winners == 1 ?
-                            <b>{t(`edit_race.${methodFamily}`)}</b> :
-                            t('edit_race.count_with_family', {
-                                count: editedRace.num_winners,
-                                // .props.children[0] is a hack to remove the tip and parse out the string
-                                family: (typeof t(`edit_race.${methodFamily}`) == 'string') ?
-                                    t(`edit_race.${methodFamily}`) :
-                                    t(`edit_race.${methodFamily}`).props.children[0]
-                            })
-                        }
-                    </StepButton>
-                    <StepContent>
-                        <RadioGroup
-                            aria-labelledby="method-family-radio-group"
-                            name="method-family-radio-buttons-group"
-                            value={methodFamily}
-                            onChange={(e) => {
-                                if(e.target.value == 'single'){
-                                    setErrors({ ...errors, raceNumWinners: '' })
-                                    applyRaceUpdate(race => { race.num_winners = 1 })
-                                }
-                                setMethodFamily(e.target.value)
-                            }}
-                        >
-                            <FormControlLabel
-                                value="single_winner"
-                                control={<Radio />}
-                                label={t('edit_race.single_winner')}
-                                sx={{ mb: 0, pb: 0 }}
-                                onClick={() => {
-                                    applyRaceUpdate(race => {
-                                        if(PR_METHODS.includes(race.voting_method)) race.voting_method = '';
-                                        race.num_winners = 1
-                                    })
-                                }}
-                            />
-                            <FormControlLabel
-                                value="bloc_multi_winner"
-                                control={<Radio />}
-                                label={t('edit_race.bloc_multi_winner')}
-                                sx={{ mb: 0, pb: 0 }}
-                                onClick={() => {
-                                    applyRaceUpdate(race => {
-                                        if(PR_METHODS.includes(race.voting_method)) race.voting_method = '';
-                                        race.num_winners = Math.max(2, race.num_winners)
-                                    })
-                                }}
-                            />
-                            <FormControlLabel
-                                value="proportional_multi_winner"
-                                control={<Radio />}
-                                label={t('edit_race.proportional_multi_winner')}
-                                sx={{ mb: 0, pb: 0 }}
-                                onClick={() => {
-                                    applyRaceUpdate(race => {
-                                        if(!PR_METHODS.includes(race.voting_method)) race.voting_method = '';
-                                        race.num_winners = Math.max(2, race.num_winners)
-                                    })
-                                }}
-                            />
-                        </RadioGroup>
-                        <Box sx={{
-                            height: methodFamily == 'single_winner' ? 0 : '105px', // copied from the value for auto
-                            opacity: methodFamily == 'single_winner' ? 0 : 1,
-                            overflow: 'hidden',
-                            transition: 'height .4s, opacity .7s',
-                            maxWidth: '300px'
-                        }}>
-                            <Typography gutterBottom component="p" sx={{marginTop: 2}}>
-                                <b>{t('edit_race.number_of_winners')}</b>
-                            </Typography>
-                            <TextField
-                                id={`num-winners-${String(race_index)}`}
-                                name="Number Of Winners"
-                                type="number"
-                                InputProps={{
-                                    inputProps: { 
-                                        min: 2 
-                                    }
-                                }}
-                                fullWidth
-                                value={editedRace.num_winners}
-                                sx={{
-                                    p: 0,
-                                    boxShadow: 2,
-                                }}
-                                onChange={(e) => {
-                                    setErrors({ ...errors, raceNumWinners: '' })
-                                    applyRaceUpdate(race => { race.num_winners = parseInt(e.target.value) })
-                                }}
-                            />
-                            <FormHelperText error sx={{ pl: 1, pt: 0 }}>
-                                {errors.raceNumWinners}
-                            </FormHelperText>
-                        </Box>
-                    </StepContent>
-                </Step>
+const TitleAndDescription = ({setErrors, errors, editedRace, applyRaceUpdate, open}) => {
+    const [showDescription, setShowDescription] = useState(editedRace.description != '');
+    const { election, t } = useElection()
+    const isDisabled = election.state !== 'draft';
 
-                <Step>
-                    <StepButton onClick={() => setActiveStep(1)}>
-                        {t('edit_race.which_voting_method')}
-                        &nbsp;
-                        <b>{editedRace.voting_method != '' && t(`methods.${methodValueToTextKey[editedRace.voting_method]}.full_name`)}</b>
-                    </StepButton>
-                    <StepContent>
-                        <FormControl component="fieldset" variant="standard">
-                            <RadioGroup
-                                aria-labelledby="voting-method-radio-group"
-                                name="voter-method-radio-buttons-group"
-                                value={editedRace.voting_method}
-                                onChange={(e) => applyRaceUpdate(race => { race.voting_method = e.target.value })}
-                            >
-                                {methodFamily == 'proportional_multi_winner' ?
-                                    <MethodBullet value='STAR_PR'/>
-                                : <>
-                                    <MethodBullet value='STAR'/>
-                                    <MethodBullet value='RankedRobin'/>
-                                    <MethodBullet value='Approval'/>
-                                </>}
+    useEffect(() => {
+        setShowDescription(editedRace.description != '')
+    }, [open])
 
-                                <Box
-                                    display='flex'
-                                    justifyContent="left"
-                                    alignItems="center"
-                                    sx={{ width: '100%', ml: -1 }}>
+    return <>
+        <Box>
+            <TextField
+                id={`race-title`}
+                disabled={isDisabled}
+                name="title"
+                label={t('wizard.title_label')}
+                type="text"
+                error={errors.raceTitle !== ''}
+                value={editedRace.title}
+                sx={{
+                    m: 0,
+                    boxShadow: 2,
+                }}
+                fullWidth
+                onChange={(e) => {
+                    setErrors({ ...errors, raceTitle: '' })
+                    applyRaceUpdate(race => { race.title = e.target.value })
+                }}
+            />
+            <FormHelperText error sx={{ pl: 1, pt: 0 }}>
+                {errors.raceTitle}
+            </FormHelperText>
+        </Box>
 
-                                    {!showsAllMethods &&
-                                        <IconButton aria-label="Home" onClick={() => { setShowsAllMethods(true) }}>
-                                            <ExpandMore />
-                                        </IconButton>}
-                                    {showsAllMethods &&
-                                        <IconButton aria-label="Home" onClick={() => { setShowsAllMethods(false) }}>
-                                            <ExpandLess />
-                                        </IconButton>}
-                                    <Typography variant="body1" >
-                                        More Options
-                                    </Typography>
-                                </Box>
-                                <Box sx={{
-                                    height: showsAllMethods? 0 : '163px', // copied the value from auto
-                                    opacity: showsAllMethods? 0 : 1,
-                                    overflow: 'hidden',
-                                    transition: 'height .4s, opacity .7s',
-                                }}
-                                >
-                                    <Box
-                                        display='flex'
-                                        justifyContent="left"
-                                        alignItems="center"
-                                        sx={{ width: '100%', pl: 4, mt: -1 }}>
-
-                                        <FormHelperText >
-                                            These voting methods do not guarantee every voter an equally powerful vote if there are more than two candidates.
-                                        </FormHelperText>
-                                    </Box>
-
-
-                                    {methodFamily == 'proportional_multi_winner' ?
-                                        <MethodBullet value='STV'/>
-                                    : <>
-                                        <MethodBullet value='Plurality'/>
-                                        <MethodBullet value='IRV'/>
-                                    </>}
-
-                                </Box>
-                            </RadioGroup>
-                        </FormControl>
-                    </StepContent>
-                </Step>
-            </Stepper>
-
-            <Grid container sx={{ m: 0, p: 1 }} >
-                <Grid item xs={12} sx={{ m: 0, p: 1 }}>
-                    <Typography gutterBottom variant="h6" component="h6">
-                        Candidates
-                    </Typography>
-                    <FormHelperText error sx={{ pl: 1, mt: -1 }}>
-                        {errors.candidates}
-                    </FormHelperText>
-                </Grid>
-            </Grid>
-            <Stack spacing={2}>
-                {
-                    <SortableList
-                        items={ephemeralCandidates}
-                        identifierKey="candidate_id"
-                        onChange={handleChangeCandidates}
-                        renderItem={(candidate, index) => (
-                            <SortableList.Item id={candidate.candidate_id}>
-                                <CandidateForm
-                                    key={candidate.candidate_id}
-                                    onEditCandidate={(newCandidate) => onEditCandidate(newCandidate, index)}
-                                    candidate={candidate}
-                                    index={index}
-                                    onDeleteCandidate={() => onDeleteCandidate(index)}
-                                    disabled={ephemeralCandidates.length - 1 === index}
-                                    inputRef={el => inputRefs.current[index] = el}
-                                    onKeyDown={event => handleKeyDown(event, index)}/>
-                            </SortableList.Item>
-                        )}
-                    />
-                }
-            </Stack>
-        </>
-    )
+        <Box>
+            <Button
+                sx={{textDecoration: 'none', textTransform: 'none', color: 'black', fontSize: '1.125rem', opacity: 0.86}}
+                onClick={() => setShowDescription(d => !d)}
+            >
+                {showDescription? <MinusIcon prefix/> : <AddIcon prefix/>} Description (Optional)
+            </Button>
+            {showDescription && <>
+                <TextField
+                    id={`race-description`}
+                    name="description"
+                    label="Description"
+                    disabled={isDisabled}
+                    multiline
+                    fullWidth
+                    type="text"
+                    error={errors.raceDescription !== ''}
+                    value={editedRace.description}
+                    minRows={3}
+                    sx={{
+                        m: 0,
+                        boxShadow: 2,
+                    }}
+                    onChange={(e) => {
+                        setErrors({ ...errors, raceDescription: '' })
+                        applyRaceUpdate(race => { race.description = e.target.value })
+                    }}
+                />
+                <FormHelperText error sx={{ pl: 1, pt: 0 }}>
+                    {errors.raceDescription}
+                </FormHelperText>
+            </>}
+        </Box>
+    </>
 }

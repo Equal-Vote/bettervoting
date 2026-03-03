@@ -1,8 +1,6 @@
-import React from "react";
 import { TableContainer, Table, TableHead, TableRow, TableCell, TableBody } from "@mui/material";
-import { Paper } from "@mui/material";
 
-function CellViewer({ cell }) {
+function CellViewer({ cell }: { cell: number | null }) {
   if (cell === null) return <></>;
 
   return (
@@ -12,7 +10,15 @@ function CellViewer({ cell }) {
   );
 }
 
-export default function MatrixViewer({ results }) {
+interface Results {
+  summaryData: {
+    candidates: { name: string }[];
+    preferenceMatrix: (number | null)[][];
+    pairwiseMatrix: number[][];
+  };
+}
+
+export default function MatrixViewer({ results }: { results: Results }) {
   return (
       <TableContainer sx={{ maxHeight: 600, maxWidth: {xs:300, sm: 500, md: 600, lg: 1000}}}>
         <Table stickyHeader aria-label="sticky table">
@@ -43,7 +49,7 @@ export default function MatrixViewer({ results }) {
           </TableHead>
           <TableBody >
             {results.summaryData.preferenceMatrix.map((row, i) => (
-              <TableRow>
+              <TableRow key={i}>
                 <TableCell
                   style={{
                     position: 'sticky',

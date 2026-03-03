@@ -1,5 +1,5 @@
-import { Box, Button, Dialog, DialogContent, Stack, Step, StepConnector, StepContent, StepLabel, Stepper, TextField, Tooltip, Typography } from "@mui/material";
-import { useState, createContext, useContext } from "react";
+import { Dialog, DialogContent, Stack, Typography } from "@mui/material";
+import { useState, createContext, useContext, ReactNode } from "react";
 import { openFeedback, useSubstitutedTranslation } from "./util";
 import { sharedConfig } from "@equal-vote/star-vote-shared/config";
 import { PrimaryButton, SecondaryButton } from "./styles";
@@ -12,7 +12,7 @@ export interface IReturnToClassicContext{
 
 export const ReturnToClassicContext = createContext<IReturnToClassicContext>(null);
 
-export const ReturnToClassicContextProvider = ({children}) => {
+export const ReturnToClassicContextProvider = ({children}: {children: ReactNode}) => {
     const [open, setOpen] = useState(false);
 
     return <ReturnToClassicContext.Provider
@@ -26,11 +26,11 @@ export const ReturnToClassicContextProvider = ({children}) => {
     </ReturnToClassicContext.Provider>
 }
 
-export default () => {
+const ReturnToClassicDialog = () => {
     const returnToClassicContext = useContext(ReturnToClassicContext);
     const {t} = useSubstitutedTranslation('election');
     return <>
-        <Dialog open={returnToClassicContext.open}>
+        <Dialog open={returnToClassicContext.open} onClose={returnToClassicContext.closeDialog}>
             <DialogContent sx={{margin: 4}}>
                 <Stack className="classicPopupInner">
                     <Typography align='center' >{t('return_to_classic.description')}</Typography>
@@ -58,3 +58,5 @@ export default () => {
         </Dialog>
     </>
 }
+
+export default ReturnToClassicDialog

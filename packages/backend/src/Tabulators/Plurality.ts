@@ -1,22 +1,24 @@
-import { approvalSummaryData, ballot, candidate, pluralityResults, pluralitySummaryData, roundResults, totalScore } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
+import { candidate, pluralityCandidate, pluralityResults, pluralitySummaryData, plurlaityRoundResults, rawVote, roundResults } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
 
-import { commaListFormatter, getInitialData, makeBoundsTest, makeAbstentionTest, runBlocTabulator } from "./Util";
+import { commaListFormatter, makeBoundsTest, makeAbstentionTest, runBlocTabulator, getSummaryData } from "./Util";
 import { ElectionSettings } from "@equal-vote/star-vote-shared/domain_model/ElectionSettings";
 
-export function Plurality(candidates: string[], votes: ballot[], nWinners = 1, randomTiebreakOrder:number[] = [], breakTiesRandomly = true, electionSettings?:ElectionSettings) {
-  breakTiesRandomly = true // hard coding this for now
-
-  const [_, summaryData] = getInitialData<pluralitySummaryData>(
+export function Plurality(candidates: candidate[], votes: rawVote[], nWinners = 1, electionSettings?:ElectionSettings) {
+  const {summaryData} = getSummaryData<pluralityCandidate, pluralitySummaryData>(
     // ordinal would be more correct, but for computing totalScores plurlaity uses cardinal rules
-		votes, candidates, randomTiebreakOrder, 'cardinal', 
+    candidates.map(c => ({...c, score: 0})),
+    votes,
+    'cardinal', 
+    'score',
 		[
 			makeBoundsTest(0, 1),
-			makeAbstentionTest(null),
-      ['nOvervotes', (ballot: number[]) => ballot.filter(v => v==1).length > 1]
+			makeAbstentionTest(),
+      // not sure why I can't use Object.values below
+      ['nOvervotes', (vote: rawVote) => Object.entries(vote.marks).reduce((prev, [_, m]) => prev + (m??0), 0) > 1]
 		]
 	);
 
-  return runBlocTabulator<pluralityResults, pluralitySummaryData>(
+  return runBlocTabulator<pluralityCandidate, pluralitySummaryData, pluralityResults>(
 		{
       votingMethod: 'Plurality',
       elected: [],
@@ -31,17 +33,9 @@ export function Plurality(candidates: string[], votes: ballot[], nWinners = 1, r
   );
 }
 
-const singleWinnerPlurality = (remainingCandidates: candidate[], summaryData: pluralitySummaryData): roundResults => {
-  let scoresLeft = remainingCandidates.map(c => summaryData.totalScores.find(s => s.index == c.index)) as totalScore[];
-  scoresLeft.sort((a:totalScore, b:totalScore) => -(a.score-b.score));
-
-  const candidates = summaryData.candidates;
-
-  let topScore = scoresLeft[0];
-  let tiedCandidates = scoresLeft
-    .filter(s => s.score == topScore.score)
-    .map(s => candidates[s.index]);
-  let winner = candidates[topScore.index];
+const singleWinnerPlurality = (remainingCandidates: pluralityCandidate[], summaryData: pluralitySummaryData): plurlaityRoundResults => {
+  let winner = remainingCandidates[0];
+  let tiedCandidates = remainingCandidates.filter(c => c.score == winner.score);
 
   return {
     winners: [winner],

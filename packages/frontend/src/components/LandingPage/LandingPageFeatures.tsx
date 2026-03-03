@@ -1,6 +1,4 @@
-import { Box, Grid, Typography } from '@mui/material'
-import React from 'react'
-import FeaturedElection from './FeaturedElection'
+import { Box, Typography } from '@mui/material'
 import { useSubstitutedTranslation } from '../util';
 
 
@@ -9,8 +7,8 @@ interface FeaturePanel{
     text: string;
 }
 
-export default () => {
-    let {t} = useSubstitutedTranslation('election');
+const LandingPageFeatures = () => {
+    const {t} = useSubstitutedTranslation('election');
 
     const panels = t('landing_page.features.items') as FeaturePanel[];
 
@@ -47,3 +45,4 @@ export default () => {
         </Box>
     )
 }
+export default LandingPageFeatures

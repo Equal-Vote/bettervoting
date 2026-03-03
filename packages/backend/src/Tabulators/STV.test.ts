@@ -1,3 +1,4 @@
+import { mapMethodInputs } from '../test/TestHelper'
 import { STV } from './IRV'
 
 describe("STV Tests", () => {
@@ -18,15 +19,15 @@ describe("STV Tests", () => {
             [2, 3, 1, 4, 0],
             [2, 3, 4, 1, 0],
         ]
-        const results = STV(candidates, votes,2)
+        const results = STV(...mapMethodInputs(candidates, votes),2)
         expect(results.elected.length).toBe(2); 
         expect(results.elected[0].name).toBe('Alice');
         expect(results.elected[1].name).toBe('Bob');
-        expect(results.voteCounts.length).toBe(3); 
-        expect(results.voteCounts[0]).toStrictEqual([5,2,1,1]);  
-        expect(results.voteCounts[1]).toStrictEqual([0,3,1,1]);  // first 5 voters weight reduced to 1/5 and transfered to Bob
-        expect(results.voteCounts[2]).toStrictEqual([0,4,1,0]);  // Dave eliminated and transfered to Bob
 
+        expect(results.summaryData.candidates[0].hareScores).toStrictEqual([5,0,0]);  
+        expect(results.summaryData.candidates[1].hareScores).toStrictEqual([2,3,4]);  
+        expect(results.summaryData.candidates[2].hareScores).toStrictEqual([1,1,1]);  
+        expect(results.summaryData.candidates[3].hareScores).toStrictEqual([1,1,0]);  
     })
 
 })

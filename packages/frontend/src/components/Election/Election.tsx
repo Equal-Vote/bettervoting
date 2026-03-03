@@ -1,15 +1,15 @@
 import { useParams } from "react-router";
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import ElectionHome from "./ElectionHome";
 import VotePage from './Voting/VotePage'
 import Admin from './Admin/Admin'
 import ViewElectionResults from './Results/ViewElectionResults'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { Routes, Route } from 'react-router-dom'
 import Sidebar from "./Sidebar";
-import { Box, Grid } from "@mui/material";
+import { Box } from "@mui/material";
 import Thanks from "./Voting/Thanks";
-import ViewBallot from "./Admin/ViewBallot";
-import useElection, { ElectionContextProvider } from "../ElectionContextProvider";
+import VerifyBallot from  "./Voting/VerifyBallot";
+import { ElectionContextProvider } from "../ElectionContextProvider";
 import { useElectionExists } from "../../hooks/useAPI";
 import { sharedConfig } from "@equal-vote/star-vote-shared/config";
 import { AnonymizedBallotsContextProvider } from "../AnonymizedBallotsContextProvider";
@@ -39,7 +39,7 @@ const Election = () => {
               <Route path='/thanks' element={<Thanks />} />
               <Route path='/results' element={<ViewElectionResults />} />
               <Route path='/admin/*' element={<Admin />} />
-              <Route path='/ballot/:ballot_id' element={<ViewBallot ballot={null} onClose={null} />} />
+              <Route path='/ballot/:ballot_id' element={<VerifyBallot />} />
               <Route path='/id/:voter_id' element={<ElectionHome />} />
             </Routes>
           </Box>

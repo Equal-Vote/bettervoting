@@ -19,9 +19,7 @@
       "~/*": ["./src/*"]
     },
     "types": [
-      "vite/client",
-      "node",
-      "@modyfi/vite-plugin-yaml/modules"
+      "node"
     ]
   },
   "include": ["./src"]

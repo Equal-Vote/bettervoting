@@ -1,42 +1,65 @@
 import { Box, Paper, Typography } from '@mui/material';
-import { log } from 'console';
-import React, { useState }  from 'react'
 import { starResults } from '@equal-vote/star-vote-shared/domain_model/ITabulators';
 import Widget from '../components/Widget';
 
 
-const STARResultDetailedStepsWidget = ({ results, rounds, t, filterRandomFromLogs}: {results: starResults, rounds: number, t: Function, filterRandomFromLogs: boolean }) => {
+// NOTE: we're not using filterRandomFromLogs at the moment, but we'll add the functionality back later
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const STARResultDetailedStepsWidget = ({ results, rounds, t, filterRandomFromLogs}: {results: starResults, rounds: number, t: (key: string, v?: object) => any, filterRandomFromLogs: boolean }) => {
 
-    // Note: there are other keys I don't want to show, but at least one of
-    //       these will be used if the tiebreaker process is used
-    const warningKeys = [
-        'tabulation_logs.star.scoring_round_tiebreaker_start',
-        'tabulation_logs.star.runoff_round_tiebreaker_start',
+    // make log groups
+    const topLogs = [
+        'tabulation_logs.star.advance_to_runoff_basic',
+        'tabulation_logs.star.advance_to_runoff_same_score',
+        'tabulation_logs.star.advance_to_runoff_tiebreak',
+        'tabulation_logs.star.runoff_win',
+        'tabulation_logs.star.runoff_tiebreak',
     ];
-    const showTieBreakerWarning = results.roundResults.some(round => (round.logs.some(log =>
-        typeof log !== 'string' && warningKeys.includes(log.key)
-    )))
+    const roundLogGroups = results.roundResults.map(round => {
+        const logGroups = [];
+        let group = [];
+        round.logs.forEach((log) => {
+            if(typeof log === 'string'){
+                group.push(log);
+            }else{
+                group.push(t(log['key'], log));
+                if(topLogs.includes(log['key'])){
+                    logGroups.push(group);
+                    group = [];
+                }
+            }
+        })
+        return logGroups;
+    })
 
-    let logs = (t('results.star.tiebreaker_note_text') as Array<String>)
-    // this approach is a bit error prone, but it works for now
-    if(filterRandomFromLogs) logs = logs.slice(0, logs.length-2);
-    return <div className='detailedSteps'>
-        {results.roundResults.map((round, r) => (
-            <Box key={r}>
-                {rounds > 1 && <Typography variant="h4">{`Winner ${r + 1}`}</Typography>}
-                <ol style={{textAlign: 'left'}}>
-                    {round.logs.map((log, i) => (<li key={i}>
-                        {typeof log === 'string' ? log : t(log['key'], log)}
-                    </li>))}
-                </ol>
-            </Box>
-        ))}
-        { showTieBreakerWarning && <Paper elevation={2} sx={{backgroundColor: 'theme.gray4', width: '90%', margin: 'auto', textAlign: 'left', padding: 3}}>
-            <b>{t('results.star.tiebreaker_note_title')}</b>️
-            <hr/>
-            {logs.slice(0, ).map((s,i) => <p key={i}>{s}</p>)}
-        </Paper> }
-    </div>
+    // disabling for now
+    const showTieBreakerWarning = false; // roundLogGroups.some(r => r.some(g => g.length > 1));
+
+    return <Widget title={t('results.star.detailed_steps_title')} wide>
+        <div className='detailedSteps'>
+            { showTieBreakerWarning && <Paper elevation={2} sx={{backgroundColor: 'theme.gray4', width: '90%', margin: 'auto', textAlign: 'left', padding: 3}}>
+                <b>{t('results.star.tiebreaker_note_title')}</b>️
+                <hr/>
+                {(t('results.star.tiebreaker_note_text') as Array<string>).slice(0, ).map((s,i) => <p key={i}>{s}</p>)}
+            </Paper> }
+            {results.roundResults.map((round, r) => (
+                <Box key={r}>
+                    {rounds > 1 && <Typography variant="h4">{`Winner ${r + 1}`}</Typography>}
+                    <ul style={{listStyleType: 'none'}}>
+                        {roundLogGroups[r].map((group, i) => <li key={i} style={{textAlign: 'left'}}>
+                            {group.length == 1 && group[0]}
+                            {group.length > 1 && <details key={i}>
+                                <summary>{group.at(-1)}</summary>
+                                <ol>
+                                    {group.slice(0, -1).map((item, j) => <li key={j}>{item}</li>)}
+                                </ol>
+                            </details>}
+                        </li>)}
+                    </ul>
+                </Box>
+            ))}
+        </div>
+    </Widget>
 }
 
 export default STARResultDetailedStepsWidget;

@@ -1,12 +1,10 @@
-import React, { useContext } from 'react'
 import Grid from "@mui/material/Grid";
-import { Box, Divider, Paper } from "@mui/material";
+import { Box, Button, Divider } from "@mui/material";
 import { Typography } from "@mui/material";
 import { PrimaryButton } from "../../styles";
 import { Link, useNavigate } from 'react-router-dom';
-import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
 import ShareButton from "../ShareButton";
-import { useArchiveEleciton, useFinalizeElection, usePostElection, useSetPublicResults } from "../../../hooks/useAPI";
+import { useArchiveEleciton, useSetOpenState, useFinalizeElection, usePostElection, useSetPublicResults } from "../../../hooks/useAPI";
 import { useSubstitutedTranslation } from '../../util';
 import useConfirm from '../../ConfirmationDialogProvider';
 import useElection from '../../ElectionContextProvider';
@@ -17,10 +15,12 @@ import structuredClone from '@ungap/structured-clone';
 import useAuthSession from '../../AuthSessionContextProvider';
 import useFeatureFlags from '../../FeatureFlagContextProvider';
 import ElectionAuthForm from '~/components/ElectionForm/Details/ElectionAuthForm';
+import useSnackbar from "~/components/SnackbarContext";
+import TemporaryAccessWarning from "../TemporaryAccessWarning";
 
 type SectionProps = {
     text: {[key: string]: string}
-    button: any
+    button: JSX.Element
     permission?: string
     includeDivider?: boolean
 }
@@ -30,6 +30,7 @@ const AdminHome = () => {
     const { election, refreshElection: fetchElection, permissions } = useElection()
     const {t} = useSubstitutedTranslation(election.settings.term_type, {time_zone: election.settings.time_zone});
     const { makeRequest } = useSetPublicResults(election.election_id)
+    const { setSnack } = useSnackbar()
     const togglePublicResults = async () => {
         const public_results = !election.settings.public_results
         await makeRequest({ public_results: public_results })
@@ -37,9 +38,10 @@ const AdminHome = () => {
     }
     const { makeRequest: finalize } = useFinalizeElection(election.election_id)
     const { makeRequest: archive } = useArchiveEleciton(election.election_id)
+    const { makeRequest: setOpenState } = useSetOpenState(election.election_id)
 
     const navigate = useNavigate()
-    const { error, isPending, makeRequest: postElection } = usePostElection()
+    const { makeRequest: postElection } = usePostElection()
     
     const confirm = useConfirm()
     const emailConfirm = useConfirm()
@@ -48,14 +50,25 @@ const AdminHome = () => {
         return (permissions && permissions.includes(requiredPermission))
     }
 
+    if (!hasPermission('canEditElectionState')) return <Box width='100%'>
+        <Typography align='center' variant="h5" sx={{ color: 'error.main', pl: 2 }}>
+            {t('admin_home.admin_access_denied')}
+        </Typography>
+    </Box>
+
     const finalizeElection = async () => {
-        const confirmed = await confirm(t('admin_home.finalize_confirm'))
-        if (!confirmed) return
+        const confirmed = await confirm(t('admin_home.finalize_confirm'));
+        if (!confirmed) return;
         try {
-            await finalize()
-            await fetchElection()
+            await finalize() && setSnack({
+                message: t('admin_home.finalize_snack'),
+                severity: 'success',
+                open: true,
+                autoHideDuration: 6000,
+            });
+            await fetchElection();
         } catch (err) {
-            console.error(err)
+            console.error(err);
         }
 
         const currentTime = new Date();
@@ -72,10 +85,15 @@ const AdminHome = () => {
     }
 
     const archiveElection = async () => {
-        const confirmed = await confirm(t('admin_home.finalize_confirm'))
+        const confirmed = await confirm(t('admin_home.archive_confirm'))
         if (!confirmed) return
         try {
-            await archive()
+            await archive() && setSnack({
+                message: t('admin_home.archive_snack'),
+                severity: 'success',
+                open: true,
+                autoHideDuration: 6000,
+            });
             await fetchElection()
         } catch (err) {
             console.error(err)
@@ -102,9 +120,23 @@ const AdminHome = () => {
         navigate(`/${newElection.election.election_id}/admin`)
     }
 
+    const changeOpenState = async (open: boolean) => {
+        try {
+            await setOpenState({open}) && setSnack({
+                message: t(`admin_home.${open ? 'open': 'close'}_snack`),
+                severity: 'success',
+                open: true,
+                autoHideDuration: 6000,
+            });
+            await fetchElection();
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
     const Section = ({ text, button, permission, includeDivider=true }: SectionProps) => 
         <Grid container sx={{ maxWidth: 800}}>
-            <Grid xs={12} md={8} sx={{ p: 1 }}>
+            <Grid item xs={12} md={8} sx={{ p: 1 }}>
                 <Box sx={{ minHeight: { xs: 0, md: 60 } }}>
                     <Typography variant="h5">
                         {text.description}
@@ -121,7 +153,7 @@ const AdminHome = () => {
                     }
                 </Box>
             </Grid>
-            <Grid xs={12} md={4} sx={{ p: 1, pl: 2, display: 'flex', alignItems: 'center' }}>
+            <Grid item xs={12} md={4} sx={{ p: 1, pl: 2, display: 'flex', alignItems: 'center' }}>
                 {button}
             </Grid>
             {includeDivider && <Divider style={{width: '100%'}}/>}
@@ -147,6 +179,7 @@ const AdminHome = () => {
         button={(<>
             <PrimaryButton
                 type='button'
+                role='button'
                 fullWidth
                 component={Link} to={`/${election.election_id}`}
             >
@@ -168,17 +201,9 @@ const AdminHome = () => {
         }
     />
 
-    const ResultsSection = () => <Section
-        text={t('admin_home.view_results')}
-        permission='canViewPreliminaryResults'
-        button={(<>
-            
-        </>)}
-    />
-
     const TogglePublicResultsSection = () => {
-        let m = t('admin_home.public_results');
-        let text = {
+        const m = t('admin_home.public_results');
+        const text = {
             ...m,
             description: election.settings.public_results === true ? m.make_private : m.make_public
         };
@@ -199,8 +224,8 @@ const AdminHome = () => {
 
     const ArchiveElectionSection = () => <Section
         text={t('admin_home.archive')}
-        permission='canEditElectionState'
         includeDivider={false}
+        permission='canEditElectionState'
         button={(<>
             <PrimaryButton
                 disabled={!hasPermission('canEditElectionState')}
@@ -212,17 +237,36 @@ const AdminHome = () => {
         </>)}
     />
 
+    const CloseElectionSection = () => <Section
+        text={t('admin_home.close')}
+        permission='canEditElectionState'
+        button={(<>
+            <PrimaryButton
+                disabled={!hasPermission('canEditElectionState')}
+                fullWidth
+                onClick={() => changeOpenState(false)}
+            >
+                {t('admin_home.close.button')}
+            </PrimaryButton>
+        </>)}
+    />
+
+    const OpenElectionSection = () => <Section
+        text={t('admin_home.open')}
+        permission='canEditElectionState'
+        button={(<>
+            <PrimaryButton
+                disabled={!hasPermission('canEditElectionState')}
+                fullWidth
+                onClick={() => changeOpenState(true)}
+            >
+                {t('admin_home.open.button')}
+            </PrimaryButton>
+        </>)}
+    />
+
     const HeaderSection = () => {
         return <Box width='100%'>
-
-            {
-            /* Sometimes the email blast will bug, and then this message will make the UX of the bug worse */
-            /*{(election.state === 'open' || election.state == 'finalized') && election.settings.invitation &&
-                <Typography align='center' gutterBottom variant="h6" component="h6" >
-                    {t('admin_home.header_invitations_sent')}
-                </Typography>
-            }*/}
-
             {election.state === 'finalized' && election.start_time &&
                 <Typography align='center' gutterBottom variant="h6" component="h6" >
                     {t('admin_home.header_start_time', {datetime: election.start_time})}
@@ -247,26 +291,21 @@ const AdminHome = () => {
     }
 
     const FinalizeSection = () => <Box sx={{maxWidth: 800}}>
-        <Grid xs={12} sx={{ p: 1, pt: 3, pb: 0 }}>
+        <Grid item xs={12} sx={{ p: 1, pt: 3, pb: 0 }}>
             <Typography align='center' variant="body1" sx={{ pl: 2 }}>
                 {t('admin_home.finalize_description')}
+                {' '}
                 {t(election.start_time? 'admin_home.finalize_voting_begins_later' : 'admin_home.finalize_voting_begins_now')}
             </Typography>
-            {/* I don't think this is true anymore */}
-            {/* {election.settings.invitation &&
-                <Typography align='center' variant="body1" sx={{ pl: 2 }}>
-                   {t('admin_home.finalize_invitations_will_send')}
-                </Typography>
-            } */}
             {!hasPermission('canEditElectionState') &&
                 <Typography align='center' variant="body1" sx={{ color: 'error.main', pl: 2 }}>
                     {t('admin_home.permissions_error')}
                 </Typography>
             }
         </Grid>
-        <Grid xs={12} sx={{ p: 1, pt: 0, display: 'flex', alignItems: 'center' }}>
+        <Grid item xs={12} sx={{ p: 1, pt: 0, display: 'flex', alignItems: 'center' }}>
             <PrimaryButton
-                disabled={election.title.length === 0 || election.races.length === 0 || !hasPermission('canEditElectionState')}
+                disabled={election.title.length === 0 || election.races.length === 0 || !hasPermission('canEditElectionState') || !authSession.isLoggedIn()}
                 fullWidth
                 onClick={() => finalizeElection()}
                 sx={{mt: 2}}
@@ -276,6 +315,19 @@ const AdminHome = () => {
                 </Typography>
             </PrimaryButton>
         </Grid>
+        {!authSession.isLoggedIn() && 
+        <Grid xs={12} sx={{ p: 1, pt: 0, display: 'flex', alignItems: 'center' }}>
+            <Typography align='center' variant="body1" sx={{ pl: 2, m:'auto' }}>
+                {/* I'm setting an href here and an onClick, so that the url styling will work like other a-href components*/}
+                <a href='#free-account-text' id='free-account-text' onClick={() => {
+                    sessionStorage.setItem('election_to_claim', election.election_id)
+                    authSession.openLogin()
+                }}>
+                    Create a free account
+                </a>
+                &nbsp;to finalize your election!
+            </Typography>
+        </Grid>}
     </Box>
     
     const flags = useFeatureFlags();
@@ -288,6 +340,7 @@ const AdminHome = () => {
         gap={6}
         sx={{ width: '100%', maxWidth: 800, margin: 'auto' }}
     >
+        <TemporaryAccessWarning />
         <HeaderSection />
         <ElectionDetailsInlineForm />
         {(election.state !== 'draft' && election.state !== 'finalized') && 
@@ -295,15 +348,16 @@ const AdminHome = () => {
                 <Box sx={{width: '100%', maxWidth: 300}}>
                     <ShareButton url={`${window.location.origin}/${election.election_id}`} />
                 </Box>
-                <Box sx={{width: '100%', maxWidth: 300}}>
-                    <PrimaryButton
-                        disabled={!(hasPermission('canViewPreliminaryResults') || election.settings.public_results === true)}
-                        fullWidth
-                        component={Link} to={`/${election.election_id}/results`}
-                    >
-                        {t('admin_home.view_results.button')}
-                    </PrimaryButton>
-                </Box>
+                {(hasPermission('canViewPreliminaryResults') && election.settings.public_results || election.state === 'closed') &&
+                    <Box sx={{width: '100%', maxWidth: 300}}>
+                        <PrimaryButton
+                            fullWidth
+                            component={Link} to={`/${election.election_id}/results`}
+                        >
+                            {t('admin_home.view_results.button')}
+                        </PrimaryButton>
+                    </Box>
+                }
             </Box>
         }
         {(election.settings.voter_access === 'open') && <ElectionAuthForm />}
@@ -311,10 +365,12 @@ const AdminHome = () => {
         <Races />
         <Box sx={{width: '100%'}}>
             {(election.state === 'draft') && <TestBallotSection /> }
-            {(election.state !== 'draft' && election.state !== 'finalized') && <TogglePublicResultsSection/>}
+            {!['draft', 'finalized'].includes(election.state) && !(election.state === 'open' && election.settings.ballot_updates) && <TogglePublicResultsSection/>}
             {flags.isSet('ELECTION_ROLES') && <EditRolesSection />}
             <DuplicateElectionSection/>
-            <ArchiveElectionSection />
+            {(election.state === 'open') && !election.start_time && !election.end_time && <CloseElectionSection />}
+            {(election.state === 'closed') && !election.start_time && !election.end_time && <OpenElectionSection />}
+            {election.state != 'archived' && <ArchiveElectionSection />}
         </Box>
 
         {election.state === 'draft' && <FinalizeSection /> }

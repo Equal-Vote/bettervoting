@@ -1,53 +1,23 @@
-import { useEffect, useState } from "react"
-import { useLocation, useNavigate, useParams } from "react-router";
-import React from 'react'
-import Button from "@mui/material/Button";
+import { useEffect } from "react"
 import Container from '@mui/material/Container';
-import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip, Typography } from "@mui/material";
-import PermissionHandler from "../../PermissionHandler";
-import ViewBallot from "./ViewBallot";
+import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
 import { useGetBallots } from "../../../hooks/useAPI";
-import { epochToDateString, getLocalTimeZoneShort, useSubstitutedTranslation } from "../../util";
 import useElection from "../../ElectionContextProvider";
 import useFeatureFlags from "../../FeatureFlagContextProvider";
 import DraftWarning from "../DraftWarning";
 import { BallotDataExport } from "../Results/BallotDataExport";
-import { SecondaryButton } from "~/components/styles";
+import { Election } from "@equal-vote/star-vote-shared/domain_model/Election";
 
 const ViewBallots = () => {
     // some ballots will have different subsets of the races, but we need the full list anyway
     // so we use election instead of precinctFilteredElection
     const { election } = useElection()
-    const { data, isPending, error, makeRequest: fetchBallots } = useGetBallots(election.election_id)
+    const { data, isPending, makeRequest: fetchBallots } = useGetBallots(election.election_id)
 
     const flags = useFeatureFlags();
     useEffect(() => { fetchBallots() }, [])
-    const [isViewing, setIsViewing] = useState(false)
-    const [addRollPage, setAddRollPage] = useState(false)
-    const [selectedBallot, setSelectedBallot] = useState(null)
-    const navigate = useNavigate();
-    const location = useLocation();
 
-    const {t} = useSubstitutedTranslation(election.settings.term_type)
 
-    const onOpen = (ballot) => {
-        setIsViewing(true);
-        setSelectedBallot({ ...ballot })
-        navigate(`${location.pathname}?viewing=true`, { replace: false });
-    }
-    const onClose = () => {
-        setIsViewing(false)
-        setAddRollPage(false)
-        setSelectedBallot(null)
-        fetchBallots()
-        navigate(location.pathname, { replace: false });
-    }
-    useEffect(() => {
-        if (!location.search.includes('viewing=true') && isViewing) {
-            onClose();
-        }
-    }, [location.search])
-    
     return (
         <Container>
             <DraftWarning />
@@ -58,7 +28,7 @@ const ViewBallots = () => {
                 View Ballots
             </Typography>
             {isPending && <div> Loading Data... </div>}
-            {data && data.ballots && !isViewing && !addRollPage &&
+            {data?.ballots &&
                 <>
                     <TableContainer component={Paper}>
                         <Table style={{ width: '100%' }} aria-label="simple table">
@@ -66,7 +36,7 @@ const ViewBallots = () => {
                                 <TableRow >
                                     <TableCell colSpan={3}></TableCell>
                                     {election.races.map(race => (
-                                        <TableCell align='center' sx={{borderWidth: 1, borderTopWidth: 0, borderColor: 'lightgray', borderStyle: 'solid'}}  colSpan={race.candidates.length}>
+                                        <TableCell key={race.race_id} align='center' sx={{borderWidth: 1, borderTopWidth: 0, borderColor: 'lightgray', borderStyle: 'solid'}}  colSpan={race.candidates.length}>
                                             {race.title}
                                         </TableCell>
                                     ))}
@@ -81,12 +51,11 @@ const ViewBallots = () => {
                                 <TableCell> Status </TableCell>
                                 {election.races.map((race) => (
                                     race.candidates.map((candidate) => (
-                                        <TableCell>
+                                        <TableCell key={candidate.candidate_id} >
                                             {candidate.candidate_name}
                                         </TableCell>
                                     ))
                                 ))}
-                                <TableCell> View </TableCell>
                             </TableHead>
                             <TableBody>
                                 {data.ballots.map((ballot) => (
@@ -98,20 +67,16 @@ const ViewBallots = () => {
                                         <TableCell >{ballot.status.toString()}</TableCell>
                                         {ballot.votes.map((vote) => (
                                             vote.scores.map((score) => (
-                                                <TableCell >{score.score || ''}</TableCell>
+                                                <TableCell key={score.candidate_id}>{score.score || ''}</TableCell>
                                             ))))}
-                                        <TableCell ><SecondaryButton onClick={() => onOpen(ballot)} > View </SecondaryButton></TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
                         </Table>
                     </TableContainer>
 
-                    <BallotDataExport election={election}/>
+                    <BallotDataExport election={election as Election}/>
                 </>
-            }
-            {isViewing && selectedBallot &&
-                <ViewBallot ballot={selectedBallot} onClose={onClose} />
             }
         </Container>
     )

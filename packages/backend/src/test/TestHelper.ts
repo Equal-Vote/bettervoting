@@ -7,6 +7,7 @@ import Logger from "../Services/Logging/Logger";
 import { TestLoggerImpl } from "../Services/Logging/TestLoggerImpl";
 import ServiceLocator  from "../ServiceLocator"
 import { MockEventQueue } from "../Services/EventQueue/MockEventQueue";
+import { candidate, rawVote } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
 const request = require("supertest");
 
 type ElectionResponse = {
@@ -23,6 +24,16 @@ type BallotResponse = {
     election: Election;
     voterAuth: VoterAuth;
 };
+
+export const mapMethodInputs = (names: string[], votes: (number | null)[][]): [candidate[], rawVote[]] => ([
+    // candidates
+    names.map((name,i) => ({name, id: name, tieBreakOrder: i, votesPreferredOver: {}, winsAgainst: {}} as candidate)) as candidate[],
+    votes.map(v => ({
+        marks: Object.fromEntries(names.map((name,i) => ([name, v[i]]))),
+        overvote_rank: v?.[names.length] ?? undefined,
+        has_duplicate_rank: v?.[names.length+1] ?? undefined,
+    } as rawVote)) as rawVote[],
+])
 
 export class TestHelper {
     public expressApp;

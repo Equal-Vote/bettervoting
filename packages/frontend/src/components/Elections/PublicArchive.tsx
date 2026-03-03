@@ -1,18 +1,17 @@
-import React, { useEffect, useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useGetElections } from "../../hooks/useAPI";
 import { useNavigate } from 'react-router';
 import EnhancedTable from '../EnhancedTable';
-import { Box, Container, Link, Paper, Typography } from '@mui/material';
-import useFeatureFlags from '../FeatureFlagContextProvider';
+import { Container } from '@mui/material';
 
-export default () => {
+const PublicArchive = () => {
     const navigate = useNavigate();
 
-    const { data, isPending, error, makeRequest: fetchElections } = useGetElections();
+    const { data, isPending, makeRequest: fetchElections } = useGetElections();
 
     useEffect(() => {fetchElections()}, []);
 
-    let publicArchiveData = useMemo(
+    const publicArchiveData = useMemo(
         () =>  [...data?.public_archive_elections ?? [] ],
         [data]
     );
@@ -30,3 +29,5 @@ export default () => {
         />
     </Container>
 }
+
+export default PublicArchive;

@@ -29,6 +29,12 @@ const editElection = async (req: IElectionRequest, res: Response, next: NextFunc
         Logger.info(req, `Body Election ${inputElection.election_id} != param ID ${req.params.id}`);
         throw new BadRequest("Election ID must match the URL Param")
     }
+
+    // re-opening an election should maintain mutual exclusion of ballot_updates and preliminary results
+    if (inputElection.settings.ballot_updates && inputElection.state === "open" && inputElection.settings.public_results) {
+        inputElection.settings.public_results = false;
+    }
+
     Logger.debug(req, `election ID = ${inputElection}`);
     var failMsg = `Failed to update election`;
 

@@ -1,25 +1,24 @@
-import { Box, Button, ClickAwayListener, IconButton, Tooltip, responsiveFontSizes, styled } from "@mui/material"
-import { TextField, useTheme } from '@mui/material';
+import { Box, Button, ClickAwayListener, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Paper, TextFieldProps, Tooltip, Typography } from "@mui/material"
+import { TextField } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import { useState } from "react";
+import { ReactNode, useState, isValidElement } from "react";
 import en from './en.yaml';
 import { useSubstitutedTranslation } from "./util";
-import { TermType } from "@equal-vote/star-vote-shared/domain_model/ElectionSettings";
 import useRace from "./RaceContextProvider";
 import useElection from "./ElectionContextProvider";
-import { Link } from "react-router-dom";
+import { ButtonProps } from "@mui/material";
 
 // this doesn't work yet, I filed a github issue
 // https://github.com/Modyfi/vite-plugin-yaml/issues/27
 type TipName = keyof typeof en.tips;
 
 
-export const Tip = (props: {name?: TipName, children?: any, content?: any}) => {
+export const Tip = (props: {name?: TipName, children?: ReactNode, content?: {title:string, description:string | JSX.Element}}) => {
     // TODO: maybe I can insert useElection and useRace within useSubstitutedTranslation?
     const {t: ts, i18n} = useSubstitutedTranslation('election');
     const {t: te} = useElection();
     const {t: tr} = useRace();
-    let t = (tr() !== undefined) ? tr : (
+    const t = (tr() !== undefined) ? tr : (
         (te() !== undefined) ? te : ts
     );
 
@@ -32,7 +31,7 @@ export const Tip = (props: {name?: TipName, children?: any, content?: any}) => {
                 <strong>{props.name ? t(`tips.${props.name as string}.title`) : props.content.title}</strong>
                 <br/>
                 {props.name ? t(`tips.${props.name as string}.description`) : props.content.description}
-                {i18n.exists(learnLinkKey) && <a href={t(learnLinkKey)} target='_blank'>Learn More</a>}
+                {i18n.exists(learnLinkKey) && <a href={t(learnLinkKey)} target='_blank' rel="noreferrer">Learn More</a>}
             </>}
             onOpen={() => setHovered(true)}
             onClose={() => setHovered(false)}
@@ -48,7 +47,7 @@ export const Tip = (props: {name?: TipName, children?: any, content?: any}) => {
                 }
             }}
         >
-            {props.children ?
+            {props.children && isValidElement(props.children) ?
                 props.children
             : 
             <IconButton size='small' sx={{marginBottom: 1}} onClick={() => setClicked(true)}>
@@ -58,7 +57,117 @@ export const Tip = (props: {name?: TipName, children?: any, content?: any}) => {
     </ClickAwayListener>
 }
 
-export const PrimaryButton = (props) => (
+export const CandidatePhoto = (props) => {
+    const [open, setOpen] = useState(false);
+    if(!props.candidate.photo_filename) return <></>
+
+    const {size, candidate, ...boxProps} = props;
+
+    const Photo = ({size, clickable=false}) => <Paper
+        onClick={() => clickable && setOpen(o => !o)}
+        component="img"
+        src={props.candidate.photo_filename}
+        elevation={2}
+        
+        sx={{
+            width: size,
+            aspectRatio: '1 / 1',
+            objectFit: 'contain',
+            borderRadius: '10px',
+            background: 'none',
+            p: 1,
+        }}
+    />
+
+    return <Box {...boxProps} width={props.size} height={props.size}>
+        <Photo size={size} clickable/>
+        <Dialog open={open} maxWidth='xl'>
+            <DialogTitle>{candidate.candidate_name}</DialogTitle>
+            <DialogContent>
+                <Photo size={{xs: '70vw', md: '60vh'}}/>
+            </DialogContent>
+            <DialogActions>
+                <SecondaryButton
+                    type='button'
+                    onClick={() => setOpen(false)}
+                >
+                    Close
+                </SecondaryButton>
+            </DialogActions>
+        </Dialog>
+    </Box>
+}
+
+export const FileDropBox = (props) => {
+    const [dragged, setDragged] = useState(false);
+
+    const {onDrop, onlyShowOnDrag, helperText, insideDialog, ...boxProps} = props;
+
+    // HACK: Most pointer events can be disabled more elegantly, but drag and drop is more difficult. This was the best work around I could find
+    const isMuiDialogActive = () => 
+        Array.from(
+            document.querySelectorAll('.MuiDialog-container')
+        ).some(el => {
+            const style = window.getComputedStyle(el);
+            return (
+            style.visibility !== 'hidden' &&
+            style.opacity !== '0'
+            );
+        });
+
+    return <Box
+        onDragOver={() => {
+            if(!insideDialog && isMuiDialogActive()) return;
+            setDragged(true)
+        }}
+        onDragLeave={() => {
+            if(!insideDialog && isMuiDialogActive()) return;
+            setDragged(false)
+        }}
+        onDrop={(e) => {
+            if(!insideDialog && isMuiDialogActive()) return;
+            setDragged(false);
+            onDrop(e)
+        }}
+        {...boxProps}
+        sx={{
+            position: 'relative',
+            ...props.sx,
+        }}
+    >
+        {onlyShowOnDrag && dragged && <Box
+            position='absolute'
+            display='flex'
+            flexDirection='column-reverse'
+            textAlign='center'
+            width={'100%'}
+            height={'100%'}
+            sx={{
+                pointerEvents: 'none',
+                backgroundColor: dragged ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0)',
+                zIndex: 1, // setting z-index so order is displayed correctly for the RaceForm case
+            }}
+        >
+            <Typography component='p' color='var(--brand-pop)' sx={{mb: 1}}><b>{helperText}</b></Typography>
+        </Box>}
+        {/* Adding this as a separate outline so that outline overlays on the box in stead of offseting elements */}
+        <Box
+            position='absolute'
+            border={`4px dashed ${dragged ? 'var(--brand-pop)': (onlyShowOnDrag ? 'rgba(0, 0, 0, 0)' : 'rgb(112,112,112)')}`} 
+            width={'100%'}
+            height={'100%'}
+            sx={{
+                pointerEvents: 'none',
+                zIndex: 2, // setting z-index so order is displayed correctly for the RaceForm case
+            }}
+        />
+        {props.children}
+    </Box>
+}
+interface CustomButtonProps extends ButtonProps {
+    to?: string;
+}
+export const PrimaryButton = (props: CustomButtonProps) => (
     <Button
         variant="contained"
         {...props}
@@ -66,15 +175,11 @@ export const PrimaryButton = (props) => (
             p: 1,
             m: 0,
             boxShadow: 0,
-            //backgroundColor: 'primary.main',
             backgroundColor: 'var(--brand-pop)',//'#073763',
             fontFamily: 'Montserrat, Verdana, sans-serif',
             fontWeight: 'bold',
             fontSize: 18,
             color: 'primary.contrastText',
-            //'&:hover': {
-            //    backgroundColor: 'black',
-            //}
             ...props.sx,
         }}
     >
@@ -82,7 +187,7 @@ export const PrimaryButton = (props) => (
     </Button>
 )
 
-export const SecondaryButton = (props) => (
+export const SecondaryButton = (props: ButtonProps) => (
     <Button
         variant="outlined"
         {...props}
@@ -104,7 +209,7 @@ export const SecondaryButton = (props) => (
 )
 
 
-export const StyledTextField = (props) => (
+export const StyledTextField = (props: TextFieldProps) => (
     <TextField
         className='styledTextField'
         fullWidth

@@ -1,5 +1,5 @@
-import { CSVLink, CSVDownload } from 'react-csv';
-import { useState, useEffect } from 'react';
+import { CSVLink } from 'react-csv';
+import { useState } from 'react';
 import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
 import MenuItem from "@mui/material/MenuItem";
 import BorderAll from '@mui/icons-material/BorderAll';
@@ -13,8 +13,14 @@ interface Props {
 }
 
 export const BallotDataExport = ({ election }: Props) => {
-    const [csvData, setCsvData] = useState<any[]>([]);
-    const [csvHeaders, setCsvHeaders] = useState<any[]>([]);
+    const [csvData, setCsvData] = useState<Record<string, string | number | boolean>[]>([]);
+    const [csvHeaders, setCsvHeaders] = useState<({
+        label: string;
+        key: string;
+    }[] | {
+        label: string;
+        key: string;
+    })[]>([]);
     const { ballots, fetchBallots } = useAnonymizedBallots();
     const downloadCSV = async () => {
         if (!ballots) return
@@ -33,13 +39,13 @@ export const BallotDataExport = ({ election }: Props) => {
             ]),
         ];
         header = header.flat();
-        let tempCsvData = ballots.map((ballot) => {
-            let row = { ballot_id: ballot.ballot_id, precinct: ballot.precinct };
+        const tempCsvData = ballots.map((ballot) => {
+            const row = { ballot_id: ballot.ballot_id, precinct: ballot.precinct };
             ballot.votes.forEach((vote) => {
                 vote.scores.forEach((score) => {
                     row[`${vote.race_id}-${score.candidate_id}`] = score.score;
                 })
-                let race = election.races.find(r => r.race_id == vote.race_id);
+                const race = election.races.find(r => r.race_id == vote.race_id);
                 if(race.voting_method == 'IRV' || race.voting_method == 'STV'){
                     row['overvote_rank'] = vote.overvote_rank ?? '';
                     row['has_duplicate_rank'] = vote.has_duplicate_rank ? 'TRUE' : 'FALSE';

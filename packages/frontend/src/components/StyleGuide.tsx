@@ -1,10 +1,10 @@
 import Box from '@mui/material/Box';
-import { Paper, Typography } from "@mui/material";
+import { Typography } from "@mui/material";
 import WidgetContainer from './Election/Results/components/WidgetContainer';
 import Widget from './Election/Results/components/Widget';
 import ResultsBarChart from './Election/Results/components/ResultsBarChart';
 
-export default () => {
+const StyleGuide = () => {
     return (<>
         <Box
             display='flex'
@@ -48,3 +48,4 @@ export default () => {
     </>)
 }
 
+export default StyleGuide

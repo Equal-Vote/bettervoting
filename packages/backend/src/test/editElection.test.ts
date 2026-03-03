@@ -6,10 +6,6 @@ import testInputs from './testInputs';
 
 const th = new TestHelper();
 
-// Uses the mock service locator in place of the production one
-// Which users mock databases
-jest.mock("./../ServiceLocator");
-
 afterEach(() => {
     jest.clearAllMocks();
     th.afterEach();

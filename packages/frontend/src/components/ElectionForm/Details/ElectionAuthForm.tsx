@@ -1,11 +1,10 @@
-import React, { useState } from 'react'
 import { FormControl, FormControlLabel, FormLabel, Grid, Paper, Radio, Typography } from "@mui/material"
 import useElection from '../../ElectionContextProvider';
 import { useSubstitutedTranslation } from '~/components/util';
 
 export default function ElectionAuthForm() {
 
-    const { election, refreshElection, permissions, updateElection } = useElection()
+    const { election, refreshElection, updateElection } = useElection()
     const ip = election.settings.voter_authentication.ip_address == true
     const device_id = election.settings.voter_authentication.voter_id == true
     const email = election.settings.voter_authentication.email == true
@@ -26,7 +25,7 @@ export default function ElectionAuthForm() {
                     p: 0,
                 }}
             >
-                <Grid xs={12} sx={{marginBottom: 1}}>
+                <Grid item xs={12} sx={{marginBottom: 1}}>
                     <Typography gutterBottom variant="h4" component="h4">
                         {t('admin_home.voter_authentication.form_label')}
                     </Typography>

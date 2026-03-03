@@ -3,10 +3,10 @@ import { ElectionRoll, ElectionRollState } from "@equal-vote/star-vote-shared/do
 import { IRequest } from "../../IRequest";
 import ServiceLocator from "../../ServiceLocator";
 import Logger from "../../Services/Logging/Logger";
-import { BadRequest, InternalServerError, Unauthorized } from "@curveball/http-errors";
+import { InternalServerError, Unauthorized } from "@curveball/http-errors";
 import { ILoggingContext } from "../../Services/Logging/ILogger";
-import { randomUUID } from "crypto";
 import { hashString } from "../controllerUtils";
+import { makeUniqueID, ID_LENGTHS, ID_PREFIXES } from "@equal-vote/star-vote-shared/utils/makeID";
 
 const ElectionRollModel = ServiceLocator.electionRollDb();
 
@@ -15,7 +15,8 @@ export async function getOrCreateElectionRoll(req: IRequest, election: Election,
     Logger.info(req, `getOrCreateElectionRoll`)
     const ip_hash = hashString(req.ip!)
     // Get data that is used for voter authentication
-    const require_ip_hash = election.settings.voter_authentication.ip_address ? ip_hash : null
+    // NOTE: I'm ensuring that undefined is coaleced into null, that makes it compliant with the type when calling getElectionRoll
+    const require_ip_hash = (election.settings.voter_authentication.ip_address ? ip_hash : null) ?? null;
     const email = election.settings.voter_authentication.email ? req.user?.email : null
     
     // Get voter ID if required and available, otherwise set to null
@@ -42,7 +43,13 @@ export async function getOrCreateElectionRoll(req: IRequest, election: Election,
         if (!skipStateCheck && election.state !== 'open') return null
 
         Logger.info(req, "Creating new roll");
-        const new_voter_id = election.settings.voter_authentication.voter_id ? voter_id : randomUUID()
+        const new_voter_id = election.settings.voter_authentication.voter_id ? 
+            voter_id : 
+            await makeUniqueID(
+                ID_PREFIXES.VOTER,
+                ID_LENGTHS.VOTER,
+                async (id: string) => await ElectionRollModel.getByVoterID(String(election.election_id), id, ctx) !== null,
+            );
         const history = [{
             action_type: ElectionRollState.approved,
             actor: new_voter_id,
@@ -91,7 +98,7 @@ export async function getOrCreateElectionRoll(req: IRequest, election: Election,
         Logger.error(req, "Email does not match saved election roll", electionRollEntries);
         throw new Unauthorized('Email does not match saved election roll');
     }
-    if (election.settings.voter_authentication.voter_id && electionRollEntries[0].voter_id !== voter_id) {
+    if (election.settings.voter_authentication.voter_id && electionRollEntries[0].voter_id.trim() !== voter_id.trim()) {
         // Voter ID does not match saved election roll, for example if email and voter ID are selected but email doesn't match the voter ID 
         Logger.error(req, "Voter ID does not match saved election roll", electionRollEntries);
         throw new Unauthorized('Voter ID does not match saved voter roll');
@@ -109,6 +116,7 @@ export function checkForMissingAuthenticationData(req: IRequest, election: Elect
         return 'Voter ID Required'
     }
     // Arend's Note: I don't think 'User ID Required' is used anymore, might be a remnant of when we were thinking of custom authentication flows, but we don't have a clear story for that at the moment.
+    // Arend's second note: This is still possible, this happens with "one vote per device" security settings and the cookies aren't set properly
     if ((election.settings.voter_authentication.voter_id && election.settings.voter_access == 'open') && !(req.user)) {
         return 'User ID Required'
     }

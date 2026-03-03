@@ -4,12 +4,12 @@ import Logger from "../../Services/Logging/Logger";
 
 const ElectionRollModel = ServiceLocator.electionRollDb();
 const className = "VoterRolls.Controllers";
-import { getOrCreateElectionRoll, checkForMissingAuthenticationData, getVoterAuthorization } from "./voterRollUtils"
+import { getOrCreateElectionRoll, checkForMissingAuthenticationData } from "./voterRollUtils"
 import { BadRequest, InternalServerError, Unauthorized } from "@curveball/http-errors";
 import { Election } from "@equal-vote/star-vote-shared/domain_model/Election";
-import { randomUUID } from "crypto";
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
+import { makeUniqueID, ID_PREFIXES, ID_LENGTHS } from "@equal-vote/star-vote-shared/utils/makeID";
 import { hashString } from "../controllerUtils";
 
 const registerVoter = async (req: IElectionRequest, res: Response, next: NextFunction) => {
@@ -40,7 +40,11 @@ const registerVoter = async (req: IElectionRequest, res: Response, next: NextFun
     let tempRoll = await getOrCreateElectionRoll(req, targetElection, req);
     if (tempRoll == null) {
         roll = {
-            voter_id: randomUUID(),
+            voter_id: await makeUniqueID(
+                ID_PREFIXES.VOTER,
+                ID_LENGTHS.VOTER,
+                async (id: string) => await ElectionRollModel.getByVoterID(req.election.election_id, id, req) !== null
+            ),
             election_id: req.election.election_id,
             email: req.user?.email,
             submitted: false,

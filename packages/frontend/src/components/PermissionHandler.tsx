@@ -1,9 +1,9 @@
-import React from 'react'
+import { ReactElement } from "react"
 
 type PermissionHandlerProps = {
     permissions: string[],
     requiredPermission: string,
-    children: any
+    children: ReactElement
 }
 
 const PermissionHandler = ({permissions,requiredPermission,children}:PermissionHandlerProps) => {

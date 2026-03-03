@@ -58,7 +58,7 @@ export default class ElectionRollDB implements IElectionRollStore {
         return this._postgresClient
             .selectFrom(tableName)
             .where('election_id', '=', election_id)
-            .where('voter_id', '=', voter_id)
+            .where(({ eb, or, fn }) => eb(fn('trim', ['voter_id']), '=', voter_id.trim()))
             .where('head', '=', true)
             .selectAll()
             .executeTakeFirstOrThrow()
@@ -121,10 +121,10 @@ export default class ElectionRollDB implements IElectionRollStore {
             .selectFrom(tableName)
             .where('election_id', '=', election_id)
             .where('head', '=', true)
-            .where(({ eb, or }) => {
+            .where(({ eb, or, fn }) => {
                 const ors = []
                 if (voter_id) {
-                    ors.push(eb('voter_id', '=', voter_id))
+                    ors.push(eb(fn('trim', ['voter_id']), '=', voter_id.trim()))
                 }
 
                 if (email) {

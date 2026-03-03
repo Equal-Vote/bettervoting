@@ -31,6 +31,6 @@ Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 This allows you to see the built version of local code.
 ## Learn More
 
-You can learn more in the [Vite](https://vitejs.dev/) and [Vite Awesome Repo](https://github.com/vitejs/awesome-vite).
+You can learn more in the [Rspack website](https://rspack.rs/) and [Github Repo](https://github.com/web-infra-dev/rspack).
 
 To learn React, check out the [React documentation](https://reactjs.org/).

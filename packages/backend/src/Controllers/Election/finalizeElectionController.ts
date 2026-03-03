@@ -47,6 +47,6 @@ const finalizeElection = async (req: IElectionRequest, res: Response, next: Next
     res.json({ election: updatedElection })
 }
 
-export  {
-    finalizeElection,
+export {
+    finalizeElection
 }

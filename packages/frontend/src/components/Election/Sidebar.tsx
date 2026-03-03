@@ -1,4 +1,3 @@
-import * as React from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { Button, Grid } from '@mui/material';
@@ -8,7 +7,7 @@ import PermissionHandler from '../PermissionHandler';
 import useElection from '../ElectionContextProvider';
 import useFeatureFlags from '../FeatureFlagContextProvider';
 
-const ListItem = ({ text, link }) => {
+const ListItem = ({ text, link }: { text:string, link: string}) => {
     return (
         <Grid item>
             <Button component={Link} to={link} fullWidth >
@@ -32,7 +31,7 @@ export default function Sidebar() {
                     display='flex'
                     justifyContent="center"
                     alignItems="center"
-                    sx={{ 
+                    sx={{
                         "@media print": {
                             display: 'none',
                         }
@@ -52,9 +51,20 @@ export default function Sidebar() {
                             {election.settings.voter_access != 'open' && <PermissionHandler permissions={permissions} requiredPermission={'canViewElectionRoll'}>
                                 <ListItem text='Voters' link={`/${id}/admin/voters`} />
                             </PermissionHandler>}
-                            <PermissionHandler permissions={permissions} requiredPermission={'canViewBallots'}>
-                                <ListItem text='Ballots' link={`/${id}/admin/ballots`} />
-                            </PermissionHandler>
+                            {/*
+                            The "Ballots" choice on the left-hand menu is available only if
+                            public_results is true or the election is closed
+                            */}
+                            {
+                                (
+                                    election.settings.public_results ||
+                                    election.state === 'closed'
+                                ) && (
+                                    <PermissionHandler permissions={permissions} requiredPermission="canViewBallots">
+                                        <ListItem text="Ballots" link={`/${id}/admin/ballots`} />
+                                    </PermissionHandler>
+                                )}
+
                         </Grid>
                     </Paper>
                 </Box>

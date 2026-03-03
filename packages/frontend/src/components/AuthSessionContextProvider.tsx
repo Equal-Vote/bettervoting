@@ -1,20 +1,15 @@
-import React, {
+import {
     createContext,
-    useCallback,
     useContext,
-    useRef,
-    useState,
 } from 'react';
 import { useEffect } from "react";
 import { useCookie } from "../hooks/useCookie";
 import jwt_decode from 'jwt-decode'
-let keycloakBaseUrl = process.env.REACT_APP_KEYCLOAK_URL;
+const keycloakBaseUrl = process.env.REACT_APP_KEYCLOAK_URL;
 
 const keycloakAuthConfig = {
     clientId: 'web',
     responseType: 'code',
-    redirectUri: window.location.href.split('?')[0],
-    logoutUri: window.location.origin,
     endpoints: {
         login: `${keycloakBaseUrl}/auth`,
         logout: `${keycloakBaseUrl}/logout`,
@@ -30,29 +25,33 @@ const keycloakAuthConfig = {
 const authConfig = keycloakAuthConfig;
 
 export interface IAuthSession {
-    isLoggedIn: () => Boolean
+    isLoggedIn: () => boolean
     openLogin: () => void
     openLogout: () => void
-    getIdField: (fieldName: any) => any
+    getIdField: (fieldName: string) => string | null
     accountUrl: string
 }
 
 const AuthSessionContext = createContext<IAuthSession>(null);
 
-export function AuthSessionContextProvider({ children }) {
+export function AuthSessionContextProvider({ children }: { children: React.ReactNode }) {
     const [accessToken, setAccessToken] = useCookie('access_token', null, 24 * 5)
     const [idToken, setIdToken] = useCookie('id_token', null, 24 * 5)
     const [refreshToken, setRefreshToken] = useCookie('refresh_token', null, 24 * 5)
 
     const isLoggedIn = () => {
-        return accessToken !== null
+        // the backend uses the idToken to determine if the user is logged in, so it's a more accurate reference point
+        return idToken !== null
     }
 
     const openLogin = () => {
         const queryString = [
             `client_id=${authConfig.clientId}`,
             `response_type=${authConfig.responseType}`,
-            `redirect_uri=${authConfig.redirectUri}`,
+            // redirecting users to manage so they can immediately see the elections assigned to their account
+            // TODO: Once the logged in dashboard has been implemented we can remove the /manage
+            // https://github.com/Equal-Vote/bettervoting/issues/889
+            `redirect_uri=${window.location.origin}/manage`,
             `scope=openid`,
         ].join('&');
 
@@ -62,9 +61,9 @@ export function AuthSessionContextProvider({ children }) {
     const openLogout = () => {
         const queryString = [
             `client_id=${authConfig.clientId}`,
-            `logout_uri=${authConfig.redirectUri}`,
+            `logout_uri=${window.location.origin}`,
             `id_token_hint=${idToken}`,
-            `post_logout_redirect_uri=${authConfig.redirectUri}`,
+            `post_logout_redirect_uri=${window.location.origin}`,
         ].join('&');
 
         setAccessToken(null)
@@ -75,7 +74,7 @@ export function AuthSessionContextProvider({ children }) {
 
     const getIdField = (fieldName: string) => {
         if (!idToken) return null
-        const id_map = jwt_decode<any>(idToken);
+        const id_map = jwt_decode<string>(idToken);
         return id_map[fieldName];
     }
 
@@ -101,7 +100,7 @@ export function AuthSessionContextProvider({ children }) {
 
         // Select Token retrieval method
         // Authorization Code: 
-        //      When users initially login through oAuth, the browser will be redirected our website, and it will inclue the auth code in the query parameters
+        //      When users initially login through oAuth, the browser will be redirected our website, and it will include the auth code in the query parameters
         //      This tempoary code can then be used the retrieve tokens
         // Refresh Token: 
         //      If the user is already logged in and their access token expires, 
@@ -118,7 +117,7 @@ export function AuthSessionContextProvider({ children }) {
         var token_url = `${window.location.protocol}//${window.location.hostname}:${SERVER_PORT}`+
                         `/API/Token?grant_type=${grant_type}&redirect_uri=${this.redirectUri}`;
         */
-        var token_url = `/API/Token?grant_type=${grant_type}&redirect_uri=${authConfig.redirectUri}`;
+        let token_url = `/API/Token?grant_type=${grant_type}&redirect_uri=${window.location.origin}/manage`;
 
         if (grant_type == 'authorization_code') {
             token_url = `${token_url}&code=${auth_code}`

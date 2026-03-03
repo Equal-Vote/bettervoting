@@ -3,22 +3,19 @@ import Widget from "./Widget";
 import useRace from "~/components/RaceContextProvider";
 import { Divider, Typography } from "@mui/material";
 import ResultsBarChart from "./ResultsBarChart";
-import useFeatureFlags from "~/components/FeatureFlagContextProvider";
 
 // candidates helps define the order
-export default () => {
+const ColumnDistributionWidget = () => {
     const {ballotsForRace} = useAnonymizedBallots();
     const {t, race} = useRace();
 
-    const flags = useFeatureFlags();
-    if(!flags.isSet('ALL_STATS')) return <></>
-
-    let numColumns = [];
+    const numColumns = [];
     let whichColumns = [];
     let totalColumns = 0;
 
     const incIndex = (arr, key) => {
-        let index = (arr == numColumns) ? key-1 : key;
+        const index = (arr == numColumns) ? key-1 : key;
+        if(index < 0) return; // Quick Hack to keep the page from crashing
         while(index >= arr.length ){
             arr.push({
                 name: (arr == numColumns)? arr.length + 1 : arr.length,
@@ -28,26 +25,28 @@ export default () => {
         arr[index].count++;
     }
 
-    let b = ballotsForRace()
-    b.forEach((scores, j) => {
+    const b = ballotsForRace()
+    b.forEach((scores) => {
         [...new Set(scores.map(score => score.score ?? 0))].forEach(score => incIndex(whichColumns, score));
 
-        let definedScores = scores.filter(score => score.score !== undefined && score.score !== null);
+        const definedScores = scores.filter(score => score.score !== undefined && score.score !== null);
         totalColumns += definedScores.length;
         incIndex(numColumns, definedScores.length);
     })
 
     whichColumns = whichColumns.map(c => ({...c, name: c.name == 'blank'? 'blank' : `${c.name}⭐`}))
 
-    return <Widget title={t(`results_ext.column_distribution_title`)}>
+    return <Widget title={t(`results_ext.column_distribution_title`)} wide>
         <Typography variant='h6'>{t(`results_ext.column_distribution_num_avg`, {count: Math.round(100*totalColumns / b.length)/100})}</Typography>
         <Divider/>
         <Typography variant='h6'>{t(`results_ext.column_distribution_num_title`)}</Typography>
-        <ResultsBarChart data={numColumns} xKey='count' percentage={true} sortFunc={false}/>
+        <ResultsBarChart data={numColumns} xKey='count' percentage={true}/>
         <Divider/>
         {(race.voting_method == 'STAR' || race.voting_method == 'STAR_PR') && <>
             <Typography variant='h6'>{t('results_ext.column_distribution_which_title')}</Typography>
-            <ResultsBarChart data={whichColumns} xKey='count' percentage={true} sortFunc={false} percentDenominator={b.length}/>
+            <ResultsBarChart data={whichColumns} xKey='count' percentage={true} percentDenominator={b.length}/>
         </>}
     </Widget>
 }
+
+export default ColumnDistributionWidget;

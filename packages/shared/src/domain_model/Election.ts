@@ -1,12 +1,13 @@
 import { ElectionRoll } from "./ElectionRoll";
 import { ElectionSettings, electionSettingsValidation } from "./ElectionSettings";
+import { ElectionState, validElectionStates } from "./ElectionStates";
 import { Race } from "./Race";
 import { Uid } from "./Uid";
 import { raceValidation } from "./Race";
 import { checkForDuplicates, emailRegex } from "./Util";
 
-const validElectionStates = ['draft', 'finalized', 'open', 'closed', 'archived'] as const;
-export type ElectionState = typeof validElectionStates[number]; 
+export { ElectionState }
+
 export interface Election {
     election_id:    Uid; // identifier assigned by the system
     title:          string; // one-line election title
@@ -122,7 +123,7 @@ export function electionValidation(obj:Election): string | null {
   if (!obj.settings){
     return "Invalid Election Settings";
   } else {
-    const settingsError = electionSettingsValidation(obj.settings);
+    const settingsError = electionSettingsValidation(obj.settings, obj.state);
     if (settingsError){
       return settingsError;
     }
@@ -151,7 +152,6 @@ export function electionValidation(obj:Election): string | null {
   if (obj.head && typeof obj.head !== 'boolean'){
     return "Invalid Head";
   }
-  
 
   //TODO... etc
   return null;

@@ -22,6 +22,7 @@ const ScoreIcon = ({ opacity, value, fontSX }: ScoreIconProps) => (
 				height: { xs: '100%', sm: '80%' },
 			}}
 			className="starIcon"
+			alt="star icon"
 		/>
 		<Typography className="scoreColumnHeading" sx={{ ...fontSX }}>
 			{value}

@@ -8,10 +8,6 @@ import testInputs from './testInputs';
 
 const app = makeApp()
 
-// Uses the mock service locator in place of the production one
-// Which users mock databases
-jest.mock("./../ServiceLocator");
-
 var logger = new TestLoggerImpl().setup();
 const th = new TestHelper();
 

@@ -37,6 +37,10 @@
       "types": "./dist/types/domain_model/*.d.ts",
       "default": "./dist/domain_model/*.js"
     },
+    "./utils/*": {
+      "types": "./dist/types/utils/*.d.ts",
+      "default": "./dist/utils/*.js"
+    },
     "./schema.json": {
       "default": "./dist/schema.json"
     }
@@ -44,6 +48,8 @@
   "dependencies": {
     "@equal-vote/star-vote-backend": "^1.0.0",
     "@equal-vote/star-vote-frontend": "^0.1.0",
+    "@types/sanitize-html": "^2.13.0",
+    "sanitize-html": "^2.13.1",
     "socket.io": "^4.7.5",
     "socket.io-client": "^4.7.5",
     "typescript-json-schema": "^0.65.1"

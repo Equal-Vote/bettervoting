@@ -23,6 +23,7 @@ const SendEmailEventQueue = "sendEmailEvent";
 
 export type email_request_data = {
     voter_id?: string,
+    recipient_email?: string,
     email: {
         subject: string,
         body: string,
@@ -76,14 +77,32 @@ const sendEmailsController = async (req: IElectionRequest, res: Response, next: 
     let message_id = ''
 
     if (email_request.target == 'single') {
-        const electionRollResponse = await ElectionRollModel.getByVoterID(electionId, email_request.voter_id ?? '', req)
+        let electionRollResponse: ElectionRoll | null = null;
+
+        // When redact_voter_ids is enabled, voter_id is not available, so use recipient_email instead
+        if (email_request.voter_id) {
+            electionRollResponse = await ElectionRollModel.getByVoterID(electionId, email_request.voter_id, req);
+        } else if (email_request.recipient_email) {
+            const rolls = await ElectionRollModel.getElectionRoll(electionId, null, email_request.recipient_email, null, req);
+            if (rolls && rolls.length > 0) {
+                if (rolls.length > 1) {
+                    Logger.warn(req, `Multiple voters found with email ${email_request.recipient_email} in election ${electionId}, using first match`);
+                }
+                electionRollResponse = rolls[0];
+            }
+        } else {
+            const msg = `Either voter_id or recipient_email is required for single target`;
+            Logger.info(req, msg);
+            throw new BadRequest(msg);
+        }
+
         if (!electionRollResponse) {
             const msg = `Voter not found`;
             Logger.info(req, msg);
             throw new BadRequest(msg)
         }
         electionRoll = [electionRollResponse]
-        message_id = `dm_${email_request.voter_id}_${0}` //TODO: retreive count of previous dms
+        message_id = `dm_${email_request.voter_id ?? email_request.recipient_email}_${0}` //TODO: retreive count of previous dms
     } else if(email_request.target == 'test'){
         // Create dummy election rolls for each test email
         electionRoll = (email_request.testEmails ?? []).map(email => makeTestRoll(req.election.election_id, email));
@@ -175,7 +194,12 @@ async function handleSendEmailEvent(job: { id: string; data: email_request_event
     // TODO: I think this will always give a single element array, we can probably simplify this and be less generalized
     let emails: Imsg[] = makeEmails(election, [electionRoll], event.url, event.email.subject, event.email.body, event.test_email != '');
 
-    const emailResponse = await EmailService.sendEmails(emails)
+    let emailResponse;
+    try{
+        emailResponse = await EmailService.sendEmails(emails)
+    }catch(e){
+        throw new InternalServerError(`Couldn't send email: ${e}`);
+    }
 
     if(event.test_email) return; // skip the database updates if it's a test email
 

@@ -1,10 +1,7 @@
 import { Box, Paper, Typography } from '@mui/material'
-import React from 'react'
-import { useThemeSelector } from '../../theme'
 import { useSubstitutedTranslation } from '../util'
 
-export default () => {
-    const themeSelector = useThemeSelector()
+const LandingPagePricing = () => {
 
     const { t } = useSubstitutedTranslation();
     const options = t('landing_page.pricing.items')
@@ -51,3 +48,4 @@ export default () => {
         </Box>
     )
 }
+export default LandingPagePricing

@@ -1,20 +1,14 @@
-import React, { useContext, useEffect } from 'react'
-import { createContext, Dispatch, SetStateAction } from 'react'
-import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
-import { useEditElection, useGetElection } from '../hooks/useAPI';
-import { Election as IElection } from '@equal-vote/star-vote-shared/domain_model/Election';
-import { VoterAuth } from '@equal-vote/star-vote-shared/domain_model/VoterAuth';
-import structuredClone from '@ungap/structured-clone';
-import { Share } from '@mui/icons-material';
+import { useContext } from 'react'
+import { createContext } from 'react'
 import { Race } from '@equal-vote/star-vote-shared/domain_model/Race';
-import { useSubstitutedTranslation } from './util';
 import { ElectionResults } from '@equal-vote/star-vote-shared/domain_model/ITabulators';
 
 
 export interface IRaceContext {
   race: Race,
   results: ElectionResults,
-  t: Function
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  t: (key?: string, v?: object) => any
 }
 
 export const RaceContext = createContext<IRaceContext>({
@@ -23,7 +17,15 @@ export const RaceContext = createContext<IRaceContext>({
   t: () => {},
 })
 
-export const RaceContextProvider = ({ race, results, t, children }) => {
+interface RaceContextProviderProps {
+  race: Race,
+  results: ElectionResults,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  t: (key?: string, v?: object) => any,
+  children: React.ReactNode
+}
+
+export const RaceContextProvider = ({ race, results, t, children }: RaceContextProviderProps) => {
     return (<RaceContext.Provider value={{race, results, t}}>
         {children}
     </RaceContext.Provider>

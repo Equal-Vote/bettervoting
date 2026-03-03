@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react'
+import React, { ReactNode, useContext, useState } from 'react'
 import { createContext, Dispatch, SetStateAction } from 'react'
 import { Alert, Snackbar } from '@mui/material'
 
@@ -25,7 +25,7 @@ export const SnackbarContext = createContext<ISnackBarContext>({
 }
 )
 
-export const SnackbarContextProvider = ({ children }) => {
+export const SnackbarContextProvider = ({ children }: {children: ReactNode}) => {
 
     const [snack, setSnack] = useState<Isnack>({
         message: '',

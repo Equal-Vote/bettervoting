@@ -5,7 +5,7 @@ interface Props {
     children: React.ReactNode
 }
 
-export default (props: Props) => {
+const ComposeContextProviders = (props: Props) => {
     const { providers = [], children } = props;
 
     return (
@@ -16,3 +16,5 @@ export default (props: Props) => {
         </>
     )
 }
+
+export default ComposeContextProviders

@@ -1,18 +1,21 @@
-import { approvalResults, approvalSummaryData, ballot, candidate, roundResults, totalScore } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
+import { approvalResults, approvalCandidate, approvalSummaryData, candidate, rawVote, approvalRoundResults, } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
 
-import { commaListFormatter, getInitialData, makeBoundsTest, makeAbstentionTest, runBlocTabulator } from "./Util";
+import { commaListFormatter, makeBoundsTest, makeAbstentionTest, runBlocTabulator, getSummaryData } from "./Util";
 import { ElectionSettings } from "@equal-vote/star-vote-shared/domain_model/ElectionSettings";
 
-export function Approval(candidates: string[], votes: ballot[], nWinners = 1, randomTiebreakOrder:number[] = [], breakTiesRandomly = true, electionSettings?:ElectionSettings) {
-  const [_, summaryData] = getInitialData<approvalSummaryData>(
-		votes, candidates, randomTiebreakOrder, 'cardinal',
+export function Approval(candidates: candidate[], votes: rawVote[], nWinners = 1, electionSettings?:ElectionSettings) {
+  const {summaryData} = getSummaryData<approvalCandidate, approvalSummaryData>(
+		candidates.map(c => ({...c, score: 0})),
+    votes,
+    'cardinal',
+    'score',
 		[
 			makeBoundsTest(0, 1),
-			makeAbstentionTest(null),
-		]
-	)
+			makeAbstentionTest(),
+		],
+	);
 
-	return runBlocTabulator<approvalResults, approvalSummaryData>(
+	return runBlocTabulator<approvalCandidate, approvalSummaryData, approvalResults>(
 		{
 			votingMethod: 'Approval',
 			elected: [],
@@ -23,21 +26,15 @@ export function Approval(candidates: string[], votes: ballot[], nWinners = 1, ra
 			tieBreakType: 'none',
 		} as approvalResults,
 		nWinners,
-		singleWinnerApproval
+		singleWinnerApproval,
+    (candidate: approvalCandidate) => ([candidate.score])
 	)
 }
 
-const singleWinnerApproval = (remainingCandidates: candidate[], summaryData: approvalSummaryData): roundResults => {
-  const candidates = summaryData.candidates;
+const singleWinnerApproval = (remainingCandidates: approvalCandidate[], summaryData: approvalSummaryData): approvalRoundResults => {
 
-  let scoresLeft = remainingCandidates.map(c => summaryData.totalScores.find(s => s.index == c.index)) as totalScore[];
-  scoresLeft.sort((a:totalScore, b:totalScore) => -(a.score-b.score));
-
-  let topScore = scoresLeft[0];
-  let tiedCandidates = scoresLeft
-    .filter(s => s.score == topScore.score)
-    .map(s => candidates[s.index]);
-  let winner = candidates[topScore.index];
+  let winner = remainingCandidates[0];
+  let tiedCandidates = remainingCandidates.filter(c => c.score == winner.score);
 
   return {
     winners: [winner],

@@ -3,10 +3,10 @@ import { useGetElections } from "../../hooks/useAPI";
 import EnhancedTable from '../EnhancedTable';
 import { useNavigate } from 'react-router';
 
-export default () => {
+const electionInvitations = () => {
     const navigate = useNavigate();
 
-    const { data, isPending, error, makeRequest: fetchElections } = useGetElections();
+    const { data, isPending, makeRequest: fetchElections } = useGetElections();
 
     useEffect(() => {fetchElections()}, []);
 
@@ -26,3 +26,5 @@ export default () => {
         emptyContent='No Election Invitations'
     />
 }
+
+export default electionInvitations;

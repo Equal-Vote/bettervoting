@@ -1,6 +1,5 @@
-import React from 'react'
 import Typography from '@mui/material/Typography';
-import { Box, Divider, Stack } from "@mui/material"
+import { Box, Stack } from "@mui/material"
 import useElection from '../../ElectionContextProvider';
 import Race from './Race';
 import AddRace from './AddRace';
@@ -15,7 +14,7 @@ export default function Races() {
             </Box>
 
             {election.races?.map((race, race_index) => (
-                <Race race={race} race_index={race_index} />
+                <Race key={race.race_id} race={race} race_index={race_index} />
             ))
             }
 

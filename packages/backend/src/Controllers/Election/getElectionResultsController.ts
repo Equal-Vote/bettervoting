@@ -1,23 +1,29 @@
 import ServiceLocator from "../../ServiceLocator";
 import Logger from "../../Services/Logging/Logger";
-import { BadRequest } from "@curveball/http-errors";
+import { BadRequest, Forbidden } from "@curveball/http-errors";
 import { Ballot } from '@equal-vote/star-vote-shared/domain_model/Ballot';
-import { Score } from '@equal-vote/star-vote-shared/domain_model/Score';
 import { expectPermission } from "../controllerUtils";
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { VotingMethods } from '../../Tabulators/VotingMethodSelecter';
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
-import { ballot, ElectionResults } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
-var seedrandom = require('seedrandom');
+import { ElectionResults, candidate, rawVote } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
+import { Candidate } from "@equal-vote/star-vote-shared/domain_model/Candidate";
 
 const BallotModel = ServiceLocator.ballotsDb();
 
 const getElectionResults = async (req: IElectionRequest, res: Response, next: NextFunction) => {
-    var electionId = req.election.election_id;
+    const election = req.election
+    const electionId = election.election_id;
+
     Logger.info(req, `getElectionResults: ${electionId}`);
 
-    if (!req.election.settings.public_results) {
+    if (!election.settings.public_results) {
+        if (election.state == 'open') {
+            const msg = `Preliminary results not enabled for election ${electionId}`;
+            Logger.error(req, msg);
+            throw new Forbidden(msg);
+        }
         expectPermission(req.user_auth.roles, permissions.canViewPreliminaryResults)
     }
 
@@ -28,49 +34,65 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
         throw new BadRequest(msg);
     }
 
-    const election = req.election
     let results: ElectionResults[] = []
     for (let race_index = 0; race_index < election.races.length; race_index++) {
         const race = election.races[race_index]
-        const candidateNames = race.candidates.map((Candidate: any) => (Candidate.candidate_name))
-        const candidateIDs = race.candidates.map((Candidate: any) => (Candidate.candidate_id))
-        const useWriteIns = race.enable_write_in && race.write_in_candidates && race.write_in_candidates.length>0
-        const writeInCandidates = useWriteIns && race.write_in_candidates ? race.write_in_candidates : [] 
-        const writeInCandidateNames = useWriteIns && race.write_in_candidates ? race.write_in_candidates.map(candidate => candidate.candidate_name) : []
-        const number_of_candidates = candidateNames.length + writeInCandidateNames.length
+        const useWriteIns = race.enable_write_in && race.write_in_candidates && race.write_in_candidates.length > 0
+        const writeInCandidates = useWriteIns && race.write_in_candidates ? race.write_in_candidates : []
+
+        // Build candidate list including approved write-in candidates
+        const candidates: candidate[] = race.candidates.map((c: Candidate, i) => ({
+            id: c.candidate_id,
+            name: c.candidate_name,
+            tieBreakOrder: i,
+            votesPreferredOver: {},
+            winsAgainst: {}
+        }))
+
+        if (useWriteIns) {
+            writeInCandidates.forEach((wc, i) => {
+                if (wc.approved) {
+                    candidates.push({
+                        id: wc.candidate_id || `write_in_${i}`,
+                        name: wc.candidate_name,
+                        tieBreakOrder: race.candidates.length + i,
+                        votesPreferredOver: {},
+                        winsAgainst: {}
+                    })
+                }
+            })
+        }
+
         const race_id = race.race_id
-        const cvr: ballot[] = []
+        const cvr: rawVote[] = []
         const num_winners = race.num_winners
         const voting_method = race.voting_method
-        const fullCandidateNames = [...candidateNames,...writeInCandidateNames]
         let numUnprocessedWriteIns = 0
+
         ballots.forEach((ballot: Ballot) => {
             const vote = ballot.votes.find((vote) => vote.race_id === race_id)
             if (vote) {
-                let row: ballot = new Array(number_of_candidates).fill(null)
+                const marks: {[key: string]: number | null} = {}
                 vote.scores.forEach(score => {
-                    const candidateIndex = candidateIDs.indexOf(score.candidate_id)
-                    if (candidateIndex >= 0) {
-                        row[candidateIndex] = score.score
-                    }
-                    else if (useWriteIns && score.write_in_name) {
-                        const write_in_name = score.write_in_name // typescript sees score.write_in_name as possibly undefined unless I extract it to another variable for some reason
-                        const writeInCandidateIndex = writeInCandidates.findIndex(candidate => candidate.aliases.includes(write_in_name))
-                        if (writeInCandidateIndex < 0) {
+                    const isRegularCandidate = race.candidates.some((c: Candidate) => c.candidate_id === score.candidate_id)
+                    if (isRegularCandidate) {
+                        marks[score.candidate_id] = score.score
+                    } else if (useWriteIns && score.write_in_name) {
+                        const write_in_name = score.write_in_name
+                        const writeInCandidate = writeInCandidates.find(wc => wc.aliases.includes(write_in_name))
+                        if (!writeInCandidate) {
                             numUnprocessedWriteIns += 1
-                        } else if (writeInCandidates[writeInCandidateIndex].approved) {
-                            row[writeInCandidateIndex + candidateNames.length] = score.score
+                        } else if (writeInCandidate.approved) {
+                            const wcId = writeInCandidate.candidate_id || `write_in_${writeInCandidates.indexOf(writeInCandidate)}`
+                            marks[wcId] = score.score
                         }
                     }
                 })
-
-                // Feels hacky to add overrank information as an additional column
-                // but the other alternatives required updating the voting method inputs 
-                // and that would need refactors to all methods
-                if(voting_method == 'IRV' || voting_method == 'STV'){
-                    row = [...row, vote.overvote_rank ?? null];
-                }
-                cvr.push(row)
+                cvr.push({
+                    marks,
+                    overvote_rank: vote?.overvote_rank,
+                    has_duplicate_rank: vote?.has_duplicate_rank,
+                })
             }
         })
 
@@ -79,11 +101,9 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
         }
         const msg = `Tabulating results for ${voting_method} election`
         Logger.info(req, msg);
-        let rng = seedrandom(election.election_id + ballots.length.toString())
-        const tieBreakOrders = fullCandidateNames.map((Candidate) => (rng() as number))
+        const tabulationResult = VotingMethods[voting_method](candidates, cvr, num_winners, election.settings)
         results[race_index] = {
-            votingMethod: voting_method,
-            ...VotingMethods[voting_method](fullCandidateNames, cvr, num_winners, tieBreakOrders, election.settings),
+            ...tabulationResult,
             numUnprocessedWriteIns: useWriteIns ? numUnprocessedWriteIns : undefined
         }
     }

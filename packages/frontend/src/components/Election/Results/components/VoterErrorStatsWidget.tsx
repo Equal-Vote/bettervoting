@@ -4,14 +4,55 @@ import useElection from "~/components/ElectionContextProvider";
 import useRace from "~/components/RaceContextProvider";
 import Widget from "./Widget";
 import { Box, Typography } from "@mui/material";
-import RectPieChart from "./RectPieChart";
 import ResultsBarChart from "./ResultsBarChart";
 import { formatPercent } from "~/components/util";
+import { Vote } from "@equal-vote/star-vote-shared/domain_model/Vote";
 
-export default () => {
+export const getVoterErrorData = (ballots: Vote[]) => {
+    const detectSkippedRank = (vote) => {
+        const sortedScores = vote.scores.map(s => s.score).sort((a, b) => (a??-1)-(b??-1))
+        //let sorts = []
+        return sortedScores.some((score, i) => {
+            const prev = (i==0)? null : sortedScores[i-1];
+            if(prev == null && score != null && score > 1) return true;
+            if(prev != null && (score - prev) > 1) return true;
+            return false;
+        })
+        //if(result){
+        //    if(sortedScores[0] == 1 && sortedScores[1] == 2 && sortedScores[2] == 4){
+        //        sorts.push(vote.scores.map(s => s.score).join('-'));
+        //    }
+        //}
+        //return result
+    }
+
+    let totalSkippedVotes = 0
+    let totalOvervotes = 0
+    let totalDuplicateRanks = 0
+
+    ballots.forEach((vote) => {
+        if(vote.overvote_rank != null && vote.overvote_rank > 0){
+            totalOvervotes++;
+        // I'm giving duplicate rank precedence since duplicate rank ballots get cast to skipped rank ballots under our format
+        }else if(vote.has_duplicate_rank){ 
+            totalDuplicateRanks++;
+        }else if(detectSkippedRank(vote)){
+            totalSkippedVotes++;
+        }
+    })
+
+    return [
+        {name: 'No Error', votes: ballots.length - (totalOvervotes + totalSkippedVotes + totalDuplicateRanks)},
+        {name: 'Overvoted', votes: totalOvervotes },
+        {name: 'Skipped Rank', votes: totalSkippedVotes },
+        {name: 'Duplicate Ranks', votes: totalDuplicateRanks},
+    ];
+}
+
+const VoterErrorStatsWidget = () => {
     const {t, election} = useElection();
-    const {ballots, ballotsForRaceWithMeta} = useAnonymizedBallots();
-    let {results, race} = useRace();
+    const {ballotsForRaceWithMeta} = useAnonymizedBallots();
+    let {results } = useRace();
     results = results as irvResults
 
     if(election.public_archive_id === '') return <></>
@@ -23,48 +64,12 @@ export default () => {
         {name: 'Abstentions', votes: results.summaryData.nAbstentions},
     ];
 
-    let totalSkippedVotes = 0
-    let totalOvervotes = 0
-    let totalDuplicateRanks = 0
-    let b = ballotsForRaceWithMeta()
-    let numBallots = b.length;
-    let sorts = []
-    const detectSkippedRank = (vote, j) => {
-        let sortedScores = vote.scores.map(s => s.score).sort((a, b) => (a??-1)-(b??-1))
-        let result = sortedScores.some((score, i) => {
-            let prev = (i==0)? null : sortedScores[i-1];
-            if(prev == null && score != null && score > 1) return true;
-            if(prev != null && (score - prev) > 1) return true;
-            return false;
-        })
-        if(result){
-            if(sortedScores[0] == 1 && sortedScores[1] == 2 && sortedScores[2] == 4){
-                sorts.push(vote.scores.map(s => s.score).join('-'));
-            }
-        }
-        return result
-    }
+    const b = ballotsForRaceWithMeta()
 
-    b.forEach((vote, j) => {
-        if(vote.overvote_rank != null && vote.overvote_rank > 0){
-            totalOvervotes++;
-        // I'm giving duplicate rank precedence since duplicate rank ballots get cast to skipped rank ballots under our format
-        }else if(vote.has_duplicate_rank){ 
-            totalDuplicateRanks++;
-        }else if(detectSkippedRank(vote, j)){
-            totalSkippedVotes++;
-        }
-    })
+    const voterErrorData = getVoterErrorData(b);
+    const errorVotes = b.length - voterErrorData[0].votes;
 
-    let errorVotes = totalOvervotes + totalSkippedVotes + totalDuplicateRanks;
-    const voterErrorData = [
-        {name: 'No Error', votes: results.summaryData.nTallyVotes - errorVotes},
-        {name: 'Overvoted', votes: totalOvervotes },
-        {name: 'Skipped Rank', votes: totalSkippedVotes },
-        {name: 'Duplicate Ranks', votes: totalDuplicateRanks},
-    ];
-
-    let voidedVotes = results.nExhaustedViaDuplicateRank + results.nExhaustedViaOvervote + results.nExhaustedViaSkippedRank;
+    const voidedVotes = results.nExhaustedViaDuplicateRank + results.nExhaustedViaOvervote + results.nExhaustedViaSkippedRank;
     const voidedErrorData = [
         {name: 'Vote Counted', votes: results.summaryData.nTallyVotes - voidedVotes},
         {name: 'Voided by Overvote', votes: results.nExhaustedViaOvervote},
@@ -72,7 +77,7 @@ export default () => {
         {name: 'Voided by Duplicate Rank', votes: results.nExhaustedViaDuplicateRank},
     ];
 
-    return <Widget title={'Voter Errors'} >
+    return <Widget title={t('results_ext.voter_error_title')} wide>
         <Box width='100%' display='flex' flexDirection='column' gap={4}>
             <Box>
                 <Typography><b>{formatPercent(results.summaryData.nAbstentions / totalVotes)}</b> of voters abstained from this race</Typography>
@@ -99,3 +104,5 @@ export default () => {
         </Box>
     </Widget>
 }
+
+export default VoterErrorStatsWidget;

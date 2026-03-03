@@ -14,6 +14,7 @@ election_home:
 # Ballot (ex. https://bettervoting.com/j87vqp/vote)
 ballot:
   this_election_uses: Te {{election}} wykorzystują metodę głosowania {{voting_method}}, aby wybrać {{spelled_count}} $t(winner.winner)
+  this_election_uses_draggable: Te {{election}} wykorzystują metodę głosowania {{voting_method}} z przeciąganymi kartami do głosowania, aby wybrać {{spelled_count}} $t(winner.winner)
   instructions_checkbox: Zapoznałem/Zapoznałam się z instrukcjami
   learn_more: Dowiedz się więcej o {{voting_method}}
   previous: Wcześniejszy
@@ -45,7 +46,7 @@ ballot:
        - Give your favorite(s) five stars.
        - Give your last choice(s) zero stars or leave blank.
        - Score other {{candidates}} as desired.
-       - Equal scores indicate equal preference.
+       - Equal scores indicate equal support.
       footer_single_winner: ''
       footer_multi_winner: >
         Winners in Proportional STAR Voting are selected in rounds. Each round elects the {{candidate}} with the highest total score,
@@ -59,7 +60,7 @@ ballot:
        - Give your favorite(s) five stars.
        - Give your last choice(s) zero stars or leave blank.
        - Score other {{candidates}} as desired.
-       - Equal scores indicate equal preference.
+       - Equal scores indicate equal support.
       footer_single_winner: |
         The two highest scoring {{candidates}} are finalists.
         Your full vote goes to the finalist you prefer.
@@ -258,8 +259,8 @@ results:
     tiebreaker_note_text: 
       - Ties are broken using the [Offical Tiebreaker Protocol](https://starvoting.org/ties) whenever possible.
       - Ties are 10 times less likely to occur with STAR Voting than with Choose-One Voting and generally resolve as the number of voters increases.
-    equal_preferences_title: Distribution of Equal Preferences
-    equal_preferences: Equal Preferences
+    equal_preferences_title: Distribution of Equal Support
+    equal_preferences: Equal Support
     score_higher_than_runoff_title: Why is the top scoring candidate different from the winner?
     score_higher_than_runoff_text: |
       The top-scoring candidate often matches the runoff winner, but not always. 

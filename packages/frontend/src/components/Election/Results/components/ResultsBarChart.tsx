@@ -8,22 +8,23 @@ interface ResultsBarChartData {
   votes?: number | undefined; 
   count?: number | undefined; 
   score?: number | undefined; 
-  [key: string]: any;
+  [key: string]: string | number | undefined | boolean;
 }
 
 interface ResultsBarChartProps {
   data: ResultsBarChartData[];
   runoff?: boolean;
   colorOffset?: number;
-  sortFunc?: ((a: ResultsBarChartData, b: ResultsBarChartData) => number) | false;
+  sortFunc?: ((a: ResultsBarChartData, b: ResultsBarChartData) => number);
   xKey?: 'votes' | 'count' | 'score';
   percentage?: boolean;
   percentDenominator?: number;
-  star?: boolean;
+  stars?: number;
   majorityLegend?: string;
   majorityOffset?: boolean;
   height?: number;
   maxBarSize?: number;
+  maxCandidates?: number;
 }
 
 export default function ResultsBarChart({
@@ -34,35 +35,27 @@ export default function ResultsBarChart({
   xKey = 'votes',
   percentage = false,
   percentDenominator = undefined,
-  star = false,
+  stars = 0,
   majorityLegend = undefined,
   majorityOffset = false,
-  height = undefined,
   maxBarSize = undefined,
+  maxCandidates = 10,
 }: ResultsBarChartProps) {
 const [rawNumbers, setRawNumbers] = useState(false);   
-  let rawData = data;
+  const rawData = data;
 
   // Sort entries
-  if (sortFunc != false) {
-    // we're handling undefined and false difference, so that's why this is explicit
-    rawData.sort(
-      sortFunc ??
-        ((a, b) => {
-          return b[xKey] - a[xKey];
-        })
-    );
-  }
+  if (sortFunc) rawData.sort(sortFunc)
 
   // Truncate names & add percent
-  let maxValue = maxBarSize ?? Math.max(...data.map(d => d[xKey]))
+  const maxValue = maxBarSize ?? Math.max(...data.map(d => d[xKey]))
   percentDenominator ??= data.reduce((sum, d) => sum + d[xKey], 0);
   percentDenominator = Math.max(1, percentDenominator);
   data = rawData.map((d, i) => {
-    let s = {
+    const s = {
       ...d,
-      name: (((star && i == 0) || d['star']) ? "⭐" : "") + truncName(d["name"], 40),
-      // hack to get smaller values to allign different than larger ones
+      name: ((i < stars || d['star']) ? "⭐ " : "") + truncName(d["name"], 40),
+      // hack to get smaller values to allign different from larger ones
       left: (percentage && !rawNumbers)
         ? formatPercent(d[xKey] / percentDenominator)
         : (Math.round(d[xKey]*100)/100).toString(),
@@ -80,8 +73,6 @@ const [rawNumbers, setRawNumbers] = useState(false);
     return s;
   });
 
-  
-
   // compute colors
   let colors = [...CHART_COLORS];
   for (let i = 0; i < colorOffset; i++) {
@@ -90,17 +81,17 @@ const [rawNumbers, setRawNumbers] = useState(false);
 
   // Add majority
   if (majorityLegend || majorityOffset) {
-    let sum = data.reduce((prev, d, i) => {
-      if(i == data.length-1) return prev; // don't include exhausted or equal preference votes in the denominator
+    const sum = data.reduce((prev, d, i) => {
+      if(i == data.length-1) return prev; // don't include exhausted or equal support votes in the denominator
       return prev + d[xKey];
     }, 0);
-    let m = sum / 2;
+    const m = sum / 2;
     data = data.map((d, i) => {
-      let s = { ...d };
+      const s = { ...d };
       s[majorityLegend] = i < 2 ? m : null;
       return s;
     });
-    let s = { name: "" };
+    const s = { name: "" };
     s[majorityLegend] = m;
     data.unshift(s);
     colors.unshift(colors.pop());
@@ -108,7 +99,7 @@ const [rawNumbers, setRawNumbers] = useState(false);
 
   // Bar Max Size
   if(maxBarSize){
-    let d = {name: ''}
+    const d = {name: ''}
     d[xKey] = maxBarSize;
     data = [d, ...data];
     // this is hack, I may need to add more colors later
@@ -116,10 +107,9 @@ const [rawNumbers, setRawNumbers] = useState(false);
   }
 
   // Truncate entries
-  const maxCandidates = 10;
   if (rawData.length > maxCandidates) {
     data = data.slice(0, maxCandidates - 1);
-    let item = {
+    const item = {
       name: `+${rawData.length - (maxCandidates - 1)} more`,
       index: 0,
     };
@@ -137,7 +127,7 @@ const [rawNumbers, setRawNumbers] = useState(false);
   const axisWidth = Math.max(
     50,
     Math.min(
-      150, // 150 since that's the width of Equal Preferences
+      150, // 150 since that's the width of Equal Support
       15 * (longestCandidateName.length > 20 ? 20 : longestCandidateName.length)
     )
   );
@@ -145,7 +135,7 @@ const [rawNumbers, setRawNumbers] = useState(false);
   const tickOffset = 40; 
   const adjustedAxisWidth = useTickMargin ? axisWidth + tickOffset : axisWidth;
   return (
-    <div style={{width:'100%'}} onMouseEnter={() => setRawNumbers(true)} onMouseLeave={() => setRawNumbers(false)}>
+    <div style={{width:'100%', maxWidth: '600px', marginLeft: 'auto', marginRight: 'auto'}} onMouseEnter={() => setRawNumbers(true)} onMouseLeave={() => setRawNumbers(false)}>
     <ResponsiveContainer width="90%" height={50 * data.length} style={maxBarSize ?
       {marginTop: '-50px'}: {}
     }>
@@ -156,7 +146,7 @@ const [rawNumbers, setRawNumbers] = useState(false);
           type="category"
           axisLine={false}
           tickLine={false}
-          tick={{ fontSize: ".9rem", fill: "black", fontWeight: "bold" }}
+          tick={{ fontSize: ".8rem", fill: "black", fontWeight: "bold" }}
           width={adjustedAxisWidth}
           tickMargin={useTickMargin ? tickOffset : undefined}
           

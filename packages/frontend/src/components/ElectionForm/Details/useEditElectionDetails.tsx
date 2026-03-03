@@ -1,5 +1,4 @@
-import React from 'react'
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { DateTime } from 'luxon'
 import useElection from '../../ElectionContextProvider';
 import { isValidDate } from '../../util';
@@ -19,7 +18,7 @@ export const dateToLocalLuxonDate = (date: Date | string | null | undefined, tim
 }
 
 export const useEditElectionDetails = () => {
-    const { election, refreshElection, permissions, updateElection } = useElection()
+    const { election, refreshElection, updateElection } = useElection()
 
 
     const [editedElection, setEditedElection] = useState(election)
@@ -31,7 +30,18 @@ export const useEditElectionDetails = () => {
         endTime: '',
     })
 
-    const applyUpdate = (updateFunc: (settings) => any) => {
+    // Sync editedElection state when the election context changes
+    useEffect(() => {
+        setEditedElection(election)
+        setErrors({
+            title: '',
+            description: '',
+            startTime: '',
+            endTime: '',
+        })
+    }, [election.election_id])
+
+    const applyUpdate = (updateFunc: (settings) => void) => {
         const settingsCopy = structuredClone(editedElection)
         updateFunc(settingsCopy)
         setEditedElection(settingsCopy)
@@ -42,7 +52,7 @@ export const useEditElectionDetails = () => {
 
     const validatePage = () => {
         let isValid = 1
-        let newErrors = { ...errors }
+        const newErrors = { ...errors }
 
         if (!editedElection.title) {
             newErrors.title = 'Election title required';

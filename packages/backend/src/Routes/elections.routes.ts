@@ -19,15 +19,15 @@ import {
     getSandboxResults,
     sendInvitationController,
     sendInvitationsController,
+    setOpenState,
     setPublicResults,
     sendEmailsController,
     setWriteInResults,
+    queryElections,
+    claimElection,
 } from '../Controllers/Election';
 import {upload, uploadImageController} from '../Controllers/uploadImageController';
 import asyncHandler from 'express-async-handler';
-
-
-
 
 /**
  * @swagger
@@ -55,7 +55,6 @@ import asyncHandler from 'express-async-handler';
 */
 
 electionsRouter.get('/Election/:id', asyncHandler(returnElection));
-
 
 /** 
  * @swagger
@@ -85,6 +84,39 @@ electionsRouter.get('/Election/:id', asyncHandler(returnElection));
  *         description: Election not found
  */
 electionsRouter.get('/Election/:_id/exists', asyncHandler(electionExistsByID))
+
+/** 
+ * @swagger
+ * /Election/{id}/claim:
+ *   get:
+ *     summary: Claims a election that was created without an account
+ *     tags: [Elections]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The election ID
+ * 
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               claim_key:
+ *                 type: string
+ * 
+ *     responses:
+ *       200:
+ *         description: If claim was successful
+ * 
+ *       404:
+ *         description: Election not found
+ */
+electionsRouter.post('/Election/:id/claim', asyncHandler(claimElection))
 
 /**
  * @swagger
@@ -181,6 +213,59 @@ electionsRouter.delete('/Election/:id', asyncHandler(deleteElection))
  *                   $ref: '#/components/schemas/Election'
  *  */
  electionsRouter.post('/Elections/', asyncHandler(createElectionController))
+ 
+/** 
+ * @swagger
+ * /QueryElections:
+ *   get:
+ *     summary: Query Elections based on time range (sys-admin only)
+ *     tags: [Elections]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               start_time:
+ *                 type: date
+ *               end_time:
+ *                 type: date
+ *     responses:
+ *       200:
+ *         description: List of elections
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 open_elections:
+ *                   oneOf:
+ *                     - type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Election'
+ *                     - type: null
+ *                 closed_elections:
+ *                   oneOf:
+ *                     - type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Election'
+ *                     - type: null
+ *                     - type: undefined
+ *                 popular_elections:
+ *                   oneOf:
+ *                     - type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Election'
+ *                     - type: null
+ *                 vote_counts:
+ *                   oneOf:
+ *                     - type: array
+ *                       items:
+ *                         type: object
+ *                     - type: null
+  */
+ electionsRouter.post('/QueryElections', asyncHandler(queryElections))
  
  /** 
  * 
@@ -439,6 +524,47 @@ electionsRouter.post('/Election/:id/setPublicResults',asyncHandler(setPublicResu
 */
 electionsRouter.post('/Election/:id/archive', asyncHandler(archiveElection))
 
+ /** 
+ * @swagger
+ * /Election/{id}/setOpenState:
+ *   post:
+ *     summary: Change an election's state from open to closed, or from closed to open
+ *     security:
+ *      - ApiKeyAuth: []
+ *     tags: [Elections]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The election ID
+ *     requestBody:
+ *      content:
+ *        application/json:
+ *          schema:
+ *           type: object
+ *           properties:
+ *            open:
+ *             type: boolean
+ *             description: True if reopening a closed election; false if closing an open election
+ *             required: true
+ *     responses:
+ *       200:
+ *         description: Election state changed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 election:
+ *                   type: object
+ *                   $ref: '#/components/schemas/Election'
+ *       404:
+ *         description: Election not found 
+*/
+electionsRouter.post('/Election/:id/setOpenState', asyncHandler(setOpenState))
+
 /** 
  * @swagger
  * /Election/{id}/sendInvites:
@@ -605,8 +731,6 @@ electionsRouter.post('/images',upload.single("file"), asyncHandler(uploadImageCo
 electionsRouter.post('/Election/:id/setWriteInResults',asyncHandler(setWriteInResults))
 
 
-
-//router.param('id', asyncHandler(electionController.getElectionByID))
 electionsRouter.param('id', asyncHandler(getElectionByID))
 electionsRouter.param('id', asyncHandler(electionSpecificAuth))
 electionsRouter.param('id', asyncHandler(electionPostAuthMiddleware))

@@ -1,20 +1,22 @@
 import { IRequest, reqIdSuffix } from "../IRequest"
 import { Election, electionValidation } from "@equal-vote/star-vote-shared/domain_model/Election";
 import Logger from "../Services/Logging/Logger"
-import { BadRequest, InternalServerError, Unauthorized } from "@curveball/http-errors";
-import { Request, Response } from 'express';
+import { BadRequest, Unauthorized } from "@curveball/http-errors";
+import { Response } from 'express';
 import { roles } from "@equal-vote/star-vote-shared/domain_model/roles";
-import { hasPermission, permission, permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
-import { randomUUID, createHash } from "crypto";
+import { permission } from '@equal-vote/star-vote-shared/domain_model/permissions';
+import { createHash } from "crypto";
 import ServiceLocator from "../ServiceLocator";
-import { makeID } from "../Util";
-import { Uid } from "@equal-vote/star-vote-shared/domain_model/Uid";
-const accountService = ServiceLocator.accountService();
+import { makeUniqueID , ID_LENGTHS } from "@equal-vote/star-vote-shared/utils/makeID";
 const ElectionsModel =  ServiceLocator.electionsDb();
 
 export async function expectValidElectionFromRequest(req:IRequest):Promise<Election> {
     const inputElection = req.body.Election;
-    inputElection.election_id = await makeID(async (id: Uid) => await ElectionsModel.electionExistsByID(id, req));
+    inputElection.election_id = await makeUniqueID(
+        null,
+        ID_LENGTHS.ELECTION,
+        async (id: string) => Boolean(await ElectionsModel.electionExistsByID(id, req))
+    );
     inputElection.create_date = new Date().toISOString()
     const validationErr = electionValidation(inputElection);
     if (validationErr) {
@@ -43,6 +45,8 @@ export function expectPermission(roles:roles[],permission:permission):any {
       }
 }
 
+// Note: it feels weird to have the same util function on both frontend and backend instead of using shared, but they need to use different libraries
 export function hashString(inputString: string) {
+    if(inputString === undefined) return undefined;
     return createHash('sha256').update(inputString).digest('hex')
 }

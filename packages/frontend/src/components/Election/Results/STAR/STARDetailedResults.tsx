@@ -1,47 +1,34 @@
-import React, { useState }  from 'react'
-import { TableContainer, Typography, Paper, Box} from "@mui/material";
-import { roundResults, starResults, starSummaryData } from '@equal-vote/star-vote-shared/domain_model/ITabulators';
+import { starResults } from '@equal-vote/star-vote-shared/domain_model/ITabulators';
 import WidgetContainer from '../components/WidgetContainer';
 import Widget from '../components/Widget';
 import ResultsTable from '../components/ResultsTable';
 import useRace from '~/components/RaceContextProvider';
+import { getEntry } from '@equal-vote/star-vote-shared/domain_model/Util';
+import { formatPercent } from '~/components/util';
 
 type candidateTableEntry = {
   name: string,
   votes: number,
-  index: number,
   runoffVotes: number
 }
 
-export default () => {
-    let {results, t} = useRace();
+const STARDetailedResults = () => {
+    let {results} = useRace();
+    const {t} = useRace();
     results = results as starResults;
-    const winnerIndex = results.roundResults[0].winners[0].index;
-    const runnerUpIndex = results.roundResults[0].runner_up[0].index;
 
-    // NOTE: I'm only using the runoff data, but I'm still generating all the data in case I need them later
     const tableData: candidateTableEntry[] = results.summaryData.candidates.map((c, i) => ({
         name: c.name,
-        votes: results.summaryData.totalScores[i].score,
-        runoffVotes:
-          i == winnerIndex ?
-            results.summaryData.preferenceMatrix[winnerIndex][runnerUpIndex] : (
-          i == runnerUpIndex ?
-            results.summaryData.preferenceMatrix[runnerUpIndex][winnerIndex] : 
-            0 ),
-        index: i
+        votes: c.score,
+        runoffVotes: i < 2 ? c.votesPreferredOver[results.summaryData.candidates[1-i].id] : 0,
     }));
 
-    tableData.sort((a, b) => b.votes - a.votes);
-
-    let runoffData = tableData.slice(0, 2);
-    let finalistVotes = (runoffData[0].runoffVotes + runoffData[1].runoffVotes)
-    runoffData.sort((a, b) => b.runoffVotes - a.runoffVotes);
+    const runoffData = tableData.slice(0, 2);
+    const finalistVotes = runoffData[0].runoffVotes + runoffData[1].runoffVotes
     runoffData.push({
       name: t('results.star.equal_preferences'),
       votes: 0,
       runoffVotes: results.summaryData.nTallyVotes - finalistVotes,
-      index: -1,
     })
 
     return ( <>
@@ -58,8 +45,8 @@ export default () => {
             ...runoffData.map((c, i) => [
               c.name,
               c.runoffVotes,
-              `${Math.round(c.runoffVotes * 1000 / results.summaryData.nTallyVotes) / 10}%`,
-              i == 2 ? '' : `${Math.round(c.runoffVotes * 1000 / finalistVotes) / 10}%`,
+              formatPercent(c.runoffVotes / results.summaryData.nTallyVotes),
+              i == 2 ? '' : formatPercent(c.runoffVotes / finalistVotes),
             ]),
             [t('keyword.total'), results.summaryData.nTallyVotes, '100%', '100%'] 
             ]}/>
@@ -67,3 +54,4 @@ export default () => {
       </WidgetContainer>
     </>);
 }
+export default STARDetailedResults;

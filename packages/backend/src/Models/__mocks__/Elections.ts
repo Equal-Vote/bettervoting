@@ -60,7 +60,7 @@ export default class ElectionsDB implements IElectionStore {
         return Promise.resolve(JSON.parse(JSON.stringify(election)))//Simple deep copy
     }
 
-    electionExistsByID(election_id: Uid, ctx: ILoggingContext): Promise<Boolean | string>{
+    electionExistsByID(election_id: Uid, ctx: ILoggingContext): Promise<boolean | string>{
         Logger.debug(ctx, `Mock Election DB electionExistsByID ${election_id}`);
         const election = this.elections.find(election => {
             return election.election_id==election_id;

@@ -1,11 +1,10 @@
-import { Box, Button, Typography } from '@mui/material';
-import React from 'react';
+import { Box, Typography } from '@mui/material';
 import { PrimaryButton } from '../styles';
 import useAuthSession from '../AuthSessionContextProvider';
 import { useThemeSelector } from '../../theme';
 import { useSubstitutedTranslation } from '../util';
 
-export default () => {
+const LandingPageSignUpBar = () => {
     const authSession = useAuthSession()
     const themeSelector = useThemeSelector()
     const {t} = useSubstitutedTranslation();
@@ -37,3 +36,5 @@ export default () => {
         </Box>
     )
 }
+
+export default LandingPageSignUpBar

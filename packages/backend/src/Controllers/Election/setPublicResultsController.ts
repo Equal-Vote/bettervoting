@@ -12,7 +12,7 @@ var ElectionsModel = ServiceLocator.electionsDb();
 const className = "election.Controllers";
 
 const setPublicResults = async (req: IElectionRequest, res: Response, next: NextFunction) => {
-    Logger.info(req, `${className}.finalize ${req.election.election_id}`);
+    Logger.info(req, `${className}.setPublicResults ${req.election.election_id}`);
     expectPermission(req.user_auth.roles, permissions.canEditElectionState)
     const election: Election = req.election
     const public_results = req.body.public_results

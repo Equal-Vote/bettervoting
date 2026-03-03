@@ -11,7 +11,9 @@ export const useLocalStorage = <data>(key: string, defaultValue: data|null, upda
         let initial: data|null;
         try {
             initial = JSON.parse(saved);
-        } catch {}
+        } catch {
+            initial = null;
+        }
         if (!initial) {
             localStorage.setItem(key, JSON.stringify(defaultValue));
             return defaultValue

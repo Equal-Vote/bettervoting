@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+
+# TypeScript build artifacts
+dist/
+*.js.map
+
+# Logs
+*.log
+npm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+.env.test
+.env.*
+
+# Test issue tracking
+.test-issues.json
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo

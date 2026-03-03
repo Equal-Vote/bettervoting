@@ -1,7 +1,6 @@
-import { Candidate } from "@equal-vote/star-vote-shared/domain_model/Candidate";
-import { candidate, genericResults, genericSummaryData, nonNullBallot, roundResults, totalScore } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
-import { ballot, voter } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
+import { candidate, genericResults, genericSummaryData, rawVote, roundResults, vote } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
 
+const Fraction = require('fraction.js');
 declare namespace Intl {
   class ListFormat {
     constructor(locales?: string | string[], options?: {});
@@ -10,15 +9,6 @@ declare namespace Intl {
 }
 // converts list of strings to string with correct grammar ([a,b,c] => 'a, b, and c')
 export const commaListFormatter = new Intl.ListFormat('en', { style: 'long', type: 'conjunction' });
-
-export function sortTotalScores(totalScores : totalScore[], candidates : candidate[]){
-  return totalScores.sort((a: totalScore, b: totalScore) => {
-    if (a.score > b.score) return -1
-    if (a.score < b.score) return 1
-    if (candidates[a.index].tieBreakOrder < candidates[b.index].tieBreakOrder) return -1
-    return 1
-  });
-}
 
 // Format a Timestamp value into a compact string for display;
 function formatTimestamp(value : string) {
@@ -69,6 +59,7 @@ const columnTypes = [
   { test: isAny, transform: transformAny }
 ];
 
+
 function getTransforms(header : any, data : string[][]) {
   const transforms : any[] = [];
   const rowCount = Math.min(data.length, 3);
@@ -98,122 +89,240 @@ function getTransforms(header : any, data : string[][]) {
 export const makeBoundsTest = (minValue:number, maxValue:number) => {
 	return [
 		'nOutOfBoundsVotes',
-		(ballot: number[]) => ballot.filter(b => b < minValue || maxValue < b).length > 0
+		(vote: rawVote) => Object.values(vote.marks).filter(b => b != null && (b < minValue || maxValue < b)).length > 0
 	] as const;
 }
 
-export const makeAbstentionTest = (underVoteValue:number|null = 0) => {
+export const makeAbstentionTest = (markAllEqualAsAbstention:boolean = false) => {
 	return [
 		'nAbstentions',
-		(ballot: number[]) => ballot.filter(b => (underVoteValue === null ? b : (b??0)) === underVoteValue).length == ballot.length
+		(vote: rawVote) => {
+            const marks = Object.values(vote.marks).map(m => m ?? 0);
+            return marks.every(m => m === (markAllEqualAsAbstention ? marks[0] : 0));
+        }
 	] as const;
 }
 
-type StatTestPair = Readonly<[string, Function]>;
+type StatTestPair = Readonly<[string, (vote: rawVote) => boolean]>;
 
-const filterInitialVotes = (data: ballot[], tests: StatTestPair[]): [nonNullBallot[], {[key: string]: number}] => {
-	let tallyVotes: nonNullBallot[] = [];
+const filterInitialVotes = (rawVotes: rawVote[], tests: StatTestPair[]): [vote[], {[key: string]: number}] => {
+	let tallyVotes: vote[] = [];
 	let summaryStats: {[key: string]: number} = {};
 
-    tests.forEach(([statName, statTest]) => {
-      summaryStats[statName] = 0;
-    })
-    summaryStats['nTallyVotes'] = 0;
+  tests.forEach(([statName, statTest]) => {
+    summaryStats[statName] = 0;
+  })
+  summaryStats['nTallyVotes'] = 0;
 
-    data.forEach(ballot => {
-      // using a classic loop so that I can return out of it
-      for(let i = 0; i < tests.length; i++){
-        let [statName, statTest] = tests[i]; 
-        if(statTest(ballot)){
-          summaryStats[statName] = (summaryStats[statName] ?? 0)+1;
-          return;
-        }
+  rawVotes.forEach(rawVote => {
+    // using a classic loop so that I can return out of it
+    for(let i = 0; i < tests.length; i++){
+      let [statName, statTest] = tests[i]; 
+      if(statTest(rawVote)){
+        summaryStats[statName] = (summaryStats[statName] ?? 0)+1;
+        return;
       }
-      summaryStats.nTallyVotes++;
-      tallyVotes.push(ballot.map(s => s??0))
+    }
+    summaryStats.nTallyVotes++;
+    tallyVotes.push({
+      ...rawVote,
+      marks: Object.fromEntries(Object.entries(rawVote.marks).map(([c, v]) => [c, v ?? 0]))
     })
+  })
 
-    return [tallyVotes, summaryStats];
+  return [tallyVotes, summaryStats];
 }
 
-export const getInitialData = <SummaryType,>(
-	allVotes: ballot[],
-  candidates: string[],
-  randomTiebreakOrder: number[],
+export type CandidateSortField<CandidateType extends candidate> = keyof CandidateType
+
+export const shuffleCandidates = <CandidateType extends candidate>(candidates: CandidateType[], nTallyVotes: number): CandidateType[] => {
+  // TODO: this will be replaced by tinyrand as described at https://discuss.python.org/t/finding-a-bloc-star-provider/73918/45
+
+  // https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
+  function shuffle(array: any[]) {
+    let seed = nTallyVotes;
+
+    // https://stackoverflow.com/a/19303725
+    function random() {
+        let x = Math.sin(seed++) * 10000;
+        return x - Math.floor(x);
+    }
+
+    let currentIndex = array.length;
+
+    // While there remain elements to shuffle...
+    while (currentIndex != 0) {
+
+      // Pick a remaining element...
+      let randomIndex = Math.floor(random() * currentIndex);
+      currentIndex--;
+
+      // And swap it with the current element.
+      [array[currentIndex], array[randomIndex]] = [
+        array[randomIndex], array[currentIndex]];
+    }
+
+    return array;
+  }
+
+  return shuffle(candidates);
+}
+
+export const sortCandidates = <CandidateType extends candidate>(
+  candidates: CandidateType[],
+  fieldsExpr: CandidateSortField<CandidateType>[] | CandidateSortField<CandidateType> | undefined,
+  roundResults?: roundResults<CandidateType>[]
+) => {
+  if(fieldsExpr === undefined) return;
+  const fields = Array.isArray(fieldsExpr) ? fieldsExpr : [fieldsExpr];
+
+  const evalField = (candidate: CandidateType, field: CandidateSortField<CandidateType>, subIndex?: number) => {
+    if(Array.isArray(candidate[field])){
+      // @ts-ignore: typescript doesn't know candidate[field] is an array
+      return candidate[field].at(subIndex ?? -1)
+    }else{
+      return candidate[field]
+    }
+  }
+
+  const cmpr = (a: CandidateType, b: CandidateType, fieldIndex: number = 0, subIndex: number = -1): number => {
+    if(fieldIndex >= fields.length) return 0;
+    let aa = evalField(a, fields[fieldIndex], subIndex);
+    let bb = evalField(b, fields[fieldIndex], subIndex);
+    if(typeof aa == typeof Fraction){
+      let diff = aa.sub(bb).mul(-1);
+      if(!diff.equals(0)) return diff.valueOf();
+    }else{
+      let diff = -(aa - bb);
+      if(diff != 0) return diff;
+    }
+    if(Array.isArray(a[fields[fieldIndex]]) && subIndex != 0){
+      // @ts-ignore - we just established that it's an array, not sure why typescript is confused
+      let l = a[fields[fieldIndex]].length;
+      return cmpr(a, b, fieldIndex, (subIndex-1+l)%l)
+    }else{
+      return cmpr(a, b, fieldIndex+1);
+    }
+  }
+
+  const winRound = (c: CandidateType) => {
+    if(roundResults == undefined) return -1;
+    let i = roundResults.findIndex(r => r.winners.map(w => w.id).includes(c.id))
+    if(i == -1) return 999999; // I can't do infinity because Infinity can't equal Infinity for comparison purposes
+    return i;
+  }
+
+  candidates.sort((a, b) => {
+    let wDiff = winRound(a) - winRound(b);
+    if(wDiff != 0) return wDiff;
+    return cmpr(a, b);
+  });
+}
+
+export const getSummaryData = <CandidateType extends candidate, SummaryType extends genericSummaryData<CandidateType>,>(
+  candidates: CandidateType[],
+	allVotes: rawVote[],
   methodType: 'cardinal' | 'ordinal',
+  sortFields: CandidateSortField<CandidateType>[] | CandidateSortField<CandidateType> | undefined,
   statTests: StatTestPair[],
-): [nonNullBallot[], SummaryType] => {
+): {tallyVotes: vote[], summaryData: SummaryType} => {
 	// Filter Ballots
 	const [tallyVotes, summaryStats] = filterInitialVotes(allVotes, statTests);
 
-	// Initialize randomTiebreakOrder structure
-	if (randomTiebreakOrder.length < candidates.length) {
-		randomTiebreakOrder = candidates.map((c,index) => index)
-	}
-
   // Matrix for voter preferences
   const remapZero = (n:number) => n == 0 ? Infinity : n;
-  const preferenceMatrix: number[][] = candidates.map((_,i) => 
-    candidates.map((_,j) =>
-      // count the number of votes with i > j
-      tallyVotes.reduce((n, vote) => n + (methodType == 'cardinal'?
+  candidates.forEach(a => {
+    candidates.forEach(b => {
+      a.votesPreferredOver[b.id] = tallyVotes.reduce((n, vote) => n + (methodType == 'cardinal'?
         // Cardinal systems: vote goes to the candinate with the higher number and 0 is infinity
-        (vote[i] > vote[j])? 1 : 0
+        (vote.marks[a.id] > vote.marks[b.id])? 1 : 0
       :
         // Orindal systems: vote goes to the candinate with the smaller rank
-        (remapZero(vote[i]) < remapZero(vote[j]))? 1 : 0
+        (remapZero(vote.marks[a.id]) < remapZero(vote.marks[b.id]))? 1 : 0
       ), 0)
-    )
-  )
+    })
+  })
 
   // Matrix for voter preferences
-  const pairwiseMatrix: number[][] = candidates.map((_,i) => 
-    // count if more voters prefer i to j
-    candidates.map((_,j) => (preferenceMatrix[i][j] > preferenceMatrix[j][i])? 1 : 0)
-  )
+  candidates.forEach(a => {
+    candidates.forEach(b => {
+      a.winsAgainst[b.id] = a.votesPreferredOver[b.id] > b.votesPreferredOver[a.id];
+    })
+  })
 
   // Totaled score measures for each candidate
-  const totalScores: totalScore[] = candidates.map((_,candidateIndex) => ({
-    index: candidateIndex,
-    score: methodType == 'ordinal' ?
-      pairwiseMatrix[candidateIndex].filter(entry => entry === 1).length
-    :
-      tallyVotes.reduce((score, vote) => score + vote[candidateIndex], 0),
-  }));
+  if(candidates.every(c => 'score' in c)){ // using every to make typescript happy
+    candidates.forEach(c => {
+      // @ts-ignore - We know `score` is present even if typescript doesn't
+      c.score = tallyVotes.reduce((score, vote) => score + vote.marks[c.id], 0)
+    })   
+  }
 
-	// Sort totalScores (don't sort totalScores, lots of spots use the values for direct reference)
-  //const candidatesWithIndexes: candidate[] = candidates.map((candidate, index) => ({ index: index, name: candidate, tieBreakOrder: randomTiebreakOrder[index] }))
-  //sortTotalScores(totalScores, candidatesWithIndexes);
+  // Compute copeland score based on matrix
+  if(candidates.every(c => 'copelandScore' in c)){ // using every to make typescript happy
+    candidates.forEach(c => {
+      // @ts-ignore - We know `copelandScore` is present even if typescript doesn't
+      c.copelandScore = candidates.reduce(
+        (prev, other) => {
+          // self
+          if(c.id == other.id) return prev;
+          // win
+          if(c.winsAgainst[other.id]) return prev+1;
+          // tie
+          if(c.winsAgainst[other.id] === other.winsAgainst[c.id]) return prev+0.5;
+          // loss
+          return prev;
+        }, 0
+      )
+    })   
+  }
 
-  return [
-		tallyVotes, 
-		{
-			candidates: candidates.map((candidate, index) => 
-				({ index: index, name: candidate, tieBreakOrder: randomTiebreakOrder[index] })
-			),
-			totalScores,
-			preferenceMatrix,
-			pairwiseMatrix,
-			...summaryStats,
-		} as SummaryType
-	]
+  // Compute fiveStarCount
+  if(candidates.every(c => 'fiveStarCount' in c)){ // using every to make typescript happy
+    candidates.forEach(c => {
+      // @ts-ignore - We know `fiveStarCount` is present even if typescript doesn't
+      c.fiveStarCount = tallyVotes.reduce((count, v) => v.marks[c.id] === 5 ? count+1 : count, 0)
+    });
+  }
+
+  // hareScores is handled in irv tabulator
+  // Compute hareScores (just adding first rounds for now, tabulator will add the rest)
+  //if(candidates.every(c => 'hareScores' in c)){ // using every to make typescript happy
+  //  candidates.forEach(c => {
+  //    // @ts-ignore - We know `firstRankCount` is present even if typescript doesn't
+  //    c.hareScores = [tallyVotes.reduce((count, v) => v.marks[c.id] === 1 ? count+1 : count, 0)]
+  //  });
+  //}
+
+
+  // Pre-Sort by the sort field
+  sortCandidates(candidates, sortFields);
+
+  return {
+    summaryData: {
+      candidates,
+      ...summaryStats,
+    } as SummaryType,
+    tallyVotes
+  }
 }
 
-export const runBlocTabulator = <ResultsType extends genericResults, SummaryType extends genericSummaryData,>(
+export const runBlocTabulator = <CandidateType extends candidate, SummaryType extends genericSummaryData<CandidateType>, ResultsType extends genericResults<CandidateType, SummaryType>,>(
 	results: ResultsType,
 	nWinners: number,
-	singleWinnerCallback: (remainingCandidates: candidate[], summaryData: SummaryType) => roundResults
-) => {
-  let remainingCandidates = [...results.summaryData.candidates];
+	singleWinnerCallback: (remainingCandidates: CandidateType[], summaryData: SummaryType) => roundResults<CandidateType>,
+  evaluate?: (candidate: CandidateType, roundResults: roundResults<CandidateType>[]) => number[]
+): ResultsType => {
+  let remainingCandidates: CandidateType[] = [...results.summaryData.candidates];
 
   for(let w = 0; w < nWinners; w++){
-    let roundResults = singleWinnerCallback(remainingCandidates, results.summaryData as SummaryType);
+    let roundResults = singleWinnerCallback(remainingCandidates, results.summaryData);
 
     results.elected.push(...roundResults.winners);
     results.roundResults.push(roundResults);
 
     // remove winner for next round
-    remainingCandidates = remainingCandidates.filter(candidate => candidate.index != roundResults.winners[0].index)
+    remainingCandidates = remainingCandidates.filter(candidate => candidate.id != roundResults.winners[0].id)
 
     // only save the tie breaker info if we're in the final round
     if(w == nWinners-1){
@@ -222,7 +331,26 @@ export const runBlocTabulator = <ResultsType extends genericResults, SummaryType
     }
   }
 
-  results.other = remainingCandidates.map(c => results.summaryData.candidates[c.index]); // remaining candidates in sortedScores
+  results.other = remainingCandidates; // remaining candidates in sortedScores
+
+  if(evaluate){
+    // evaulate() converts candidates into an number[] of evaluation scores
+    // candidates with higher evaluation scores will be sorted higher
+    // index 0 is checked first, then further indexes are checked to break ties
+
+    results.summaryData.candidates = 
+      results.summaryData.candidates
+        .map((c: CandidateType) => ([c, evaluate(c, results.roundResults)] as [CandidateType, number[]]))
+        .sort(([_, a]: [candidate, number[]], [__, b] : [candidate, number[]]) => {
+          const compare = (a: number[], b: number[], i: number): number => {
+            if(i > a.length || i > b.length) return 0;
+            let diff = -(a[i] - b[i]);
+            return diff == 0 ? compare(a, b, i+1) : diff;
+          };
+          return compare(a, b, 0)
+        }) 
+        .map(([c, _]: [CandidateType, number[]]) => c)
+  }
 
   return results
 }

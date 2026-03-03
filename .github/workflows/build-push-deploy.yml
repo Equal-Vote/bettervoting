@@ -42,15 +42,18 @@ jobs:
       - name: Build and push Docker images
         uses: docker/build-push-action@v5
         with:
+          build-args: |
+            COMMIT_SHA=${{ github.sha }}
           cache-from: type=registry,ref=ghcr.io/${{ env.REPO }}:${{ github.ref_name }}
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
 
       # TODO: Currently using a personal access token to do this, which is not
       # secure. Need to switch to switch to one of these maybe?
-      # 
+      #
       # * https://github.com/marketplace/actions/workflow-dispatch
       # * https://github.com/marketplace/actions/trigger-workflow-and-wait
       #
@@ -65,5 +68,5 @@ jobs:
           yq -i ".image.tag = \"sha-${GITHUB_SHA::7}\"" applications/star-server/values.yaml
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git commit -am "Automatically updating star-server image."
+          git commit -am "Automatically updating bettervoting image."
           git push

@@ -1,14 +1,21 @@
-import React, { useEffect, useRef } from 'react';
-
-import { Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material"
+import { useEffect, useRef } from 'react';
+import { useSubstitutedTranslation } from '../../util';
+import { Box, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material"
 import { PrimaryButton, SecondaryButton } from '../../styles';
 import useElection from '../../ElectionContextProvider';
 
 
+interface RaceDialogProps {
+    onSaveRace: () => void;
+    open: boolean;
+    handleClose: () => void;
+    children: React.ReactNode;
+}
+
 export default function RaceDialog({
-  onSaveRace, open, handleClose, children, editedRace, resetStep
-}) {
-    const { election } = useElection()
+  onSaveRace, open, handleClose, children
+}: RaceDialogProps) {
+    const { election, t } = useElection()
     const handleSave = () => onSaveRace()
 
     const onClose = (event, reason) => {
@@ -16,10 +23,6 @@ export default function RaceDialog({
             return;
         handleClose();
     }
-
-    useEffect(() => {
-      if (! open) resetStep();
-    }, [open]);
 
     const dialogContentRef = useRef<HTMLDivElement>(null);
 
@@ -44,15 +47,22 @@ export default function RaceDialog({
                 {children}
             </DialogContent>
             <DialogActions>
-                <SecondaryButton onClick={handleClose}>
-                    Cancel
-                </SecondaryButton >
-                <PrimaryButton
-                    onClick={() => handleSave()}
-                    disabled={election.state!=='draft'}
-                  >
-                    Save
-                </PrimaryButton>
+                {election.state === 'draft' ?
+                    <>
+                        <SecondaryButton onClick={handleClose}>
+                           {t('keyword.cancel')}
+                        </SecondaryButton >
+                        <PrimaryButton
+                            onClick={() => handleSave()}
+                        >
+                           {t('keyword.save')}
+                        </PrimaryButton>
+                    </>
+                :
+                    <PrimaryButton onClick={handleClose}>
+                        {t('keyword.close')}
+                    </PrimaryButton >
+                }
             </DialogActions>
         </Dialog>
     )

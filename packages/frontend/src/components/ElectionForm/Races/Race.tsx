@@ -1,4 +1,3 @@
-import React from 'react'
 import { useState } from "react"
 import Typography from '@mui/material/Typography';
 import { Box, Paper, Tooltip } from "@mui/material"
@@ -6,33 +5,61 @@ import IconButton from '@mui/material/IconButton'
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import RaceDialog from './RaceDialog';
-import { useEditRace } from './useEditRace';
 import RaceForm from './RaceForm';
 import useElection from '../../ElectionContextProvider';
 import { ContentCopy } from '@mui/icons-material';
+import { Race as IRace } from "@equal-vote/star-vote-shared/domain_model/Race";
+import { ID_LENGTHS, ID_PREFIXES, makeID } from "@equal-vote/star-vote-shared/utils/makeID";
+import { useDeleteAllBallots } from "~/hooks/useAPI";
+import useConfirm from "~/components/ConfirmationDialogProvider";
 
-export default function Race({ race, race_index }) {
+export interface NewRace extends Omit<IRace, 'voting_method'> {
+    voting_method: "STAR" | "STAR_PR" | "Approval" | "RankedRobin" | "IRV" | "Plurality" | "STV" | ""
+}
+interface RaceProps {
+    race: IRace
+    race_index: number
+}
 
-    const { election } = useElection()
-    const { editedRace, errors, setErrors, applyRaceUpdate, onSaveRace, onDeleteRace, onAddRace, onDuplicateRace } = useEditRace(race, race_index)
-
+export default function Race({ race, race_index }: RaceProps) {
+    const { election, updateElection, refreshElection } = useElection()
+    const { makeRequest: deleteAllBallots } = useDeleteAllBallots(election.election_id);
+    const confirm = useConfirm();
     const [open, setOpen] = useState(false);
-    const handleOpen = () => setOpen(true);
-    const handleClose = () => setOpen(false);
 
-    const [activeStep, setActiveStep] = useState(0);
-    const resetStep = () => setActiveStep(0);
-
-    const onSave = async () => {
-        const success = await onSaveRace()
-        if (!success) return
-        handleClose()
+    const onSave = async (editedRace) => {
+        const success = await updateElection(election => {
+            election.races[race_index] = editedRace
+        }) && await deleteAllBallots()
+        if (!success) return false
+        await refreshElection()
+        return true
     }
 
-    const onCopy = async () => {
-        const success = await onDuplicateRace()
-        if (!success) return
+    const onDuplicate = async () => {
+        const race = election.races[race_index];
+        const success = await updateElection(election => {
+            election.races.push({
+                ...race,
+                title: 'Copy Of ' + race.title,
+                race_id: makeID(ID_PREFIXES.RACE, ID_LENGTHS.RACE)
+            })
+        }) && deleteAllBallots()
+        if (!success) return false
+        await refreshElection()
+        return true
+    }
+
+    const onDelete = async () => {
+        const confirmed = await confirm({ title: 'Confirm', message: 'Are you sure?' })
+        if (!confirmed) return false
+        let success = await updateElection(election => {
+            election.races.splice(race_index, 1)
+        })
+        success = success && await deleteAllBallots()
+        if (!success) return false
+        await refreshElection()
+        return true
     }
 
     return (
@@ -47,8 +74,8 @@ export default function Race({ race, race_index }) {
                 <Box sx={{ flexShrink: 1, p: 1 }}>
                     <Tooltip title='Duplicate'>
                         <IconButton
-                            aria-label="copy"
-                            onClick={onCopy}
+                            aria-label='Duplicate'
+                            onClick={onDuplicate}
                             disabled={election.state !== 'draft'}>
                             <ContentCopy />
                         </IconButton>
@@ -57,8 +84,8 @@ export default function Race({ race, race_index }) {
                 <Box sx={{ flexShrink: 1, p: 1 }}>
                     <Tooltip title='Edit'>
                         <IconButton
-                            aria-label="edit"
-                            onClick={handleOpen}>
+                            aria-label={`Edit Race: ${race.title}`}
+                            onClick={() => setOpen(true)}>
                             {election.state === 'draft' ? <EditIcon /> : <VisibilityIcon />}
                         </IconButton>
                     </Tooltip>
@@ -66,9 +93,9 @@ export default function Race({ race, race_index }) {
                 <Box sx={{ flexShrink: 1, p: 1 }}>
                     <Tooltip title='Delete'>
                         <IconButton
-                            aria-label="delete"
+                            aria-label={`Delete Race: ${race.title}`}
                             color="error"
-                            onClick={onDeleteRace}
+                            onClick={onDelete}
                             disabled={election.state !== 'draft'}>
                             <DeleteIcon />
                         </IconButton>
@@ -76,23 +103,13 @@ export default function Race({ race, race_index }) {
                 </Box>
 
             </Box>
-            <RaceDialog
-              onSaveRace={onSave}
-              open={open}
-              handleClose={handleClose}
-              editedRace={editedRace}
-              resetStep={resetStep}
-            >
-                <RaceForm
-                    race_index={race_index}
-                    editedRace={editedRace}
-                    errors={errors}
-                    setErrors={setErrors}
-                    applyRaceUpdate={applyRaceUpdate}
-                    activeStep={activeStep}
-                    setActiveStep={setActiveStep}
-                />
-            </RaceDialog>
+            <RaceForm
+                raceIndex={race_index}
+                onConfirm={async (editedRace) => (await onSave(editedRace) && setOpen(false))}
+                onCancel={() => setOpen(false)}
+                dialogOpen={open}
+                styling='Dialog'
+            />
         </Paper >
     )
 }

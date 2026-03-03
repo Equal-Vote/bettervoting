@@ -1,16 +1,20 @@
-import React, { useContext, useMemo, useCallback, useEffect, useState } from 'react';
-import { BallotContext } from './VotePage'; 
-import GenericBallotView from './GenericBallotView/GenericBallotView'; 
-import { useSubstitutedTranslation } from '~/components/util'; 
-import { use } from 'i18next';
-import { ca } from 'date-fns/locale';
-import { set } from 'date-fns';
-import { get } from 'http';
+import { useContext, useMemo, useCallback } from 'react';
+import { BallotContext } from './VotePage';
+import GenericBallotView from './GenericBallotView/GenericBallotView';
+import DraggableIRVBallotView from './DraggableIRVBallotView';
+import { useSubstitutedTranslation } from '~/components/util';
+import useElection from '../../ElectionContextProvider'; 
 
 
-export default function RankedBallotView({ onlyGrid = false }) {
+export default function RankedBallotView({ onlyGrid = false }: { onlyGrid?: boolean }) {
   const ballotContext = useContext(BallotContext);
+  const { election } = useElection();
   const { t } = useSubstitutedTranslation();
+
+  // Use draggable component for IRV when draggable_ballot setting is enabled
+  if (ballotContext.race.voting_method === 'IRV' && election.settings.draggable_ballot && !onlyGrid) {
+    return <DraggableIRVBallotView />;
+  }
 
 
   // disabling warnings until we have a better solution, see slack convo

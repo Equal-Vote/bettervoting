@@ -35,8 +35,6 @@ export interface OrderedNewBallot extends PartialBy<NewBallot,'votes'> {
     orderedVotes: OrderedVote[]
 }
 
-
-
 export interface AnonymizedBallot {
     ballot_id:  Uid;    //ID of ballot
     election_id: Uid;   //ID of election ballot is cast in

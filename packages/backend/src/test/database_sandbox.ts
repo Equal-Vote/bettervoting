@@ -97,10 +97,10 @@ async function addBatchElections() {
         const id = hashString(i.toString())
         for (let j = 0; j < 99; j++) {
             const date = hashString(j.toString())
-            elections.push(buildElection(id, date, false))
+            elections.push(buildElection(id ?? '', date ?? '', false))
         }
         const date = hashString('100')
-        elections.push(buildElection(id, date, true))
+        elections.push(buildElection(id ?? '', date ?? '', true))
         console.info('Batch: ' + i)
         await AddElections(elections)
     }

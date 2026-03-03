@@ -7,10 +7,6 @@ import testInputs from "./testInputs";
 import { TestHelper } from "./TestHelper";
 import ServiceLocator from "../ServiceLocator";
 
-// Uses the mock service locator in place of the production one
-// Which users mock databases
-jest.mock("./../ServiceLocator");
-
 const th = new TestHelper();
 const accountService = ServiceLocator.accountService() as any;
 accountService.verify = true;

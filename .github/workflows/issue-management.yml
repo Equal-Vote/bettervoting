@@ -1,0 +1,97 @@
+name: Issue Management
+
+on:
+  # Run daily at 9:00 AM UTC (adjust timezone as needed)
+  # To change the schedule, modify the cron expression below
+  # Examples: '0 */6 * * *' (every 6 hours), '0 9 * * 1' (Mondays only)
+  schedule:
+    - cron: '0 9 * * *'
+
+  # Manual triggering via Actions tab
+  # IMPORTANT: Manual triggers use the input values below (or defaults if not changed)
+  # - Default dry_run is FALSE, so manual triggers WILL make real changes unless you check the box
+  # - To test safely, set dry_run to TRUE when triggering manually
+  # - To change production defaults for scheduled runs, modify lines 27-28 and 73-74
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Run in dry-run mode (preview only, no actual changes)'
+        required: false
+        default: false
+        type: boolean
+      time_unit:
+        description: 'Time unit (seconds, minutes, or weeks)'
+        required: false
+        default: 'weeks'
+        type: string
+      warning_weeks:
+        description: 'Time before warning (in selected time unit)'
+        required: false
+        default: '5'
+        type: string
+      unassign_weeks:
+        description: 'Time before unassignment (in selected time unit)'
+        required: false
+        default: '6'
+        type: string
+
+jobs:
+  manage-stale-issues:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      issues: write
+      contents: read
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: '.github/scripts/package-lock.json'
+
+      - name: Install dependencies
+        run: |
+          cd .github/scripts
+          npm ci
+
+      - name: Build TypeScript
+        run: |
+          cd .github/scripts
+          npm run build
+
+      - name: Run stale issue management
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          # Different defaults based on trigger type:
+          # - Manual trigger: use input values
+          # - Scheduled (cron): production mode with hardcoded defaults below
+          # To change production thresholds, edit the '5' and '6' values on lines 69-70
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || 'false' }}
+          TIME_UNIT: ${{ github.event_name == 'workflow_dispatch' && inputs.time_unit || 'weeks' }}
+          WARNING_WEEKS: ${{ github.event_name == 'workflow_dispatch' && inputs.warning_weeks || '5' }}
+          UNASSIGN_WEEKS: ${{ github.event_name == 'workflow_dispatch' && inputs.unassign_weeks || '6' }}
+        run: |
+          cd .github/scripts
+          node dist/issue-management/check-stale-issues.js
+      
+      - name: Summary
+        if: always()
+        env:
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || 'false' }}
+          TIME_UNIT: ${{ github.event_name == 'workflow_dispatch' && inputs.time_unit || 'weeks' }}
+          WARNING_WEEKS: ${{ github.event_name == 'workflow_dispatch' && inputs.warning_weeks || '5' }}
+          UNASSIGN_WEEKS: ${{ github.event_name == 'workflow_dispatch' && inputs.unassign_weeks || '6' }}
+        run: |
+          echo "## Issue Management Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- Repository: ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Dry Run: $DRY_RUN" >> $GITHUB_STEP_SUMMARY
+          echo "- Time Unit: $TIME_UNIT" >> $GITHUB_STEP_SUMMARY
+          echo "- Warning Threshold: $WARNING_WEEKS $TIME_UNIT" >> $GITHUB_STEP_SUMMARY
+          echo "- Unassign Threshold: $UNASSIGN_WEEKS $TIME_UNIT" >> $GITHUB_STEP_SUMMARY
+          echo "- Triggered by: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY

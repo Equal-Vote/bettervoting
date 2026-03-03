@@ -1,12 +1,11 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Results from './Election/Results/Results';
-import { FormHelperText, Grid, Paper, Typography } from "@mui/material";
+import { FormHelperText, Grid, Paper } from "@mui/material";
 import TextField from "@mui/material/TextField";
 import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
-import Button from "@mui/material/Button";
-import { Box, InputLabel } from "@mui/material";
+import { InputLabel } from "@mui/material";
 import { useGetSandboxResults } from '../hooks/useAPI';
 import { VotingMethod } from '@equal-vote/star-vote-shared/domain_model/Race';
 import { ElectionContextProvider } from './ElectionContextProvider';
@@ -14,7 +13,7 @@ import { PrimaryButton } from './styles';
 
 const Sandbox = () => {
 
-    const { data, error, isPending, makeRequest } = useGetSandboxResults()
+    const { data, error, makeRequest } = useGetSandboxResults()
 
     const [candidates, setCandidates] = useState('A,B,C,D,E')
     const [cvr, setCvr] = useState('10:2,1,3,4,5\n10:5,4,3,1,2\n3,2,5,4,1')
@@ -60,7 +59,6 @@ const Sandbox = () => {
             num_winners: nWinners,
             votingMethod: votingMethod,
         })
-
     }
 
     useEffect(() => {

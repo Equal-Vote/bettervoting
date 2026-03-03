@@ -3,7 +3,7 @@ import { ElectionRoll, ElectionRollState } from "@equal-vote/star-vote-shared/do
 import { IRequest } from "../../IRequest";
 import ServiceLocator from "../../ServiceLocator";
 import Logger from "../../Services/Logging/Logger";
-import { InternalServerError } from "@curveball/http-errors";
+import { InternalServerError, BadRequest } from "@curveball/http-errors";
 import { ILoggingContext } from "../../Services/Logging/ILogger";
 import { expectValidElectionFromRequest, catchAndRespondError, expectPermission } from "../controllerUtils";
 import { Response, NextFunction } from "express";
@@ -11,7 +11,7 @@ import { Response, NextFunction } from "express";
 var ElectionsModel = ServiceLocator.electionsDb();
 
 const className = "createElectionController";
-const failMsgPrfx = "CATCH:  create error electio err: ";
+const failMsgPrfx = "CATCH:  create error election err: ";
 async function createElectionController(req: IRequest, res: Response, next: NextFunction) {
     Logger.info(req, "Create Election Controller");
     const inputElection = await expectValidElectionFromRequest(req);
@@ -25,13 +25,18 @@ const createAndCheckElection = async (
     inputElection: Election,
     ctx: ILoggingContext
 ): Promise<Election> => {
-    var failMsg = "Election not created";
+    const validationFailure = electionValidation(inputElection);
+    if (validationFailure) {
+        Logger.error(ctx, validationFailure);
+        throw new BadRequest(validationFailure);
+    }
     const newElection = await ElectionsModel.createElection(
         inputElection,
         ctx,
         `User Creates new election`
     );
     if (!newElection) {
+        const failMsg = "Election not created";
         Logger.error(ctx, failMsgPrfx + failMsg);
         throw new InternalServerError(failMsg);
     }

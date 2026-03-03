@@ -27,5 +27,4 @@ export default class AccountServiceUtils {
             throw new Unauthorized();
         }
     };
-
 }

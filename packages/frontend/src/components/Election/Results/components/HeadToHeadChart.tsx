@@ -3,24 +3,24 @@ import useRace from "~/components/RaceContextProvider";
 import { Tip } from "~/components/styles";
 import { CHART_COLORS } from "~/components/util";
 
-export default (
+const HeadToHeadChart = (
     {leftName, rightName, leftVotes, rightVotes, total, equalContent} :
     {leftName: string, rightName: string, leftVotes: number, rightVotes: number, total: number, equalContent?: {title: string, description: string | {name: string, count: number}[]}}
 ) => {
     const {race} = useRace();
-    let leftValue = leftVotes / total;
-    let midVotes = (total - leftVotes - rightVotes)
-    let midValue = midVotes / total;
-    let rightValue = rightVotes / total;
-    let leftPercent = `${Math.round(leftValue*100)}%`;
-    let rightPercent = `${Math.round(rightValue*100)}%`;
-    let midPercent = `${Math.round(midValue*100)}%`;
+    const leftValue = leftVotes / total;
+    const midVotes = (total - leftVotes - rightVotes)
+    const midValue = midVotes / total;
+    const rightValue = rightVotes / total;
+    const leftPercent = `${Math.round(leftValue*100)}%`;
+    const rightPercent = `${Math.round(rightValue*100)}%`;
+    const midPercent = `${Math.round(midValue*100)}%`;
 
     const formatEqualPreference = (arr) => {
         return <>{(race.voting_method == 'RankedRobin'? arr : arr.toReversed())
             .map(e => {
-                let n = Math.round(20*e.count/midVotes)
-                let p = [...new Array(n)].map(() => '█').join('')+' '+Math.round(100*e.count/midVotes)+'%';
+                const n = Math.round(20*e.count/midVotes)
+                const p = [...new Array(n)].map(() => '█').join('')+' '+Math.round(100*e.count/midVotes)+'%';
                 if(race.voting_method == 'STAR' || race.voting_method == 'STAR_PR')
                     return `${e.name}⭐: ${p}`
                 if(race.voting_method == 'Approval')
@@ -34,7 +34,7 @@ export default (
         }</>
     }
 
-    return <Box sx={{mx: 4}}>
+    return <Box sx={{mx:4, width: '100%', maxWidth: '540px', margin: 'auto'}}>
         <Box display='flex' flexDirection='row' justifyContent='space-between' sx={{mb: 1}} gap={2}>
             <Typography sx={{textAlign: 'left', fontWeight: 'bold'}}>{leftName}</Typography>
             <Typography sx={{textAlign: 'right', fontWeight: 'bold'}}>{rightName}</Typography>
@@ -70,3 +70,5 @@ export default (
         </Box>
     </Box>
 }
+
+export default HeadToHeadChart;

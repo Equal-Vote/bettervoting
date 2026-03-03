@@ -22,11 +22,13 @@ COPY --chown=node:node package*.json ./
 RUN npm ci --omit=dev
 RUN npm i typescript
 
+ARG COMMIT_SHA
 ENV \
   REACT_APP_FEATURED_ELECTIONS=__REACT_APP_FEATURED_ELECTIONS__ \
   REACT_APP_KEYCLOAK_URL=__REACT_APP_KEYCLOAK_URL__ \
   REACT_APP_MAX_BALLOT_RANKS=__REACT_APP_MAX_BALLOT_RANKS__ \
-  REACT_APP_DEFAULT_BALLOT_RANKS=__REACT_APP_DEFAULT_BALLOT_RANKS__
+  REACT_APP_DEFAULT_BALLOT_RANKS=__REACT_APP_DEFAULT_BALLOT_RANKS__ \
+  REACT_APP_COMMIT_SHA=${COMMIT_SHA}
 
 COPY --chown=node:node . /usr/src/app/
 
@@ -37,7 +39,9 @@ RUN npm run build -ws
 ####################
 
 FROM node:20.11.1-bullseye-slim
+ARG COMMIT_SHA
 ENV NODE_ENV=production
+ENV COMMIT_SHA=${COMMIT_SHA}
 COPY --from=build /usr/bin/dumb-init /usr/bin/dumb-init
 USER node
 WORKDIR /usr/src/app

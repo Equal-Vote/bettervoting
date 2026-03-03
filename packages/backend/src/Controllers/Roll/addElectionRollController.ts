@@ -1,36 +1,74 @@
 import { ElectionRoll, ElectionRollState } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll";
 import ServiceLocator from "../../ServiceLocator";
 import Logger from "../../Services/Logging/Logger";
-import { responseErr } from "../../Util";
-import { hasPermission, permission, permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
+import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { expectPermission } from "../controllerUtils";
 import { BadRequest, InternalServerError } from "@curveball/http-errors";
-import { randomUUID } from "crypto";
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
 import { sharedConfig } from "@equal-vote/star-vote-shared/config";
+import { makeUniqueID, ID_LENGTHS, ID_PREFIXES } from "@equal-vote/star-vote-shared/utils/makeID";
+
+interface ElectionRollInput {
+    voter_id?: string;
+    email?: string;
+    precinct?: string;
+    state?: ElectionRollState;
+}
 
 const ElectionRollModel = ServiceLocator.electionRollDb();
 
 const className = "VoterRolls.Controllers";
 
-const addElectionRoll = async (req: IElectionRequest, res: Response, next: NextFunction) => {
+const addElectionRoll = async (req: IElectionRequest & { body: { electionRoll: ElectionRollInput[] } }, res: Response, next: NextFunction) => {
     expectPermission(req.user_auth.roles, permissions.canAddToElectionRoll)
     Logger.info(req, `${className}.addElectionRoll ${req.election.election_id}`);
+
+    // Filter out empty roll entries (where all fields are empty)
+    req.body.electionRoll = req.body.electionRoll.filter((rollInput: ElectionRollInput) => {
+        return rollInput.voter_id?.trim() || rollInput.email?.trim() || rollInput.precinct?.trim();
+    });
+
+    // Prevent creating voters by voter_id when using email invitations
+    if (req.election.settings.invitation === 'email') {
+        const hasVoterId = req.body.electionRoll.some((rollInput: ElectionRollInput) => rollInput.voter_id);
+        if (hasVoterId) {
+            throw new BadRequest('Cannot create voters with voter_id when using email invitations');
+        }
+    }
+
     const history = [{
-        action_type: 'added',
+        action_type: "added",
         actor: req.user.email,
         timestamp: Date.now(),
     }]
-    const rolls: ElectionRoll[] = req.body.electionRoll.map((roll: ElectionRoll) => ({
-        voter_id: roll.voter_id || randomUUID(),
+    if (req.election.settings.invitation === "email" && req.body.electionRoll.some((r: ElectionRollInput) => r.voter_id)) {
+        throw new BadRequest("User provided voterIds are not permitted for email list elections");
+    }
+    
+    // Generate all IDs in parallel first
+    const idPromises: Promise<string>[] = req.body.electionRoll.map((rollInput: ElectionRollInput) =>
+        rollInput.voter_id || makeUniqueID(
+            ID_PREFIXES.VOTER,
+            ID_LENGTHS.VOTER,
+            async (id: string) => await ElectionRollModel.getByVoterID(req.election.election_id, id, req) !== null
+        )
+    );
+    const voterIds = await Promise.all(idPromises);
+    
+    // Then create the rolls array using the pre-generated IDs
+    const rolls: ElectionRoll[] = req.body.electionRoll.map((rollInput: ElectionRollInput, index: number) => ({
+        voter_id: voterIds[index],
         election_id: req.election.election_id,
-        email: roll.email,
+        email: rollInput.email,
         submitted: false,
-        precinct: roll.precinct,
-        state: roll.state || ElectionRollState.approved,
+        precinct: rollInput.precinct,
+        state: rollInput.state || ElectionRollState.approved,
         history: history,
-    }))
+        create_date: new Date().toISOString(),
+        update_date: Date.now().toString(),
+        head: true
+    }));
     // TODO: move this to a dedicated database querry
     const existingRolls = await ElectionRollModel.getRollsByElectionID(req.election.election_id, req)
 

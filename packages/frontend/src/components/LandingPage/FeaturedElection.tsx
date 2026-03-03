@@ -1,22 +1,23 @@
-import { Box, Card, CardActionArea, CardContent, Paper, Typography } from "@mui/material";
-import React, { useEffect } from 'react';
+import { Card, CardActionArea, CardContent, Typography } from "@mui/material";
+import { useEffect } from 'react';
 import { useNavigate } from "react-router";
-import useElection from "../ElectionContextProvider";
 import { useGetElection } from "../../hooks/useAPI";
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 declare namespace Intl {
   class ListFormat {
-    constructor(locales?: string | string[], options?: {});
+    constructor(locales?: string | string[], options?: object);
     public format: (items: string[]) => string;
   }
 }
 const formatter = new Intl.ListFormat('en', { style: 'long', type: 'conjunction' });
 
-export default ({electionId}) => {
+const FeaturedElection = ({electionId}: { electionId: string }) => {
     const navigate = useNavigate();
-    const { data, isPending, error, makeRequest: fetchElections } = useGetElection(electionId);
+    const { data, makeRequest: fetchElections } = useGetElection(electionId);
 
     useEffect(() => {
+        if (!electionId) return;
         //isMounted is used to prevent memory leaks by ensuring that the component is still mounted before updating the state
         let isMounted = true;
 
@@ -31,7 +32,7 @@ export default ({electionId}) => {
         return () => {
             isMounted = false;
         };
-    }, [fetchElections]);
+    }, [electionId]);
 
     return <Card className='featuredElection' onClick={() => navigate(`/${electionId}`)} elevation={8} sx={{
         width: '100%',
@@ -50,3 +51,5 @@ export default ({electionId}) => {
         </CardActionArea>
     </Card>
 }
+
+export default FeaturedElection

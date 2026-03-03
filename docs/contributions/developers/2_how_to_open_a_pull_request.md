@@ -38,7 +38,7 @@ When opening a Pull Request(PR), you can use the below to determine the type, sc
 
 **Scope:**
 
-You can select a scope from [this list of labels](https://github.com/Equal-Vote/star-server/labels?q=scope).
+You can select a scope from [this list of labels](https://github.com/Equal-Vote/bettervoting/labels?q=scope).
 
 **Description:**
 
@@ -57,13 +57,13 @@ Some examples of good PR titles would be:
 
    ![Image - Compare & pull request prompt on GitHub](https://contribute.freecodecamp.org/images/github/compare-pull-request-prompt.png)
 
-2. By default, all pull requests should be against the star-server main repo, `main` branch.
+2. By default, all pull requests should be against the bettervoting main repo, `main` branch.
 
-   Make sure that your Base Fork is set to Equal-Vote/star-server when raising a Pull Request.
+   Make sure that your Base Fork is set to Equal-Vote/bettervoting when raising a Pull Request.
 
    ![Image - Comparing forks when making a pull request](https://contribute.freecodecamp.org/images/github/comparing-forks-for-pull-request.png)
 
-3. Submit the pull request from your branch to star-server's `main` branch.
+3. Submit the pull request from your branch to bettervoting's `main` branch.
 
 4. In the body of your PR include a more detailed summary of the changes you made and why.
 

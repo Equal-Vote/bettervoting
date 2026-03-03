@@ -1,8 +1,8 @@
-
 import BallotsDB from "../Models/__mocks__/Ballots";
 import ElectionsDB from "../Models/__mocks__/Elections";
 import ElectionRollDB from "../Models/__mocks__/ElectionRolls";
 import EmailService from "../Services/Email/__mocks__/EmailService";
+import BlobService from "../Services/Blob/__mocks__/BlobService";
 import CastVoteStore from "../Models/__mocks__/CastVoteStore";
 import { IBallotStore } from "../Models/IBallotStore";
 import { IElectionRollStore } from "../Models/IElectionRollStore";
@@ -14,6 +14,7 @@ var _ballotsDb:IBallotStore;
 var _electionsDb:ElectionsDB;
 var _electionRollDb:IElectionRollStore;
 var _emailService:EmailService;
+var _blobService:BlobService;
 var _castVoteStore:CastVoteStore;
 var _eventQueue:MockEventQueue;
 var _castVoteStore:CastVoteStore;;
@@ -48,6 +49,13 @@ function emailService():EmailService {
     return _emailService;
 }
 
+function blobService():BlobService {
+    if (_blobService == null) {
+        _blobService = new BlobService();
+    }
+    return _blobService;
+}
+
 function castVoteStore():CastVoteStore {
     if (_castVoteStore == null){
         _castVoteStore = new CastVoteStore(ballotsDb(), electionRollDb());
@@ -77,4 +85,4 @@ function globalData():GlobalData {
     return _globalData;
 }
 
-export  default { ballotsDb, electionsDb, electionRollDb, emailService, castVoteStore, accountService, globalData, eventQueue };
+export  default { ballotsDb, electionsDb, electionRollDb, emailService, blobService, castVoteStore, accountService, globalData, eventQueue };

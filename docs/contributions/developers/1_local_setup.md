@@ -67,7 +67,7 @@ Here's some videos to quickly get up to speed on the core skills
 
 ### Additional Reading
 
-We compile our typescript using Vite, you can learn more in the [Vite](https://vitejs.dev/) and [Vite Awesome Repo](https://github.com/vitejs/awesome-vite).
+We compile and bundle our frontend using Rspack, you can learn more in the [Rspack website](https://rspack.rs/) and [Github Repo](https://github.com/web-infra-dev/rspack).
 
 To learn more React, check out the [React documentation](https://reactjs.org/).
 
@@ -77,21 +77,21 @@ To learn more React, check out the [React documentation](https://reactjs.org/).
 
 This is essential, as it allows you to work on your own copy of BetterVoting on GitHub, or to download (clone) your repository to work on locally. Later, you will be able to request changes to be pulled into the main repository from your fork via a pull request (PR).
 
-> The main repository at `https://github.com/Equal-Vote/star-server` is often referred to as the `upstream` repository.
+> The main repository at `https://github.com/Equal-Vote/bettervoting` is often referred to as the `upstream` repository.
 >
-> Your fork at `https://github.com/YOUR_USER_NAME/star-server` is often referred to as the `origin` repository. `YOUR_USER_NAME` would be replaced with your GitHub username.
+> Your fork at `https://github.com/YOUR_USER_NAME/bettervoting` is often referred to as the `origin` repository. `YOUR_USER_NAME` would be replaced with your GitHub username.
 
-**Follow these steps to fork the `https://github.com/Equal-Vote/star-server` repository:**
+**Follow these steps to fork the `https://github.com/Equal-Vote/bettervoting` repository:**
 
-1. Go to the BetterVoting repository on GitHub: <https://github.com/Equal-Vote/star-server>
+1. Go to the BetterVoting repository on GitHub: <https://github.com/Equal-Vote/bettervoting>
 
 2. Click the "Fork" Button in the upper right-hand corner of the interface ([More Details Here](https://help.github.com/articles/fork-a-repo/))
 
-3. After the repository has been forked, you will be taken to your copy of the BetterVoting repository at `https://github.com/YOUR_USER_NAME/star-server` (`YOUR_USER_NAME` would be replaced with your GitHub user name.)
+3. After the repository has been forked, you will be taken to your copy of the BetterVoting repository at `https://github.com/YOUR_USER_NAME/bettervoting` (`YOUR_USER_NAME` would be replaced with your GitHub user name.)
 
 ## Clone your fork from GitHub
 
-[Cloning](https://help.github.com/articles/cloning-a-repository/) is where you **download** a copy of a repository from a `remote` location that is either owned by you or by someone else. In your case, this remote location is your `fork` of BetterVoting's repository that should be available at `https://github.com/YOUR_USER_NAME/star-server`. (`YOUR_USER_NAME` would be replaced with your GitHub user name.)
+[Cloning](https://help.github.com/articles/cloning-a-repository/) is where you **download** a copy of a repository from a `remote` location that is either owned by you or by someone else. In your case, this remote location is your `fork` of BetterVoting's repository that should be available at `https://github.com/YOUR_USER_NAME/bettervoting`. (`YOUR_USER_NAME` would be replaced with your GitHub user name.)
 
 Run these commands on your local machine:
 
@@ -102,7 +102,7 @@ Run these commands on your local machine:
 2. Clone your fork of BetterVoting, replacing `YOUR_USER_NAME` with your GitHub Username
 
    ```
-   git clone --depth=1 https://github.com/YOUR_USER_NAME/star-server.git
+   git clone --depth=1 https://github.com/YOUR_USER_NAME/bettervoting.git
    ```
 
 This will download the entire BetterVoting repository to your projects directory.
@@ -117,16 +117,16 @@ Now that you have downloaded a copy of your fork, you will need to set up an `up
 
 You need a reference from your local clone to the `upstream` repository in addition to the `origin` repository. This is so that you can sync changes from the main repository without the requirement of forking and cloning repeatedly.
 
-1. Change directory to the new star-server directory:
+1. Change directory to the new bettervoting directory:
 
    ```
-   cd star-server
+   cd bettervoting
    ```
 
 2. Add a remote reference to the main BetterVoting repository:
 
    ```
-   git remote add upstream https://github.com/Equal-Vote/star-server.git
+   git remote add upstream https://github.com/Equal-Vote/bettervoting.git
    ```
 
 3. Ensure the configuration looks correct:
@@ -138,10 +138,10 @@ You need a reference from your local clone to the `upstream` repository in addit
    The output should look something like below (replacing `YOUR_USER_NAME` with your GitHub username):
 
    ```
-   origin      https://github.com/YOUR_USER_NAME/star-server (fetch)
-   origin      https://github.com/YOUR_USER_NAME/star-server (push)
-   upstream        https://github.com/Equal-Vote/star-server (fetch)
-   upstream        https://github.com/Equal-Vote/star-server (push)
+   origin      https://github.com/YOUR_USER_NAME/bettervoting (fetch)
+   origin      https://github.com/YOUR_USER_NAME/bettervoting (push)
+   upstream        https://github.com/Equal-Vote/bettervoting (fetch)
+   upstream        https://github.com/Equal-Vote/bettervoting (push)
    ```
 
 ## Running BetterVoting locally
@@ -154,9 +154,9 @@ This will allow you to:
 - Work on UI related issues and enhancements.
 - Debug and fix issues with the application servers and client apps.
 
-If you do run into issues, first perform a web search for your issue and see if it has already been answered. If you cannot find a solution, please search our [GitHub issues](https://github.com/Equal-Vote/star-server/issues) page for a solution and report the issue if it has not yet been reported.
+If you do run into issues, first perform a web search for your issue and see if it has already been answered. If you cannot find a solution, please search our [GitHub issues](https://github.com/Equal-Vote/bettervoting/issues) page for a solution and report the issue if it has not yet been reported.
 
-And as always, feel free to ask questions on the [#_software-dev slack channel](https://starvoting.slack.com/archives/C01EBAT283H).
+And as always, feel free to ask questions on the [#_bettervoting slack channel](https://starvoting.slack.com/archives/C01EBAT283H).
 
 > If you haven't joined the STAR Voting slack yet, you can [sign up with STAR Voting](https://starvoting.org/join) to received an invite link
 
@@ -202,7 +202,7 @@ copy packages/backend/sample.env packages/backend/.env
 
 #### Step 2: Setup Backend Connection
 
-Now your packages/frontend/.env file should 2 sections for connecting to the backend. One for a production backend, and one for local
+Now your packages/frontend/.env file should include 2 sections for connecting to the backend. One for a production backend, and one for local
 
 If you're running your own backend, then leave the default sample.env (which has the production backend commented out).
 
@@ -237,7 +237,7 @@ There will probably be lots of red in the terminal, but your frontend should be 
 
 Note: Most of you will need to setup the databases, but if you have production credentials in your .env then you can skip this step. Email elections@star.vote if you need access to the production databases.
 
-The database(s) inclue a postgresql database for storing all the election data, and a keycloak service which stores and manages all the user data. Both are defined within docker-compose, and can be started with some docker commands. 
+The database(s) include a postgresql database for storing all the election data, and a keycloak service which stores and manages all the user data. Both are defined within docker-compose, and can be started with some docker commands. 
 
 Luckily, all the commands here should only need to be ran once. After that the services should be available for all future dev sessions.  
 
@@ -264,8 +264,8 @@ You can run ``docker ps`` to confirm both services started properly. The output 
 ```
 $ docker ps
 CONTAINER ID   IMAGE                              COMMAND                  CREATED         STATUS          PORTS                              NAMES
-6682eb490f13   quay.io/keycloak/keycloak:23.0.1   "/opt/keycloak/bin/k…"   3 seconds ago   Up 2 seconds    0.0.0.0:8080->8080/tcp, 8443/tcp   star-server-keycloak-1
-f443236f9609   postgres                           "docker-entrypoint.s…"   5 days ago      Up 53 seconds   0.0.0.0:5432->5432/tcp             star-server-my-db-1
+6682eb490f13   quay.io/keycloak/keycloak:23.0.1   "/opt/keycloak/bin/k…"   3 seconds ago   Up 2 seconds    0.0.0.0:8080->8080/tcp, 8443/tcp   bettervoting-keycloak-1
+f443236f9609   postgres                           "docker-entrypoint.s…"   5 days ago      Up 53 seconds   0.0.0.0:5432->5432/tcp             bettervoting-my-db-1
 ```
 
 Also the Keycloak UI should be running at http://localhost:8080/
@@ -289,16 +289,6 @@ migration "2024_01_27_Create_Date" was executed successfully
 migration "2024_01_29_pkeys_and_heads" was executed successfully
 ```
 
-#### Configuring Keycloak
-
-We need to manually configure the keycloak realm so that it can interface with the service properly.
-
-1. [Download the Keycloak configuration](https://drive.google.com/file/d/1_S-MpnsxSr8oeA6MrNd3VSOGyKe7Qca_/view?usp=sharing)
-1. Navigate to localhost:8080 , select Administration Console
-1. Login with user=admin, password=admin
-1. Select the master dropdown in the top-left, select "Create Realm"
-1. Browse to select the configuration you downloaded
-1. Click "Create"
 
 **Verification Steps**
 It's tricky to verify at the moment, but once you have the backend running you should be able to register with a username and password via your frontend at localhost:3000.
@@ -325,6 +315,9 @@ You should be able to create elections using the quick poll.
 
 Congratulations, you got the whole service running locally!! 🥳🥳
 
+## Using Feature Flags (Optional)
+
+BetterVoting uses feature flags to test and gradually roll out new features. If you're working on a feature that's behind a feature flag, or want to test unreleased features, see [How to enable beta features](../../help/how_to_enable_beta_features.md).
 
 ## Making changes locally
 
@@ -353,16 +346,16 @@ Follow these steps:
    git checkout main
    ```
 
-2. Sync the latest changes from the star-server upstream `main` branch to your local main branch:
+2. Sync the latest changes from the bettervoting upstream `main` branch to your local main branch:
 
    > [!WARNING]
    > If you have any outstanding pull request that you made from the `main` branch of your fork, you will lose them at the end of this step.
    >
    > You should ensure your pull request is merged by a moderator before performing this step. To avoid this scenario, you should **always** work on a branch other than the `main`.
 
-   This step **will sync the latest changes** from the main repository of star-server. It is important that you rebase your branch on top of the latest `upstream/main` as often as possible to avoid conflicts later.
+   This step **will sync the latest changes** from the main repository of bettervoting. It is important that you rebase your branch on top of the latest `upstream/main` as often as possible to avoid conflicts later.
 
-   Update your local copy of the star-server upstream repository:
+   Update your local copy of the bettervoting upstream repository:
 
    ```
    git fetch upstream
@@ -390,7 +383,7 @@ Follow these steps:
 
 3. Create a fresh new branch:
 
-   Working on a separate branch for each issue helps you keep your local work copy clean. You should never work on the `main`. This will soil your copy of star-server and you may have to start over with a fresh clone or fork.
+   Working on a separate branch for each issue helps you keep your local work copy clean. You should never work on the `main`. This will soil your copy of bettervoting and you may have to start over with a fresh clone or fork.
 
    Check that you are on `main` as explained previously, and branch off from there:
 
@@ -412,7 +405,7 @@ Follow these steps:
 
 4. Edit pages and work on code in your favorite text editor.
 
-5. Once you are happy with the changes you should optionally run star-server locally to preview the changes.
+5. Once you are happy with the changes you should optionally run bettervoting locally to preview the changes.
 
 6. Make sure you fix any errors and check the formatting of your changes.
 
@@ -564,7 +557,7 @@ For now we've been fixing the issue by clearing the dev database periodically. P
 
 ## Getting Help
 
-If you are stuck and need help, feel free to ask questions on the [#_software-dev slack channel](https://starvoting.slack.com/archives/C01EBAT283H).
+If you are stuck and need help, feel free to ask questions on the [#_bettervoting slack channel](https://starvoting.slack.com/archives/C01EBAT283H).
 
 > If you haven't joined the STAR Voting slack yet, you can follow the instructions [here](https://www.starvoting.us/get_involved) to get added
 

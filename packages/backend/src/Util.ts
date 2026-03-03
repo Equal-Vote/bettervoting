@@ -1,7 +1,5 @@
 import { Request, Response } from 'express';
 import { reqIdSuffix } from './IRequest';
-import { ILoggingContext } from './Services/Logging/ILogger';
-import { InternalServerError } from '@curveball/http-errors';
 import ServiceLocator from './ServiceLocator';
 import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
 
@@ -26,26 +24,6 @@ export function responseErr(res:Response, req:Request, code:number, errMessage:s
   }
   extraData.error = errMessage;
   return res.status(code).json(extraData);
-}
-
-export async function makeID<Uid>(hasCollision: Function, length=6){ // default length of 6 is already 22^6=113 million options
-  // Removing vowels to avoid spelling real words in IDS (especially don't want curse words)
-  // also removing o/0 and 1/l to avoid confusion if someone was manually copying the 
-  // https://stackoverflow.com/questions/956556/is-it-irrational-to-sanitize-random-character-strings-for-curse-words
-  const options = 'bcdfghjkmpqrtvwxy346789';
-  let id: Uid;
-  let i = 0;
-  const maxIter = 10;
-  do{
-    // TODO: I used Math.random(), but we may upgrade this in the future
-    // https://security.stackexchange.com/questions/120352/should-i-use-a-cryptograpically-secure-random-number-generator-when-i-generate-i
-    // apparently I need to add the as unknown to make typescript happy?
-    id = [...Array(length)].map( _ => options.charAt(Math.floor(Math.random()*options.length))).join('') as unknown as Uid;
-    i++;
-  }while(i < maxIter && await hasCollision(id));
-  // TODO: this causes the request to fail, but it also crashes
-  if(i == maxIter) throw new InternalServerError("Failed to generate new ID");
-  return id;
 }
 
 interface ImageKitLayer{
@@ -81,7 +59,7 @@ export async function getMetaTags(req: any) : Promise<TagObject>  {
   let election:Election|null;
 
   // list copied from App.tsx
-  if(['', 'About', 'ElectionInvitations', 'ElectionsYouManage', 'ElectionsYouVotedIn', 'OpenElections', 'Sandbox'].includes(parts[1].split('?')[0])){
+  if(['', 'about', 'invitations', 'manage', 'vote_history', 'browse', 'sandbox'].includes(parts[1].split('?')[0])){
     election = null;
   }else{
     const electionID = (parts[1] == 'Election' ? parts[2] : parts[1])

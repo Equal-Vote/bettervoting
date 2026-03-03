@@ -1,5 +1,4 @@
 import { ElectionState } from '@equal-vote/star-vote-shared/domain_model/Election';
-import { BorderColor } from '@mui/icons-material';
 import { Chip, Typography } from '@mui/material';
 import { useMemo } from 'react';
 import { useSubstitutedTranslation } from '~/components/util';

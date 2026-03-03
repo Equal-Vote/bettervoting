@@ -4,10 +4,6 @@ import { MockEventQueue } from "../Services/EventQueue/MockEventQueue";
 import { TestHelper } from "./TestHelper";
 import testInputs from "./testInputs";
 
-// Uses the mock service locator in place of the production one
-// Which users mock databases
-jest.mock("./../ServiceLocator");
-
 const th = new TestHelper();
 
 afterEach(() => {

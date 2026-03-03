@@ -1,7 +1,14 @@
 import { TableContainer } from "@mui/material";
 
-export default ({ className, data, minCellWidth = "120px" }) => {
-  let c = `resultTable ${className}`;
+interface ResultsTableProps {
+  className?: string;
+  data: (string | number)[][];
+  winningRows?: number;
+}
+
+const ResultsTable = ({ className='', data, winningRows=1 }: ResultsTableProps) => {
+  const c = `resultTable ${className}`;
+  const winningStyle = { backgroundColor: 'var(--brand-gold'}
 
   return (
     <TableContainer
@@ -24,7 +31,7 @@ export default ({ className, data, minCellWidth = "120px" }) => {
         </thead>
         <tbody>
           {data.slice(1).map((row, i) => (
-            <tr className={c} key={i}>
+            <tr className={c} key={i} style={i < winningRows ? winningStyle : {}}>
               {row.map((value, j) => (
                 <td
                   key={j}
@@ -33,7 +40,7 @@ export default ({ className, data, minCellWidth = "120px" }) => {
                     paddingLeft: j == 0 ? "8px" : "0",
                   }}
                 >
-                  {isNaN(value/100) ? value : Math.round(100*value)/100}
+                  {typeof value === "number" ? Math.round(100 * value) / 100 : value}
                 </td>
               ))}
             </tr>
@@ -43,3 +50,5 @@ export default ({ className, data, minCellWidth = "120px" }) => {
     </TableContainer>
   );
 };
+
+export default ResultsTable;

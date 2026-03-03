@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
 
-    <link rel="icon" href="/favicon-local.png" />
+    <link rel="icon" href="<%= assetPrefix %>/favicon-local.png" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#000000" />
@@ -14,6 +14,11 @@
     <meta name="og:title" content="__META_TITLE__" />
     <meta name="og:description" content="__META_DESCRIPTION__" />
     <meta name="og:image" content="__META_IMAGE__" />
+
+    <!-- Include Montserrat -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800&display=swap" rel="stylesheet">
 
     <!--
       manifest.json provides metadata used when your web app is installed on a
@@ -69,13 +74,18 @@
 
       // override color
       function onload(){
-        const frame = document.getElementById("launcher-frame");
-        const button = frame.contentWindow.document.getElementsByClassName(
-          "launcher-button"
-        )[0]
-        button.style.backgroundColor = '#86C66A';
-        button.style.animation = '0s'
-        button.style.transition = '0s'
+        setTimeout(() => {
+          const frame = document.getElementById("launcher-frame");
+          // there's a race condition with the load order, the timeout
+          // helps but we still have the undefined just in case
+          if(frame === undefined) return; 
+          const button = frame.contentWindow.document.getElementsByClassName(
+            "launcher-button"
+          )[0]
+          button.style.backgroundColor = '#86C66A';
+          button.style.animation = '0s'
+          button.style.transition = '0s'
+        }, 500)
       }
     </script>
     <script type='text/javascript' src='https://widget.freshworks.com/widgets/63000001746.js' async defer></script>
@@ -94,6 +104,5 @@
       To begin the development, run `npm start` or `yarn start`.
       To create a production bundle, use `npm run build` or `yarn build`.
     -->
-    <script type="module" src="/src/index.tsx"></script>
   </body>
 </html>

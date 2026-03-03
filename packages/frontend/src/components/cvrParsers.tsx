@@ -1,4 +1,4 @@
-import { NewBallot, NewBallotWithVoterID } from "@equal-vote/star-vote-shared/domain_model/Ballot";
+import { NewBallot } from "@equal-vote/star-vote-shared/domain_model/Ballot";
 import { Election } from "@equal-vote/star-vote-shared/domain_model/Election";
 
 /* 
@@ -25,16 +25,16 @@ export const rankColumnCSV = ({data, meta, errors}, election: Election) : {ballo
     const errorRows = new Set(errors.map(error => error.row))
     const rankFields = meta.fields.filter((field:string) => field.startsWith('rank'));
 
-    let ballots = data.map((row,i) => {
+    const ballots = data.map((row,i) => {
         if(errorRows.has(i)) return;
         // TODO: this currently doesn't handle overvotes or duplicate ranks
         // TODO: add try catch for adding errors
-        let invRow = rankFields.reduce((obj, key) => {
+        const invRow = rankFields.reduce((obj, key) => {
             // adding ?? so that overvote will represent the first overvote
             obj[row[key]] ??= Number(key.replace('rank', ''));
             return obj;
         }, {})
-        let nonSkippedFields = rankFields.map(key => row[key]).filter(item => item != 'skipped')
+        const nonSkippedFields = rankFields.map(key => row[key]).filter(item => item != 'skipped')
         return {
             election_id: election.election_id,
             status: 'submitted',
@@ -44,7 +44,7 @@ export const rankColumnCSV = ({data, meta, errors}, election: Election) : {ballo
                 {
                     race_id: election.races[0].race_id,
                     scores: election.races[0].candidates.map(c => {
-                        let ranking = invRow[c.candidate_name];
+                        const ranking = invRow[c.candidate_name];
                         return {
                             candidate_id: c.candidate_id,
                             score: ranking ? ranking : null

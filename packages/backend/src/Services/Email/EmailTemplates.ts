@@ -3,7 +3,7 @@ import { Election } from "@equal-vote/star-vote-shared/domain_model/Election"
 import { ElectionRoll } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll"
 import { Imsg } from "./IEmail"
 import { DateTime } from 'luxon'
-import sanitizeHtml from 'sanitize-html';
+import { formatMarkdown, makeButton } from "@equal-vote/star-vote-shared/utils/formatMarkdown";
 
 const emailSettings: Partial<Imsg> = {
     asm: process.env.SENDGRID_GROUP_ID ? {
@@ -16,45 +16,18 @@ const emailSettings: Partial<Imsg> = {
     } : undefined
 }
 
-const rLink = /\[(.*?)\]\((.*?)\)/;
-const rBold = /\*\*(.*?)\*\*/;
-
 const formatTime = (time: string | Date, tz: string) => DateTime.fromJSDate(new Date(time)).setZone(tz).toLocaleString(DateTime.DATETIME_FULL);
-
-const makeButton = (text: string, link: string) =>
-  // https://stackoverflow.com/questions/2857765/whats-the-best-way-to-center-your-html-email-content-in-the-browser-window-or
-  // adding ? at the end of link to ensure that trailing spaces are respected
-  `<table width="100%" border="0" cellspacing="0" cellpadding="0"><tr><td align="center">
-      <a clicktracking="off" href="${link}?" target="_blank" style="border: solid 1px #3498db; border-radius: 5px; box-sizing: border-box; cursor: pointer; display: inline-block; font-size: 14px; font-weight: bold; padding: 12px 25px; text-decoration: none; text-transform: capitalize; background-color: #3498db; border-color: #3498db; color: #ffffff;">${text}</a>
-  </td></tr></table>`
 
 
 export function makeEmails(election: Election, voters: ElectionRoll[], url: string, email_subject: string, email_body: string, test_email: boolean): Imsg[] {
     const processEmailBody = (body: string, voter_id: string) => {
-        // sanitize
-        body = sanitizeHtml(body);
-        // bold
-        body = body.split(rBold).map((str, i) => {
-            if(i%2 == 0) return str
-            return `<b>${str}</b>`;
-        }).join('')
-        // links
-        let linkParts = body.split(rLink);
-        body = linkParts.map((str, i) => {
-            if(i%3 == 0) return str;
-            if(i%3 == 2) return '';
-            return `<a href=${linkParts[i+1]}>${linkParts[i]}</a>`
-        }).join('')
-        // newline / paragraph breaks
-        body = `<p>${body.replaceAll('\n\n', '</p><p>')}</p>`
-        // buttons
-        body = body.replaceAll('__VOTE_BUTTON__',
-            makeButton('Vote', `${url}/${election.election_id}/${election.settings.voter_authentication.voter_id === true && 'id/' + voter_id}`)
-        );
-        body = body.replaceAll('__ELECTION_HOME_BUTTON__',
-            makeButton('View Election', `${url}/${election.election_id}`)
-        )
-        return body
+        return formatMarkdown(body, {
+            allowButtons: true,
+            buttonContext: {
+                voteUrl: `${url}/${election.election_id}/${election.settings.voter_authentication.voter_id === true && 'id/' + voter_id}`,
+                electionHomeUrl: `${url}/${election.election_id}`
+            }
+        });
     }
     return voters.map((voter) => <Imsg>{
         ...emailSettings,
@@ -78,10 +51,10 @@ export function Invites(election: Election, voters: ElectionRoll[], url: string,
         text: `${election.state === 'draft' ? `[⚠️Test ${election.settings.term_type}]` : ''} ${email_body ?? '' }  You have been invited to vote in ${election.title} ${url}/${election.election_id}`,
         html: emailTemplate(`
           ${election.state === 'draft' ? `<h3>⚠️This ${election.settings.term_type} is still in test mode. All ballots during test mode will be removed once the election is finalized, and at that time you will need to vote again.⚠️</h3>` : ''}
-          ${email_body ? email_body : '' }
+          ${email_body ? formatMarkdown(email_body) : '' }
           <p>You have been invited to vote in the \"${election.title}\" ${election.settings.term_type}.</p>
           ${election.description ?
-            `<p>Election ${election.description}<p>` : ''
+            `<p>Election ${formatMarkdown(election.description)}<p>` : ''
           }
           ${(election.start_time && election.settings.time_zone) ?
             `<p>Voting will begin on ${formatTime(election.start_time, election.settings.time_zone)}.<p>` : ''
@@ -107,24 +80,28 @@ export function Blank(election: Election, voters: ElectionRoll[], url: string, e
       subject: email_subject,
       text: `${email_body}`,
       html: emailTemplate(`
-        <p>${email_body}</p>
+        ${formatMarkdown(email_body)}
         ${makeButton('View Election', `${url}/${election.election_id}`)}
       `)
   })
 }
 
-export function Receipt(election: Election, email: string, ballot: Ballot, url: string): Imsg {
+export function Receipt(election: Election, email: string, ballot: Ballot, url: string, roll?: ElectionRoll): Imsg {
+    const ballotVerifyUrl = `${url}/${election.election_id}/ballot/${ballot.ballot_id}`;
+    const ballotUpdateUrl = `${url}/${election.election_id}/id/${roll?.voter_id}`;
     return {
         ...emailSettings,
         to: email, // Change to your recipient
         from: process.env.FROM_EMAIL_ADDRESS ?? '',
         subject: `Ballot Receipt For ${election.title}`,
-        text: `${election.state === 'draft' ? '[⚠️Test Ballot]' : ''} Thank you for voting in ${election.title}, you can view your ballot and ballot status at ${url}/Election/${election.election_id}/ballot/${ballot.ballot_id}`,
+        text: `${election.state === 'draft' ? '[⚠️Test Ballot]' : ''} Thank you for voting in ${election.title}, you can view your ballot and ballot status at \
+               ${ballotVerifyUrl}. ${election.settings.ballot_updates && roll ? `While the election is still open, you can update you ballot at ${ballotUpdateUrl}`: ''}`,
         html: emailTemplate(`
           <div> 
             ${election.state === 'draft' ? "<h3>⚠️This was cast as a test ballot. All test ballots will be removed once the election is finalized, and at that time you will need to vote again.⚠️</h3>" : ''}
             <p>Thank you for voting in ${election.title}!<p>
-            <p>You can <a clicktracking="off" href="${url}/${election.election_id}/ballot/${ballot.ballot_id}">verify your ballot and ballot status</a> at any time.</p>
+            <p>You can <a clicktracking="off" href="${ballotVerifyUrl}">verify your ballot and ballot status</a> at any time.</p>
+            ${election.settings.ballot_updates && roll ? `<p>While the election is still open, you can <a clicktracking="off" href="${ballotUpdateUrl}">update your ballot</a></p>.` : ''}
           </div>    
         `),
     }

@@ -1,8 +1,7 @@
 import { PrimaryButton } from '~/components/styles';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Menu, { menuClasses } from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
 interface MenuButtonProps {
     label: React.ReactNode;
     children?: React.ReactNode;

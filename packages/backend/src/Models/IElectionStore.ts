@@ -8,5 +8,5 @@ export interface IElectionStore {
     getElections: (id: string, email: string, ctx: ILoggingContext) => Promise<Election[] | null>;
     getElectionByID: (election_id: Uid, ctx:ILoggingContext) => Promise<Election | null>;
     delete: (election_id: Uid, ctx:ILoggingContext, reason:string) => Promise<boolean>;
-    electionExistsByID: (election_id: Uid, ctx: ILoggingContext) => Promise<Boolean | string>;
+    electionExistsByID: (election_id: Uid, ctx: ILoggingContext) => Promise<boolean | string>;
 }

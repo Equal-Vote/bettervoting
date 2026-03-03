@@ -1,6 +1,10 @@
 import { Box, Paper, Typography } from "@mui/material";
 
-export default ({items}) =>
+interface ResultsKeyProps {
+    items: [string, string][]
+}
+
+const ResultsKey = ({items}: ResultsKeyProps) =>
     <Paper sx={{display: 'flex', gap: 3, ml: {xs: 'unset', md: 'auto'}, p: 2, flexDirection: 'column'}}>
             {items.map(([col, txt], i) => <Box key={i} display='flex' sx={{justifyContent: 'flex-start', flexDirection: 'row'}}>
                 <Box sx={{
@@ -17,3 +21,5 @@ export default ({items}) =>
             </Box>)
         }
     </Paper>
+
+export default ResultsKey;

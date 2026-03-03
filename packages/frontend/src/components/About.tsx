@@ -1,14 +1,10 @@
 import {
   Box,
-  Button,
   Container,
-  Divider,
   Paper,
   Typography,
 } from "@mui/material";
-import React from "react";
 import { PrimaryButton } from "./styles";
-import { useLocalStorage } from "../hooks/useLocalStorage";
 import { useSubstitutedTranslation } from "./util";
 
 const About = () => {
@@ -32,9 +28,16 @@ const About = () => {
           {t('about.description')}
         </Typography>
 
+        <Typography sx={{ mt: 2 }}>
+          For more information, visit our documentation at{' '}
+          <a href="https://docs.bettervoting.com" target="_blank" rel="noreferrer">
+            docs.bettervoting.com
+          </a>.
+        </Typography>
+
         <h1>{t('about.team_title')}</h1>
         <h2>{t('about.leads_title')}</h2>
-        <ul>{t('about.leads').map(content => <li>{content}</li>)}</ul>
+        <ul>{t('about.leads').map((content, i) => <li key={i}>{content}</li>)}</ul>
 
         <h2>{t('about.contributors_title')}</h2>
         <Box
@@ -45,11 +48,12 @@ const About = () => {
           sx={{ maxWidth: 800 }}
         >
           {t('about.contributors').map(({github_user_name, github_image_id}) => (
-            <a href={`https://github.com/${github_user_name}`}>
+            <a href={`https://github.com/${github_user_name}`} target = "_blank" aria-label={`${github_user_name} github profile`} key={github_user_name} rel="noreferrer">
               <Box
                 component="img"
                 src={`https://avatars.githubusercontent.com/u/${github_image_id}?v=4`}
                 sx={{ borderRadius: "100%", width: 80, heigth: 80 }}
+                alt={`${github_user_name} profile picture`}
               />
             </a>
           ))}
@@ -65,9 +69,25 @@ const About = () => {
           {t('about.donate_description')}
         </Typography>
 
-        <PrimaryButton sx={{m: 3}} href={t('about.donate_link')}>
+        <PrimaryButton
+          sx={{m: 3}}
+          href={t('about.donate_link')}
+        >
           {t('about.donate_button')}
         </PrimaryButton>
+
+{process.env.REACT_APP_COMMIT_SHA && (
+          <Typography
+            sx={{
+              textAlign: 'right',
+              color: 'gray',
+              fontSize: '0.75rem',
+              mt: 4,
+            }}
+          >
+            {process.env.REACT_APP_COMMIT_SHA}
+          </Typography>
+        )}
       </Paper>
     </Container>
   );

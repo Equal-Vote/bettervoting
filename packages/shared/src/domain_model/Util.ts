@@ -4,8 +4,20 @@ export const checkForDuplicates = (inputArray: string[]): boolean => {
 //from https://emailregex.com/
 export const emailRegex = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
 
+
+export type GenericObject = {[key: string | number]: any};
+// NOTE: there's a couple of weird cases where passing the key as a function is necessary, but we may be able to remove this later
+export const getEntry = <ItemType extends GenericObject,>(arr: ItemType[], id: any, key: string | number | Function ='id'): ItemType => {
+  let match = arr.find(a => (typeof key === 'function')? key(a) == id : a[key] == id)
+  if(match === undefined){
+    throw new Error("Couldn't find match in array!")
+  }
+  return match
+}
+
 export const urlRegex = /^(http|https):\/\/[^ "]+$/;
 export const timeZones = [
+  'Etc/GMT+12', // confusingly, this is actually UTC-12 timezone
   'Pacific/Midway',
   'Pacific/Pago_Pago',
   'Pacific/Honolulu',

@@ -1,15 +1,14 @@
-import { Box, Grid, Typography } from '@mui/material'
-import React, { useEffect, useRef, useState } from 'react'
+import { Box,  Typography } from '@mui/material'
+import { useEffect, useRef, useState } from 'react'
 
-import { useGetGlobalElectionStats } from '~/hooks/useAPI';
 import SlotCounter from 'react-slot-counter';
 import { useSubstitutedTranslation } from '../util';
 import { io } from 'socket.io-client';
 
-interface FeaturePanel{
-    title: string;
-    text: string;
-}
+// interface FeaturePanel{
+//     title: string;
+//     text: string;
+// }
 
 // https://stackoverflow.com/questions/25778414/what-port-does-the-socketio-client-listen-to-by-default
 // https://stackoverflow.com/questions/69450485/receiving-error-xhr-poll-error-socket-io-client-react
@@ -17,8 +16,8 @@ const socket = io(process.env.REACT_APP_BACKEND_URL, {
     transports: ['websocket']
 });
 
-export default () => {
-    let {t} = useSubstitutedTranslation('election');
+const LandingPageStats = () => {
+    const {t} = useSubstitutedTranslation('election');
 
     const [electionStats, setElectionStats] = useState({elections: 0, votes: 0})
 
@@ -77,3 +76,4 @@ export default () => {
         </Box>
     </Box>
 }
+export default LandingPageStats

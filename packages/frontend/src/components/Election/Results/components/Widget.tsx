@@ -1,6 +1,12 @@
 import { Paper, Typography } from "@mui/material";
 
-export default ({ children, title, wide=false }) => (
+interface WidgetProps {
+  children: React.ReactNode;
+  title: string;
+  wide?: boolean;
+}
+
+const Widget = ({ children, title, wide=false }: WidgetProps) => (
   <Paper
     elevation={5}
     className="graph"
@@ -21,3 +27,5 @@ export default ({ children, title, wide=false }) => (
     {children}
   </Paper>
 );
+
+export default Widget;

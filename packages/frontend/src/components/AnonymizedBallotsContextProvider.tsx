@@ -20,8 +20,13 @@ export const AnonymizedBallotsContext = createContext<IAnonymizedBallotsContext 
     ballotsForRaceWithMeta: () => []
 })
 
-export const AnonymizedBallotsContextProvider = ({ id, children }) => {
-    const { data, isPending, error, makeRequest: fetchData } = useGetAnonymizedBallots(id)
+interface AnonymizedBallotsContextProviderProps {
+    id: string,
+    children: React.ReactNode
+}
+
+export const AnonymizedBallotsContextProvider = ({ id, children }: AnonymizedBallotsContextProviderProps) => {
+    const { data, isPending, makeRequest: fetchData } = useGetAnonymizedBallots(id)
 
     return (<AnonymizedBallotsContext.Provider
         value={{

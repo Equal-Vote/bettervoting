@@ -1,0 +1,78 @@
+name: End-to-end tests
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    permissions:     
+      pull-requests: write
+      id-token: write
+      contents: write
+      pages: write
+    # environment:
+    #   name: github-pages
+    #   url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        continue-on-error: false
+
+      - name: Install Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/download/v2.34.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version
+        continue-on-error: false
+
+      - name: Start application-specific services using Docker Compose
+        # We're telling it to build playwright specifically without the -d tag so we can see the logs and the next
+        # step won't start until all the tests are done. The docker-compose.yml has the dependencies set up so it
+        # will build all of the components playwright needs to run the tests.
+        run: docker compose up --build playwright
+        continue-on-error: false
+
+      - name: Check for failure
+        id: tests
+        run: |
+            export status=$(grep -q "passed" ./testing/test-results/.last-run.json && echo passed || echo failed)
+            echo "status=$status" >> "$GITHUB_OUTPUT"
+            echo $status
+  
+
+      # - name: Setup Pages
+      #   if: steps.tests.outputs.status == 'failed'
+      #   uses: actions/configure-pages@v5
+
+      - name: Upload Artifact
+        id: upload
+        if: steps.tests.outputs.status == 'failed'
+        uses: actions/upload-artifact@v4
+        with:
+          name: PlayWright Report
+          path: "./testing/playwright-report/"
+          retention-days: 30
+      # Removing this action for now because it overwrites docs
+      # - name: Deploy to GitHub Pages
+      #   if: steps.tests.outputs.status == 'failed'
+      #   id: deployment
+      #   uses: actions/deploy-pages@v4
+
+      - name: Fail the job if there any failed case
+        if: steps.tests.outputs.status == 'failed'
+        run : |
+            echo "::error title=End-To-End Tests Failed::Please check the report at ${{ steps.upload.outputs.artifact-url }}"
+            exit 1
+      
+      
+      - name: Stop Docker Compose services
+        if: always()
+        run: docker-compose down --volumes --remove-orphans
+        continue-on-error: false
+
+      

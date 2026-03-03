@@ -18,7 +18,6 @@ import { getUserToken, getUser } from './Controllers/User';
 const asyncHandler = require('express-async-handler')
 require('./socketHandler')
 
-
 export default function makeApp() {
     const app = express();
     const appInitContext = Logger.createContext("appInit");

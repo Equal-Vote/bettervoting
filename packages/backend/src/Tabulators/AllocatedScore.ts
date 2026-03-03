@@ -1,11 +1,9 @@
-import { ballot, candidate, fiveStarCount, allocatedScoreResults, allocatedScoreSummaryData, totalScore, nonNullBallot } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
+import { candidate, allocatedScoreResults, allocatedScoreSummaryData, rawVote, allocatedScoreCandidate, vote } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
 
 const Fraction = require('fraction.js');
-import { sortByTieBreakOrder } from "./Star";
-import { getInitialData, makeAbstentionTest, makeBoundsTest } from "./Util";
+import { getSummaryData, makeAbstentionTest, makeBoundsTest } from "./Util";
 import { ElectionSettings } from "@equal-vote/star-vote-shared/domain_model/ElectionSettings";
 
-const maxScore = 5;
 interface winner_scores {
     index: number
     ballot_weight: typeof Fraction,
@@ -14,13 +12,18 @@ interface winner_scores {
 
 type ballotFrac = typeof Fraction[]
 
-export function AllocatedScore(candidates: string[], votes: ballot[], nWinners = 3, randomTiebreakOrder: number[] = [], breakTiesRandomly = true, electionSettings?:ElectionSettings) {
-    const [tallyVotes, initialSummaryData] =
-    getInitialData<Omit<allocatedScoreSummaryData,'splitPoints' | 'spentAboves' | 'weight_on_splits' | 'weightedScoresByRound'>>(
-		votes, candidates, randomTiebreakOrder, 'cardinal',
+const MAX_SCORE = 5;
+
+export function AllocatedScore(candidates: candidate[], votes: rawVote[], nWinners = 3, electionSettings?:ElectionSettings) {
+    const {summaryData: initialSummaryData, tallyVotes} =
+    getSummaryData<allocatedScoreCandidate, Omit<allocatedScoreSummaryData,'splitPoints' | 'spentAboves' | 'weight_on_splits' | 'weightedScoresByRound'>>(
+		candidates.map(c => ({...c, score: 0})),
+        votes,
+        'cardinal',
+        undefined,
 		[
 			makeBoundsTest(0, 5),
-			makeAbstentionTest(null), 
+			makeAbstentionTest(true), 
 		]
 	)
 
@@ -43,30 +46,29 @@ export function AllocatedScore(candidates: string[], votes: ballot[], nWinners =
         tieBreakType: 'none',
         logs: []
     }
-    var remainingCandidates = [...summaryData.candidates]
+    let remainingCandidates = [...summaryData.candidates]
     // Run election rounds until there are no remaining candidates
     // Keep running elections rounds even if all seats have been filled to determine candidate order
 
     // Normalize scores array
-    var scoresNorm = normalizeArray(tallyVotes, maxScore);
+    let scoresNorm = votes.map(v => candidates.map(c => new Fraction(v.marks[c.id]).div(MAX_SCORE)))
 
     // Find number of voters and quota size
     const V = scoresNorm.length;
     const quota = new Fraction(V).div(nWinners);
     results.logs.push(`${nWinners} winners will represent ${V} voters, so winners will need to represent a quota of ${rounded(quota)} voters each.`)
-    var num_candidates = candidates.length
+    let num_candidates = candidates.length
 
-    var ballot_weights: typeof Fraction[] = Array(V).fill(new Fraction(1));
+    let ballot_weights: typeof Fraction[] = Array(V).fill(new Fraction(1));
 
-    var ties = [];
-    // var weightedSumsByRound = []
-    var candidatesByRound: candidate[][] = []
+    // let weightedSumsByRound = []
+    let candidatesByRound: candidate[][] = []
     // run loop until specified number of winners are found
     while (results.elected.length < nWinners) {
         results.logs.push(`Round ${results.elected.length+1} of tabulation...`)
         // weight the scores
-        var weighted_scores: ballotFrac[] = Array(scoresNorm.length);
-        var weighted_sums: typeof Fraction[] = Array(num_candidates).fill(new Fraction(0));
+        let weighted_scores: ballotFrac[] = Array(scoresNorm.length);
+        let weighted_sums: typeof Fraction[] = Array(num_candidates).fill(new Fraction(0));
         scoresNorm.forEach((ballot, b) => {
             weighted_scores[b] = [];
             ballot.forEach((score, s) => {
@@ -82,17 +84,17 @@ export function AllocatedScore(candidates: string[], votes: ballot[], nWinners =
 
         candidatesByRound.push([...remainingCandidates])
         // get index of winner
-        var maxAndTies = indexOfMax(weighted_sums, summaryData.candidates, breakTiesRandomly);
-        var w = maxAndTies.maxIndex;
+        let maxAndTies = indexOfMax(weighted_sums, summaryData.candidates);
+        let w = maxAndTies.maxIndex;
         // add winner to winner list
-        results.logs.push(`${summaryData.candidates[w].name} is scored highest with ${rounded(weighted_sums[w].mul(maxScore))} stars and is elected!`)
+        results.logs.push(`${summaryData.candidates[w].name} is scored highest with ${rounded(weighted_sums[w].mul(MAX_SCORE))} stars and is elected!`)
         results.elected.push(summaryData.candidates[w]);
         // Update scores
         // the and is not perfect, but I'll fix this once I switch to localizing
         if(maxAndTies.ties.length > 1){
             results.logs.push(`${maxAndTies.ties.map(c => c.name).join(' and ')} are tied for the highest scores!`)
         }
-        results.tied.push(maxAndTies.ties);
+        results.tied.push(...maxAndTies.ties);
         // Set all scores for winner to zero
         scoresNorm.forEach((ballot, b) => {
             ballot[w] = new Fraction(0)
@@ -101,8 +103,8 @@ export function AllocatedScore(candidates: string[], votes: ballot[], nWinners =
         // remainingCandidates.splice(w, 1);
 
         // create arrays for sorting ballots
-        var cand_df: winner_scores[] = [];
-        var cand_df_sorted: winner_scores[] = [];
+        let cand_df: winner_scores[] = [];
+        let cand_df_sorted: winner_scores[] = [];
 
         weighted_scores.forEach((weighted_score, i) => {
             cand_df.push({
@@ -121,11 +123,11 @@ export function AllocatedScore(candidates: string[], votes: ballot[], nWinners =
             a.weighted_score < b.weighted_score ? 1 : -1
         );
 
-        var split_point = findSplitPoint(cand_df_sorted, quota);
+        let split_point = findSplitPoint(cand_df_sorted, quota);
 
         summaryData.splitPoints.push(split_point.valueOf());
 
-        var spent_above = new Fraction(0);
+        let spent_above = new Fraction(0);
         cand_df.forEach((c, i) => {
             if (c.weighted_score.compare(split_point) > 0) {
                 spent_above = spent_above.add(c.ballot_weight);
@@ -134,7 +136,7 @@ export function AllocatedScore(candidates: string[], votes: ballot[], nWinners =
         summaryData.spentAboves.push(spent_above.valueOf());
 
         if (spent_above.valueOf() > 0) {
-            results.logs.push(`The ${rounded(spent_above)} voters who gave ${summaryData.candidates[w].name} more than ${rounded(split_point.mul(maxScore))} stars are fully represented and will be removed from future rounds.`)
+            results.logs.push(`The ${rounded(spent_above)} voters who gave ${summaryData.candidates[w].name} more than ${rounded(split_point.mul(MAX_SCORE))} stars are fully represented and will be removed from future rounds.`)
             cand_df.forEach((c, i) => {
                 if (c.weighted_score.compare(split_point) > 0) {
                     cand_df[i].ballot_weight = new Fraction(0);
@@ -142,12 +144,12 @@ export function AllocatedScore(candidates: string[], votes: ballot[], nWinners =
             });
         }
 
-        var weight_on_split = findWeightOnSplit(cand_df, split_point);
+        let weight_on_split = findWeightOnSplit(cand_df, split_point);
 
         // quota = spent_above + weight_on_split*new_weight
         let new_weight = (quota.sub(spent_above)).div(weight_on_split);
         results.logs.push(
-            `The ${rounded(weight_on_split)} voters who gave ${summaryData.candidates[w].name} ${rounded(split_point.mul(maxScore))} stars are partially represented. `+
+            `The ${rounded(weight_on_split)} voters who gave ${summaryData.candidates[w].name} ${rounded(split_point.mul(MAX_SCORE))} stars are partially represented. `+
             `${percent(new_weight)} of their remaining vote will go toward ${summaryData.candidates[w].name} and ${percent(new Fraction(1).sub(new_weight))} will be preserved for future rounds.`)
 
         summaryData.weight_on_splits.push(weight_on_split.valueOf());
@@ -163,7 +165,7 @@ export function AllocatedScore(candidates: string[], votes: ballot[], nWinners =
 
     for (let i = 0; i < summaryData.weightedScoresByRound.length; i++) {
         for (let j = 0; j < summaryData.weightedScoresByRound[i].length; j++) {
-            summaryData.weightedScoresByRound[i][j] *= maxScore
+            summaryData.weightedScoresByRound[i][j] *= MAX_SCORE
         }
     }
 
@@ -189,7 +191,7 @@ function updateBallotWeights(
     split_point: typeof Fraction
 ) {
     if (weight_on_split.compare(0) > 0) {
-        var spent_value = quota.sub(spent_above).div(weight_on_split);
+        let spent_value = quota.sub(spent_above).div(weight_on_split);
         cand_df.forEach((c, i) => {
             if (c.weighted_score.equals(split_point)) {
                 cand_df[i].ballot_weight = cand_df[i].ballot_weight.mul( (new Fraction(1).sub(spent_value) ) );
@@ -210,7 +212,7 @@ function updateBallotWeights(
 }
 
 function findWeightOnSplit(cand_df: winner_scores[], split_point: typeof Fraction) {
-    var weight_on_split = new Fraction(0);
+    let weight_on_split = new Fraction(0);
     cand_df.forEach((c, i) => {
         if (c.weighted_score.equals(split_point)) {
             weight_on_split = weight_on_split.add(c.ballot_weight);
@@ -219,15 +221,15 @@ function findWeightOnSplit(cand_df: winner_scores[], split_point: typeof Fractio
     return weight_on_split;
 }
 
-function indexOfMax(arr: typeof Fraction[], candidates: candidate[], breakTiesRandomly: boolean) {
+function indexOfMax(arr: typeof Fraction[], candidates: candidate[]) {
     if (arr.length === 0) {
         return { maxIndex: -1, ties: [] };
     }
 
-    var max = arr[0];
-    var maxIndex = 0;
-    var ties: candidate[] = [candidates[0]];
-    for (var i = 1; i < arr.length; i++) {
+    let max = arr[0];
+    let maxIndex = 0;
+    let ties: candidate[] = [candidates[0]];
+    for (let i = 1; i < arr.length; i++) {
         if (max.equals(arr[i])) {
             ties.push(candidates[i]);
         } else if (arr[i].compare(max) > 0) {
@@ -236,22 +238,10 @@ function indexOfMax(arr: typeof Fraction[], candidates: candidate[], breakTiesRa
             ties = [candidates[i]];
         }
     }
-    if (breakTiesRandomly && ties.length > 1) {
-        maxIndex = candidates.indexOf(sortByTieBreakOrder(ties)[0])
+    if (ties.length > 1) {
+        maxIndex = candidates.indexOf(ties.sort((a, b) => -(a.tieBreakOrder-b.tieBreakOrder))[0]);
     }
     return { maxIndex, ties };
-}
-
-function normalizeArray(scores: nonNullBallot[], maxScore: number) {
-    // Normalize scores array
-    var scoresNorm: ballotFrac[] = Array(scores.length);
-    scores.forEach((row, r) => {
-        scoresNorm[r] = [];
-        row.forEach((score, s) => {
-            scoresNorm[r][s] = new Fraction(score).div(maxScore);
-        });
-    });
-    return scoresNorm;
 }
 
 function findSplitPoint(cand_df_sorted: winner_scores[], quota: typeof Fraction) {

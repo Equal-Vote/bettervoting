@@ -1,7 +1,7 @@
 {
   "name": "@equal-vote/star-vote",
   "version": "1.0.0",
-  "description": "star-server is built using Express (For now) for the back end server and React for the front end user interface",
+  "description": "bettervoting is built using Express (For now) for the back end server and React for the front end user interface",
   "main": "index.js",
   "workspaces": [
     "./packages/shared",
@@ -12,24 +12,34 @@
     "clean": "npx rimraf node_modules",
     "clean:ws": "npm run clean -ws && npm run clean",
     "test": "cd packages/backend && npm install && npm test",
+    "makedevelections": "tsx ./packages/backend/src/DevElections/makeDevElections.ts",
     "start": "./replace.sh && node ./packages/backend/build/src/Migrators/migrate-to-latest.js && node ./packages/backend/build/src/index.js",
     "heroku-postbuild": "cd packages/frontend && npm install && npm run build && cd ../backend && npm install && npm run-script build"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Equal-Vote/star-server.git"
+    "url": "git+https://github.com/Equal-Vote/bettervoting.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Equal-Vote/star-server/issues"
+    "url": "https://github.com/Equal-Vote/bettervoting/issues"
   },
-  "homepage": "https://github.com/Equal-Vote/star-server#readme",
+  "homepage": "https://github.com/Equal-Vote/bettervoting#readme",
   "devDependencies": {
+    "@playwright/test": "^1.51.1",
     "rimraf": "^5.0.5"
   },
   "dependencies": {
-    "typescript": "^5.6.2"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "optionalDependencies": {
+    "@rspack/binding-linux-x64-gnu": "latest",
+    "@rspack/binding-linux-arm64-gnu": "latest",
+    "@rspack/binding-linux-x64-musl": "latest",
+    "@rspack/binding-darwin-arm64": "latest",
+    "@rspack/binding-darwin-x64": "latest"
   }
 }

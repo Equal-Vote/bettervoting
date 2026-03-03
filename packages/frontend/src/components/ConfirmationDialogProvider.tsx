@@ -1,4 +1,4 @@
-import React, {
+import {
     createContext,
     useCallback,
     useContext,
@@ -30,9 +30,10 @@ type confirmContext = (data: ConfirmData) => Promise<boolean>
 
 const ConfirmDialog = createContext<confirmContext>(null);
 
-export function ConfirmDialogProvider({ children }) {
+export function ConfirmDialogProvider({ children }:  { children: React.ReactNode }) {
     const [state, setState] = useState({ isOpen: false, title: '', message: '', submit: null, cancel: null});
-    const fn = useRef((choice: boolean) => { });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const fn = useRef((choice: boolean) => {  });
 
     const {t} = useSubstitutedTranslation();
 
@@ -64,7 +65,7 @@ export function ConfirmDialogProvider({ children }) {
                     <SecondaryButton
                         type='button'
                         variant="outlined"
-                        width="100%"
+                        // width="100%"
                         fullWidth={false}
                         onClick={() => fn.current(false)}>
                         {state['cancel'] ?? t('keyword.cancel')}
