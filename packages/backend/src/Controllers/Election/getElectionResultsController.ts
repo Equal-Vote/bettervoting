@@ -53,7 +53,7 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
             writeInCandidates.forEach((wc, i) => {
                 if (wc.approved) {
                     candidates.push({
-                        id: wc.candidate_id || `write_in_${i}`,
+                        id: `write_in_${wc.candidate_name}`,
                         name: wc.candidate_name,
                         tieBreakOrder: race.candidates.length + i,
                         votesPreferredOver: {},
@@ -83,7 +83,7 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
                         if (!writeInCandidate) {
                             numUnprocessedWriteIns += 1
                         } else if (writeInCandidate.approved) {
-                            const wcId = writeInCandidate.candidate_id || `write_in_${writeInCandidates.indexOf(writeInCandidate)}`
+                            const wcId = `write_in_${writeInCandidate.candidate_name}`
                             marks[wcId] = score.score
                         }
                     }
