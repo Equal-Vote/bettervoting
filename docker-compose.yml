@@ -33,6 +33,16 @@ services:
         condition: service_healthy
         restart: true
 
+  proxy:
+    image: nginx:alpine
+    networks:
+      - star-net
+    depends_on:
+      - web
+    volumes:
+      - ./testing/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./testing/certs:/etc/nginx/certs:ro
+
   my-db:
     image: postgres
     ports:
@@ -86,16 +96,18 @@ services:
     # command: ["tail", "-f", "/dev/null"]
     depends_on:
       - web
+      - proxy
     volumes:
+      - ./testing/tests:/app/tests
+      - ./testing/playwright.config.ts:/app/playwright.config.ts
+      - ./testing/playwright:/app/playwright
       - ./testing/test-results:/app/test-results
       - ./testing/playwright-report:/app/playwright-report
     environment:
-      - BACKEND_URL=http://web:5000
-      - FRONTEND_URL=http://web:5000
+      - FRONTEND_URL=https://proxy
       - OPEN_REPORT=never
       - CI=true
 
     
 networks:
   star-net: {}
-

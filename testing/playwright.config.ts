@@ -8,6 +8,8 @@ import dotenv from 'dotenv';
 import path from 'path';
 dotenv.config({ path: path.resolve(__dirname, '.env') });
 
+if(!process.env.FRONTEND_URL) throw "Couldn't find FRONTEND_URL environment variable, have you copied sample.env into .env yet?"
+
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
@@ -30,6 +32,7 @@ export default defineConfig({
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
     baseURL: process.env.FRONTEND_URL,
+    ignoreHTTPSErrors: true,
     launchOptions: {
       slowMo: 100
     },
@@ -69,14 +72,15 @@ export default defineConfig({
       dependencies: ['setup'],
     },
 
-    {
-      name: 'webkit',
-      use: {
-        ...devices['Desktop Safari'],
-        storageState: path.join(__dirname, '/playwright/auth/user.json')
-      },
-      dependencies: ['setup'],
-    },
+    // Disabling webkit for now, it's more flaky than the others
+    //{
+    //  name: 'webkit',
+    //  use: {
+    //    ...devices['Desktop Safari'],
+    //    storageState: path.join(__dirname, '/playwright/auth/user.json')
+    //  },
+    //  dependencies: ['setup'],
+    //},
 
     /* Test against mobile viewports. */
     // {

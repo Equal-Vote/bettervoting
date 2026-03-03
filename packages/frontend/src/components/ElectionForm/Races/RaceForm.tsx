@@ -231,7 +231,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
     return <Box display='flex' flexDirection='column' alignItems='stretch' gap={RACE_FORM_GAP} sx={{textAlign: 'left'}}>
         <TitleAndDescription setErrors={setErrors} errors={errors} editedRace={editedRace} applyRaceUpdate={applyRaceUpdate} open={open}/>
 
-        <VotingMethodSelector election={election} editedRace={editedRace} isDisabled={isDisabled} setErrors={setErrors} errors={errors} applyRaceUpdate={applyRaceUpdate} />
+        <VotingMethodSelector election={election} editedRace={editedRace} isDisabled={isDisabled} setErrors={setErrors} errors={errors} applyRaceUpdate={applyRaceUpdate} open={open}/>
 
         <FileDropBox onlyShowOnDrag helperText={'Add from photo(s)'} onDrop={handlePhotoDrop}>
             <Button
@@ -284,7 +284,7 @@ const TitleAndDescription = ({setErrors, errors, editedRace, applyRaceUpdate, op
     const isDisabled = election.state !== 'draft';
 
     useEffect(() => {
-        setShowDescription(editedRace.description == '')
+        setShowDescription(editedRace.description != '')
     }, [open])
 
     return <>

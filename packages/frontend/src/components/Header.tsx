@@ -29,6 +29,7 @@ const Header = () => {
     };
     const themeSelector = useThemeSelector()
     const authSession = useAuthSession()
+
     // this is important for setting the default value
     useCookie('temp_id', makeID(ID_PREFIXES.VOTER, ID_LENGTHS.VOTER))
     const {t} = useSubstitutedTranslation();
@@ -140,7 +141,7 @@ const Header = () => {
                                         </AccordionSummary>
                                         <AccordionDetails sx={{p: 0, m: 0, mt: '.5rem', background: '#eeeeee', width: '100%' }}>
                                             {item.items.map((subitem, i) => 
-                                                <MenuItem key={i} component={Link} href={subitem.href} target={subitem.target}>{subitem.text}</MenuItem>
+                                                <MenuItem key={i} component={Link} href={subitem.href} target={subitem.target} onClick={subitem.onClick}>{subitem.text}</MenuItem>
                                             )}
                                         </AccordionDetails>
                                     </Accordion>
@@ -182,6 +183,7 @@ const Header = () => {
                                     component={Link}
                                     href={subitem.href}
                                     target={subitem.target}
+                                    onClick={subitem.onClick}
                                 >
                                     {subitem.text}
                                 </MenuItem>

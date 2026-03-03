@@ -55,6 +55,34 @@ export async function makeUniqueID(
   return currentId;
 }
 
+// Dev election constants and helpers
+export const DEV_ELECTION_PREFIX = 'devtest';
+
+export function devElectionId(name: string): string {
+    return `${DEV_ELECTION_PREFIX}${name}`;
+}
+
+export function devBallotId(electionId: string, index: number): string {
+    return `${ID_PREFIXES.BALLOT}-${electionId}-ballot${index}`;
+}
+
+export function devBallotIdPrefix(electionId: string): string {
+    return `${ID_PREFIXES.BALLOT}-${electionId}-ballot`;
+}
+
+export function validateDevElectionId(electionId: string): void {
+    if (!electionId.startsWith(DEV_ELECTION_PREFIX)) {
+        throw new Error(`Election ID "${electionId}" must start with "${DEV_ELECTION_PREFIX}"`);
+    }
+}
+
+export function validateDevBallotId(ballotId: string, electionId: string): void {
+    const expectedPrefix = devBallotIdPrefix(electionId);
+    if (!ballotId.startsWith(expectedPrefix)) {
+        throw new Error(`Ballot ID "${ballotId}" must start with "${expectedPrefix}" — use devBallotId() to generate ballot IDs`);
+    }
+}
+
 // Synchronous version for when collision checking is needed but async isn't required
 export function makeUniqueIDSync(
   prefix: string | null = null, 

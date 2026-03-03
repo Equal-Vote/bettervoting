@@ -1,7 +1,7 @@
 let blobServiceClient: any = null;
 
 export default class BlobService {
-    client; 
+    client;
 
     constructor() {
         const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING || '';
@@ -20,6 +20,8 @@ export default class BlobService {
         contentType?: string,
         onProgress?: (progress: any) => void,
     ): Promise<string> => {
+        if(!this.client) throw new Error("Couldn't upload to blob, client wasn't initialized since AZURE_STORAGE_CONNECTION_STRING wasn't properly set")
+
         const containerClient = this.client.getContainerClient(containerName);
         await containerClient.createIfNotExists();
 
