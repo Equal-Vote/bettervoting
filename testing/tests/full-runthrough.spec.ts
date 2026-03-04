@@ -54,7 +54,7 @@ test('Full Runthrough', async ({ page }) => {
 	await page.getByRole('button', { name: 'Save' }).click();
 
 	// Adding Race 1
-	await page.getByText('Add').click();
+	await page.getByRole('button', { name: 'Add Race' }).click();
 	await page.getByRole('textbox', { name: 'Title' }).fill('Race 1');
 	await page.getByRole('button', { name: 'Description' }).click();
 	await page
