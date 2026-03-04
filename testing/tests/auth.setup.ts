@@ -4,6 +4,13 @@ import path from 'path';
 const authFile = path.join(__dirname, '../playwright/auth/user.json');
 
 setup('log in', async ({ page }) => {
+    const frontendUrl = process.env.FRONTEND_URL!;
+    try {
+        await fetch(frontendUrl, { signal: AbortSignal.timeout(5000) });
+    } catch {
+        throw new Error(`Could not reach frontend at ${frontendUrl}. Is your local frontend running?`);
+    }
+
     await page.goto('/');
 
     // find SIGN IN button and click it
