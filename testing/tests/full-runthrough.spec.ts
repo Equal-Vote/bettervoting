@@ -49,7 +49,7 @@ test('Full Runthrough', async ({ page }) => {
 	await page.getByRole('button', { name: 'Edit Settings' }).click();
 	await page
 		.getByRole('checkbox', { name: 'Set Number of Rankings' })
-		.click();
+		.check();
 	await page.getByRole('spinbutton', { name: 'Rank Limit' }).fill('8');
 	await page.getByRole('button', { name: 'Save' }).click();
 
