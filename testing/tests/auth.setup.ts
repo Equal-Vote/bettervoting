@@ -5,10 +5,14 @@ const authFile = path.join(__dirname, '../playwright/auth/user.json');
 
 setup('log in', async ({ page }) => {
     const frontendUrl = process.env.FRONTEND_URL!;
-    try {
-        await fetch(frontendUrl, { signal: AbortSignal.timeout(5000) });
-    } catch {
-        throw new Error(`Could not reach frontend at ${frontendUrl}. Is your local frontend running?`);
+    // This is a quality of life error for local development. We use process.env.CI to detect if we're 
+    // The fetch won't work on github actions since since fetch expects https and the github actions proxy has ssl disabled
+    if(!process.env.CI){ 
+        try {
+            await fetch(frontendUrl, { signal: AbortSignal.timeout(5000) });
+        } catch {
+            throw new Error(`Could not reach frontend at ${frontendUrl}. Is your local frontend running?`);
+        }
     }
 
     await page.goto('/');
