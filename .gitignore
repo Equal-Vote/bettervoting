@@ -11,3 +11,4 @@
 .pre-commit-config.yaml
 .idea
 .gitattributes
+.claude/
