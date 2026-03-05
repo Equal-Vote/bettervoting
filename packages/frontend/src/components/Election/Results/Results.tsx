@@ -478,6 +478,11 @@ export default function Results({ race, results }: {race: Race, results: Electio
             </Typography>
           }
           <Typography variant="h6">{t('results.vote_count', {n: results.summaryData.nTallyVotes})}</Typography>
+            {results.numUnprocessedWriteIns > 0 &&
+              <Typography component="p" sx={{color: '#808080', fontSize: '0.9rem', mt: 1}}>
+                {results.numUnprocessedWriteIns} write-in vote{results.numUnprocessedWriteIns === 1 ? '' : 's'} not included in results
+              </Typography>
+            }
             {/* Voting method and learning link */}
             <Typography component="p" sx={{color: '#808080', fontSize: '1rem', marginTop: '20px', mb: 2}}>
                 {t('results.method_context', { voting_method: votingMethod })}

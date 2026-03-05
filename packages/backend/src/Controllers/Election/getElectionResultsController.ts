@@ -77,7 +77,7 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
                     const isRegularCandidate = race.candidates.some((c: Candidate) => c.candidate_id === score.candidate_id)
                     if (isRegularCandidate) {
                         marks[score.candidate_id] = score.score
-                    } else if (useWriteIns && score.write_in_name) {
+                    } else if (race.enable_write_in && score.write_in_name) {
                         const write_in_name = score.write_in_name
                         const writeInCandidate = writeInCandidates.find(wc => wc.aliases.includes(write_in_name))
                         if (!writeInCandidate) {
@@ -104,7 +104,7 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
         const tabulationResult = VotingMethods[voting_method](candidates, cvr, num_winners, election.settings)
         results[race_index] = {
             ...tabulationResult,
-            numUnprocessedWriteIns: useWriteIns ? numUnprocessedWriteIns : undefined
+            numUnprocessedWriteIns: race.enable_write_in ? numUnprocessedWriteIns : undefined
         }
     }
     

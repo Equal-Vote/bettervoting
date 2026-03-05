@@ -36,7 +36,7 @@ export function raceValidation(obj:Race):string | null {
     if (obj.num_winners < 1 || obj.num_winners > 100){
         return "Invalid Number of Winners";
     }
-    if (!obj.candidates || obj.candidates.length < 2){
+    if (!obj.candidates || (!obj.enable_write_in && obj.candidates.length < 2)){
         return "Invalid Number of Candidates";
     } else {
         if (checkForDuplicates(obj.candidates.map(candidate => candidate.candidate_id))){

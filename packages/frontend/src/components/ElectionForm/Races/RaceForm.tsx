@@ -2,7 +2,7 @@ import React, { MouseEventHandler, useCallback, useEffect, useMemo, useRef, useS
 import CandidateForm from "../Candidates/CandidateForm";
 import TextField from "@mui/material/TextField";
 import Typography from '@mui/material/Typography';
-import { Box, Button, FormHelperText, Stack } from "@mui/material";
+import { Box, Button, Checkbox, FormControlLabel, FormHelperText, Stack } from "@mui/material";
 import { AddIcon, MinusIcon, TransitionBox, useSubstitutedTranslation } from '../../util';
 import useConfirm from '../../ConfirmationDialogProvider';
 import useFeatureFlags from '../../FeatureFlagContextProvider';
@@ -274,6 +274,19 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
                     </Stack>
                 </TransitionBox>
             </Box>
+
+            <FormControlLabel
+                disabled={isDisabled}
+                control={
+                    <Checkbox
+                        id="enable-write-in"
+                        checked={!!editedRace.enable_write_in}
+                        onChange={(e) => applyRaceUpdate(race => { race.enable_write_in = e.target.checked; })}
+                    />
+                }
+                label="Allow write-ins"
+                sx={{ pl: 1 }}
+            />
         </FileDropBox>
     </Box>
 }
