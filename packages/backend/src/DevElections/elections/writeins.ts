@@ -1,7 +1,7 @@
 import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { Ballot } from '@equal-vote/star-vote-shared/domain_model/Ballot';
 import { DevElectionDefinition, devBallotId } from '../types';
-import { devElectionId } from '@equal-vote/star-vote-shared/utils/makeID';
+import { devElectionId, NOTA_ID } from '@equal-vote/star-vote-shared/utils/makeID';
 
 const ELECTION_ID = devElectionId('writeins');
 const RACE_SINGLE = 'devtestwriteins_race0';
@@ -10,6 +10,7 @@ const RACE_MULTI = 'devtestwriteins_race1';
 const singleWinnerCandidates = [
     { candidate_id: 'alice', candidate_name: 'Alice' },
     { candidate_id: 'bob', candidate_name: 'Bob' },
+    { candidate_id: NOTA_ID, candidate_name: 'None of the Above' },
 ];
 
 const multiWinnerCandidates = [

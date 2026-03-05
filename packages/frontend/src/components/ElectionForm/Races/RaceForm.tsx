@@ -2,16 +2,16 @@ import React, { MouseEventHandler, useCallback, useEffect, useMemo, useRef, useS
 import CandidateForm from "../Candidates/CandidateForm";
 import TextField from "@mui/material/TextField";
 import Typography from '@mui/material/Typography';
-import { Box, Button, Checkbox, FormControlLabel, FormHelperText, Stack } from "@mui/material";
+import { Box, Button, Checkbox, FormControlLabel, FormHelperText, Link, Stack } from "@mui/material";
 import { AddIcon, MinusIcon, TransitionBox, useSubstitutedTranslation } from '../../util';
 import useConfirm from '../../ConfirmationDialogProvider';
 import useFeatureFlags from '../../FeatureFlagContextProvider';
 import { SortableList } from '~/components/DragAndDrop';
 import { makeDefaultRace, RaceErrors, useEditRace } from './useEditRace';
-import { makeUniqueIDSync, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
+import { makeUniqueIDSync, ID_PREFIXES, ID_LENGTHS, NOTA_ID } from '@equal-vote/star-vote-shared/utils/makeID';
 import VotingMethodSelector from './VotingMethodSelector';
 import useElection from '~/components/ElectionContextProvider';
-import { SecondaryButton, PrimaryButton, FileDropBox } from '~/components/styles';
+import { SecondaryButton, PrimaryButton, FileDropBox, LinkButton, Tip } from '~/components/styles';
 import RaceDialog from './RaceDialog';
 import { Candidate } from '@equal-vote/star-vote-shared/domain_model/Candidate';
 import { getImage, postImage } from '../Candidates/PhotoUtil';
@@ -87,18 +87,23 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
             hasCollision
         );
 
-        return [...editedRace.candidates, {
-            candidate_id: newId,
-            candidate_name: ''
-        }];
+        return [
+            ...editedRace.candidates.filter(c => c.candidate_id !== NOTA_ID && !c.candidate_id.startsWith('write_in_')),
+            {
+                candidate_id: newId,
+                candidate_name: ''
+            },
+            ...editedRace.candidates.filter(c => c.candidate_id === NOTA_ID || c.candidate_id.startsWith('write_in_')),
+        ];
     }, [editedRace.candidates]);
 
-    const onEditCandidate = useCallback((candidate, index) => {
+    const onEditCandidate = useCallback((candidate, uiIndex) => {
         applyRaceUpdate(race => {
-            if (race.candidates[index]) {
-                race.candidates[index] = candidate;
-            } else {
-                race.candidates.push(candidate);
+            if(uiIndex === newCandidateIndex){
+                race.candidates.splice(newCandidateIndex, 0, candidate) // this could be a push, or if there's nota or write in then this would be an insert
+            }else{
+                // the uiIndexToActualIndex is unnecessary here since we know uiIndex and index will always match for this case, but I'm still adding the function for clarity
+                race.candidates[uiIndexToActualIndex(uiIndex)] = candidate;
             }
         });
 
@@ -111,17 +116,16 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleChangeCandidates = useCallback((newCandidateList: any[]) => {
-        //remove the last candidate if it is empty
-        if (newCandidateList.length > 1 && newCandidateList[newCandidateList.length - 1].candidate_name === '') {
-            newCandidateList.pop();
-        }
+        // removing the newCandidateIndex will update the ephemeral order to match the actual one
+        newCandidateList.splice(newCandidateIndex, 1)
         applyRaceUpdate(race => {
             race.candidates = newCandidateList;
         }
         );
     }, [applyRaceUpdate]);
 
-    const onDeleteCandidate = useCallback(async (index) => {
+    const onDeleteCandidate = useCallback(async (uiIndex) => {
+        let index = uiIndexToActualIndex(uiIndex);
         if (editedRace.candidates.length < 2) {
             setErrors(prev => ({ ...prev, candidates: 'At least 2 candidates are required' }));
             return;
@@ -184,6 +188,22 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
 
     const candidateItems = election.state === 'draft' ? ephemeralCandidates : editedRace.candidates;
 
+    // special candidates are "none of the above" and write-ins
+    // these candidates are listed below the new candidate in the ephemeral list
+    const maxSpecialCandidates = 1;
+    const isSpecialCandidate = (c) => c.candidate_id === NOTA_ID || c.candidate_id.startsWith('write_in_');
+    const numSpecialCandidates = editedRace.candidates.filter(isSpecialCandidate).length;
+    const newCandidateIndex = election.state === 'draft' ? ephemeralCandidates.length - 1 - numSpecialCandidates : undefined;
+
+    const uiIndexToActualIndex = (uiIndex) => {
+        // we only use the ephemeral list when we're in draft, otherwise the ui will match editedRace.candidates
+        if(election.state != 'draft') return uiIndex;
+        if(uiIndex === newCandidateIndex) throw "There is no mapping for the new candidate, this function shouldn't be used for that case"
+        // the ephemeral list has a temp candidate inserted at the end before nota, so we need to offset accordingly
+        if(uiIndex > newCandidateIndex) return uiIndex-1;
+        return uiIndex;
+    }
+
     const handlePhotoDrop = async (e) =>  {
         // load file data
         let names = []
@@ -228,6 +248,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
         });
     }
 
+
     return <Box display='flex' flexDirection='column' alignItems='stretch' gap={RACE_FORM_GAP} sx={{textAlign: 'left'}}>
         <TitleAndDescription setErrors={setErrors} errors={errors} editedRace={editedRace} applyRaceUpdate={applyRaceUpdate} open={open}/>
 
@@ -247,7 +268,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
 
             <Box sx={{
                 position: 'relative',
-                height: candidatesExpaneded? `${candidateItems.length*66 - 11}px` : 0,
+                height: candidatesExpaneded? `${candidateItems.length*66 - 11 + 40*(maxSpecialCandidates-numSpecialCandidates)}px` : 0,
                 transition: 'height 0.5s',
             }}>
                 <TransitionBox absolute enabled={candidatesExpaneded}>
@@ -255,6 +276,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
                         <SortableList
                             items={candidateItems}
                             identifierKey="candidate_id"
+                            indexIsValid={index => index < newCandidateIndex}
                             onChange={handleChangeCandidates}
                             renderItem={(candidate, index) => (
                                 <SortableList.Item id={candidate.candidate_id}>
@@ -264,15 +286,26 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
                                         candidate={candidate}
                                         index={index}
                                         onDeleteCandidate={() => onDeleteCandidate(index)}
-                                        disabled={ephemeralCandidates.length - 1 === index || election.state !== 'draft'}
+                                        disabled={election.state !== 'draft'}
+                                        special={index > newCandidateIndex}
                                         inputRef={(el: React.MutableRefObject<HTMLInputElement[]>) => inputRefs.current[index] = el}
                                         onKeyDown={(event: React.KeyboardEvent<HTMLInputElement>) => handleKeyDown(event, index)}
                                         electionState={election.state} />
                                 </SortableList.Item>
                             )}
                         />
+                        {election.state == 'draft' && !editedRace.candidates.some((c) => c.candidate_id === NOTA_ID) && <Box>
+                            <LinkButton onClick={()=>{onEditCandidate({
+                                candidate_id: NOTA_ID,
+                                candidate_name: 'None of the Above',
+                            }, candidateItems.length-1)}} sx={{
+                                ml: 1,
+                            }}>Add "None of the Above"</LinkButton>
+                            <Tip name='nota'/>
+                        </Box>}
                     </Stack>
                 </TransitionBox>
+                
             </Box>
 
             <FormControlLabel

@@ -69,7 +69,7 @@ const VoterIntentWidget = () => {
         const cs = race.candidates;
         // keeping this variable so we have an easy way to debug
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const loggedBallot = ranksLeft.map(s => ({score: s.score, name: cs.find(c => c.candidate_id == s.candidate_id).candidate_name, id: s.candidate_id}))
+        const loggedBallot = ranksLeft.map(s => ({score: s.score, name: cs.find(c => c.candidate_id === s.candidate_id).candidate_name, id: s.candidate_id}))
 
         let hasPassedOver = false;
         const alreadyEliminated = []
