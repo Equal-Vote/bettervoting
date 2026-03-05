@@ -171,8 +171,8 @@ function distributeVotes(remainingCandidates: irvCandidate[], candidateVotes: ke
         let v = ballot.vote;
 
         const mapZero = (n: number) => n == 0 ? Infinity : n;
-        let topCandidate = remainingCandidates.reduce((top, c) => mapZero(v.marks[top.id]) < mapZero(v.marks[c.id])? top : c)
-        let topRemainingRank: number = (v.overvote_rank && v.marks[topCandidate.id] > v.overvote_rank) ? v.overvote_rank : v.marks[topCandidate.id];
+        let topCandidate = remainingCandidates.reduce((top, c) => mapZero(v.marks[top.id] ?? 0) < mapZero(v.marks[c.id] ?? 0)? top : c)
+        let topRemainingRank: number = (v.overvote_rank && (v.marks[topCandidate.id] ?? 0) > v.overvote_rank) ? v.overvote_rank : (v.marks[topCandidate.id] ?? 0);
 
         let prevTopRank = Object.entries(v.marks).reduce((prevTopRank, [_, rank]) => {
             if(rank == 0 || rank >= topRemainingRank) return prevTopRank;

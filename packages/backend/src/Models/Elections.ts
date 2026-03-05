@@ -83,6 +83,50 @@ export default class ElectionsDB implements IElectionStore {
         return updatedElection
     }
 
+    async updateElectionInTransaction(
+        election_id: Uid,
+        mutationFn: (election: Election) => void,
+        ctx: ILoggingContext,
+        reason: string
+    ): Promise<Election> {
+        Logger.debug(ctx, `${tableName}.updateElectionInTransaction`);
+        const updatedElection = await this._postgresClient.transaction().execute(async (trx) => {
+            const election = await trx
+                .selectFrom(tableName)
+                .where('election_id', '=', election_id)
+                .where('head', '=', true)
+                .selectAll()
+                .executeTakeFirst() as Election | undefined;
+
+            if (!election) {
+                throw new InternalServerError(`Election ${election_id} not found`);
+            }
+
+            mutationFn(election);
+
+            const validationFailure = electionValidation(election);
+            if (validationFailure) {
+                throw new BadRequest(validationFailure);
+            }
+
+            await trx.updateTable(tableName)
+                .where('election_id', '=', election_id)
+                .where('head', '=', true)
+                .set('head', false)
+                .execute();
+
+            election.update_date = Date.now().toString();
+            election.head = true;
+
+            return await trx.insertInto(tableName)
+                .values(election)
+                .returningAll()
+                .executeTakeFirstOrThrow();
+        });
+
+        return updatedElection as Election;
+    }
+
     async getOpenElections(ctx: ILoggingContext): Promise<Election[] | null> {
         Logger.debug(ctx, `${tableName}.getOpenElections`);
         // Returns all elections where settings.voter_access == open and state == open

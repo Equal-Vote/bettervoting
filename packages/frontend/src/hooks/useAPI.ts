@@ -7,6 +7,7 @@ import { ElectionResults } from "@equal-vote/star-vote-shared/domain_model/ITabu
 import { Ballot, NewBallot, AnonymizedBallot, NewBallotWithVoterID, BallotSubmitStatus } from "@equal-vote/star-vote-shared/domain_model/Ballot";
 import { email_request_data } from "@equal-vote/star-vote-backend/src/Controllers/Election/sendEmailController"
 import { NumberObject } from "~/components/util";
+import { WriteInCandidate, WriteInData } from "@equal-vote/star-vote-shared/domain_model/WriteIn";
 
 export const useGetElection = (electionID: string | undefined) => {
     return useFetch<undefined, {
@@ -160,6 +161,16 @@ export const usePostBallot = (election_id: string | undefined) => {
 
 export const useUploadBallots = (election_id: string | undefined) => {
     return useFetch<{ ballots: NewBallotWithVoterID[] }, {responses: BallotSubmitStatus[]}>(`/API/Election/${election_id}/uploadBallots`, 'post')
+}
+
+export const useGetWriteIns = (election_id: string) => {
+    return useFetch<undefined, { write_in_data: WriteInData[] }>(
+        `/API/Election/${election_id}/getWriteIns`, 'get')
+}
+
+export const useSetWriteInResults = (election_id: string) => {
+    return useFetch<{ write_in_results: { race_id: string, write_in_candidates: WriteInCandidate[] } }, { election: Election }>(
+        `/API/Election/${election_id}/setWriteInResults`, 'post')
 }
 
 export const useGetSandboxResults = () => {
