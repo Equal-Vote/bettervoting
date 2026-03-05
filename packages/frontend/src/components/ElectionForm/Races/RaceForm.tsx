@@ -2,7 +2,7 @@ import React, { MouseEventHandler, useCallback, useEffect, useMemo, useRef, useS
 import CandidateForm from "../Candidates/CandidateForm";
 import TextField from "@mui/material/TextField";
 import Typography from '@mui/material/Typography';
-import { Box, Button, FormHelperText, Link, Stack } from "@mui/material";
+import { Box, Button, Checkbox, FormControlLabel, FormHelperText, Link, Stack } from "@mui/material";
 import { AddIcon, MinusIcon, TransitionBox, useSubstitutedTranslation } from '../../util';
 import useConfirm from '../../ConfirmationDialogProvider';
 import useFeatureFlags from '../../FeatureFlagContextProvider';
@@ -88,12 +88,12 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
         );
 
         return [
-            ...editedRace.candidates.filter(c => c.candidate_id !== NOTA_ID),
+            ...editedRace.candidates.filter(c => c.candidate_id !== NOTA_ID && !c.candidate_id.startsWith('write_in_')),
             {
                 candidate_id: newId,
                 candidate_name: ''
             },
-            ...editedRace.candidates.filter(c => c.candidate_id === NOTA_ID),
+            ...editedRace.candidates.filter(c => c.candidate_id === NOTA_ID || c.candidate_id.startsWith('write_in_')),
         ];
     }, [editedRace.candidates]);
 
@@ -188,10 +188,11 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
 
     const candidateItems = election.state === 'draft' ? ephemeralCandidates : editedRace.candidates;
 
-    // special candidates are "none of the above", and in the future this will also include write in
+    // special candidates are "none of the above" and write-ins
     // these candidates are listed below the new candidate in the ephemeral list
     const maxSpecialCandidates = 1;
-    const numSpecialCandidates = editedRace.candidates.filter((c) => c.candidate_id === NOTA_ID).length; 
+    const isSpecialCandidate = (c) => c.candidate_id === NOTA_ID || c.candidate_id.startsWith('write_in_');
+    const numSpecialCandidates = editedRace.candidates.filter(isSpecialCandidate).length;
     const newCandidateIndex = election.state === 'draft' ? ephemeralCandidates.length - 1 - numSpecialCandidates : undefined;
 
     const uiIndexToActualIndex = (uiIndex) => {
@@ -306,6 +307,19 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
                 </TransitionBox>
                 
             </Box>
+
+            <FormControlLabel
+                disabled={isDisabled}
+                control={
+                    <Checkbox
+                        id="enable-write-in"
+                        checked={!!editedRace.enable_write_in}
+                        onChange={(e) => applyRaceUpdate(race => { race.enable_write_in = e.target.checked; })}
+                    />
+                }
+                label="Allow write-ins"
+                sx={{ pl: 1 }}
+            />
         </FileDropBox>
     </Box>
 }

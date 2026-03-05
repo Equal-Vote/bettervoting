@@ -6,9 +6,11 @@ import { DevElectionDefinition, validateDefinition } from './types'
 
 // Import all dev election definitions here
 import wizardstar from './elections/wizardstar'
+import writeins from './elections/writeins'
 
 const allDefinitions: DevElectionDefinition[] = [
     wizardstar,
+    writeins,
 ];
 
 async function main() {

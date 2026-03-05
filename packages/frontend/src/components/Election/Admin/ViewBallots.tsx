@@ -34,9 +34,9 @@ const ViewBallots = () => {
                         <Table style={{ width: '100%' }} aria-label="simple table">
                             <TableHead>
                                 <TableRow >
-                                    <TableCell colSpan={3}></TableCell>
+                                    <TableCell colSpan={flags.isSet('VOTER_FLAGGING') ? 3 : 2}></TableCell>
                                     {election.races.map(race => (
-                                        <TableCell key={race.race_id} align='center' sx={{borderWidth: 1, borderTopWidth: 0, borderColor: 'lightgray', borderStyle: 'solid'}}  colSpan={race.candidates.length}>
+                                        <TableCell key={race.race_id} align='center' sx={{borderWidth: 1, borderTopWidth: 0, borderColor: 'lightgray', borderStyle: 'solid'}}  colSpan={race.candidates.length + (race.enable_write_in ? 1 : 0)}>
                                             {race.title}
                                         </TableCell>
                                     ))}
@@ -49,13 +49,18 @@ const ViewBallots = () => {
                                     <TableCell> Precinct </TableCell>
                                 }
                                 <TableCell> Status </TableCell>
-                                {election.races.map((race) => (
-                                    race.candidates.map((candidate) => (
+                                {election.races.map((race) => (<>
+                                    {race.candidates.map((candidate) => (
                                         <TableCell key={candidate.candidate_id} >
                                             {candidate.candidate_name}
                                         </TableCell>
-                                    ))
-                                ))}
+                                    ))}
+                                    {race.enable_write_in &&
+                                        <TableCell key={`${race.race_id}-writeins`}>
+                                            Write-ins
+                                        </TableCell>
+                                    }
+                                </>))}
                             </TableHead>
                             <TableBody>
                                 {data.ballots.map((ballot) => (
@@ -65,10 +70,27 @@ const ViewBallots = () => {
                                             <TableCell >{ballot.precinct || ''}</TableCell>
                                         }
                                         <TableCell >{ballot.status.toString()}</TableCell>
-                                        {ballot.votes.map((vote) => (
-                                            vote.scores.map((score) => (
-                                                <TableCell key={score.candidate_id}>{score.score || ''}</TableCell>
-                                            ))))}
+                                        {election.races.map((race) => {
+                                            const vote = ballot.votes.find(v => v.race_id === race.race_id);
+                                            return (<>
+                                                {race.candidates.map((candidate) => {
+                                                    const score = vote?.scores.find(s => s.candidate_id === candidate.candidate_id);
+                                                    return (
+                                                        <TableCell key={`${ballot.ballot_id}-${candidate.candidate_id}`}>
+                                                            {score?.score || ''}
+                                                        </TableCell>
+                                                    );
+                                                })}
+                                                {race.enable_write_in && (() => {
+                                                    const writeIns = vote?.scores.filter(s => s.write_in_name) || [];
+                                                    return (
+                                                        <TableCell key={`${ballot.ballot_id}-${race.race_id}-writeins`}>
+                                                            {writeIns.map(s => `${s.write_in_name}: ${s.score || 0}`).join(', ')}
+                                                        </TableCell>
+                                                    );
+                                                })()}
+                                            </>);
+                                        })}
                                     </TableRow>
                                 ))}
                             </TableBody>
