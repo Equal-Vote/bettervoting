@@ -49,6 +49,8 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
             winsAgainst: {}
         }))
 
+        Logger.info(req, `[WriteIn Debug] race=${race.race_id} useWriteIns=${useWriteIns} writeInCandidates=${JSON.stringify(writeInCandidates.map(wc => ({name: wc.candidate_name, approved: wc.approved, aliases: wc.aliases})))}`);
+
         if (useWriteIns) {
             writeInCandidates.forEach((wc, i) => {
                 if (wc.approved) {
@@ -62,12 +64,14 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
                 }
             })
         }
+        Logger.info(req, `[WriteIn Debug] candidates for tabulation: ${JSON.stringify(candidates.map(c => ({id: c.id, name: c.name})))}`);
 
         const race_id = race.race_id
         const cvr: rawVote[] = []
         const num_winners = race.num_winners
         const voting_method = race.voting_method
         let numUnprocessedWriteIns = 0
+        let numExcludedWriteIns = 0
 
         ballots.forEach((ballot: Ballot) => {
             const vote = ballot.votes.find((vote) => vote.race_id === race_id)
@@ -80,11 +84,15 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
                     } else if (race.enable_write_in && score.write_in_name) {
                         const write_in_name = score.write_in_name
                         const writeInCandidate = writeInCandidates.find(wc => wc.aliases.includes(write_in_name))
+                        Logger.info(req, `[WriteIn Debug] ballot write_in_name="${write_in_name}" matched=${!!writeInCandidate} approved=${writeInCandidate?.approved} matchedAliases=${JSON.stringify(writeInCandidate?.aliases)}`);
                         if (!writeInCandidate) {
                             numUnprocessedWriteIns += 1
+                            numExcludedWriteIns += 1
                         } else if (writeInCandidate.approved) {
                             const wcId = `write_in_${writeInCandidate.candidate_name}`
                             marks[wcId] = score.score
+                        } else {
+                            numExcludedWriteIns += 1
                         }
                     }
                 })
@@ -104,8 +112,9 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
         const tabulationResult = VotingMethods[voting_method](candidates, cvr, num_winners, election.settings)
         results[race_index] = {
             ...tabulationResult,
-            numUnprocessedWriteIns: race.enable_write_in ? numUnprocessedWriteIns : undefined
-        }
+            numUnprocessedWriteIns: race.enable_write_in ? numUnprocessedWriteIns : undefined,
+            numExcludedWriteIns: race.enable_write_in ? numExcludedWriteIns : undefined,
+        };
     }
     
     res.json(

@@ -31,6 +31,17 @@ export default class ElectionsDB implements IElectionStore {
         return Promise.resolve(res);
     }
 
+    updateElectionInTransaction(election_id: Uid, mutationFn: (election: Election) => void, ctx: ILoggingContext, reason: string): Promise<Election> {
+        var foundIndex = this.elections.findIndex(dbElection => dbElection.election_id == election_id);
+        if(foundIndex == -1){
+            throw new Error("Election Not Found")
+        }
+        var copy = JSON.parse(JSON.stringify(this.elections[foundIndex]));
+        mutationFn(copy);
+        this.elections[foundIndex] = copy;
+        return Promise.resolve(JSON.parse(JSON.stringify(copy)));
+    }
+
     getElections(id: string, email: string, ctx:ILoggingContext): Promise<Election[] | null> {
         var elections:Array<Election> = JSON.parse(JSON.stringify(this.elections));
         if(id != ""){

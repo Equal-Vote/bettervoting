@@ -5,9 +5,11 @@ import IconButton from '@mui/material/IconButton'
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import DrawIcon from '@mui/icons-material/Draw';
 import RaceForm from './RaceForm';
 import useElection from '../../ElectionContextProvider';
 import { ContentCopy } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { Race as IRace } from "@equal-vote/star-vote-shared/domain_model/Race";
 import { ID_LENGTHS, ID_PREFIXES, makeID } from "@equal-vote/star-vote-shared/utils/makeID";
 import { useDeleteAllBallots } from "~/hooks/useAPI";
@@ -25,6 +27,7 @@ export default function Race({ race, race_index }: RaceProps) {
     const { election, updateElection, refreshElection } = useElection()
     const { makeRequest: deleteAllBallots } = useDeleteAllBallots(election.election_id);
     const confirm = useConfirm();
+    const navigate = useNavigate();
     const [open, setOpen] = useState(false);
 
     const onSave = async (editedRace) => {
@@ -81,6 +84,17 @@ export default function Race({ race, race_index }: RaceProps) {
                         </IconButton>
                     </Tooltip>
                 </Box>
+                {race.enable_write_in && (
+                    <Box sx={{ flexShrink: 1, p: 1 }}>
+                        <Tooltip title='Manage Write-Ins'>
+                            <IconButton
+                                aria-label={`Manage Write-Ins: ${race.title}`}
+                                onClick={() => navigate(`/${election.election_id}/admin/writeins/${race.race_id}`)}>
+                                <DrawIcon />
+                            </IconButton>
+                        </Tooltip>
+                    </Box>
+                )}
                 <Box sx={{ flexShrink: 1, p: 1 }}>
                     <Tooltip title='Edit'>
                         <IconButton
