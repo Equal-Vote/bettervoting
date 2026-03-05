@@ -11,13 +11,14 @@ import useElection from '../../ElectionContextProvider';
 import { useGetWriteIns, useSetWriteInResults } from '../../../hooks/useAPI';
 import { WriteInCandidate } from '@equal-vote/star-vote-shared/domain_model/WriteIn';
 
-const trimLower = (s: string) => s.trim().toLowerCase();
+const trimLower = (s: string) => s.trim().toLowerCase().normalize('NFC');
 
 interface CandidateRow {
-    officialName: string;
-    approved: boolean;
-    aliases: string[];
+    key: string;          // trimLower key
+    displayKey: string;   // capitalized version for display
     count: number;
+    approved: boolean;
+    officialName: string; // editable
 }
 
 const WriteInApproval = () => {
@@ -44,57 +45,35 @@ const WriteInApproval = () => {
         const raceWriteInData = writeInData.write_in_data.find(d => d.race_id === raceId);
         const ballotNames = raceWriteInData?.names || {};
 
-        // Build merged view keyed by trimLower
-        const rowMap = new Map<string, CandidateRow>();
-
-        // Start with existing candidates
+        // Build a lookup from existing write_in_candidates by trimLower of name and aliases
+        const existingByKey = new Map<string, WriteInCandidate>();
         for (const ex of existing) {
-            const key = trimLower(ex.candidate_name);
-            rowMap.set(key, {
-                officialName: ex.candidate_name,
-                approved: ex.approved,
-                aliases: [...(ex.aliases || [])],
-                count: 0,
-            });
-            // Also index aliases
+            existingByKey.set(trimLower(ex.candidate_name), ex);
             for (const alias of (ex.aliases || [])) {
-                const ak = trimLower(alias);
-                if (!rowMap.has(ak)) {
-                    rowMap.set(ak, rowMap.get(key)!);
-                }
+                existingByKey.set(trimLower(alias), ex);
             }
         }
 
-        // Merge ballot data
+        // One row per unique trimLower key from ballots
+        const rowMap = new Map<string, CandidateRow>();
         for (const [name, count] of Object.entries(ballotNames)) {
             const key = trimLower(name);
             const existing = rowMap.get(key);
             if (existing) {
                 existing.count += count;
-                // Add as alias if different casing from official name
-                if (name.trim() !== existing.officialName && !existing.aliases.some(a => trimLower(a) === key)) {
-                    existing.aliases.push(name.trim());
-                }
             } else {
-                const newRow: CandidateRow = {
-                    officialName: name.trim(),
-                    approved: false,
-                    aliases: [],
-                    count: count,
-                };
-                rowMap.set(key, newRow);
+                const prior = existingByKey.get(key);
+                rowMap.set(key, {
+                    key,
+                    displayKey: key.toUpperCase(),
+                    count,
+                    approved: prior?.approved ?? false,
+                    officialName: prior?.candidate_name ?? name.trim(),
+                });
             }
         }
 
-        // Deduplicate: collect unique rows by object identity
-        const seen = new Set<CandidateRow>();
-        const result: CandidateRow[] = [];
-        for (const row of rowMap.values()) {
-            if (!seen.has(row)) {
-                seen.add(row);
-                result.push(row);
-            }
-        }
+        const result = Array.from(rowMap.values());
 
         // Sort: approved first, then by count descending
         result.sort((a, b) => {
@@ -131,10 +110,11 @@ const WriteInApproval = () => {
         }
         setError(null);
 
+        // Send just candidate_name and approved; backend merge handles aliases
         const candidates: WriteInCandidate[] = rows.map(r => ({
             candidate_name: r.officialName,
             approved: r.approved,
-            aliases: r.aliases,
+            aliases: [],
         }));
 
         const result = await setWriteInResults({
@@ -173,16 +153,18 @@ const WriteInApproval = () => {
                 <Table>
                     <TableHead>
                         <TableRow>
-                            <TableCell>Approved</TableCell>
+                            <TableCell>Write-In (capitalization ignored)</TableCell>
+                            <TableCell align="right">Count</TableCell>
+                            <TableCell align="center">Approved</TableCell>
                             <TableCell>Official Name</TableCell>
-                            <TableCell>Aliases</TableCell>
-                            <TableCell>Count</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
                         {rows.map((row, index) => (
-                            <TableRow key={index}>
-                                <TableCell>
+                            <TableRow key={row.key}>
+                                <TableCell>{row.displayKey}</TableCell>
+                                <TableCell align="right">{row.count}</TableCell>
+                                <TableCell align="center">
                                     <Checkbox
                                         checked={row.approved}
                                         onChange={(e) => handleApprovedChange(index, e.target.checked)}
@@ -196,10 +178,6 @@ const WriteInApproval = () => {
                                         fullWidth
                                     />
                                 </TableCell>
-                                <TableCell>
-                                    {row.aliases.join(', ')}
-                                </TableCell>
-                                <TableCell>{row.count}</TableCell>
                             </TableRow>
                         ))}
                         {rows.length === 0 && (
