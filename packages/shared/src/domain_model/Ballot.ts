@@ -84,12 +84,32 @@ export function ballotValidation(election: Election, obj:NewBallot): string | nu
     const maxRankings = election.settings.max_rankings
     
     let outOfBoundsError = ''
+    let writeInError = ''
     obj.votes.forEach(vote => {
     //Checks if the score exceeds max_rankings or number of candidates for ranked elections
         const race = approvedRaces.find(race => race.race_id === vote.race_id)
         if (!race) {
             return
         }
+
+        // Validate score types
+        vote.scores.forEach(score => {
+            if (score && typeof score.score !== 'number') {
+                outOfBoundsError += `Race: ${race.title}, Score is not a number: ${score.score}; `;
+            }
+        })
+
+        // Validate write-ins
+        const writeIns = vote.scores.filter(s => s.write_in_name)
+        if (writeIns.length > 10) {
+            writeInError += `Race: ${race.title}, Too many write-ins (${writeIns.length}, max 10); `;
+        }
+        writeIns.forEach(s => {
+            if (typeof s.write_in_name !== 'string' || s.write_in_name.length > 100) {
+                writeInError += `Race: ${race.title}, Invalid write-in name; `;
+            }
+        })
+
         if (['RankedRobin', 'IRV', 'STV'].includes(race.voting_method)) {
             const numCandidates = race.candidates.length;
             vote.scores.forEach(score => {
@@ -116,10 +136,13 @@ export function ballotValidation(election: Election, obj:NewBallot): string | nu
                     }
                 })
             }
-        
+
     });
     if (outOfBoundsError !== '') {
         return "The following races have scores that are out of bounds: " + outOfBoundsError;
+    }
+    if (writeInError !== '') {
+        return "Write-in validation failed: " + writeInError;
     }
     return null;
   }
