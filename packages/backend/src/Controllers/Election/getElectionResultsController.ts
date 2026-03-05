@@ -90,7 +90,9 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
                             numExcludedWriteIns += 1
                         } else if (writeInCandidate.approved) {
                             const wcId = `write_in_${writeInCandidate.candidate_name}`
-                            marks[wcId] = score.score
+                            if (!(wcId in marks)) {
+                                marks[wcId] = score.score
+                            }
                         } else {
                             numExcludedWriteIns += 1
                         }
