@@ -9,7 +9,7 @@ import { WriteInCandidate } from '@equal-vote/star-vote-shared/domain_model/Writ
 
 var ElectionsModel = ServiceLocator.electionsDb();
 
-const trimLower = (s: string) => s.trim().toLowerCase();
+const trimLower = (s: string) => s.trim().toLowerCase().normalize('NFC');
 
 function mergeWriteInCandidates(existing: WriteInCandidate[], incoming: WriteInCandidate[]): WriteInCandidate[] {
     // Build existingByKey: map trimLower(name) and trimLower(each alias) to the same object
