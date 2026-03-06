@@ -57,7 +57,7 @@ export default class ElectionsDB implements IElectionStore {
         return newElection
     }
 
-    updateElection(election: Election, ctx: ILoggingContext, reason: string): Promise<Election> {
+    async updateElection(election: Election, ctx: ILoggingContext, reason: string, expected_update_date?: string): Promise<Election> {
         Logger.debug(ctx, `${tableName}.updateElection`);
         const validationFailure = electionValidation(election);
         if (validationFailure) {
@@ -67,12 +67,20 @@ export default class ElectionsDB implements IElectionStore {
         election.update_date = Date.now().toString()
         election.head = true
         // Transaction to insert updated election and set old version's head to false
-        const updatedElection = this._postgresClient.transaction().execute(async (trx) => {
-            await trx.updateTable('electionDB')
+        const updatedElection = await this._postgresClient.transaction().execute(async (trx) => {
+            let query = trx.updateTable('electionDB')
                 .where('election_id', '=', election.election_id)
                 .where('head', '=', true)
+            if (expected_update_date !== undefined) {
+                query = query.where('update_date', '=', expected_update_date)
+            }
+            const result = await query
                 .set('head', false)
-                .execute()
+                .executeTakeFirst()
+
+            if (expected_update_date !== undefined && result.numUpdatedRows === BigInt(0)) {
+                throw new InternalServerError('Concurrent write detected, please try again');
+            }
 
             return await trx.insertInto('electionDB')
                 .values(election)

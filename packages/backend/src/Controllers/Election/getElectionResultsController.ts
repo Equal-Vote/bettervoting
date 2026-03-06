@@ -2,17 +2,17 @@ import ServiceLocator from "../../ServiceLocator";
 import Logger from "../../Services/Logging/Logger";
 import { BadRequest, Forbidden } from "@curveball/http-errors";
 import { Ballot } from '@equal-vote/star-vote-shared/domain_model/Ballot';
-import { Score } from '@equal-vote/star-vote-shared/domain_model/Score';
 import { expectPermission } from "../controllerUtils";
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { VotingMethods } from '../../Tabulators/VotingMethodSelecter';
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
-import { vote, ElectionResults, candidate, rawVote } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
+import { ElectionResults, candidate, rawVote } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
 import { Candidate } from "@equal-vote/star-vote-shared/domain_model/Candidate";
-var seedrandom = require('seedrandom');
 
 const BallotModel = ServiceLocator.ballotsDb();
+
+const trimLower = (s: string) => s.trim().toLowerCase().normalize('NFC');
 
 const getElectionResults = async (req: IElectionRequest, res: Response, next: NextFunction) => {
     const election = req.election
@@ -38,23 +38,70 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
 
     let results: ElectionResults[] = []
     for (let race_index = 0; race_index < election.races.length; race_index++) {
-        const candidates: candidate[] = election.races[race_index].candidates.map((c: Candidate, i) => ({
+        const race = election.races[race_index]
+        const useWriteIns = race.enable_write_in && race.write_in_candidates && race.write_in_candidates.length > 0
+        const writeInCandidates = useWriteIns && race.write_in_candidates ? race.write_in_candidates : []
+
+        // Build candidate list including approved write-in candidates
+        const candidates: candidate[] = race.candidates.map((c: Candidate, i) => ({
             id: c.candidate_id,
             name: c.candidate_name,
-            // These will be set later
             tieBreakOrder: i,
             votesPreferredOver: {},
             winsAgainst: {}
         }))
-        const race_id = election.races[race_index].race_id
+
+        Logger.debug(req, `[WriteIn Debug] race=${race.race_id} useWriteIns=${useWriteIns} writeInCandidates=${JSON.stringify(writeInCandidates.map(wc => ({name: wc.candidate_name, approved: wc.approved, aliases: wc.aliases})))}`);
+
+        if (useWriteIns) {
+            writeInCandidates.forEach((wc, i) => {
+                if (wc.approved) {
+                    candidates.push({
+                        id: `write_in_${wc.candidate_name}`,
+                        name: wc.candidate_name,
+                        tieBreakOrder: race.candidates.length + i,
+                        votesPreferredOver: {},
+                        winsAgainst: {}
+                    })
+                }
+            })
+        }
+        Logger.debug(req, `[WriteIn Debug] candidates for tabulation: ${JSON.stringify(candidates.map(c => ({id: c.id, name: c.name})))}`);
+
+        const race_id = race.race_id
         const cvr: rawVote[] = []
-        const num_winners = election.races[race_index].num_winners
-        const voting_method = election.races[race_index].voting_method
+        const num_winners = race.num_winners
+        const voting_method = race.voting_method
+        let numUnprocessedWriteIns = 0
+        let numExcludedWriteIns = 0
+
         ballots.forEach((ballot: Ballot) => {
             const vote = ballot.votes.find((vote) => vote.race_id === race_id)
             if (vote) {
+                const marks: {[key: string]: number} = {}
+                vote.scores.forEach(score => {
+                    const isRegularCandidate = race.candidates.some((c: Candidate) => c.candidate_id === score.candidate_id)
+                    if (isRegularCandidate) {
+                        marks[score.candidate_id] = score.score
+                    } else if (race.enable_write_in && score.write_in_name) {
+                        const write_in_name = score.write_in_name
+                        const writeInCandidate = writeInCandidates.find(wc => wc.aliases.includes(trimLower(write_in_name)))
+                        Logger.debug(req, `[WriteIn Debug] ballot write_in_name="${write_in_name}" matched=${!!writeInCandidate} approved=${writeInCandidate?.approved} matchedAliases=${JSON.stringify(writeInCandidate?.aliases)}`);
+                        if (!writeInCandidate) {
+                            numUnprocessedWriteIns += 1
+                            numExcludedWriteIns += 1
+                        } else if (writeInCandidate.approved) {
+                            const wcId = `write_in_${writeInCandidate.candidate_name}`
+                            if (!(wcId in marks)) {
+                                marks[wcId] = score.score
+                            }
+                        } else {
+                            numExcludedWriteIns += 1
+                        }
+                    }
+                })
                 cvr.push({
-                    marks: Object.fromEntries(vote.scores.map(score => [score.candidate_id, score.score])),
+                    marks,
                     overvote_rank: vote?.overvote_rank,
                     has_duplicate_rank: vote?.has_duplicate_rank,
                 })
@@ -66,7 +113,12 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
         }
         const msg = `Tabulating results for ${voting_method} election`
         Logger.info(req, msg);
-        results[race_index] = VotingMethods[voting_method](candidates, cvr, num_winners, election.settings)
+        const tabulationResult = VotingMethods[voting_method](candidates, cvr, num_winners, election.settings)
+        results[race_index] = {
+            ...tabulationResult,
+            numUnprocessedWriteIns: race.enable_write_in ? numUnprocessedWriteIns : undefined,
+            numExcludedWriteIns: race.enable_write_in ? numExcludedWriteIns : undefined,
+        };
     }
     
     res.json(

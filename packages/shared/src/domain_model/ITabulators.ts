@@ -3,7 +3,7 @@
 export type keyedObject<T> = {[key: string]: T};
 
 export type rawVote = {
-    marks: keyedObject<number | null>; // candidate id => bubble value mapping
+    marks: keyedObject<number>; // candidate id => bubble value mapping
     overvote_rank?: number;
     has_duplicate_rank?: boolean;
 }
@@ -32,7 +32,7 @@ export type ElectionResults =
     starResults |
     allocatedScoreResults |
     approvalResults |
-    rankedRobinResults | 
+    rankedRobinResults |
     irvResults |
     pluralityResults;
 
@@ -79,6 +79,8 @@ export interface genericResults<CandidateType extends candidate, SummaryType ext
     roundResults: roundResults<CandidateType>[],
     summaryData: SummaryType,
     tieBreakType: tieBreakType,
+    numUnprocessedWriteIns?: number,
+    numExcludedWriteIns?: number,
 }
 
 /////////////// STAR TYPES //////////////////
