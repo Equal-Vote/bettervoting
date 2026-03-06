@@ -1,5 +1,6 @@
 import { ILoggingContext } from '../Services/Logging/ILogger';
 import Logger from '../Services/Logging/Logger';
+import { logSafeHash } from '../Services/Logging/logSafeHash';
 import { IElectionRollStore } from './IElectionRollStore';
 import { Expression, Kysely } from 'kysely'
 import { Database } from './Database';
@@ -53,7 +54,7 @@ export default class ElectionRollDB implements IElectionRollStore {
     }
 
     getByVoterID(election_id: string, voter_id: string, ctx: ILoggingContext): Promise<ElectionRoll | null> {
-        Logger.debug(ctx, `${tableName}.getByVoterID election:${election_id}, voter:${voter_id}`);
+        Logger.debug(ctx, `${tableName}.getByVoterID election:${election_id}, voter:${logSafeHash(voter_id)}`);
 
         return this._postgresClient
             .selectFrom(tableName)
@@ -115,7 +116,7 @@ export default class ElectionRollDB implements IElectionRollStore {
     }
 
     getElectionRoll(election_id: string, voter_id: string | null, email: string | null, ip_hash: string | null, ctx: ILoggingContext): Promise<ElectionRoll[] | null> {
-        Logger.debug(ctx, `${tableName}.get election:${election_id}, voter:${voter_id}`);
+        Logger.debug(ctx, `${tableName}.get election:${election_id}, voter:${logSafeHash(voter_id)}`);
 
         return this._postgresClient
             .selectFrom(tableName)

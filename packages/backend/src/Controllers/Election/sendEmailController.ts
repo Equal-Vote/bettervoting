@@ -11,6 +11,7 @@ import { randomUUID } from "crypto";
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
 import { Imsg } from '../../Services/Email/IEmail';
+import { logSafeHash } from '../../Services/Logging/logSafeHash';
 
 var ElectionRollModel = ServiceLocator.electionRollDb();
 var ElectionModel = ServiceLocator.electionsDb();
@@ -86,7 +87,7 @@ const sendEmailsController = async (req: IElectionRequest, res: Response, next: 
             const rolls = await ElectionRollModel.getElectionRoll(electionId, null, email_request.recipient_email, null, req);
             if (rolls && rolls.length > 0) {
                 if (rolls.length > 1) {
-                    Logger.warn(req, `Multiple voters found with email ${email_request.recipient_email} in election ${electionId}, using first match`);
+                    Logger.warn(req, `Multiple voters found with email ${logSafeHash(email_request.recipient_email)} in election ${electionId}, using first match`);
                 }
                 electionRollResponse = rolls[0];
             }
@@ -187,7 +188,7 @@ async function handleSendEmailEvent(job: { id: string; data: email_request_event
         await ElectionRollModel.getByVoterID(election.election_id, event.voter_id, ctx)
     if (!electionRoll) {
         //this should hopefully never happen
-        Logger.error(ctx, `Could not find voter ${event.voter_id}`);
+        Logger.error(ctx, `Could not find voter ${logSafeHash(event.voter_id)}`);
         throw new InternalServerError('Could not find voter');
     }
     // await sendEmail(ctx, event.election, electionRoll, event.sender, event.url)

@@ -5,6 +5,7 @@ import { expectPermission } from "../controllerUtils";
 import { BadRequest } from "@curveball/http-errors";
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
+import { logSafeHash } from "../../Services/Logging/logSafeHash";
 
 const ElectionRollModel = ServiceLocator.electionRollDb();
 
@@ -40,8 +41,7 @@ const revealVoterIdByEmail = async (req: IElectionRequest, res: Response, next: 
     const actor = req.user?.email || 'unknown';
 
     // PROMINENT LOGGING - This action should be highly visible in logs
-    Logger.error(req, `🚨 BREAK GLASS ACTION 🚨 ${className}.revealVoterIdByEmail - Election: ${electionId}, Email: ${email}, Actor: ${actor}`);
-    console.error(`🚨🚨🚨 BREAK GLASS: Voter ID revealed for ${email} in election ${electionId} by user ${actor} 🚨🚨🚨`);
+    Logger.error(req, `BREAK GLASS ACTION - ${className}.revealVoterIdByEmail - Election: ${electionId}, Email: ${logSafeHash(email)}, Actor: ${logSafeHash(actor)}`);
 
     const electionRoll = await ElectionRollModel.getRollsByElectionID(electionId, req);
     if (!electionRoll) {
@@ -53,7 +53,7 @@ const revealVoterIdByEmail = async (req: IElectionRequest, res: Response, next: 
     // Find the roll entry by email
     const rollEntry = electionRoll.find(roll => roll.email?.toLowerCase() === email.toLowerCase());
     if (!rollEntry) {
-        const msg = `No voter found with email ${email}`;
+        const msg = `No voter found with email ${logSafeHash(email)}`;
         Logger.info(req, msg);
         throw new BadRequest(msg);
     }
@@ -68,7 +68,7 @@ const revealVoterIdByEmail = async (req: IElectionRequest, res: Response, next: 
 
     await ElectionRollModel.update(rollEntry, req, '🚨 VOTER_ID_REVEALED');
 
-    Logger.error(req, `🚨 BREAK GLASS COMPLETED 🚨 Voter ID ${rollEntry.voter_id} revealed for ${email}`);
+    Logger.error(req, `BREAK GLASS COMPLETED - ${className}.revealVoterIdByEmail - Election: ${electionId}, VoterID: ${logSafeHash(rollEntry.voter_id)}, Email: ${logSafeHash(email)}`);
 
     res.json({
         voter_id: rollEntry.voter_id,

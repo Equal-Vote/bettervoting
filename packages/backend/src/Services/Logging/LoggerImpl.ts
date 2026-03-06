@@ -8,6 +8,7 @@ export class LoggerImpl {
     }
 
     debug(context?:ILoggingContext,  message?: any, ...optionalParams: any[]):void{
+        if (process.env.NODE_ENV === 'production') return;
         this.log(context, "", message, ...optionalParams);
     }
 

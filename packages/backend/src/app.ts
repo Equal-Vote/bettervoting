@@ -15,6 +15,7 @@ import swaggerUi from 'swagger-ui-express';
 import swagger from './OpenApi/swagger.json';
 
 import { getUserToken, getUser } from './Controllers/User';
+import { sendGridWebhookController } from './Controllers/sendGridWebhookController';
 const asyncHandler = require('express-async-handler')
 require('./socketHandler')
 
@@ -49,6 +50,7 @@ export default function makeApp() {
     // app.use('/debug',debugRouter)
     app.use('/API/Docs', swaggerUi.serve, swaggerUi.setup(swagger));
     app.post('/API/Token', asyncHandler(getUserToken));
+    app.post('/API/SendGridWebhook', express.raw({ type: 'application/json' }), sendGridWebhookController);
 
     // NOTE: I've removed express.static because it doesn't allow me to inject meta tags
     // https://stackoverflow.com/questions/51120214/how-to-modify-static-file-content-with-express-static
