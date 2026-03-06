@@ -118,34 +118,36 @@ const setWriteInResults = async (req: IElectionRequest, res: Response, next: Nex
     }
 
     const election_id = req.election.election_id;
-    try {
-        const updatedElection = await ElectionsModel.updateElectionInTransaction(
-            election_id,
-            (election) => {
-                const race_index = election.races.findIndex(r => r.race_id === write_in_results.race_id);
-                if (race_index === -1) {
-                    throw new BadRequest('Invalid Race ID')
-                }
-                if (!election.races[race_index].enable_write_in) {
-                    throw new BadRequest('Write-In not enabled for this race')
-                }
-                const existing = election.races[race_index].write_in_candidates || [];
-                election.races[race_index].write_in_candidates = mergeWriteInCandidates(
-                    existing,
-                    write_in_results.write_in_candidates
-                );
-            },
-            req,
-            'Update Write-In Candidates'
-        );
-        res.json({ election: updatedElection });
-    } catch (err) {
-        if (err instanceof BadRequest || err instanceof InternalServerError) {
-            throw err;
-        }
-        Logger.error(req, `Transaction error: ${err}`);
-        throw new InternalServerError('Concurrent write detected, please try again');
+
+    // Read the current election and note its update_date
+    const election = await ElectionsModel.getElectionByID(election_id, req);
+    if (!election) {
+        throw new InternalServerError(`Election ${election_id} not found`);
     }
+    const expected_update_date = election.update_date as string;
+
+    // Modify in memory
+    const race_index = election.races.findIndex(r => r.race_id === write_in_results.race_id);
+    if (race_index === -1) {
+        throw new BadRequest('Invalid Race ID')
+    }
+    if (!election.races[race_index].enable_write_in) {
+        throw new BadRequest('Write-In not enabled for this race')
+    }
+    const existing = election.races[race_index].write_in_candidates || [];
+    election.races[race_index].write_in_candidates = mergeWriteInCandidates(
+        existing,
+        write_in_results.write_in_candidates
+    );
+
+    // Update with optimistic concurrency check
+    const updatedElection = await ElectionsModel.updateElection(
+        election,
+        req,
+        'Update Write-In Candidates',
+        expected_update_date
+    );
+    res.json({ election: updatedElection });
 }
 
 export {
