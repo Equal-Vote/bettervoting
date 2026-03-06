@@ -11,85 +11,29 @@ var ElectionsModel = ServiceLocator.electionsDb();
 
 const trimLower = (s: string) => s.trim().toLowerCase().normalize('NFC');
 
-function mergeWriteInCandidates(existing: WriteInCandidate[], incoming: WriteInCandidate[]): WriteInCandidate[] {
-    // Build existingByKey: map trimLower(name) and trimLower(each alias) to the same object
-    const existingByKey = new Map<string, WriteInCandidate>();
-    for (const ex of existing) {
-        existingByKey.set(trimLower(ex.candidate_name), ex);
-        for (const alias of (ex.aliases || [])) {
-            existingByKey.set(trimLower(alias), ex);
+function validateWriteInCandidates(candidates: unknown[]): WriteInCandidate[] {
+    const result: WriteInCandidate[] = [];
+    for (const c of candidates) {
+        if (typeof c !== 'object' || c === null) {
+            throw new BadRequest('Each write_in_candidate must be an object');
         }
-    }
-
-    // Track all keys referenced by incoming entries
-    const seenKeys = new Set<string>();
-    // Result map keyed by trimLower of official name
-    const resultMap = new Map<string, WriteInCandidate>();
-
-    for (const inc of incoming) {
-        const key = trimLower(inc.candidate_name);
-        const prior = existingByKey.get(key);
-
-        // Official name: use incoming name (trimmed). If empty and prior had a name, keep prior.
-        let officialName = inc.candidate_name.trim();
-        if (!officialName && prior && prior.candidate_name.trim()) {
-            officialName = prior.candidate_name.trim();
+        const obj = c as Record<string, unknown>;
+        if (typeof obj.candidate_name !== 'string' || !obj.candidate_name.trim()) {
+            throw new BadRequest('Each write_in_candidate must have a non-empty candidate_name string');
         }
-        const officialKey = trimLower(officialName);
-
-        // Collect all aliases: union of incoming aliases + prior aliases + prior name (if different)
-        const aliasSet = new Map<string, string>(); // trimLower -> original form
-        for (const a of (inc.aliases || [])) {
-            const ak = trimLower(a);
-            if (ak && ak !== officialKey) aliasSet.set(ak, a.trim());
+        if (typeof obj.approved !== 'boolean') {
+            throw new BadRequest('Each write_in_candidate must have a boolean approved field');
         }
-        if (prior) {
-            for (const a of (prior.aliases || [])) {
-                const ak = trimLower(a);
-                if (ak && ak !== officialKey && !aliasSet.has(ak)) aliasSet.set(ak, a.trim());
-            }
-            const priorNameKey = trimLower(prior.candidate_name);
-            if (priorNameKey && priorNameKey !== officialKey && !aliasSet.has(priorNameKey)) {
-                aliasSet.set(priorNameKey, prior.candidate_name.trim());
-            }
+        if (!Array.isArray(obj.aliases) || !obj.aliases.every((a: unknown) => typeof a === 'string')) {
+            throw new BadRequest('Each write_in_candidate must have an aliases array of strings');
         }
-
-        // Track all keys this incoming entry touches
-        seenKeys.add(key);
-        seenKeys.add(officialKey);
-        for (const a of (inc.aliases || [])) {
-            seenKeys.add(trimLower(a));
-        }
-        if (prior) {
-            seenKeys.add(trimLower(prior.candidate_name));
-            for (const a of (prior.aliases || [])) {
-                seenKeys.add(trimLower(a));
-            }
-        }
-
-        // Always include the official name itself as an alias so ballot lookup by name works
-        if (officialName && !aliasSet.has(officialKey)) {
-            aliasSet.set(officialKey, officialName);
-        }
-
-        resultMap.set(officialKey, {
-            candidate_name: officialName,
-            approved: inc.approved,
-            aliases: Array.from(aliasSet.values()),
+        result.push({
+            candidate_name: obj.candidate_name.trim(),
+            approved: obj.approved,
+            aliases: (obj.aliases as string[]).map((a: string) => a.trim()).filter(Boolean),
         });
     }
-
-    // Preserve unseen existing candidates
-    for (const ex of existing) {
-        const exKey = trimLower(ex.candidate_name);
-        const allExKeys = [exKey, ...(ex.aliases || []).map(trimLower)];
-        const wasReferenced = allExKeys.some(k => seenKeys.has(k));
-        if (!wasReferenced && !resultMap.has(exKey)) {
-            resultMap.set(exKey, { ...ex });
-        }
-    }
-
-    return Array.from(resultMap.values());
+    return result;
 }
 
 const setWriteInResults = async (req: IElectionRequest, res: Response, next: NextFunction) => {
@@ -107,9 +51,11 @@ const setWriteInResults = async (req: IElectionRequest, res: Response, next: Nex
         throw new BadRequest('write_in_results.write_in_candidates must be an array')
     }
 
+    const validatedCandidates = validateWriteInCandidates(write_in_results.write_in_candidates);
+
     // Server-side dedup check: reject if two incoming candidates trim-lowercase to same key
     const incomingKeys = new Set<string>();
-    for (const c of write_in_results.write_in_candidates) {
+    for (const c of validatedCandidates) {
         const key = trimLower(c.candidate_name);
         if (incomingKeys.has(key)) {
             throw new BadRequest(`Duplicate candidate name: "${c.candidate_name}"`)
@@ -134,11 +80,7 @@ const setWriteInResults = async (req: IElectionRequest, res: Response, next: Nex
     if (!election.races[race_index].enable_write_in) {
         throw new BadRequest('Write-In not enabled for this race')
     }
-    const existing = election.races[race_index].write_in_candidates || [];
-    election.races[race_index].write_in_candidates = mergeWriteInCandidates(
-        existing,
-        write_in_results.write_in_candidates
-    );
+    election.races[race_index].write_in_candidates = validatedCandidates;
 
     // Update with optimistic concurrency check
     const updatedElection = await ElectionsModel.updateElection(
