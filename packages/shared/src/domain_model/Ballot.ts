@@ -117,7 +117,7 @@ export function ballotValidation(election: Election, obj:NewBallot): string | nu
             const numCandidates = race.candidates.length;
             vote.scores.forEach(score => {
                 // Arend: Removing check against numCandidates, that's not necessarily true for public RCV elections
-                    if (score && /*score.score > numCandidates ||*/ (maxRankings && score.score > maxRankings) || score.score < 0) {
+                    if (score && (/*score.score > numCandidates ||*/ (maxRankings && score.score > maxRankings) || score.score < 0)) {
                         outOfBoundsError +=  `Race: ${race.title}, Score: ${score.score}; `;
                     }
                 })
@@ -126,7 +126,7 @@ export function ballotValidation(election: Election, obj:NewBallot): string | nu
         //Checks if the score exceeds 5 for STAR and STAR_PR elections
          else  if ([ 'STAR', 'STAR_PR'].includes(race.voting_method)) {
             vote.scores.forEach(score => {
-                    if (score && score.score > 5 || score.score < 0) {
+                    if (score && (score.score > 5 || score.score < 0)) {
                         outOfBoundsError +=  `Race: ${race.title}, Score: ${score.score}; `;
                     }
                 })
@@ -134,7 +134,7 @@ export function ballotValidation(election: Election, obj:NewBallot): string | nu
         //Checks if the score exceeds 1 for Approval and Plurality elections
          else if (['Approval', 'Plurality'].includes(race.voting_method)) {
             vote.scores.forEach(score => {
-                    if (score && score.score > 1 || score.score < 0) {
+                    if (score && (score.score > 1 || score.score < 0)) {
                         outOfBoundsError +=  `Race: ${race.title}, Score: ${score.score}; `;
                     }
                 })
