@@ -7,6 +7,7 @@ import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
 import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { ElectionRoll, ElectionRollAction } from '@equal-vote/star-vote-shared/domain_model/ElectionRoll';
+import { logSafeHash } from '../../Services/Logging/logSafeHash';
 
 const ElectionRollModel = ServiceLocator.electionRollDb();
 
@@ -141,7 +142,7 @@ const getRollsByElectionID = async (req: IElectionRequest, res: Response, next: 
 }
 
 const getByVoterID = async (req: IElectionRequest, res: Response, next: NextFunction) => {
-    Logger.info(req, `${className}.getByVoterID ${req.election.election_id} ${req.params.voter_id}`)
+    Logger.info(req, `${className}.getByVoterID ${req.election.election_id} ${logSafeHash(req.params.voter_id)}`)
     const electionRollEntry = await ElectionRollModel.getByVoterID(req.election.election_id, req.params.voter_id, req)
     if (!electionRollEntry) {
         const msg = "Voter Roll not found";

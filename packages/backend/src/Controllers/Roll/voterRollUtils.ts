@@ -6,6 +6,7 @@ import Logger from "../../Services/Logging/Logger";
 import { InternalServerError, Unauthorized } from "@curveball/http-errors";
 import { ILoggingContext } from "../../Services/Logging/ILogger";
 import { hashString } from "../controllerUtils";
+import { logSafeHash } from "../../Services/Logging/logSafeHash";
 import { makeUniqueID, ID_LENGTHS, ID_PREFIXES } from "@equal-vote/star-vote-shared/utils/makeID";
 
 const ElectionRollModel = ServiceLocator.electionRollDb();
@@ -84,23 +85,23 @@ export async function getOrCreateElectionRoll(req: IRequest, election: Election,
     if (electionRollEntries.length > 1) {
         // Multiple election rolls match some of the authentication fields, shouldn't occur but throw error if it does
         // Maybe could happen if someone submits valid voter ID seperate valid email
-        Logger.error(req, "Multiple election roll entries found", electionRollEntries);
+        Logger.error(req, `Multiple election roll entries found (${electionRollEntries.length} entries)`);
         throw new InternalServerError('Multiple election roll entries found');
     }
     if (election.settings.voter_authentication.ip_address && electionRollEntries[0].ip_hash) {
         if (electionRollEntries[0].ip_hash !== ip_hash) {
-            Logger.error(req, "IP Address does not match saved voter roll", electionRollEntries);
+            Logger.error(req, `IP Address does not match saved voter roll, voter: ${logSafeHash(electionRollEntries[0].voter_id)}`);
             throw new Unauthorized('IP Address does not match saved voter roll');
         }
     }
     if (election.settings.voter_authentication.email && electionRollEntries[0].email !== email) {
         // Email doesn't match saved election roll, for example if email and voter ID are selected but email doesn't match the voter ID 
-        Logger.error(req, "Email does not match saved election roll", electionRollEntries);
+        Logger.error(req, `Email does not match saved election roll, voter: ${logSafeHash(electionRollEntries[0].voter_id)}`);
         throw new Unauthorized('Email does not match saved election roll');
     }
     if (election.settings.voter_authentication.voter_id && electionRollEntries[0].voter_id.trim() !== voter_id.trim()) {
         // Voter ID does not match saved election roll, for example if email and voter ID are selected but email doesn't match the voter ID 
-        Logger.error(req, "Voter ID does not match saved election roll", electionRollEntries);
+        Logger.error(req, `Voter ID does not match saved election roll, voter: ${logSafeHash(electionRollEntries[0].voter_id)}`);
         throw new Unauthorized('Voter ID does not match saved voter roll');
     }
 
