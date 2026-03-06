@@ -215,6 +215,9 @@ results:
   loading_election: Loading {{capital_election}}...
   details: Race Details
   additional_info: Stats for Nerds
+  not_enough_candidates: |
+    This race currently only has one candidate.
+    Results will be shown when election admins approve additional candidates.
   waiting_for_results: |
     Still waiting for results
     No votes have been cast

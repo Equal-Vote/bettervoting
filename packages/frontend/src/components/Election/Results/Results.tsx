@@ -458,9 +458,10 @@ export default function Results({ race, results }: {race: Race, results: Electio
       </Typography>
       <div className="flexContainer" style={{textAlign: 'center'}}>
         <Box sx={{pageBreakAfter:'avoid', pageBreakInside:'avoid', mx: 10}}>
-        {results.summaryData.nTallyVotes == 0 && <h2>{t('results.waiting_for_results')}</h2>}
-        {results.summaryData.nTallyVotes == 1 && <p>{t('results.single_vote')}</p> }
-        {results.summaryData.nTallyVotes > 1 && <>
+        {results.summaryData.candidates.length === 1 && <h2>{t('results.not_enough_candidates')}</h2>}
+        {results.summaryData.candidates.length !== 1 && results.summaryData.nTallyVotes == 0 && <h2>{t('results.waiting_for_results')}</h2>}
+        {results.summaryData.candidates.length !== 1 && results.summaryData.nTallyVotes == 1 && <p>{t('results.single_vote')}</p> }
+        {results.summaryData.candidates.length !== 1 && results.summaryData.nTallyVotes > 1 && <>
           {showTitleAsTie?
             <>
             <Typography variant="h5" sx={{fontWeight: 'bold'}}>{t('results.tie_title')}</Typography>
