@@ -28,6 +28,13 @@ const About = () => {
           {t('about.description')}
         </Typography>
 
+        <Typography sx={{ mt: 2 }}>
+          For more information, visit our documentation at{' '}
+          <a href="https://docs.bettervoting.com" target="_blank" rel="noreferrer">
+            docs.bettervoting.com
+          </a>.
+        </Typography>
+
         <h1>{t('about.team_title')}</h1>
         <h2>{t('about.leads_title')}</h2>
         <ul>{t('about.leads').map((content, i) => <li key={i}>{content}</li>)}</ul>

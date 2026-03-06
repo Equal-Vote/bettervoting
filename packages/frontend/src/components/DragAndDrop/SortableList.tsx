@@ -31,6 +31,7 @@ interface Props<T extends BaseItem> {
   items: T[];
   identifierKey: keyof T;
   onChange(items: T[]): void;
+  indexIsValid?(index: number): boolean;
   renderItem(item: T, index: number): ReactNode;
 }
 /**
@@ -62,7 +63,8 @@ export function SortableList<T extends BaseItem>({
   items,
   identifierKey,
   onChange,
-  renderItem
+  renderItem,
+  indexIsValid=() => true,
 }: Props<T>) {
   const [active, setActive] = useState<Active | null>(null);
   const activeItem = useMemo(
@@ -87,7 +89,7 @@ export function SortableList<T extends BaseItem>({
           const activeIndex = items.findIndex((item) => item[identifierKey] === active.id);
           const overIndex = items.findIndex((item) => item[identifierKey] === over.id);
 
-          onChange(arrayMove(items, activeIndex, overIndex));
+          if(indexIsValid(overIndex)) onChange(arrayMove(items, activeIndex, overIndex));
         }
         setActive(null);
       }}

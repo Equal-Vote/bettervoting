@@ -687,6 +687,10 @@ disabled_msgs:
 
 # Info bubbles
 tips:
+  nota:
+    title: None of the Above
+    description: This functions just like any other candidate, except that its guaranteed to be listed at the bottom of the ballot. Most methods will allow voters to support None of the Above (NOTA) in addition to the other candidates.
+
   public_archive: 
     title: Public Election Archive
     description: This is a list of public elections that have been replicated on BetterVoting for research purposes

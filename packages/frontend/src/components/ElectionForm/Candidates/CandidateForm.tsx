@@ -1,16 +1,14 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import { Candidate } from "@equal-vote/star-vote-shared/domain_model/Candidate"
-import React from 'react'
 import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
 import Typography from '@mui/material/Typography';
-import { Box, Dialog, DialogActions, DialogContent, DialogTitle, FormHelperText, IconButton, Paper } from '@mui/material';
+import { Box, Dialog, DialogActions, DialogContent, DialogTitle, FormHelperText, IconButton, Link, Paper } from '@mui/material';
 import Cropper from 'react-easy-crop';
 import {getImage, postImage} from './PhotoUtil';
-import DeleteIcon from '@mui/icons-material/Delete';
+import CloseIcon from '@mui/icons-material/Close';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import { CandidatePhoto, FileDropBox, PrimaryButton, SecondaryButton } from '../../styles';
-import useFeatureFlags from '../../FeatureFlagContextProvider';
 import { DragHandle } from '~/components/DragAndDrop';
 import LinkIcon from '@mui/icons-material/Link';
 
@@ -93,16 +91,7 @@ const CandidatePhotoDialog = ({ onEditCandidate, candidate, open, handleClose }:
     </Dialog>
 }
 
-interface CandidateFormProps {
-    onEditCandidate: (newCandidate: Candidate) => void,
-    candidate: Candidate,
-    index: number,
-    onDeleteCandidate: () => void,
-    disabled: boolean,
-    inputRef: (el: React.MutableRefObject<HTMLInputElement[]>) => React.MutableRefObject<HTMLInputElement[]>,
-    onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void,
-    electionState: string
-}
+
 
 const LinkDialog = ({ onEditCandidate, candidate, open, handleClose }) => {
     const onApplyEditCandidate = (updateFunc) => {
@@ -182,25 +171,47 @@ const LinkDialog = ({ onEditCandidate, candidate, open, handleClose }) => {
     )
 }
 
-export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled, inputRef, onKeyDown, electionState}: CandidateFormProps) => {
+interface CandidateFormProps {
+    onEditCandidate: (newCandidate: Candidate) => void,
+    candidate: Candidate,
+    index: number,
+    onDeleteCandidate: () => void,
+    disabled: boolean,
+    special: boolean, // special candidates include none of the above and write in, and they can be deleted, but not edited
+    inputRef: (el: React.MutableRefObject<HTMLInputElement[]>) => React.MutableRefObject<HTMLInputElement[]>,
+    onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void,
+    electionState: string
+}
 
-    const [open, setOpen] = React.useState(false);
-    const [linkOpen, setLinkOpen] = React.useState(false);
-    const flags = useFeatureFlags();
-
+export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled, special, inputRef, onKeyDown, electionState}: CandidateFormProps) => {
+    const [open, setOpen] = useState(false);
+    const [linkOpen, setLinkOpen] = useState(false);
+    // Track hover and focus so the UI (actions + textarea underline) appears on hover or when the textbox is focused
+    const [hovered, setHovered] = useState(false);
+    const [focused, setFocused] = useState(false);
+    const isEmpty = candidate.candidate_name === '';
+ 
     return (
-        <Paper elevation={4} sx={{ width: '100%' }} aria-label={`Candidate ${index + 1} Form`}>
+        <Paper
+            elevation={4}
+            // show actions when hovered or when a child (the TextField) has focus
+            sx={{ width: '100%', '&:hover .candidate-actions, &:focus-within .candidate-actions': { opacity: (isEmpty || special) ? 0 : 1 } }}
+            aria-label={`Candidate ${index + 1} Form`}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+        >
             <Box
                 sx={{ display: 'flex', justifyContent: 'space-between', bgcolor: 'background.paper', borderRadius: 10 }}
                 alignItems={'center'}
             >
-                <DragHandle style={{marginLeft: 5}} disabled={disabled} ariaLabel={`Drag Candidate Number ${index + 1}`}/>
+               <DragHandle className="candidate-actions" sx={{ opacity: 0, transition: 'opacity 150ms ease' }} disabled={disabled || special || isEmpty} ariaLabel={`Drag Candidate Number ${index + 1}`}/>
 
-                <Box sx={{ overflow: 'hidden', textOverflow: 'ellipsis', width: '100%', pl: 2 }}>
+                <Box sx={{ overflow: 'hidden', textOverflow: 'ellipsis', width: '100%' }}>
                     <TextField
                         id={`candidate-name-${index + 1}`}
                         inputProps={{ "aria-label": `Candidate ${index + 1} Name` }}
                         // data-testid={`candidate-name-${index + 1}`}
+                        disabled={disabled || special}
                         type="text"
                         value={candidate.candidate_name}
                         fullWidth
@@ -209,31 +220,38 @@ export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled
                         onChange={(e) => onEditCandidate({ ...candidate, candidate_name: e.target.value })}
                         inputRef={inputRef}
                         onKeyDown={onKeyDown}
+                        onFocus={() => setFocused(true)}
+                        onBlur={() => setFocused(false)}
+                        // show underline when hovered OR focused OR when the candidate name is empty; always hide if it's a special candidate
+                        InputProps={{ disableUnderline: special || !(hovered || focused || isEmpty)}}
                         multiline
-                        disabled={electionState !== 'draft'}
                     />
                 </Box>                    
-
-                <IconButton
-                    aria-label={`Edit Candidate Photo ${index + 1}`}
-                    color={candidate.photo_filename ? 'info' : 'default'}
-                    onClick={() => setOpen(true)}
-                    disabled={disabled}>
-                    <PhotoCameraIcon />
-                </IconButton>
-                <IconButton
-                    aria-label={`Update Link for Candidate Number ${index + 1}`}
-                    color={candidate.candidate_url ? 'info' : 'default'}
-                    onClick={() => setLinkOpen(true)}
-                    disabled={disabled}>
-                    < LinkIcon/>
-                </IconButton>
+                <Box className="candidate-actions" sx={{ display: 'flex', alignItems: 'center', gap: 0, opacity: 0, transition: 'opacity 150ms ease' }}>
+                    <IconButton
+                        aria-label={`Edit Candidate Photo ${index + 1}`}
+                        color={candidate.photo_filename ? 'info' : 'default'}
+                        onClick={() => setOpen(true)}
+                        disabled={disabled || special || isEmpty}>
+                        <PhotoCameraIcon />
+                    </IconButton>
+                    <IconButton
+                        aria-label={`Update Link for Candidate Number ${index + 1}`}
+                        color={candidate.candidate_url ? 'info' : 'default'}
+                        onClick={() => setLinkOpen(true)}
+                        disabled={disabled || special || isEmpty}>
+                        < LinkIcon/>
+                    </IconButton>
+                </Box>
                 <IconButton
                     aria-label={`Delete Candidate Number ${index + 1}`}
-                    color="error"
                     onClick={onDeleteCandidate}
-                    disabled={disabled}>
-                    <DeleteIcon />
+                    disabled={disabled || isEmpty}
+                    sx={{
+                        opacity: isEmpty ? 0 : 1
+                    }}
+                >
+                    <CloseIcon />
                 </IconButton>
             </Box>
             <CandidatePhotoDialog onEditCandidate={onEditCandidate} candidate={candidate} open={open} handleClose={() => setOpen(false)} />

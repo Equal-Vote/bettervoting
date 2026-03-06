@@ -14,25 +14,25 @@ const className = "VoterRollState.Controllers";
 
 const approveElectionRoll = async (req: IElectionRequest, res: Response, next: NextFunction) => {
     Logger.info(req, `${className}.approveElectionRoll ${req.params.id}`);
-    changeElectionRollState(req, ElectionRollState.approved, [ElectionRollState.registered, ElectionRollState.flagged], permissions.canApproveElectionRoll)
+    await changeElectionRollState(req, ElectionRollState.approved, [ElectionRollState.registered, ElectionRollState.flagged], permissions.canApproveElectionRoll)
     res.status(200).json({})
 }
 
 const flagElectionRoll = async (req: IElectionRequest, res: Response, next: NextFunction) => {
     Logger.info(req, `${className}.flagElectionRoll ${req.params.id}`);
-    changeElectionRollState(req, ElectionRollState.flagged, [ElectionRollState.approved, ElectionRollState.registered, ElectionRollState.invalid], permissions.canFlagElectionRoll)
+    await changeElectionRollState(req, ElectionRollState.flagged, [ElectionRollState.approved, ElectionRollState.registered, ElectionRollState.invalid], permissions.canFlagElectionRoll)
     res.status(200).json({})
 }
 
 const invalidateElectionRoll = async (req: IElectionRequest, res: Response, next: NextFunction) => {
     Logger.info(req, `${className}.flagElectionRoll ${req.params.id}`);
-    changeElectionRollState(req, ElectionRollState.invalid, [ElectionRollState.flagged], permissions.canInvalidateBallot)
+    await changeElectionRollState(req, ElectionRollState.invalid, [ElectionRollState.flagged], permissions.canInvalidateBallot)
     res.status(200).json({})
 }
 
 const uninvalidateElectionRoll = async (req: IElectionRequest, res: Response, next: NextFunction) => {
     Logger.info(req, `${className}.flagElectionRoll ${req.params.id}`);
-    changeElectionRollState(req, ElectionRollState.flagged, [ElectionRollState.invalid], permissions.canInvalidateBallot)
+    await changeElectionRollState(req, ElectionRollState.flagged, [ElectionRollState.invalid], permissions.canInvalidateBallot)
     res.status(200).json({})
 }
 

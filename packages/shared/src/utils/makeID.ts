@@ -17,6 +17,8 @@ export const ID_PREFIXES = {
   VOTER_SLACK: 'vs',
 } as const;
 
+// nota = none of the above, this won't collide with the standard pattern because it has vowels, and the id length is different
+export const NOTA_ID = 'c-nota'; 
 
 // Removing vowels to avoid spelling real words in IDS (especially don't want curse words)
 // also removing o/0 and 1/l to avoid confusion if someone was manually copying the 
@@ -53,6 +55,34 @@ export async function makeUniqueID(
   
   if(i === MAX_ITERATIONS) throw new Error("Failed to generate unique ID");
   return currentId;
+}
+
+// Dev election constants and helpers
+export const DEV_ELECTION_PREFIX = 'devtest';
+
+export function devElectionId(name: string): string {
+    return `${DEV_ELECTION_PREFIX}${name}`;
+}
+
+export function devBallotId(electionId: string, index: number): string {
+    return `${ID_PREFIXES.BALLOT}-${electionId}-ballot${index}`;
+}
+
+export function devBallotIdPrefix(electionId: string): string {
+    return `${ID_PREFIXES.BALLOT}-${electionId}-ballot`;
+}
+
+export function validateDevElectionId(electionId: string): void {
+    if (!electionId.startsWith(DEV_ELECTION_PREFIX)) {
+        throw new Error(`Election ID "${electionId}" must start with "${DEV_ELECTION_PREFIX}"`);
+    }
+}
+
+export function validateDevBallotId(ballotId: string, electionId: string): void {
+    const expectedPrefix = devBallotIdPrefix(electionId);
+    if (!ballotId.startsWith(expectedPrefix)) {
+        throw new Error(`Ballot ID "${ballotId}" must start with "${expectedPrefix}" — use devBallotId() to generate ballot IDs`);
+    }
 }
 
 // Synchronous version for when collision checking is needed but async isn't required

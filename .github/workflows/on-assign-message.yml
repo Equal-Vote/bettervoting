@@ -1,0 +1,50 @@
+name: On-Assign Message
+
+on:
+  issues:
+    types: [assigned]
+
+jobs:
+  post-assignment-message:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      issues: write
+    
+    steps:
+      - name: Post welcome message to assignee
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const assignee = context.payload.assignee.login;
+            const assigner = context.payload.sender.login;
+            const issueNumber = context.payload.issue.number;
+            
+            console.log(`Assignment event: assignee=${assignee}, assigner=${assigner}`);
+            
+            // Only post message if user self-assigned (assignee === assigner)
+            if (assignee !== assigner) {
+              console.log(`Skipping: Issue was assigned by ${assigner} to ${assignee} (not self-assigned)`);
+              return;
+            }
+            
+            console.log(`Self-assignment detected! Posting welcome message.`);
+            
+            const message = `👋 Hi @${assignee}! Thank you for taking on this issue!
+
+            To help us track progress and support you effectively, please provide the following information:
+
+            **Availability for this week:**
+            <!-- How many hours can you dedicate to this issue this week? -->
+
+            **My estimated ETA for completing this issue:**
+            <!-- When do you expect to have this completed? -->
+
+            Feel free to ask questions in the [#bettervoting Slack channel](https://starvoting.slack.com/archives/C01EBAT283H) if you need any help!`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: message
+            });
