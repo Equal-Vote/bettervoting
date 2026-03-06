@@ -92,15 +92,18 @@ export function ballotValidation(election: Election, obj:NewBallot): string | nu
             return
         }
 
-        // Validate score types
+        // Validate score types (null is allowed — it means the voter didn't score this candidate)
         vote.scores.forEach(score => {
-            if (score && typeof score.score !== 'number') {
+            if (score && score.score !== null && typeof score.score !== 'number') {
                 outOfBoundsError += `Race: ${race.title}, Score is not a number: ${score.score}; `;
             }
         })
 
         // Validate write-ins
         const writeIns = vote.scores.filter(s => s.write_in_name)
+        if (!race.enable_write_in && writeIns.length > 0) {
+            writeInError += `Race: ${race.title}, Write-ins not enabled for this race; `;
+        }
         if (writeIns.length > 10) {
             writeInError += `Race: ${race.title}, Too many write-ins (${writeIns.length}, max 10); `;
         }

@@ -49,7 +49,7 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
             winsAgainst: {}
         }))
 
-        Logger.info(req, `[WriteIn Debug] race=${race.race_id} useWriteIns=${useWriteIns} writeInCandidates=${JSON.stringify(writeInCandidates.map(wc => ({name: wc.candidate_name, approved: wc.approved, aliases: wc.aliases})))}`);
+        Logger.debug(req, `[WriteIn Debug] race=${race.race_id} useWriteIns=${useWriteIns} writeInCandidates=${JSON.stringify(writeInCandidates.map(wc => ({name: wc.candidate_name, approved: wc.approved, aliases: wc.aliases})))}`);
 
         if (useWriteIns) {
             writeInCandidates.forEach((wc, i) => {
@@ -64,7 +64,7 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
                 }
             })
         }
-        Logger.info(req, `[WriteIn Debug] candidates for tabulation: ${JSON.stringify(candidates.map(c => ({id: c.id, name: c.name})))}`);
+        Logger.debug(req, `[WriteIn Debug] candidates for tabulation: ${JSON.stringify(candidates.map(c => ({id: c.id, name: c.name})))}`);
 
         const race_id = race.race_id
         const cvr: rawVote[] = []
@@ -76,7 +76,7 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
         ballots.forEach((ballot: Ballot) => {
             const vote = ballot.votes.find((vote) => vote.race_id === race_id)
             if (vote) {
-                const marks: {[key: string]: number | null} = {}
+                const marks: {[key: string]: number} = {}
                 vote.scores.forEach(score => {
                     const isRegularCandidate = race.candidates.some((c: Candidate) => c.candidate_id === score.candidate_id)
                     if (isRegularCandidate) {
@@ -84,7 +84,7 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
                     } else if (race.enable_write_in && score.write_in_name) {
                         const write_in_name = score.write_in_name
                         const writeInCandidate = writeInCandidates.find(wc => wc.aliases.includes(write_in_name))
-                        Logger.info(req, `[WriteIn Debug] ballot write_in_name="${write_in_name}" matched=${!!writeInCandidate} approved=${writeInCandidate?.approved} matchedAliases=${JSON.stringify(writeInCandidate?.aliases)}`);
+                        Logger.debug(req, `[WriteIn Debug] ballot write_in_name="${write_in_name}" matched=${!!writeInCandidate} approved=${writeInCandidate?.approved} matchedAliases=${JSON.stringify(writeInCandidate?.aliases)}`);
                         if (!writeInCandidate) {
                             numUnprocessedWriteIns += 1
                             numExcludedWriteIns += 1
