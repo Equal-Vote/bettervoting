@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import React, { useEffect } from "react"
 import Container from '@mui/material/Container';
 import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
 import { useGetBallots } from "../../../hooks/useAPI";
@@ -49,7 +49,7 @@ const ViewBallots = () => {
                                     <TableCell> Precinct </TableCell>
                                 }
                                 <TableCell> Status </TableCell>
-                                {election.races.map((race) => (<>
+                                {election.races.map((race) => (<React.Fragment key={race.race_id}>
                                     {race.candidates.map((candidate) => (
                                         <TableCell key={candidate.candidate_id} >
                                             {candidate.candidate_name}
@@ -60,7 +60,7 @@ const ViewBallots = () => {
                                             Write-ins
                                         </TableCell>
                                     }
-                                </>))}
+                                </React.Fragment>))}
                             </TableHead>
                             <TableBody>
                                 {data.ballots.map((ballot) => (
@@ -72,12 +72,12 @@ const ViewBallots = () => {
                                         <TableCell >{ballot.status.toString()}</TableCell>
                                         {election.races.map((race) => {
                                             const vote = ballot.votes.find(v => v.race_id === race.race_id);
-                                            return (<>
+                                            return (<React.Fragment key={`${ballot.ballot_id}-${race.race_id}`}>
                                                 {race.candidates.map((candidate) => {
                                                     const score = vote?.scores.find(s => s.candidate_id === candidate.candidate_id);
                                                     return (
                                                         <TableCell key={`${ballot.ballot_id}-${candidate.candidate_id}`}>
-                                                            {score?.score || ''}
+                                                            {score?.score ?? ''}
                                                         </TableCell>
                                                     );
                                                 })}
@@ -85,11 +85,11 @@ const ViewBallots = () => {
                                                     const writeIns = vote?.scores.filter(s => s.write_in_name) || [];
                                                     return (
                                                         <TableCell key={`${ballot.ballot_id}-${race.race_id}-writeins`}>
-                                                            {writeIns.map(s => `${s.write_in_name}: ${s.score || 0}`).join(', ')}
+                                                            {writeIns.map(s => `${s.write_in_name}: ${s.score ?? 0}`).join(', ')}
                                                         </TableCell>
                                                     );
                                                 })()}
-                                            </>);
+                                            </React.Fragment>);
                                         })}
                                     </TableRow>
                                 ))}
