@@ -110,11 +110,10 @@ const WriteInApproval = () => {
         }
         setError(null);
 
-        // Send just candidate_name and approved; backend merge handles aliases
         const candidates: WriteInCandidate[] = rows.map(r => ({
             candidate_name: r.officialName,
             approved: r.approved,
-            aliases: [],
+            aliases: [r.key],
         }));
 
         const result = await setWriteInResults({
