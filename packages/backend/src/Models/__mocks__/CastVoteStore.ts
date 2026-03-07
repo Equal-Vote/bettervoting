@@ -14,13 +14,6 @@ export default class CastVoteStore {
         this._rollStore = rollStore;
     }
 
-    async submitBallot(ballot: Ballot, roll:ElectionRoll, ctx:ILoggingContext, reason:string): Promise<Ballot> {
-
-        const savedBallot = await this._ballotStore.submitBallot(ballot, ctx, reason);
-        await this._rollStore.update(roll, ctx, reason);
-        return savedBallot;
-    }
-
     async submitBallotEvent(event: any, ctx: ILoggingContext): Promise<void> {
         if (event.roll) {
             const currentRoll = await this._rollStore.getByVoterID(event.roll.election_id, event.roll.voter_id, ctx);

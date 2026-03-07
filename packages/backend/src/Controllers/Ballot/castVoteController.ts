@@ -21,7 +21,6 @@ import { Score } from "@equal-vote/star-vote-shared/domain_model/Score";
 import { makeUniqueID, ID_LENGTHS, ID_PREFIXES } from "@equal-vote/star-vote-shared/utils/makeID";
 
 const ElectionsModel = ServiceLocator.electionsDb();
-const ElectionRollModel = ServiceLocator.electionRollDb();
 const BallotModel = ServiceLocator.ballotsDb();
 import { CastVoteEvent } from "../../Models/CastVoteStore";
 const EventQueue = ServiceLocator.eventQueue();
@@ -68,6 +67,7 @@ async function makeBallotEvent(req: IElectionRequest, targetElection: Election, 
     //some ballot info should be server-authorative
     // TODO: move to db trigger
     inputBallot.date_submitted = Date.now();
+    inputBallot.status = 'submitted';
     if (inputBallot.history == null){
         inputBallot.history = [];
     }
@@ -91,8 +91,10 @@ async function makeBallotEvent(req: IElectionRequest, targetElection: Election, 
             async (id: string) => await BallotModel.getBallotByID(id, req) !== null
         );
     }
-    //TODO, ensure the user ID is added to the ballot...
-    //should server-authenticate the user id based on auth token
+    if (!inputBallot.user_id) {
+        inputBallot.user_id = voter_id || req.user?.sub || undefined;
+    }
+
     inputBallot.history.push({
         action_type: submitType,
         actor: roll===null ? '' : roll.voter_id ,
@@ -208,7 +210,12 @@ async function uploadBallotsController(req: IElectionRequest, res: Response, nex
                     await ServiceLocator.castVoteStore().submitBallotEvent(event, ctx);
                     successfullySavedEvents.push(event);
                 } catch (e: any) {
-                    Logger.error(req, `Could not upload ballot for ${event.roll?.voter_id}: ${e.message}`);
+                    Logger.error(req, `Could not upload ballot for ${event.roll?.voter_id || event.inputBallot.user_id || 'unknown'}: ${e.message}`);
+                    const index = events.indexOf(event);
+                    if (index !== -1) {
+                        output[index].success = false;
+                        output[index].message = e.message;
+                    }
                 }
             }
             if (successfullySavedEvents.length > 0) {
