@@ -7,7 +7,7 @@ import type {
 } from "@dnd-kit/core";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { DragHandle as MuiDragHandle } from "@mui/icons-material";
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { IconButton } from "@mui/material";
 
 import "./SortableItem.css";
@@ -67,17 +67,12 @@ export function SortableItem({ children, id }: PropsWithChildren<Props>) {
     </SortableItemContext.Provider>
   );
 }
-interface DragHandleProps {
-    style?: CSSProperties;
-    disabled?: boolean;
-    ariaLabel?: string;
-}
-export function DragHandle({ style, disabled, ariaLabel }: DragHandleProps) {
+export function DragHandle({ disabled, ariaLabel, ...props }) {
   const { attributes, listeners, ref } = useContext(SortableItemContext);
 
   return (
-    <IconButton  {...attributes} {...listeners} ref={ref} style={style} disabled={disabled} aria-label={ariaLabel}>
-        <MuiDragHandle />
+    <IconButton  {...attributes} {...listeners} {...props} ref={ref} disabled={disabled} aria-label={ariaLabel}>
+        <DragIndicatorIcon />
     </IconButton>
   );
 }

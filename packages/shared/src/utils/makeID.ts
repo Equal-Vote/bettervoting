@@ -17,6 +17,8 @@ export const ID_PREFIXES = {
   VOTER_SLACK: 'vs',
 } as const;
 
+// nota = none of the above, this won't collide with the standard pattern because it has vowels, and the id length is different
+export const NOTA_ID = 'c-nota'; 
 
 // Removing vowels to avoid spelling real words in IDS (especially don't want curse words)
 // also removing o/0 and 1/l to avoid confusion if someone was manually copying the 
