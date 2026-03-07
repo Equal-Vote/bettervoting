@@ -26,7 +26,7 @@ export default class CastVoteStore {
 
     async submitBallotEvent(event: CastVoteEvent, ctx: ILoggingContext): Promise<void> {
         return this._db.transaction().execute(async (trx) => {
-                if (event.inputBallot.user_id) {
+                if (event.inputBallot.user_id && !event.isBallotUpdate) {
                     const duplicateBallot = await trx.selectFrom('ballotDB')
                         .select(['ballot_id'])
                         .where('election_id', '=', event.inputBallot.election_id)
@@ -34,7 +34,7 @@ export default class CastVoteStore {
                         .where('head', '=', true)
                         .executeTakeFirst();
                     
-                    if (duplicateBallot && !event.isBallotUpdate) {
+                    if (duplicateBallot) {
                         Logger.info(ctx, `Duplicate ballot detected for roll-less election user_id: ${event.inputBallot.user_id}`);
                     }
                 }
@@ -45,13 +45,16 @@ export default class CastVoteStore {
                 ballotToInsert.create_date = new Date().toISOString();
 
                 if (event.isBallotUpdate) {
-                    await trx.updateTable('ballotDB')
+                    const updateBallotResult = await trx.updateTable('ballotDB')
                         .where('ballot_id', '=', ballotToInsert.ballot_id)
                         .where('election_id', '=', ballotToInsert.election_id)
                         .where('head', '=', true)
                         .set('head', false)
-                        .set('update_date', Date.now().toString())
                         .execute();
+                    
+                    if (Number(updateBallotResult[0].numUpdatedRows) === 0) {
+                        throw new Error("ALREADY_VOTED"); 
+                    }
                     
                     Logger.debug(ctx, `User updates a ballot`);
                 } else {
@@ -77,7 +80,16 @@ export default class CastVoteStore {
                         .execute();
                     
                     if (Number(updateResult[0].numUpdatedRows) === 0) {
-                        throw new Error("ALREADY_VOTED"); 
+                        const existingCount = await trx.selectFrom('electionRollDB')
+                            .where('election_id', '=', event.roll.election_id)
+                            .where('voter_id', '=', event.roll.voter_id)
+                            .where('head', '=', true)
+                            .select('voter_id')
+                            .executeTakeFirst();
+
+                        if (existingCount) {
+                            throw new Error("ALREADY_VOTED"); 
+                        }
                     }
 
                     await trx.insertInto('electionRollDB')
@@ -87,7 +99,8 @@ export default class CastVoteStore {
                     Logger.debug(ctx, `User submits a ballot`);
                 }
         }).catch((e: any) => {
-            if (e?.code === this.POSTGRES_UNIQUE_VIOLATION && e?.constraint === 'electionRollDB_one_head') {
+            if (e?.code === this.POSTGRES_UNIQUE_VIOLATION && 
+                (e?.constraint === 'electionRollDB_one_head' || e?.constraint === 'electionRollDB_pkey')) {
                 throw new Error("ALREADY_VOTED");
             }
             throw e;
