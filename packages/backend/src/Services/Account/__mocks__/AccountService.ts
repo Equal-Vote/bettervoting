@@ -1,4 +1,3 @@
-import { InternalServerError, Unauthorized } from "@curveball/http-errors";
 import { IRequest } from '../../../IRequest';
 import Logger from "../../Logging/Logger";
 import AccountServiceUtils from "../AccountServiceUtils";
@@ -24,6 +23,9 @@ export default class AccountService {
             return jwt.decode(token);
         }
         if (token){
+            if (customKey) {
+                Logger.debug(req, "using custom authKey");
+            }
             const key = customKey ? customKey : this.privateKey;
             return AccountServiceUtils.extractUserFromRequest(req, token, key);
         }

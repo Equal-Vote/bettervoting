@@ -6,8 +6,6 @@ import { InternalServerError } from "@curveball/http-errors";
 import { IRequest } from '../../IRequest';
 import AccountServiceUtils from './AccountServiceUtils';
 
-var jwt = require('jsonwebtoken');
-
 export default class AccountService {
     authConfig;
     private privateKey:string;
@@ -97,6 +95,9 @@ export default class AccountService {
     extractUserFromRequest = (req:IRequest, customKey?:string) => {
         const token = customKey ? req.cookies.custom_id_token : req.cookies.id_token;
         if (token){
+            if (customKey) {
+                Logger.debug(req, "using custom authKey");
+            }
             const key = customKey ? customKey : this.publicKey;
             return AccountServiceUtils.extractUserFromRequest(req, token, key);
         }

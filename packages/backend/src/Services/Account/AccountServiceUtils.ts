@@ -1,4 +1,3 @@
-import { Election } from "@equal-vote/star-vote-shared/domain_model/Election";
 import { IRequest } from "../../IRequest";
 import Logger from "../Logging/Logger";
 
@@ -11,17 +10,12 @@ export default class AccountServiceUtils {
         token: string,
         key: string
     ) => {
-        const inputElection: Election | undefined = req.body.Election;
-        if (inputElection && inputElection.auth_key && inputElection.auth_key != "") {
-            Logger.debug(
-                req,
-                "have input election with custom authKey",
-                inputElection.auth_key
-            );
-            key = inputElection.auth_key;
-        }
+        // TODO: migrate to storing an explicitly-defined auth_algorithm value in the election db
+        const isCustomKeyAsymmetric = key.includes('-----BEGIN PUBLIC KEY') || key.includes('-----BEGIN CERTIFICATE');
+        const algorithms = isCustomKeyAsymmetric ? ['RS256'] : ['HS256'];
+
         try {
-            return jwt.verify(token, key);
+            return jwt.verify(token, key, { algorithms });
         } catch (e: any) {
             Logger.warn(req, "JWT Verify Error: ", e.message);
             throw new Unauthorized();
