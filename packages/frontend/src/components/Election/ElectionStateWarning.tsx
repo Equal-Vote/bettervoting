@@ -8,7 +8,7 @@ export default function ElectionStateWarning
     
     const { t, election } = useElection();
     
-    if(election.state !== state) return <></>
+    if(state && election.state !== state) return <></>
 
     return <Paper sx={{display: 'flex', flexDirection: 'column', maxWidth: 600, gap: 2, padding: 2, m: 'auto', mb:4}}>
         <Box display='flex' flexDirection='row' gap={2} sx={{p: 2, m: 'auto'}}>

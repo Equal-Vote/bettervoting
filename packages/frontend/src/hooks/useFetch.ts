@@ -20,7 +20,7 @@ const useFetch = <Message, Response>(url: string, method: 'get' | 'post' | 'put'
     const { setSnack } = useSnackbar()
 
     const makeRequest = async (data?: Message) => {
-        const options = {
+        const options: RequestInit = {
             method: method,
             headers: {
                 'Accept': 'application/json',

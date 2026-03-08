@@ -28,7 +28,7 @@ const ElectionsYouManage = () => {
         }
         if(electionToClaim && claimKey){
             claim({claim_key: claimKey}).then(res => {
-                if(res){
+                if(res !== false){
                     setSnack({
                         message: `Election has been claimed to your account`,
                         severity: 'success',

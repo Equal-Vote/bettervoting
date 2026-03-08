@@ -1,12 +1,11 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from "react-router";
 import { PrimaryButton } from '../../styles.js';
 import { Box, Breakpoint, Paper, Typography, useMediaQuery } from '@mui/material';
 import { usePostElection } from '~/hooks/useAPI';
 import { setCookie, useCookie } from '~/hooks/useCookie';
 import { NewElection } from '@equal-vote/star-vote-shared/domain_model/Election';
-import useSnackbar from '../../SnackbarContext.js';
-import { makeUniqueIDSync, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
+import { makeUniqueIDSync, makeID, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
 
 import { hashString, scrollToElement, StringObject, TransitionBox, useSubstitutedTranslation } from '../../util.js';
 import useAuthSession from '../../AuthSessionContextProvider.js';
@@ -62,7 +61,8 @@ export const makeDefaultElection = () => {
 
 const Wizard = () => {
     const authSession = useAuthSession();
-    const [tempID] = useCookie('temp_id', '0')
+    const defaultTempId = useMemo(() => makeID(ID_PREFIXES.VOTER, ID_LENGTHS.VOTER), []);
+    const [tempID] = useCookie('temp_id', defaultTempId);
     const navigate = useNavigate()
     const [page, setPage] = useState(0);
     const { isPending, makeRequest: postElection } = usePostElection()
@@ -74,7 +74,12 @@ const Wizard = () => {
     const {t} = useSubstitutedTranslation(election.settings.term_type);
 
     const onAddElection = async (election, subPage) => {
-        election.owner_id = authSession.isLoggedIn() ? authSession.getIdField('sub') : tempID;
+        let submitTempID = tempID;
+        if (tempID === '0') {
+            submitTempID = makeID(ID_PREFIXES.VOTER, ID_LENGTHS.VOTER);
+            setCookie('temp_id', submitTempID);
+        }
+        election.owner_id = authSession.isLoggedIn() ? authSession.getIdField('sub') : submitTempID;
 
         const claimKey = crypto.randomUUID();
         election.claim_key_hash = hashString(claimKey);

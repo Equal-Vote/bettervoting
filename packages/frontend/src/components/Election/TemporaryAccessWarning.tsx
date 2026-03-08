@@ -1,13 +1,16 @@
 import { useCookie } from "~/hooks/useCookie";
+import { useMemo } from 'react';
 import useAuthSession from "../AuthSessionContextProvider";
 import { PrimaryButton } from "../styles";
 import ElectionStateWarning from "./ElectionStateWarning"
 import useElection from "../ElectionContextProvider";
 import { sharedConfig } from "@equal-vote/star-vote-shared/config";
+import { makeID, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
 
 export default () => {
     const authSession = useAuthSession();
-    const [tempID] = useCookie('temp_id', '0');
+    const defaultTempId = useMemo(() => makeID(ID_PREFIXES.VOTER, ID_LENGTHS.VOTER), []);
+    const [tempID] = useCookie('temp_id', defaultTempId);
     const {election, t} = useElection();
 
     const hoursSinceCreate = (new Date().getTime() - new Date(election.create_date).getTime()) / (1000 * 60 * 60)
@@ -17,7 +20,6 @@ export default () => {
 
     return (
         <ElectionStateWarning
-            state='draft'
             title="temporary_access_warning.title"
             description="temporary_access_warning.description"
             hideIcon

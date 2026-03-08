@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useEffect, useMemo } from 'react';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import { Accordion, AccordionDetails, AccordionSummary, Box, IconButton, Link, MenuItem } from '@mui/material';
@@ -35,7 +35,12 @@ const Header = () => {
     const isLandingPage = useLocation().pathname === '/'
 
     // this is important for setting the default value
-    useCookie('temp_id', makeID(ID_PREFIXES.VOTER, ID_LENGTHS.VOTER))
+    const defaultTempId = useMemo(() => makeID(ID_PREFIXES.VOTER, ID_LENGTHS.VOTER), []);
+    const [tempID, setTempID] = useCookie('temp_id', defaultTempId);
+    useEffect(() => {
+        if (tempID === '0') setTempID(makeID(ID_PREFIXES.VOTER, ID_LENGTHS.VOTER));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [tempID]);
     const {t} = useSubstitutedTranslation();
     
     const navItems = [
