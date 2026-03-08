@@ -82,9 +82,9 @@ const electionPostAuthMiddleware = async (req: IElectionRequest, res: any, next:
             hoursSinceCreate < sharedConfig.TEMPORARY_ACCESS_HOURS &&
             hashString(req.cookies[`${req.election.election_id}_claim_key`]) === req.election.claim_key_hash;
 
-        // NOTE: req.user.typ doesn't apply here, since a user can have temp ownership of an election, while also being logged in
+        // we demand typ isn't TEMP_ID to prevent people from spoofing owner_id equality with unverified temp_id cookies
         if (req.user && req.election){
-          if(req.election.owner_id == req.user.sub || tempUserAuth){
+          if((req.election.owner_id == req.user.sub && req.user.typ !== 'TEMP_ID') || tempUserAuth){
             req.user_auth.roles.push(roles.owner)
           }
           if (req.election.admin_ids && req.election.admin_ids.includes(req.user.email)){
