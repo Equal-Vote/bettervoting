@@ -53,7 +53,7 @@ export default class CastVoteStore {
                         .execute();
                     
                     if (Number(updateBallotResult[0].numUpdatedRows) === 0) {
-                        throw new Error("ALREADY_VOTED"); 
+                        throw new Error("CONCURRENT_BALLOT_UPDATE_DETECTED"); 
                     }
                     
                     Logger.debug(ctx, `User updates a ballot`);
@@ -88,7 +88,7 @@ export default class CastVoteStore {
                             .executeTakeFirst();
 
                         if (existingCount) {
-                            throw new Error("ALREADY_VOTED"); 
+                            throw new Error("CONCURRENT_ROLL_EDIT_DETECTED"); 
                         }
                     }
 

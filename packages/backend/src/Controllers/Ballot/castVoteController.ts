@@ -263,6 +263,10 @@ async function castVoteController(req: IElectionRequest, res: Response, next: Ne
             Logger.info(req, "Ballot Rejected. User has already voted.");
             throw new BadRequest("User has already voted");
         }
+        if (e.message === "CONCURRENT_BALLOT_UPDATE_DETECTED" || e.message === "CONCURRENT_ROLL_EDIT_DETECTED") {
+            Logger.info(req, `Ballot Rejected: ${e.message}`);
+            throw new BadRequest("Concurrent edit detected, aborting.");
+        }
         throw e;
     }
 
