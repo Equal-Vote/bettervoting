@@ -67,7 +67,7 @@ export default class ElectionRollDB implements IElectionRollStore{
         return Promise.resolve(res)
     }
 
-    update(voter_roll: ElectionRoll, ctx:ILoggingContext,reason:string): Promise<ElectionRoll | null> {
+    update(voter_roll: ElectionRoll, ctx: ILoggingContext, reason: string, db?: any): Promise<ElectionRoll | null> {
         Logger.debug(ctx, `MockElectionRolls update ${JSON.stringify(voter_roll)}`);
         const index = this._electionRolls.findIndex(electionRoll => {
             var electionMatch = electionRoll.election_id===voter_roll.election_id;

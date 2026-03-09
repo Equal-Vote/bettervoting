@@ -21,19 +21,12 @@ import { Score } from "@equal-vote/star-vote-shared/domain_model/Score";
 import { makeUniqueID, ID_LENGTHS, ID_PREFIXES } from "@equal-vote/star-vote-shared/utils/makeID";
 
 const ElectionsModel = ServiceLocator.electionsDb();
-const ElectionRollModel = ServiceLocator.electionRollDb();
 const BallotModel = ServiceLocator.ballotsDb();
+import { CastVoteEvent } from "../../Models/CastVoteStore";
 const EventQueue = ServiceLocator.eventQueue();
 const EmailService = ServiceLocator.emailService();
 const AccountService = ServiceLocator.accountService();
 
-type CastVoteEvent = {
-    requestId:Uid,
-    inputBallot:Ballot,
-    roll?:ElectionRoll,
-    userEmail?:string,
-    isBallotUpdate: boolean,
-}
 
 // NOTE: discord isn't implemented yet, but that's the plan for the future
 type BallotSubmitType = 'submitted_via_browser' | 'submitted_via_admin' | 'submitted_via_discord';
@@ -74,6 +67,7 @@ async function makeBallotEvent(req: IElectionRequest, targetElection: Election, 
     //some ballot info should be server-authorative
     // TODO: move to db trigger
     inputBallot.date_submitted = Date.now();
+    inputBallot.status = 'submitted';
     if (inputBallot.history == null){
         inputBallot.history = [];
     }
@@ -97,8 +91,10 @@ async function makeBallotEvent(req: IElectionRequest, targetElection: Election, 
             async (id: string) => await BallotModel.getBallotByID(id, req) !== null
         );
     }
-    //TODO, ensure the user ID is added to the ballot...
-    //should server-authenticate the user id based on auth token
+    if (!inputBallot.user_id) {
+        inputBallot.user_id = voter_id || req.user?.sub || undefined;
+    }
+
     inputBallot.history.push({
         action_type: submitType,
         actor: roll===null ? '' : roll.voter_id ,
@@ -123,10 +119,10 @@ async function makeBallotEvent(req: IElectionRequest, targetElection: Election, 
     if(req.election.ballot_source !== 'prior_election') Logger.debug(req, "Submit Ballot:", inputBallot);
 
     return {
-        requestId:req.contextId ? req.contextId : randomUUID(),
-        inputBallot,
-        roll,
-        userEmail:undefined,
+        requestId: req.contextId ? req.contextId : randomUUID(),
+        inputBallot: inputBallot as Ballot,
+        roll: roll || undefined,
+        userEmail: undefined,
         isBallotUpdate: !!updatableBallot,
     }
 }
@@ -205,8 +201,26 @@ async function uploadBallotsController(req: IElectionRequest, res: Response, nex
                 req,
                 `Admin submits a ballot for prior election`
             )
-        }else{
-            await (await EventQueue).publishBatch(castVoteEventQueue, events.filter(event => !('error' in event)));
+        } else {
+            const validEvents = events.filter((event: any) => !('error' in event)) as CastVoteEvent[];
+            const successfullySavedEvents: CastVoteEvent[] = [];
+            for (const event of validEvents) {
+                const ctx = Logger.createContext(event.requestId);
+                try {
+                    await ServiceLocator.castVoteStore().submitBallotEvent(event, ctx);
+                    successfullySavedEvents.push(event);
+                } catch (e: any) {
+                    Logger.error(req, `Could not upload ballot for ${event.roll?.voter_id || event.inputBallot.user_id || 'unknown'}: ${e.message}`);
+                    const index = events.indexOf(event);
+                    if (index !== -1) {
+                        output[index].success = false;
+                        output[index].message = e.message;
+                    }
+                }
+            }
+            if (successfullySavedEvents.length > 0) {
+                await (await EventQueue).publishBatch(castVoteEventQueue, successfullySavedEvents);
+            }
         }
     }catch(err: any){
         const msg = `Could not upload ballots`;
@@ -241,6 +255,21 @@ async function castVoteController(req: IElectionRequest, res: Response, next: Ne
 
     event.userEmail = event.roll?.email ?? AccountService.extractUserFromRequest(req)?.email ?? req.body.receiptEmail;
 
+    const ctx = Logger.createContext(event.requestId);
+    try {
+        await ServiceLocator.castVoteStore().submitBallotEvent(event, ctx);
+    } catch (e: any) {
+        if (e.message === "ALREADY_VOTED") {
+            Logger.info(req, "Ballot Rejected. User has already voted.");
+            throw new BadRequest("User has already voted");
+        }
+        if (e.message === "CONCURRENT_BALLOT_UPDATE_DETECTED" || e.message === "CONCURRENT_ROLL_EDIT_DETECTED") {
+            Logger.info(req, `Ballot Rejected: ${e.message}`);
+            throw new BadRequest("Concurrent edit detected, aborting.");
+        }
+        throw e;
+    }
+
     await (await EventQueue).publish(castVoteEventQueue, event);
 
     if(io != null){ // necessary for tests
@@ -261,23 +290,14 @@ async function castVoteController(req: IElectionRequest, res: Response, next: Ne
 async function handleCastVoteEvent(job: { id: string; data: CastVoteEvent; }):Promise<void> {
     const event = job.data;
     const ctx = Logger.createContext(event.requestId);
-    let savedBallot;
-    if (event.isBallotUpdate) {
-        savedBallot = await BallotModel.updateBallot(event.inputBallot, ctx, `User updates a ballot`);
-    } else {
-        savedBallot = await BallotModel.getBallotByID(event.inputBallot.ballot_id, ctx);
-        if (!savedBallot){
-            savedBallot = await BallotModel.submitBallot(event.inputBallot, ctx, `User submits a ballot`);
-        }
-    }
-
-    if (event.roll != null) {
-        await ElectionRollModel.update(event.roll, ctx, `User submits a ballot`);
-    }
     if (event.userEmail) {
         const targetElection = await ElectionsModel.getElectionByID(event.inputBallot.election_id, ctx);
         if (targetElection == null){
             throw new InternalServerError("Target Election null: " + ctx.contextId);
+        }
+        const savedBallot = await BallotModel.getBallotByID(event.inputBallot.ballot_id, ctx);
+        if (!savedBallot) {
+            throw new InternalServerError("Ballot not found: " + event.inputBallot.ballot_id);
         }
         const url = ServiceLocator.globalData().mainUrl;
         const receipt = Receipt(targetElection, event.userEmail, savedBallot, url, event.roll)

@@ -64,7 +64,7 @@ const ViewBallots = () => {
                                         {flags.isSet('VOTER_FLAGGING') &&
                                             <TableCell >{ballot.precinct || ''}</TableCell>
                                         }
-                                        <TableCell >{ballot.status.toString()}</TableCell>
+                                        <TableCell >{ballot.status?.toString() || 'submitted'}</TableCell>
                                         {ballot.votes.map((vote) => (
                                             vote.scores.map((score) => (
                                                 <TableCell key={score.candidate_id}>{score.score || ''}</TableCell>
