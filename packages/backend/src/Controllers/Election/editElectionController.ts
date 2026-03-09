@@ -14,14 +14,14 @@ var ElectionsModel = ServiceLocator.electionsDb();
 const editElection = async (req: IElectionRequest, res: Response, next: NextFunction) => {
     const inputElection = req.body.Election;
     Logger.info(req, `editElection: ${inputElection?.election_id}`) 
-    expectPermission(req.user_auth.roles, permissions.canViewBallots)
+    expectPermission(req.user_auth.roles, permissions.canEditElection)
     const validationErr = electionValidation(inputElection);
     if (validationErr) {
         Logger.info(req, `Invalid Election: '${inputElection?.election_id}'` + validationErr);
         throw new BadRequest("Invalid Election: " + validationErr);
     }
 
-    if (inputElection.state !== 'draft' && inputElection.public_archive_id === null) {
+    if (inputElection.state !== 'draft') {
         Logger.info(req, `Election is not editable, state=${inputElection.state}`);
         throw new BadRequest("Election is not editable")
     }

@@ -35,7 +35,7 @@ const revealVoterIdByEmail = async (req: IElectionRequest, res: Response, next: 
         throw new BadRequest('Reveal voter ID is only available for email list elections');
     }
 
-    expectPermission(req.user_auth.roles, permissions.canViewElectionRoll);
+    expectPermission(req.user_auth.roles, permissions.canEditElection);
 
     const actor = req.user?.email || 'unknown';
 
