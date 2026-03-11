@@ -21,7 +21,7 @@ const editElection = async (req: IElectionRequest, res: Response, next: NextFunc
         throw new BadRequest("Invalid Election: " + validationErr);
     }
 
-    if (inputElection.state !== 'draft') {
+    if (inputElection.state !== 'draft' && inputElection.public_archive_id === null) {
         Logger.info(req, `Election is not editable, state=${inputElection.state}`);
         throw new BadRequest("Election is not editable")
     }
