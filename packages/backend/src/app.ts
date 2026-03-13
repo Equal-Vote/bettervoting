@@ -31,7 +31,9 @@ export default function makeApp() {
     }))
 
     // Set to trust proxy so we can resolve client IP address
-    app.enable('trust proxy')
+    // We trust internal network IPs (like the internal Azure infrastructure) as proxies.
+    // This tracks the real client IP regardless of the number of internal routing hops, while stripping spoofed headers.
+    app.set('trust proxy', ['loopback', 'linklocal', 'uniquelocal'])
 
     app.use(iRequestMiddleware);
     app.use(loggerMiddleware);
