@@ -2,26 +2,41 @@ import { randomUUID } from "crypto";
 import { ILoggingContext } from "./ILogger";
 
 
+const LOG_LEVELS = ['debug', 'info', 'warn', 'error'] as const;
+type LogLevel = typeof LOG_LEVELS[number];
+
+function getLogLevel(): LogLevel {
+    const level = (process.env.LOG_LEVEL || 'info').toLowerCase();
+    if (LOG_LEVELS.includes(level as LogLevel)) return level as LogLevel;
+    return 'info';
+}
+
+function shouldLog(messageLevel: LogLevel): boolean {
+    return LOG_LEVELS.indexOf(messageLevel) >= LOG_LEVELS.indexOf(getLogLevel());
+}
+
 export class LoggerImpl {
 
     constructor() {
     }
 
     debug(context?:ILoggingContext,  message?: any, ...optionalParams: any[]):void{
-        if (process.env.NODE_ENV === 'production') return;
+        if (!shouldLog('debug')) return;
         this.log(context, "", message, ...optionalParams);
     }
 
     info(context?:ILoggingContext,  message?: any, ...optionalParams: any[]):void{
+        if (!shouldLog('info')) return;
         this.log(context, "", message, ...optionalParams);
     }
 
     warn(context?:ILoggingContext,  message?: any, ...optionalParams: any[]):void{
+        if (!shouldLog('warn')) return;
         this.log(context, "WARN ", message, ...optionalParams);
     }
 
     error(context?:ILoggingContext,  message?: any, ...optionalParams: any[]):void{
-        //TODO - put more structure to the data shared in request and spit it all out here
+        if (!shouldLog('error')) return;
         this.log(context, "ERROR", message, ...optionalParams);
     }
 
