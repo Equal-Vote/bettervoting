@@ -120,11 +120,12 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
                     nOutOfBoundsVotes: 0,
                     nAbstentions: 0,
                     nTallyVotes: 0,
+                    nOvervotes: 0,
                 },
                 tieBreakType: 'none',
                 numUnprocessedWriteIns: race.enable_write_in ? numUnprocessedWriteIns : undefined,
                 numExcludedWriteIns: race.enable_write_in ? numExcludedWriteIns : undefined,
-            } as ElectionResults;
+            } as unknown as ElectionResults; // ElectionResults is a discriminated union requiring method-specific candidate fields; not worth constructing for this degenerate case
             continue;
         }
 
