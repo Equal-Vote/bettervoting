@@ -42,6 +42,9 @@ export default function makeApp() {
     const frontendPath = '../../../../packages/frontend/build/';
     
     const path = require('path');
+    // SendGrid webhook must be registered before express.json() to preserve the raw body for signature verification
+    app.post('/API/SendGridWebhook', express.raw({ type: 'application/json' }), sendGridWebhookController);
+
     app.use(express.json());
     //Routes
     app.use('/API', getUser, electionsRouter)
@@ -50,7 +53,6 @@ export default function makeApp() {
     // app.use('/debug',debugRouter)
     app.use('/API/Docs', swaggerUi.serve, swaggerUi.setup(swagger));
     app.post('/API/Token', asyncHandler(getUserToken));
-    app.post('/API/SendGridWebhook', express.raw({ type: 'application/json' }), sendGridWebhookController);
 
     // NOTE: I've removed express.static because it doesn't allow me to inject meta tags
     // https://stackoverflow.com/questions/51120214/how-to-modify-static-file-content-with-express-static
