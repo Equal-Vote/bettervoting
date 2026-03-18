@@ -30,6 +30,8 @@ export const sendGridWebhookController = (req: IRequest, res: Response) => {
     const redactedEvents = events.map(({ email, unique_args, ...rest }) => ({ ...rest, email: logSafeHash(email) }));
     Logger.info(req, `SendGridWebhook events: ${JSON.stringify(redactedEvents)}`);
 
+    // This is a PUBLIC KEY from sendgrid.  I can't see any reason we should ever have to change it.
+    // It is safe to have public in the repo.
     const verificationKey = 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE5qOZpcaMe4gniCO5t9fSMq0MtkKvVL0qoqUX6Al/sKQK4OLhACy2WJzwYEm6MJm6djEk8GpTkjoTP9hu5ogSOQ==';
 
     const publicKey = crypto.createPublicKey({
