@@ -9,13 +9,14 @@ import { useApproveRoll, useFlagRoll, useInvalidateRoll, useRevealVoterId, useSe
 import { getLocalTimeZoneShort } from "../../util";
 import useElection from "../../ElectionContextProvider";
 import useFeatureFlags from "../../FeatureFlagContextProvider";
-import { ElectionRoll } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll";
+import { ElectionRollResponse } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll";
 import SendEmailDialog from "./SendEmailDialog";
 import useSnackbar from "~/components/SnackbarContext";
 import { PrimaryButton, SecondaryButton } from "~/components/styles";
+import EmailEventsList from "./EmailEventsList";
 
 type Props = {
-    roll: ElectionRoll,
+    roll: ElectionRollResponse,
     onClose: () => void,
     fetchRolls: () => Promise<void>,
   }
@@ -269,6 +270,9 @@ const EditElectionRoll = ({ roll, onClose, fetchRolls }:Props) => {
                             </PermissionHandler>
                         </Grid>}
                 </>}
+                {election.settings.invitation === 'email' && roll.email_events &&
+                    <EmailEventsList events={roll.email_events} />
+                }
                 {roll?.history &&
                     <TableContainer component={Paper}>
                         <Table style={{ width: '100%' }} aria-label="simple table">

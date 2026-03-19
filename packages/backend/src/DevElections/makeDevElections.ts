@@ -6,9 +6,11 @@ import { DevElectionDefinition, validateDefinition } from './types'
 
 // Import all dev election definitions here
 import wizardstar from './elections/wizardstar'
+import emailtracking from './elections/emailtracking'
 
 const allDefinitions: DevElectionDefinition[] = [
     wizardstar,
+    emailtracking,
 ];
 
 async function main() {
@@ -45,6 +47,7 @@ async function main() {
             console.info(`  Deleting existing election data...`);
             await db.deleteFrom('ballotDB').where('election_id', '=', def.electionId).execute();
             await db.deleteFrom('electionRollDB').where('election_id', '=', def.electionId).execute();
+            await db.deleteFrom('emailEventsDB').where('election_id', '=', def.electionId).execute();
             await db.deleteFrom('electionDB').where('election_id', '=', def.electionId).execute();
         }
 
@@ -77,6 +80,22 @@ async function main() {
         const ballots = def.makeBallots();
         console.info(`  Inserting ${ballots.length} ballot(s)...`);
         await db.insertInto('ballotDB').values(ballots).execute();
+
+        // Insert election rolls (if defined)
+        if (def.makeElectionRolls) {
+            const rolls = def.makeElectionRolls();
+            console.info(`  Inserting ${rolls.length} election roll(s)...`);
+            await db.insertInto('electionRollDB').values(rolls).execute();
+        }
+
+        // Insert email events (if defined)
+        if (def.makeEmailEvents) {
+            const events = def.makeEmailEvents();
+            console.info(`  Inserting ${events.length} email event(s)...`);
+            for (const event of events) {
+                await db.insertInto('emailEventsDB').values(event).execute();
+            }
+        }
 
         console.info(`  Done.`);
     }
