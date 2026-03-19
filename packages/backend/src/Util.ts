@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { reqIdSuffix } from './IRequest';
 import ServiceLocator from './ServiceLocator';
 import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
+import sanitizeHtml from 'sanitize-html';
 
 export function assertNotNull<Type>(data:Type | null, message:string = 'unexpected null'):Type {
     if (data == null){
@@ -75,9 +76,11 @@ export async function getMetaTags(req: any) : Promise<TagObject>  {
   let n_hidden = (len > 5) ? 1 : (5-len);
   let n_cropped = (len > 5) ? 0 : (5-len);
 
+  const sanitizeText = (text: string) => text ? sanitizeHtml(text, { allowedTags: [], allowedAttributes: {} }) : text;
+
   return {
-      __META_TITLE__: election?.title ?? 'BetterVoting | Create elections & polls that don\'t spoil the vote',
-      __META_DESCRIPTION__: election?.description ?? "Create secure elections with voting methods that don't spoil the vote.",
+      __META_TITLE__: sanitizeText(election?.title ?? 'BetterVoting | Create elections & polls that don\'t spoil the vote'),
+      __META_DESCRIPTION__: sanitizeText(election?.description ?? "Create secure elections with voting methods that don't spoil the vote."),
       __META_IMAGE__: election == null ?
         'https://assets.nationbuilder.com/unifiedprimary/pages/1470/attachments/original/1702692040/Screenshot_2023-12-15_at_6.00.24_PM.png?1702692040' :
         // https://imagekit.io/docs/transformations#position-of-layer
