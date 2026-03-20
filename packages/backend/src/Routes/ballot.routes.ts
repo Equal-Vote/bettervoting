@@ -4,7 +4,8 @@ import {
     getBallotByBallotID,
     castVoteController,
     getAnonymizedBallotsByElectionID,
-    uploadBallotsController
+    uploadBallotsController,
+    getWriteInNamesController,
 } from '../Controllers/Ballot';
 import {
     getElectionByID,
@@ -241,6 +242,10 @@ ballotRouter.post('/Election/:id/vote', asyncHandler(castVoteController))
  *       404:
  *         description: Election not found */
 ballotRouter.post('/Election/:id/uploadBallots', asyncHandler(uploadBallotsController))
+
+
+// TODO: write swagger
+ballotRouter.get('/Election/:id/getWriteIns', asyncHandler(getWriteInNamesController))
 
 //I don't really understand what the point of this is, but it's in the test suite so I'm including it
 ballotRouter.post('/Election/:id/ballot', asyncHandler(returnElection))

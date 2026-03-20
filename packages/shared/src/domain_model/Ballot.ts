@@ -84,17 +84,40 @@ export function ballotValidation(election: Election, obj:NewBallot): string | nu
     const maxRankings = election.settings.max_rankings
     
     let outOfBoundsError = ''
+    let writeInError = ''
     obj.votes.forEach(vote => {
     //Checks if the score exceeds max_rankings or number of candidates for ranked elections
         const race = approvedRaces.find(race => race.race_id === vote.race_id)
         if (!race) {
             return
         }
+
+        // Validate score types (null is allowed — it means the voter didn't score this candidate)
+        vote.scores.forEach(score => {
+            if (score && score.score !== null && typeof score.score !== 'number') {
+                outOfBoundsError += `Race: ${race.title}, Score is not a number: ${score.score}; `;
+            }
+        })
+
+        // Validate write-ins
+        const writeIns = vote.scores.filter(s => s.write_in_name)
+        if (!race.enable_write_in && writeIns.length > 0) {
+            writeInError += `Race: ${race.title}, Write-ins not enabled for this race; `;
+        }
+        if (writeIns.length > 10) {
+            writeInError += `Race: ${race.title}, Too many write-ins (${writeIns.length}, max 10); `;
+        }
+        writeIns.forEach(s => {
+            if (typeof s.write_in_name !== 'string' || s.write_in_name.length > 100) {
+                writeInError += `Race: ${race.title}, Invalid write-in name; `;
+            }
+        })
+
         if (['RankedRobin', 'IRV', 'STV'].includes(race.voting_method)) {
             const numCandidates = race.candidates.length;
             vote.scores.forEach(score => {
                 // Arend: Removing check against numCandidates, that's not necessarily true for public RCV elections
-                    if (score && /*score.score > numCandidates ||*/ (maxRankings && score.score > maxRankings) || score.score < 0) {
+                    if (score && (/*score.score > numCandidates ||*/ (maxRankings && score.score > maxRankings) || score.score < 0)) {
                         outOfBoundsError +=  `Race: ${race.title}, Score: ${score.score}; `;
                     }
                 })
@@ -103,7 +126,7 @@ export function ballotValidation(election: Election, obj:NewBallot): string | nu
         //Checks if the score exceeds 5 for STAR and STAR_PR elections
          else  if ([ 'STAR', 'STAR_PR'].includes(race.voting_method)) {
             vote.scores.forEach(score => {
-                    if (score && score.score > 5 || score.score < 0) {
+                    if (score && (score.score > 5 || score.score < 0)) {
                         outOfBoundsError +=  `Race: ${race.title}, Score: ${score.score}; `;
                     }
                 })
@@ -111,15 +134,18 @@ export function ballotValidation(election: Election, obj:NewBallot): string | nu
         //Checks if the score exceeds 1 for Approval and Plurality elections
          else if (['Approval', 'Plurality'].includes(race.voting_method)) {
             vote.scores.forEach(score => {
-                    if (score && score.score > 1 || score.score < 0) {
+                    if (score && (score.score > 1 || score.score < 0)) {
                         outOfBoundsError +=  `Race: ${race.title}, Score: ${score.score}; `;
                     }
                 })
             }
-        
+
     });
     if (outOfBoundsError !== '') {
         return "The following races have scores that are out of bounds: " + outOfBoundsError;
+    }
+    if (writeInError !== '') {
+        return "Write-in validation failed: " + writeInError;
     }
     return null;
   }

@@ -458,9 +458,10 @@ export default function Results({ race, results }: {race: Race, results: Electio
       </Typography>
       <div className="flexContainer" style={{textAlign: 'center'}}>
         <Box sx={{pageBreakAfter:'avoid', pageBreakInside:'avoid', mx: 10}}>
-        {results.summaryData.nTallyVotes == 0 && <h2>{t('results.waiting_for_results')}</h2>}
-        {results.summaryData.nTallyVotes == 1 && <p>{t('results.single_vote')}</p> }
-        {results.summaryData.nTallyVotes > 1 && <>
+        {results.summaryData.candidates.length === 1 && <h2>{t('results.not_enough_candidates')}</h2>}
+        {results.summaryData.candidates.length !== 1 && results.summaryData.nTallyVotes == 0 && <h2>{t('results.waiting_for_results')}</h2>}
+        {results.summaryData.candidates.length !== 1 && results.summaryData.nTallyVotes == 1 && <p>{t('results.single_vote')}</p> }
+        {results.summaryData.candidates.length !== 1 && results.summaryData.nTallyVotes > 1 && <>
           {showTitleAsTie?
             <>
             <Typography variant="h5" sx={{fontWeight: 'bold'}}>{t('results.tie_title')}</Typography>
@@ -478,6 +479,11 @@ export default function Results({ race, results }: {race: Race, results: Electio
             </Typography>
           }
           <Typography variant="h6">{t('results.vote_count', {n: results.summaryData.nTallyVotes})}</Typography>
+            {results.numExcludedWriteIns > 0 &&
+              <Typography component="p" sx={{color: '#808080', fontSize: '0.9rem', mt: 1}}>
+                {results.numExcludedWriteIns} write-in vote{results.numExcludedWriteIns === 1 ? '' : 's'} not included in results
+              </Typography>
+            }
             {/* Voting method and learning link */}
             <Typography component="p" sx={{color: '#808080', fontSize: '1rem', marginTop: '20px', mb: 2}}>
                 {t('results.method_context', { voting_method: votingMethod })}

@@ -19,6 +19,7 @@ import { useSubstitutedTranslation } from "~/components/util";
 import DraftWarning from "../DraftWarning";
 import SupportBlurb from "../SupportBlurb";
 import ElectionStateWarning from "../ElectionStateWarning"
+import WriteInSection from "./WriteInSection"
 import { NOTA_ID } from "@equal-vote/star-vote-shared/utils/makeID";
 
 // I'm using the icon codes instead of an import because there was padding I couldn't get rid of
@@ -48,6 +49,8 @@ export interface IBallotContext {
   setAlertBubbles?: (alertBubbles: [number, number][]) => void,
   warnings?: {severity: 'warning' | 'error', message: string}[],
   setWarnings?: (warnings: {severity: 'warning' | 'error', message: string}[]) => void,
+  addWriteIn?: (name: string) => void,
+  removeWriteIn?: (name: string) => void,
 }
 
 export interface IPage {
@@ -87,8 +90,8 @@ const VotePage = () => {
     // generate ballot pages
     const pages = election.races.map((race, raceIndex) => {
       const candidates = race.candidates.map(candidate => ({ ...candidate, score: null }))
-      // Special candidates like "None of the Above" or Write-ins (todo) should stay at the end
-      const numSpecialCandidates = race.candidates.filter(c => c.candidate_id === NOTA_ID).length;
+      // Special candidates like "None of the Above" or Write-ins should stay at the end
+      const numSpecialCandidates = race.candidates.filter(c => c.candidate_id === NOTA_ID || c.candidate_id.startsWith('write_in_')).length;
       return {
         instructionsRead: (flags.isSet('FORCE_DISABLE_INSTRUCTION_CONFIRMATION') || !election.settings.require_instruction_confirmation)? true : false, // I could just do !require_... , but this is more clear
         candidates: (flags.isSet('FORCE_DISABLE_RANDOM_CANDIDATES') || !election.settings.random_candidate_order) ? candidates : (
@@ -151,6 +154,35 @@ const VotePage = () => {
     setPages([...pages])
   }, [pages, currentPage])
 
+  const addWriteIn = useCallback((name: string) => {
+    setPages(prevPages => {
+      const nextPages = [...prevPages];
+      const page = prevPages[currentPage];
+      const writeInCandidate: BallotCandidate = {
+        candidate_id: `write_in_${name}`,
+        candidate_name: name,
+        score: null,
+      };
+      nextPages[currentPage] = {
+        ...page,
+        candidates: [...page.candidates, writeInCandidate],
+      };
+      return nextPages;
+    });
+  }, [currentPage]);
+
+  const removeWriteIn = useCallback((name: string) => {
+    setPages(prevPages => {
+      const nextPages = [...prevPages];
+      const page = prevPages[currentPage];
+      nextPages[currentPage] = {
+        ...page,
+        candidates: page.candidates.filter(c => c.candidate_id !== `write_in_${name}`),
+      };
+      return nextPages;
+    });
+  }, [currentPage]);
+
   const { isPending, makeRequest: postBallot } = usePostBallot(election.election_id)
   const onUpdate = (pageIndex, newRaceScores) => {
     setPages(prevPages => {
@@ -173,14 +205,26 @@ const VotePage = () => {
     const candidateIDs = election.races.map(race => race.candidates.map(candidate => candidate.candidate_id))
 
     // takes voter's scores and resorts them back into the order in the election.race objects
+    // write-in candidates (id starts with write_in_) are appended after official candidates
     const votes: Vote[] =
-      election.races.map((race, race_index) => (
-        {
+      election.races.map((race, race_index) => {
+        const official: Score[] = []
+        const writeIns: Score[] = []
+        candidateScores[race_index].forEach(c => {
+          if (c.candidate_id.startsWith('write_in_')) {
+            writeIns.push({ candidate_id: c.candidate_id, score: c.score, write_in_name: c.candidate_name })
+          } else {
+            official.push({ candidate_id: c.candidate_id, score: c.score })
+          }
+        })
+        official.sort((a, b) =>
+          candidateIDs[race_index].indexOf(a.candidate_id) - candidateIDs[race_index].indexOf(b.candidate_id)
+        )
+        return {
           race_id: race.race_id,
-          scores: candidateScores[race_index].map(c => ({ candidate_id: c.candidate_id, score: c.score } as Score)).sort((a: Score, b: Score) => {
-            return candidateIDs[race_index].indexOf(a.candidate_id) - candidateIDs[race_index].indexOf(b.candidate_id)
-          })
-        }))
+          scores: [...official, ...writeIns],
+        }
+      })
     const ballot: NewBallot = {
       election_id: election.election_id,
       votes: votes,
@@ -233,9 +277,11 @@ const VotePage = () => {
         setWarnings: setWarnings,
         alertBubbles: pages[currentPage].alertBubbles,
         setAlertBubbles: setAlertBubbles,
-
+        addWriteIn: addWriteIn,
+        removeWriteIn: removeWriteIn,
       }}>
         <BallotPageSelector votingMethod={pages[currentPage].voting_method} />
+        <WriteInSection />
       </BallotContext.Provider>
       <Box sx={{ display: 'flex', justifyContent: "space-between", marginTop: '10px' }}>
         <SecondaryButton

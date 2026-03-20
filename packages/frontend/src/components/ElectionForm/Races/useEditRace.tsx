@@ -105,7 +105,7 @@ export const useEditRace = (
 
         const numCandidates = editedRace.candidates.filter(candidate => candidate.candidate_name !== '').length
         const uniqueCandidates = new Set(editedRace.candidates.filter(candidate => candidate.candidate_name !== '').map(candidate => candidate.candidate_name))
-        if (numCandidates < 2) {
+        if (numCandidates < 2 && !editedRace.enable_write_in) {
             newErrors.candidates = 'Must have at least 2 candidates';
             isValid = false;
         }else if (editedRace.num_winners > numCandidates) {
