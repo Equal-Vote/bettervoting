@@ -26,7 +26,7 @@ ballot:
   submit_ballot: Submit
   submitting: Submitting...
 
-  # Draggable IRV UI strings
+  # Draggable RCV UI strings
   available: Available Candidates
   yourRankings: Your Rankings
   drop_here: Drop candidates here to rank them
@@ -744,8 +744,8 @@ tips:
     description: Requires voters to confirm that they have read the ballot instructions before voting.
 
   draggable_ballot:
-    title: Use Draggable Ballots for IRV
-    description: Enable a drag-and-drop interface for IRV (Instant Runoff Voting) ballots, allowing voters to rank candidates by dragging them into order.
+    title: Use Draggable Ballots for RCV
+    description: Enable a drag-and-drop interface for RCV (Ranked Choice Voting) ballots, allowing voters to rank candidates by dragging them into order.
 
   is_public:
     title: Make {{capital_election}} Publicly Searchable
@@ -1157,7 +1157,7 @@ election_settings:
 
   require_instruction_confirmation: Confirm That Voter Read Instructions !tip(require_instruction_confirmation)
 
-  draggable_ballot: Use Draggable Ballots for IRV !tip(draggable_ballot)
+  draggable_ballot: Use Draggable Ballots for RCV !tip(draggable_ballot)
 
   is_public: Make {{capital_election}} Publicly Searchable !tip(is_public)
 
