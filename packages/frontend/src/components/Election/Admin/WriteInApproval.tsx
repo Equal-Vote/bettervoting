@@ -101,6 +101,10 @@ const WriteInApproval = () => {
                 setError('Official name cannot be empty');
                 return;
             }
+            if (key !== row.key) {
+                setError(`Official name "${row.officialName}" doesn't match write-in key "${row.displayKey}" (only capitalization changes are allowed)`);
+                return;
+            }
             if (nameKeys.has(key)) {
                 setError(`Duplicate official name: "${row.officialName}"`);
                 return;
@@ -190,7 +194,7 @@ const WriteInApproval = () => {
             </TableContainer>
 
             <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                <PrimaryButton onClick={handleUpdate} disabled={isPending}>
+                <PrimaryButton onClick={handleUpdate} disabled={isPending || !writeInData}>
                     Update
                 </PrimaryButton>
             </Box>
