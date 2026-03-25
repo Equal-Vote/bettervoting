@@ -458,7 +458,14 @@ export default function Results({ race, results }: {race: Race, results: Electio
       </Typography>
       <div className="flexContainer" style={{textAlign: 'center'}}>
         <Box sx={{pageBreakAfter:'avoid', pageBreakInside:'avoid', mx: 10}}>
-        {results.summaryData.candidates.length === 1 && <h2>{t('results.not_enough_candidates')}</h2>}
+        {results.summaryData.candidates.length === 1 && <>
+          <Typography variant='h5'>⭐{results.summaryData.candidates[0].name} wins uncontested⭐</Typography>
+          {results.writeInDiagnostics?.numScoresDisregarded > 0 &&
+            <Typography component="p" sx={{color: '#808080', fontSize: '0.9rem', mt: 1}}>
+              {results.writeInDiagnostics.numScoresDisregarded} write-in vote{results.writeInDiagnostics.numScoresDisregarded === 1 ? '' : 's'} not included in results
+            </Typography>
+          }
+        </>}
         {results.summaryData.candidates.length !== 1 && results.summaryData.nTallyVotes == 0 && <h2>{t('results.waiting_for_results')}</h2>}
         {results.summaryData.candidates.length !== 1 && results.summaryData.nTallyVotes == 1 && <p>{t('results.single_vote')}</p> }
         {results.summaryData.candidates.length !== 1 && results.summaryData.nTallyVotes > 1 && <>

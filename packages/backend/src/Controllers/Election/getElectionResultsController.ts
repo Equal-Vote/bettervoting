@@ -114,7 +114,7 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
             }
         })
 
-        if (candidates.length < 2) {
+        if (candidates.length < 1) {
             results[race_index] = {
                 votingMethod: voting_method,
                 elected: [],
