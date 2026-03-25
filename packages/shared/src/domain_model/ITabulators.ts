@@ -3,7 +3,7 @@
 export type keyedObject<T> = {[key: string]: T};
 
 export type rawVote = {
-    marks: keyedObject<number>; // candidate id => bubble value mapping
+    marks: keyedObject<number | null>; // candidate id => bubble value mapping
     overvote_rank?: number;
     has_duplicate_rank?: boolean;
 }

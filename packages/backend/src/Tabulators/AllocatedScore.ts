@@ -51,7 +51,7 @@ export function AllocatedScore(candidates: candidate[], votes: rawVote[], nWinne
     // Keep running elections rounds even if all seats have been filled to determine candidate order
 
     // Normalize scores array
-    let scoresNorm = votes.map(v => candidates.map(c => new Fraction(v.marks[c.id] ?? 0).div(MAX_SCORE)))
+    let scoresNorm = tallyVotes.map(v => candidates.map(c => new Fraction(v.marks[c.id]).div(MAX_SCORE)))
 
     // Find number of voters and quota size
     const V = scoresNorm.length;

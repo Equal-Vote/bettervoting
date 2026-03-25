@@ -31,7 +31,7 @@ const DOT_ICON = "M12 6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6 2.69-6 6-6m0-2c
 const WARNING_ICON = "M12,5.99L19.53,19H4.47L12,5.99 M12,2L1,21h22L12,2L12,2z"
 
 export interface BallotCandidate extends Candidate {
-  score: number
+  score: number | null
 }
 
 export interface IBallotContext {
