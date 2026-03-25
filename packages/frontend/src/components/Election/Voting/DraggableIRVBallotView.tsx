@@ -83,33 +83,23 @@ export default function DraggableIRVBallotView() {
     const to = destination.droppableId;
     const id = draggableId;
 
-    if (from === 'unranked' && to === 'unranked') {
-      // Reorder within unranked
-      setUnrankedOrder(prev => {
-        const next = prev.filter(x => x !== id);
-        next.splice(destination.index, 0, id);
-        return next;
-      });
-      return;
-    }
+    // update unranked order
+    setUnrankedOrder(prev => {
+      const next = prev.filter(x => x !== id);
+      if(to === 'unranked') next.splice(destination.index, 0, id);
+      return next;
+    });
 
-    if (to === 'unranked') {
-      // Move from ranked to unranked at drop position
-      setUnrankedOrder(prev => {
-        const next = prev.filter(x => x !== id);
-        next.splice(destination.index, 0, id);
-        return next;
-      });
-      commitScoresFromOrder(rankedIds.filter(x => x !== id));
-      return;
-    }
+    // if ranked wasn't updated, cancel early
+    if(to !== 'ranked' && from !== 'ranked') return;
 
-    if (to === 'ranked') {
-      // Move from unranked to ranked; remove from unranked order
-      setUnrankedOrder(prev => prev.filter(x => x !== id));
-      const base = rankedIds.filter(x => x !== id);
+    // update ranked
+    const base = rankedIds.filter(x => x !== id);
+    if(to == 'ranked'){
       const insertAt = Math.max(0, Math.min(base.length, destination.index));
       commitScoresFromOrder([...base.slice(0, insertAt), id, ...base.slice(insertAt)]);
+    }else{
+      commitScoresFromOrder(base);
     }
   };
 
