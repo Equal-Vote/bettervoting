@@ -13,7 +13,7 @@ var BallotModel = ServiceLocator.ballotsDb();
 
 const getWriteInNamesController = async (req: IElectionRequest, res: Response, next: NextFunction) => {
     var electionId = req.election.election_id;
-    Logger.debug(req, "getBallotsByElectionID: " + electionId);
+    Logger.debug(req, "getWriteInNames: " + electionId);
 
     expectPermission(req.user_auth.roles, permissions.canViewBallots)
 
