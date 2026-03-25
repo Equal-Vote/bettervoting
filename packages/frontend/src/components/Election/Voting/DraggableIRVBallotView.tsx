@@ -1,5 +1,5 @@
-import React, { useContext, useMemo, useRef, useState, useEffect } from 'react';
-import { Box, Paper, Typography, Tooltip, FormGroup, FormControlLabel, Checkbox } from '@mui/material';
+import React, { useContext, useMemo, useState } from 'react';
+import { Box, Paper, Typography, FormGroup, FormControlLabel, Checkbox } from '@mui/material';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { BallotContext } from './VotePage';
 import { useSubstitutedTranslation } from '~/components/util';
@@ -10,11 +10,7 @@ import { FormattedDescription } from '~/components/FormattedDescription';
 type Score = number | null;
 
 function CandidateCard({ name }: { name: string }) {
-  const max = 20;
-  const needsTooltip = name.length > max;
-  const display = needsTooltip ? `${name.slice(0, max)}...` : name;
-
-  const inner = (
+  return (
     <Paper
       elevation={2}
       sx={{
@@ -32,18 +28,12 @@ function CandidateCard({ name }: { name: string }) {
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, overflow: 'hidden', flex: 1 }}>
-        <Typography variant="body2" noWrap title={name} aria-label={name}>
-          {display}
+        <Typography variant="body2" aria-label={name}>
+          {name}
         </Typography>
       </Box>
     </Paper>
   );
-
-  return needsTooltip ? (
-    <Tooltip title={name} placement="top" enterDelay={2000} enterNextDelay={2000} disableInteractive>
-      {inner}
-    </Tooltip>
-  ) : inner;
 }
 
 export default function DraggableIRVBallotView() {
@@ -115,6 +105,7 @@ export default function DraggableIRVBallotView() {
 
   return (
     <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
+      <Box border={2} sx={{ mt: 0, ml: 0, mr: 0, width: '100%' }} className="ballot">
       <Box sx={{ p: 3 }}>
         <Typography align="center" variant="h5" component="h4" fontWeight="bold" sx={{ mb: 2 }}>
           {ballotContext.race.title}
@@ -303,6 +294,7 @@ export default function DraggableIRVBallotView() {
             </Droppable>
           </Box>
         </Box>
+      </Box>
       </Box>
     </DragDropContext>
   );
