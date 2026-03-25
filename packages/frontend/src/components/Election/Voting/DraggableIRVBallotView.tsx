@@ -56,19 +56,24 @@ export default function DraggableIRVBallotView() {
 
   const rankedIds = useMemo(() => rankedCandidates.map(c => c.candidate_id.toString()), [rankedCandidates]);
 
+  // Track display order of unranked candidates independently so reordering is preserved
+  const [unrankedOrder, setUnrankedOrder] = useState<string[]>(() =>
+    ballotContext.candidates
+      .filter(c => !(typeof c.score === 'number' && c.score > 0))
+      .map(c => c.candidate_id.toString())
+  );
+
+  const orderedUnrankedCandidates = useMemo(() => {
+    const map = new Map(unrankedCandidates.map(c => [c.candidate_id.toString(), c]));
+    return unrankedOrder.filter(id => map.has(id)).map(id => map.get(id)!);
+  }, [unrankedCandidates, unrankedOrder]);
+
   const commitScoresFromOrder = React.useCallback((order: string[]) => {
     const m = new Map<string, number>();
     order.forEach((id, idx) => m.set(id, idx + 1));
     const scores: Score[] = ballotContext.candidates.map(c => (m.get(c.candidate_id.toString()) ?? null) as Score);
     ballotContext.onUpdate(scores);
   }, [ballotContext.candidates, ballotContext.onUpdate]);
-
-  const [draggingFrom, setDraggingFrom] = useState<string | null>(null);
-
-  const onDragStart = (start: { source: { droppableId: string }, draggableId: string }) => {
-    const src = start.source.droppableId;
-    setDraggingFrom(src);
-  };
 
   const onDragEnd = (result: DropResult) => {
     const { source, destination, draggableId } = result;
@@ -78,33 +83,38 @@ export default function DraggableIRVBallotView() {
     const to = destination.droppableId;
     const id = draggableId;
 
-    const rankedOrder = rankedIds.slice();
-
-    // No change for unranked -> unranked (we do not reorder available list)
-    if (from === 'unranked' && to === 'unranked') return;
-
-    // Remove id if coming from ranked
-    const base = rankedOrder.filter(x => x !== id);
+    if (from === 'unranked' && to === 'unranked') {
+      // Reorder within unranked
+      setUnrankedOrder(prev => {
+        const next = prev.filter(x => x !== id);
+        next.splice(destination.index, 0, id);
+        return next;
+      });
+      return;
+    }
 
     if (to === 'unranked') {
-      // Dropped into available: commit removal
-      commitScoresFromOrder(base);
-      setDraggingFrom(null);
+      // Move from ranked to unranked at drop position
+      setUnrankedOrder(prev => {
+        const next = prev.filter(x => x !== id);
+        next.splice(destination.index, 0, id);
+        return next;
+      });
+      commitScoresFromOrder(rankedIds.filter(x => x !== id));
       return;
     }
 
     if (to === 'ranked') {
+      // Move from unranked to ranked; remove from unranked order
+      setUnrankedOrder(prev => prev.filter(x => x !== id));
+      const base = rankedIds.filter(x => x !== id);
       const insertAt = Math.max(0, Math.min(base.length, destination.index));
-      const next = [...base.slice(0, insertAt), id, ...base.slice(insertAt)];
-      commitScoresFromOrder(next);
-      setDraggingFrom(null);
-      return;
+      commitScoresFromOrder([...base.slice(0, insertAt), id, ...base.slice(insertAt)]);
     }
-    setDraggingFrom(null);
   };
 
   return (
-    <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
+    <DragDropContext onDragEnd={onDragEnd}>
       <Box border={2} sx={{ mt: 0, ml: 0, mr: 0, width: '100%' }} className="ballot">
       <Box sx={{ p: 3 }}>
         <Typography align="center" variant="h5" component="h4" fontWeight="bold" sx={{ mb: 2 }}>
@@ -167,7 +177,7 @@ export default function DraggableIRVBallotView() {
             <Typography variant="h6" gutterBottom align="right">
               {t('ballot.available', 'Available Candidates')}
             </Typography>
-            <Droppable droppableId="unranked" isDropDisabled={draggingFrom !== 'ranked'}>
+            <Droppable droppableId="unranked">
               {(provided, snapshot) => (
                 <Paper elevation={0}
                   ref={provided.innerRef}
@@ -180,7 +190,7 @@ export default function DraggableIRVBallotView() {
                     border: 'none',
                   }}
                 >
-                  {unrankedCandidates.map((c, index) => (
+                  {orderedUnrankedCandidates.map((c, index) => (
                     <Draggable key={c.candidate_id} draggableId={c.candidate_id.toString()} index={index}>
                       {(prov, snapshot) => (
                         <div
@@ -209,7 +219,7 @@ export default function DraggableIRVBallotView() {
                       )}
                     </Draggable>
                   ))}
-                  {unrankedCandidates.length === 0 && (
+                  {orderedUnrankedCandidates.length === 0 && (
                     <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
                       {t('ballot.no_available', 'No available candidates')}
                     </Typography>
