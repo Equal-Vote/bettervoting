@@ -8,6 +8,7 @@ import { VotingMethods } from '../../Tabulators/VotingMethodSelecter';
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
 import { ElectionResults, candidate, rawVote } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
+import { makeWriteInCandidateId } from "@equal-vote/star-vote-shared/utils/makeID";
 import { Candidate } from "@equal-vote/star-vote-shared/domain_model/Candidate";
 import { trimLower } from "@equal-vote/star-vote-shared/domain_model/Util";
 
@@ -56,7 +57,7 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
             writeInCandidates.forEach((wc, i) => {
                 if (wc.approved) {
                     candidates.push({
-                        id: `write_in_${wc.candidate_name}`,
+                        id: makeWriteInCandidateId(wc.candidate_name),
                         name: wc.candidate_name,
                         tieBreakOrder: race.candidates.length + i,
                         votesPreferredOver: {},
@@ -90,7 +91,7 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
                             numUnprocessedWriteIns += 1
                             numExcludedWriteIns += 1
                         } else if (writeInCandidate.approved) {
-                            const wcId = `write_in_${writeInCandidate.candidate_name}`
+                            const wcId = makeWriteInCandidateId(writeInCandidate.candidate_name)
                             if (!(wcId in marks)) {
                                 marks[wcId] = score.score
                             }

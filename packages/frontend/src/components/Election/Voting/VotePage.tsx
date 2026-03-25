@@ -20,7 +20,7 @@ import DraftWarning from "../DraftWarning";
 import SupportBlurb from "../SupportBlurb";
 import ElectionStateWarning from "../ElectionStateWarning"
 import WriteInSection from "./WriteInSection"
-import { NOTA_ID } from "@equal-vote/star-vote-shared/utils/makeID";
+import { NOTA_ID, makeWriteInCandidateId, isWriteInCandidate } from "@equal-vote/star-vote-shared/utils/makeID";
 
 // I'm using the icon codes instead of an import because there was padding I couldn't get rid of
 // https://stackoverflow.com/questions/65721218/remove-material-ui-icon-margin
@@ -91,7 +91,7 @@ const VotePage = () => {
     const pages = election.races.map((race, raceIndex) => {
       const candidates = race.candidates.map(candidate => ({ ...candidate, score: null }))
       // Special candidates like "None of the Above" or Write-ins should stay at the end
-      const numSpecialCandidates = race.candidates.filter(c => c.candidate_id === NOTA_ID || c.candidate_id.startsWith('write_in_')).length;
+      const numSpecialCandidates = race.candidates.filter(c => c.candidate_id === NOTA_ID || isWriteInCandidate(c.candidate_id)).length;
       return {
         instructionsRead: (flags.isSet('FORCE_DISABLE_INSTRUCTION_CONFIRMATION') || !election.settings.require_instruction_confirmation)? true : false, // I could just do !require_... , but this is more clear
         candidates: (flags.isSet('FORCE_DISABLE_RANDOM_CANDIDATES') || !election.settings.random_candidate_order) ? candidates : (
@@ -159,7 +159,7 @@ const VotePage = () => {
       const nextPages = [...prevPages];
       const page = prevPages[currentPage];
       const writeInCandidate: BallotCandidate = {
-        candidate_id: `write_in_${name}`,
+        candidate_id: makeWriteInCandidateId(name),
         candidate_name: name,
         score: null,
       };
@@ -177,7 +177,7 @@ const VotePage = () => {
       const page = prevPages[currentPage];
       nextPages[currentPage] = {
         ...page,
-        candidates: page.candidates.filter(c => c.candidate_id !== `write_in_${name}`),
+        candidates: page.candidates.filter(c => c.candidate_id !== makeWriteInCandidateId(name)),
       };
       return nextPages;
     });
@@ -205,13 +205,13 @@ const VotePage = () => {
     const candidateIDs = election.races.map(race => race.candidates.map(candidate => candidate.candidate_id))
 
     // takes voter's scores and resorts them back into the order in the election.race objects
-    // write-in candidates (id starts with write_in_) are appended after official candidates
+    // write-in candidates are appended after official candidates
     const votes: Vote[] =
       election.races.map((race, race_index) => {
         const official: Score[] = []
         const writeIns: Score[] = []
         candidateScores[race_index].forEach(c => {
-          if (c.candidate_id.startsWith('write_in_')) {
+          if (isWriteInCandidate(c.candidate_id)) {
             writeIns.push({ candidate_id: c.candidate_id, score: c.score, write_in_name: c.candidate_name })
           } else {
             official.push({ candidate_id: c.candidate_id, score: c.score })

@@ -2,6 +2,7 @@ import React, { useContext, useState } from 'react';
 import { Box, Button, IconButton, TextField, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { BallotContext } from './VotePage';
+import { isWriteInCandidate } from '@equal-vote/star-vote-shared/utils/makeID';
 
 const MAX_WRITE_INS = 5;
 
@@ -13,7 +14,7 @@ export default function WriteInSection() {
     if (!ballotContext.race.enable_write_in) return null;
 
     const writeInCandidates = ballotContext.candidates.filter(
-        c => c.candidate_id.startsWith('write_in_')
+        c => isWriteInCandidate(c.candidate_id)
     );
 
     const handleAdd = () => {

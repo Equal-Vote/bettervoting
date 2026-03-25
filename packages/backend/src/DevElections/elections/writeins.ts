@@ -1,7 +1,7 @@
 import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { Ballot } from '@equal-vote/star-vote-shared/domain_model/Ballot';
 import { DevElectionDefinition, devBallotId } from '../types';
-import { devElectionId, NOTA_ID } from '@equal-vote/star-vote-shared/utils/makeID';
+import { devElectionId, NOTA_ID, makeWriteInCandidateId } from '@equal-vote/star-vote-shared/utils/makeID';
 
 const ELECTION_ID = devElectionId('writeins');
 const RACE_SINGLE = 'devtestwriteins_race0';
@@ -101,7 +101,7 @@ function makeBallots(): Ballot[] {
                     scores: [
                         { candidate_id: 'alice', score: 1 },
                         { candidate_id: 'bob', score: 3 },
-                        { candidate_id: 'write_in_Charlie', score: 5, write_in_name: 'Charlie' },
+                        { candidate_id: makeWriteInCandidateId('Charlie'), score: 5, write_in_name: 'Charlie' },
                     ],
                 },
                 {
@@ -110,7 +110,7 @@ function makeBallots(): Ballot[] {
                         { candidate_id: 'red', score: 0 },
                         { candidate_id: 'green', score: 5 },
                         { candidate_id: 'blue', score: 2 },
-                        { candidate_id: 'write_in_Purple', score: 4, write_in_name: 'Purple' },
+                        { candidate_id: makeWriteInCandidateId('Purple'), score: 4, write_in_name: 'Purple' },
                     ],
                 },
             ],
@@ -131,8 +131,8 @@ function makeBallots(): Ballot[] {
                     scores: [
                         { candidate_id: 'alice', score: 0 },
                         { candidate_id: 'bob', score: 1 },
-                        { candidate_id: 'write_in_Charlie', score: 4, write_in_name: 'Charlie' },
-                        { candidate_id: 'write_in_Dana', score: 5, write_in_name: 'Dana' },
+                        { candidate_id: makeWriteInCandidateId('Charlie'), score: 4, write_in_name: 'Charlie' },
+                        { candidate_id: makeWriteInCandidateId('Dana'), score: 5, write_in_name: 'Dana' },
                     ],
                 },
                 {
@@ -141,7 +141,7 @@ function makeBallots(): Ballot[] {
                         { candidate_id: 'red', score: 5 },
                         { candidate_id: 'green', score: 0 },
                         { candidate_id: 'blue', score: 3 },
-                        { candidate_id: 'write_in_Orange', score: 4, write_in_name: 'Orange' },
+                        { candidate_id: makeWriteInCandidateId('Orange'), score: 4, write_in_name: 'Orange' },
                     ],
                 },
             ],
@@ -162,7 +162,7 @@ function makeBallots(): Ballot[] {
                     scores: [
                         { candidate_id: 'alice', score: 3 },
                         { candidate_id: 'bob', score: 0 },
-                        { candidate_id: 'write_in_Charlie', score: 4, write_in_name: 'Charlie' },
+                        { candidate_id: makeWriteInCandidateId('Charlie'), score: 4, write_in_name: 'Charlie' },
                     ],
                 },
                 {
@@ -171,8 +171,8 @@ function makeBallots(): Ballot[] {
                         { candidate_id: 'red', score: 1 },
                         { candidate_id: 'green', score: 2 },
                         { candidate_id: 'blue', score: 0 },
-                        { candidate_id: 'write_in_Purple', score: 5, write_in_name: 'Purple' },
-                        { candidate_id: 'write_in_Orange', score: 3, write_in_name: 'Orange' },
+                        { candidate_id: makeWriteInCandidateId('Purple'), score: 5, write_in_name: 'Purple' },
+                        { candidate_id: makeWriteInCandidateId('Orange'), score: 3, write_in_name: 'Orange' },
                     ],
                 },
             ],

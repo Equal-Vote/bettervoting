@@ -18,7 +18,17 @@ export const ID_PREFIXES = {
 } as const;
 
 // nota = none of the above, this won't collide with the standard pattern because it has vowels, and the id length is different
-export const NOTA_ID = 'c-nota'; 
+export const NOTA_ID = 'c-nota';
+
+const WRITE_IN_CANDIDATE_PREFIX = 'cwi-';
+
+export function makeWriteInCandidateId(name: string): string {
+  return `${WRITE_IN_CANDIDATE_PREFIX}${name}`;
+}
+
+export function isWriteInCandidate(candidateId: string): boolean {
+  return candidateId.startsWith(WRITE_IN_CANDIDATE_PREFIX);
+}
 
 // Removing vowels to avoid spelling real words in IDS (especially don't want curse words)
 // also removing o/0 and 1/l to avoid confusion if someone was manually copying the 
