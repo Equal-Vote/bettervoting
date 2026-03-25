@@ -82,7 +82,11 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
                 vote.scores.forEach(score => {
                     const isRegularCandidate = race.candidates.some((c: Candidate) => c.candidate_id === score.candidate_id)
                     if (isRegularCandidate) {
-                        marks[score.candidate_id] = score.score
+                        if (score.candidate_id in marks) {
+                            Logger.warn(req, `[Tabulation] Duplicate score for candidate "${score.candidate_id}" on same ballot, keeping first score`);
+                        } else {
+                            marks[score.candidate_id] = score.score
+                        }
                     } else if (race.enable_write_in && score.write_in_name) {
                         const write_in_name = score.write_in_name
                         const writeInCandidate = writeInCandidates.find(wc => wc.aliases.includes(trimLower(write_in_name)))
@@ -94,6 +98,8 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
                             const wcId = makeWriteInCandidateId(writeInCandidate.candidate_name)
                             if (!(wcId in marks)) {
                                 marks[wcId] = score.score
+                            } else {
+                                Logger.warn(req, `[WriteIn] Duplicate write-in score for "${writeInCandidate.candidate_name}" on same ballot, keeping first score`);
                             }
                         } else {
                             numExcludedWriteIns += 1
