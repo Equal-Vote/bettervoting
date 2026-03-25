@@ -15,6 +15,8 @@ export const getEntry = <ItemType extends GenericObject,>(arr: ItemType[], id: a
   return match
 }
 
+export const trimLower = (s: string) => s.trim().toLowerCase().normalize('NFC');
+
 export const urlRegex = /^(http|https):\/\/[^ "]+$/;
 export const timeZones = [
   'Etc/GMT+12', // confusingly, this is actually UTC-12 timezone

@@ -9,10 +9,9 @@ import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
 import { ElectionResults, candidate, rawVote } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
 import { Candidate } from "@equal-vote/star-vote-shared/domain_model/Candidate";
+import { trimLower } from "@equal-vote/star-vote-shared/domain_model/Util";
 
 const BallotModel = ServiceLocator.ballotsDb();
-
-const trimLower = (s: string) => s.trim().toLowerCase().normalize('NFC');
 
 const getElectionResults = async (req: IElectionRequest, res: Response, next: NextFunction) => {
     const election = req.election
@@ -78,7 +77,7 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
         ballots.forEach((ballot: Ballot) => {
             const vote = ballot.votes.find((vote) => vote.race_id === race_id)
             if (vote) {
-                const marks: {[key: string]: number} = {}
+                const marks: {[key: string]: number | null} = {}
                 vote.scores.forEach(score => {
                     const isRegularCandidate = race.candidates.some((c: Candidate) => c.candidate_id === score.candidate_id)
                     if (isRegularCandidate) {

@@ -10,8 +10,7 @@ import { PrimaryButton } from '../../styles';
 import useElection from '../../ElectionContextProvider';
 import { useGetWriteIns, useSetWriteInResults } from '../../../hooks/useAPI';
 import { WriteInCandidate } from '@equal-vote/star-vote-shared/domain_model/WriteIn';
-
-const trimLower = (s: string) => s.trim().toLowerCase().normalize('NFC');
+import { trimLower } from '@equal-vote/star-vote-shared/domain_model/Util';
 
 interface CandidateRow {
     key: string;          // trimLower key

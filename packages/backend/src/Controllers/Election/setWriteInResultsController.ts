@@ -6,10 +6,9 @@ import { BadRequest, InternalServerError } from "@curveball/http-errors";
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
 import { WriteInCandidate } from '@equal-vote/star-vote-shared/domain_model/WriteIn';
+import { trimLower } from '@equal-vote/star-vote-shared/domain_model/Util';
 
 var ElectionsModel = ServiceLocator.electionsDb();
-
-const trimLower = (s: string) => s.trim().toLowerCase().normalize('NFC');
 
 function validateWriteInCandidates(candidates: unknown[]): WriteInCandidate[] {
     const result: WriteInCandidate[] = [];
