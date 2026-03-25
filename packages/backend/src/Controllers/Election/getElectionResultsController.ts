@@ -122,8 +122,10 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
                     nOvervotes: 0,
                 },
                 tieBreakType: 'none',
-                numUnprocessedWriteIns: race.enable_write_in ? numUnprocessedWriteIns : undefined,
-                numExcludedWriteIns: race.enable_write_in ? numExcludedWriteIns : undefined,
+                writeInDiagnostics: race.enable_write_in ? {
+                    numScoresDisregardedForUnprocessed: numUnprocessedWriteIns,
+                    numScoresDisregarded: numExcludedWriteIns,
+                } : undefined,
             } as unknown as ElectionResults; // ElectionResults is a discriminated union requiring method-specific candidate fields; not worth constructing for this degenerate case
             continue;
         }
@@ -136,8 +138,10 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
         const tabulationResult = VotingMethods[voting_method](candidates, cvr, num_winners, election.settings)
         results[race_index] = {
             ...tabulationResult,
-            numUnprocessedWriteIns: race.enable_write_in ? numUnprocessedWriteIns : undefined,
-            numExcludedWriteIns: race.enable_write_in ? numExcludedWriteIns : undefined,
+            writeInDiagnostics: race.enable_write_in ? {
+                numScoresDisregardedForUnprocessed: numUnprocessedWriteIns,
+                numScoresDisregarded: numExcludedWriteIns,
+            } : undefined,
         };
     }
     

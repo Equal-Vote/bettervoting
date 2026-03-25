@@ -79,8 +79,10 @@ export interface genericResults<CandidateType extends candidate, SummaryType ext
     roundResults: roundResults<CandidateType>[],
     summaryData: SummaryType,
     tieBreakType: tieBreakType,
-    numUnprocessedWriteIns?: number,
-    numExcludedWriteIns?: number,
+    writeInDiagnostics?: {
+        numScoresDisregardedForUnprocessed: number,
+        numScoresDisregarded: number,
+    },
 }
 
 /////////////// STAR TYPES //////////////////

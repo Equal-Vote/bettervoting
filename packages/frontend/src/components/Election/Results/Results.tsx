@@ -479,9 +479,9 @@ export default function Results({ race, results }: {race: Race, results: Electio
             </Typography>
           }
           <Typography variant="h6">{t('results.vote_count', {n: results.summaryData.nTallyVotes})}</Typography>
-            {results.numExcludedWriteIns > 0 &&
+            {results.writeInDiagnostics?.numScoresDisregarded > 0 &&
               <Typography component="p" sx={{color: '#808080', fontSize: '0.9rem', mt: 1}}>
-                {results.numExcludedWriteIns} write-in vote{results.numExcludedWriteIns === 1 ? '' : 's'} not included in results
+                {results.writeInDiagnostics.numScoresDisregarded} write-in vote{results.writeInDiagnostics.numScoresDisregarded === 1 ? '' : 's'} not included in results
               </Typography>
             }
             {/* Voting method and learning link */}
