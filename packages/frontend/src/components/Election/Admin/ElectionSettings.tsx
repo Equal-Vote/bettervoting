@@ -6,15 +6,15 @@ import FormHelperText from "@mui/material/FormHelperText";
 import FormControl from "@mui/material/FormControl";
 import Typography from '@mui/material/Typography';
 import { Checkbox, FormGroup, Radio, RadioGroup, Dialog, DialogActions, DialogContent, DialogTitle, Paper, Box, IconButton, TextField, capitalize } from "@mui/material"
-import { PrimaryButton, SecondaryButton, Tip } from '../styles';
-import useElection  from '../ElectionContextProvider';
 import structuredClone from '@ungap/structured-clone';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { useSubstitutedTranslation } from '../util';
 import { ElectionSettings as IElectionSettings, TermType, electionSettingsValidation } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
 import { ElectionState } from '@equal-vote/star-vote-shared/domain_model/ElectionStates';
-import useSnackbar from '../SnackbarContext';
+import { Tip } from '~/components/styles';
+import useSnackbar from '~/components/SnackbarContext';
+import { useSubstitutedTranslation } from '~/components/util';
+import useElection from '~/components/ElectionContextProvider';
 
 export default function ElectionSettings() {
     const { election, refreshElection, updateElection } = useElection()
