@@ -8,7 +8,7 @@ import useConfirm from '../../ConfirmationDialogProvider';
 import useFeatureFlags from '../../FeatureFlagContextProvider';
 import { SortableList } from '~/components/DragAndDrop';
 import { makeDefaultRace, RaceErrors, useEditRace } from './useEditRace';
-import { makeUniqueIDSync, ID_PREFIXES, ID_LENGTHS, NOTA_ID, isWriteInCandidate } from '@equal-vote/star-vote-shared/utils/makeID';
+import { makeUniqueIDSync, ID_PREFIXES, ID_LENGTHS, NOTA_ID } from '@equal-vote/star-vote-shared/utils/makeID';
 import VotingMethodSelector from './VotingMethodSelector';
 import useElection from '~/components/ElectionContextProvider';
 import { SecondaryButton, PrimaryButton, FileDropBox, LinkButton, Tip } from '~/components/styles';
@@ -88,12 +88,12 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
         );
 
         return [
-            ...editedRace.candidates.filter(c => c.candidate_id !== NOTA_ID && !isWriteInCandidate(c.candidate_id)),
+            ...editedRace.candidates.filter(c => c.candidate_id !== NOTA_ID),
             {
                 candidate_id: newId,
                 candidate_name: ''
             },
-            ...editedRace.candidates.filter(c => c.candidate_id === NOTA_ID || isWriteInCandidate(c.candidate_id)),
+            ...editedRace.candidates.filter(c => c.candidate_id === NOTA_ID),
         ];
     }, [editedRace.candidates]);
 
@@ -188,11 +188,9 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
 
     const candidateItems = election.state === 'draft' ? ephemeralCandidates : editedRace.candidates;
 
-    // special candidates are "none of the above" and write-ins
-    // these candidates are listed below the new candidate in the ephemeral list
+    // NOTA is listed below the new candidate in the ephemeral list
     const maxSpecialCandidates = 1;
-    const isSpecialCandidate = (c) => c.candidate_id === NOTA_ID || isWriteInCandidate(c.candidate_id);
-    const numSpecialCandidates = editedRace.candidates.filter(isSpecialCandidate).length;
+    const numSpecialCandidates = editedRace.candidates.filter(c => c.candidate_id === NOTA_ID).length;
     const newCandidateIndex = election.state === 'draft' ? ephemeralCandidates.length - 1 - numSpecialCandidates : undefined;
 
     const uiIndexToActualIndex = (uiIndex) => {
