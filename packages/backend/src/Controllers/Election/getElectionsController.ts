@@ -110,6 +110,7 @@ const innerGetGlobalElectionStats = async (req: IRequest): Promise<GlobalElectio
     const electionMethodMap: Record<string, ElectionMethodKey> = {};
     electionRaces?.forEach(e => {
         const methods = new Set((e.races as Race[]).map(r => r.voting_method));
+        if (methods.size === 0) return; // drafted elections with no races yet — skip
         let methodKey: ElectionMethodKey;
         if (methods.size > 1) {
             methodKey = 'multi_method';
