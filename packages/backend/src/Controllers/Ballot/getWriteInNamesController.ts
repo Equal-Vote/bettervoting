@@ -1,11 +1,9 @@
 import ServiceLocator from "../../ServiceLocator";
 import Logger from "../../Services/Logging/Logger";
-import { BadRequest } from "@curveball/http-errors";
 import { expectPermission } from "../controllerUtils";
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
-import { Uid } from "@equal-vote/star-vote-shared/domain_model/Uid";
 import { Ballot } from "@equal-vote/star-vote-shared/domain_model/Ballot";
 import { WriteInData } from "@equal-vote/star-vote-shared/domain_model/WriteIn";
 
@@ -18,11 +16,6 @@ const getWriteInNamesController = async (req: IElectionRequest, res: Response, n
     expectPermission(req.user_auth.roles, permissions.canViewBallots)
 
     const ballots = await BallotModel.getBallotsByElectionID(String(electionId), req);
-    if (!ballots) {
-        const msg = `Ballots not found for Election ${electionId}`;
-        Logger.info(req, msg);
-        throw new BadRequest(msg)
-    }
 
     const election = req.election
     const write_in_data: WriteInData[] = []

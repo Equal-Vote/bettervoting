@@ -272,6 +272,55 @@ describe("Write-In Candidates", () => {
     });
 });
 
+describe("Zero-ballot paths", () => {
+    var election: Election;
+
+    test("Create election", async () => {
+        const response = await th.createElection({
+            ...WriteInElection,
+            election_id: "0",
+            title: 'Zero Ballot Election',
+        } as Election, testInputs.user1token);
+        expect(response.statusCode).toBe(200);
+        election = response.election;
+        th.testComplete();
+    });
+
+    test("getWriteIns returns empty data when no ballots exist", async () => {
+        const res = await th.getRequest(
+            `/API/Election/${election.election_id}/getWriteIns`,
+            testInputs.user1token,
+        );
+        expect(res.statusCode).toBe(200);
+        expect(res.body.write_in_data).toBeTruthy();
+        const raceData = res.body.write_in_data.find((d: any) => d.race_id === 'race0');
+        expect(raceData).toBeTruthy();
+        expect(raceData.names).toEqual({});
+        th.testComplete();
+    });
+
+    test("getElectionResults returns empty results when no ballots exist", async () => {
+        const res = await th.getRequest(
+            `/API/ElectionResult/${election.election_id}`,
+            testInputs.user1token,
+        );
+        expect(res.statusCode).toBe(200);
+        expect(res.body.results).toBeTruthy();
+        expect(res.body.results[0].summaryData.nTallyVotes).toBe(0);
+        th.testComplete();
+    });
+
+    test("getBallots returns empty list when no ballots exist", async () => {
+        const res = await th.getRequest(
+            `/API/Election/${election.election_id}/ballots`,
+            testInputs.user1token,
+        );
+        expect(res.statusCode).toBe(200);
+        expect(res.body.ballots).toEqual([]);
+        th.testComplete();
+    });
+});
+
 describe("Write-In Validation (setWriteInResults)", () => {
     var election: Election;
 

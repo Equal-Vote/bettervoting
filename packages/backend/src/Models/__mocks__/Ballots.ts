@@ -24,13 +24,10 @@ export default class BallotsDB implements IBallotStore {
         return Promise.resolve(JSON.parse(JSON.stringify([] as Ballot[])));
     }
 
-    getBallotsByElectionID(election_id: string, ctx:ILoggingContext): Promise<Ballot[] | null> {
+    getBallotsByElectionID(election_id: string, ctx:ILoggingContext): Promise<Ballot[]> {
         const ballots = this.ballots.filter(
             (ballot) => ballot.election_id === election_id
         );
-        if (!ballots) {
-            return Promise.resolve(null);
-        }
         var resBallots = JSON.parse(JSON.stringify(ballots));
         return Promise.resolve(resBallots);
     }

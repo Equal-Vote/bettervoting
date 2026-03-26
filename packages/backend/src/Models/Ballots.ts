@@ -95,7 +95,7 @@ export default class BallotsDB implements IBallotStore {
     }
 
 
-    getBallotsByElectionID(election_id: string, ctx: ILoggingContext): Promise<Ballot[] | null> {
+    getBallotsByElectionID(election_id: string, ctx: ILoggingContext): Promise<Ballot[]> {
         Logger.debug(ctx, `${tableName}.getBallotsByElectionID ${election_id}`);
 
         return this._postgresClient

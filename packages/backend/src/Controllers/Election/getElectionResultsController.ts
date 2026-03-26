@@ -30,11 +30,6 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
     }
 
     const ballots = await BallotModel.getBallotsByElectionID(String(electionId), req);
-    if (!ballots) {
-        const msg = `Ballots not found for Election ${electionId}`;
-        Logger.info(req, msg);
-        throw new BadRequest(msg);
-    }
 
     let results: ElectionResults[] = []
     for (let race_index = 0; race_index < election.races.length; race_index++) {

@@ -1,6 +1,6 @@
 import ServiceLocator from "../../ServiceLocator";
 import Logger from "../../Services/Logging/Logger";
-import { BadRequest, Unauthorized } from "@curveball/http-errors";
+import { Unauthorized } from "@curveball/http-errors";
 import { expectPermission } from "../controllerUtils";
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { IElectionRequest } from "../../IRequest";
@@ -20,11 +20,6 @@ const getBallotsByElectionID = async (req: IElectionRequest, res: Response, next
     }
 
     const ballots = await BallotModel.getBallotsByElectionID(String(electionId), req);
-    if (!ballots) {
-        const msg = `Ballots not found for Election ${electionId}`;
-        Logger.info(req, msg);
-        throw new BadRequest(msg)
-    }
 
     // Scrub identifying information from ballots to preserve voter anonymity
     const scrubbedBallots = ballots.map(ballot => ({
