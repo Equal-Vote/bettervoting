@@ -320,9 +320,6 @@ export const openFeedback = () => {
   (button as HTMLButtonElement).click();
 };
 
-
-
-
 export function scrollToElement(e) {
   setTimeout(() => {
     // TODO: I feel like there's got to be an easier way to do this
