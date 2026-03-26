@@ -462,7 +462,8 @@ export default function Results({ race, results }: {race: Race, results: Electio
           <Typography variant='h5'>⭐{results.summaryData.candidates[0].name} wins uncontested⭐</Typography>
           {results.writeInDiagnostics?.numScoresDisregarded > 0 &&
             <Typography component="p" sx={{color: '#808080', fontSize: '0.9rem', mt: 1}}>
-              {results.writeInDiagnostics.numScoresDisregarded} write-in vote{results.writeInDiagnostics.numScoresDisregarded === 1 ? '' : 's'} not included in results
+              {results.writeInDiagnostics.numScoresDisregarded} write-in score{results.writeInDiagnostics.numScoresDisregarded === 1 ? '' : 's'} not counted.{' '}
+              <a href="https://docs.bettervoting.com/help/faq.html#write-in-scores-not-counted" target="_blank" rel="noopener noreferrer" style={{color: '#808080'}}>Learn more</a>
             </Typography>
           }
         </>}
