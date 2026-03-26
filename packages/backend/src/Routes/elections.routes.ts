@@ -267,8 +267,8 @@ electionsRouter.delete('/Election/:id', asyncHandler(deleteElection))
   */
  electionsRouter.post('/QueryElections', asyncHandler(queryElections))
  
- /** 
- * 
+ /**
+ *
  * @swagger
  * /GlobalElectionStats:
  *   get:
@@ -284,10 +284,64 @@ electionsRouter.delete('/Election/:id', asyncHandler(deleteElection))
  *               properties:
  *                 elections:
  *                   type: number
- *                   description: Number of elections
+ *                   description: Total elections (legacy_elections + sum of per-method elections)
  *                 votes:
  *                   type: number
- *                   description: Number of votes
+ *                   description: Total votes cast (legacy_votes + sum of per-method votes)
+ *                 legacy_elections:
+ *                   type: number
+ *                   description: Elections imported from classic star.vote
+ *                 legacy_votes:
+ *                   type: number
+ *                   description: Votes imported from classic star.vote
+ *                 star_elections:
+ *                   type: number
+ *                   description: Elections using STAR voting
+ *                 star_votes:
+ *                   type: number
+ *                   description: Votes cast in STAR elections
+ *                 rcv_elections:
+ *                   type: number
+ *                   description: Elections using Ranked Choice Voting (IRV)
+ *                 rcv_votes:
+ *                   type: number
+ *                   description: Votes cast in RCV elections
+ *                 approval_elections:
+ *                   type: number
+ *                   description: Elections using Approval voting
+ *                 approval_votes:
+ *                   type: number
+ *                   description: Votes cast in Approval elections
+ *                 ranked_robin_elections:
+ *                   type: number
+ *                   description: Elections using Ranked Robin voting
+ *                 ranked_robin_votes:
+ *                   type: number
+ *                   description: Votes cast in Ranked Robin elections
+ *                 star_pr_elections:
+ *                   type: number
+ *                   description: Elections using STAR Proportional Representation
+ *                 star_pr_votes:
+ *                   type: number
+ *                   description: Votes cast in STAR PR elections
+ *                 plurality_elections:
+ *                   type: number
+ *                   description: Elections using Plurality voting
+ *                 plurality_votes:
+ *                   type: number
+ *                   description: Votes cast in Plurality elections
+ *                 stv_elections:
+ *                   type: number
+ *                   description: Elections using Single Transferable Vote
+ *                 stv_votes:
+ *                   type: number
+ *                   description: Votes cast in STV elections
+ *                 multi_method_elections:
+ *                   type: number
+ *                   description: Elections with races using multiple different voting methods
+ *                 multi_method_votes:
+ *                   type: number
+ *                   description: Votes cast in multi-method elections
  *  */
  electionsRouter.get('/GlobalElectionStats', asyncHandler(getGlobalElectionStats))
 /** 
