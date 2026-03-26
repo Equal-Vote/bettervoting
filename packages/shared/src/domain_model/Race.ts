@@ -5,6 +5,18 @@ import { candidateValidation } from "./Candidate";
 
 const validVotingMethods = ['STAR', 'STAR_PR', 'Approval', 'RankedRobin', 'IRV', 'Plurality', 'STV'] as const;
 export type VotingMethod = typeof validVotingMethods[number];
+
+export const methodValueToTextKey = {
+    STAR: 'star',
+    STAR_PR: 'star_pr',
+    Approval: 'approval',
+    RankedRobin: 'ranked_robin',
+    IRV: 'rcv',
+    Plurality: 'choose_one',
+    STV: 'stv',
+} as const satisfies Record<VotingMethod, string>;
+
+export type MethodTextKey = typeof methodValueToTextKey[VotingMethod];
 export interface Race {
     race_id:        Uid; // short mnemonic for the race
     title:          string; // display caption for the race
