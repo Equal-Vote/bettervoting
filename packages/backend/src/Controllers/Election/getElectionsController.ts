@@ -4,6 +4,7 @@ import { BadRequest } from "@curveball/http-errors";
 import { IElectionRequest, IRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
 import { Election, removeHiddenFields } from '@equal-vote/star-vote-shared/domain_model/Election';
+import { Race, VotingMethod, MethodTextKey, methodValueToTextKey } from '@equal-vote/star-vote-shared/domain_model/Race';
 import { expectPermission } from '../controllerUtils';
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 
@@ -82,19 +83,19 @@ const queryElections = async (req: IElectionRequest, res: Response, next: NextFu
     });
 }
 
-const VOTING_METHOD_KEYS: Record<string, string> = {
-    'STAR': 'star',
-    'IRV': 'rcv',
-    'Approval': 'approval',
-    'RankedRobin': 'ranked_robin',
-    'STAR_PR': 'star_pr',
-    'Plurality': 'plurality',
-    'STV': 'stv',
-};
+type ElectionMethodKey = MethodTextKey | 'multi_method';
 
-const ALL_METHOD_KEYS = ['star', 'rcv', 'approval', 'ranked_robin', 'star_pr', 'plurality', 'stv', 'multi_method'];
+const ALL_METHOD_KEYS: ElectionMethodKey[] = [
+    ...(Object.values(methodValueToTextKey) as MethodTextKey[]),
+    'multi_method',
+];
 
-const innerGetGlobalElectionStats = async (req: IRequest) => {
+type GlobalElectionStats =
+    { elections: number; votes: number; legacy_elections: number; legacy_votes: number } &
+    Record<`${ElectionMethodKey}_votes`, number> &
+    Record<`${ElectionMethodKey}_elections`, number>;
+
+const innerGetGlobalElectionStats = async (req: IRequest): Promise<GlobalElectionStats> => {
     Logger.info(req, `getGlobalElectionStats `);
 
     const [electionVotes, electionRaces, sourcedFromPrior] = await Promise.all([
@@ -106,12 +107,18 @@ const innerGetGlobalElectionStats = async (req: IRequest) => {
     const priorElections = sourcedFromPrior?.map(e => e.election_id) ?? [];
 
     // Build election_id -> method_key map; elections with multiple distinct methods are 'multi_method'
-    const electionMethodMap: Record<string, string> = {};
+    const electionMethodMap: Record<string, ElectionMethodKey> = {};
     electionRaces?.forEach(e => {
-        const methods = new Set((e.races as any[]).map(r => r.voting_method));
-        const methodKey = methods.size > 1
-            ? 'multi_method'
-            : (VOTING_METHOD_KEYS[[...methods][0] as string] ?? 'other');
+        const methods = new Set((e.races as Race[]).map(r => r.voting_method));
+        let methodKey: ElectionMethodKey;
+        if (methods.size > 1) {
+            methodKey = 'multi_method';
+        } else {
+            const vm = [...methods][0] as VotingMethod;
+            const key = methodValueToTextKey[vm];
+            if (!key) throw new Error(`Unknown voting method: ${vm} for election ${e.election_id}`);
+            methodKey = key;
+        }
         electionMethodMap[e.election_id] = methodKey;
     });
 
@@ -121,30 +128,25 @@ const innerGetGlobalElectionStats = async (req: IRequest) => {
     // legacy_* holds pre-existing counts from classic star.vote; the per-method breakdowns
     // cover only current elections, so: votes = legacy_votes + sum(method_votes),
     // and: elections = legacy_elections + sum(method_elections)
-    const stats: Record<string, number> = {
+    const stats = {
         elections: legacyElections,
         votes: legacyVotes,
         legacy_elections: legacyElections,
         legacy_votes: legacyVotes,
-    };
-
-    for (const key of ALL_METHOD_KEYS) {
-        stats[`${key}_elections`] = 0;
-        stats[`${key}_votes`] = 0;
-    }
+        ...Object.fromEntries(ALL_METHOD_KEYS.flatMap(k => [[`${k}_votes`, 0], [`${k}_elections`, 0]])),
+    } as GlobalElectionStats;
 
     electionVotes
         ?.filter(m => !priorElections.includes(m['election_id']))
         ?.forEach((m) => {
             const count = Number(m['v']);
-            stats['votes'] += count;
-            if (count >= 2) stats['elections'] += 1;
+            stats.votes += count;
+            if (count >= 2) stats.elections += 1;
 
-            const methodKey = electionMethodMap[m['election_id']] ?? 'other';
-            if (stats[`${methodKey}_votes`] !== undefined) {
-                stats[`${methodKey}_votes`] += count;
-                if (count >= 2) stats[`${methodKey}_elections`] += 1;
-            }
+            const methodKey = electionMethodMap[m['election_id']];
+            if (!methodKey) throw new Error(`No voting method found for election ${m['election_id']}`);
+            stats[`${methodKey}_votes`] += count;
+            if (count >= 2) stats[`${methodKey}_elections`] += 1;
         });
 
     return stats;

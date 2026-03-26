@@ -86,17 +86,7 @@ export function hashString(inputString: string) {
     return createHash('sha256').update(inputString).digest('hex')
 }
 
-// mapping from method frontend version to backend version
-// TODO: we need make these consistent
-export const methodValueToTextKey = {
-    STAR_PR: 'star_pr',
-    STAR: 'star',
-    RankedRobin: 'ranked_robin',
-    Approval: 'approval',
-    STV: 'stv',
-    Plurality: 'choose_one',
-    IRV: 'rcv',
-};
+export { methodValueToTextKey } from '@equal-vote/star-vote-shared/domain_model/Race';
 
 export const formatPercent = (f: number): string => {
   if(0 < f && f < .01) return '<1%';
