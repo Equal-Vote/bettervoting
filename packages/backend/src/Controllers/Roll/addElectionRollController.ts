@@ -82,7 +82,7 @@ const addElectionRoll = async (req: IElectionRequest & { body: { electionRoll: E
             })
         })
         if (duplicateRolls.length > 0) {
-            throw new BadRequest(`Some submitted voters already exist: ${duplicateRolls.map( (roll: ElectionRoll) => `${roll.voter_id ? roll.voter_id : ''} ${roll.email ? roll.email : ''}`).join(',')}`)
+            throw new BadRequest(`Some submitted voters already exist (${duplicateRolls.length} duplicates found)`)
         }
 
         // Check for roll limit

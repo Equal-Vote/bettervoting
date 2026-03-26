@@ -15,6 +15,7 @@ import swaggerUi from 'swagger-ui-express';
 import swagger from './OpenApi/swagger.json';
 
 import { getUserToken, getUser } from './Controllers/User';
+import { sendGridWebhookController } from './Controllers/sendGridWebhookController';
 const asyncHandler = require('express-async-handler')
 require('./socketHandler')
 
@@ -41,6 +42,9 @@ export default function makeApp() {
     const frontendPath = '../../../../packages/frontend/build/';
     
     const path = require('path');
+    // SendGrid webhook must be registered before express.json() to preserve the raw body for signature verification
+    app.post('/API/SendGridWebhook', express.raw({ type: 'application/json' }), sendGridWebhookController);
+
     app.use(express.json());
     //Routes
     app.use('/API', getUser, electionsRouter)

@@ -254,9 +254,10 @@ const VotePage = () => {
   }
 
   const isLastPage = (currentPage === pages.length-1)
+  const isDraggableBallot = pages[currentPage].voting_method === 'IRV' && election.settings.draggable_ballot
 
   return (
-    <Container disableGutters={true} maxWidth="sm">
+    <Container disableGutters={true} maxWidth={isDraggableBallot ? 'md' : 'sm'}>
       <DraftWarning/>
       <ElectionStateWarning
         state="archived"

@@ -10,6 +10,7 @@ import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { randomUUID } from "crypto";
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
+import { logSafeHash } from '../../Services/Logging/logSafeHash';
 
 var ElectionRollModel = ServiceLocator.electionRollDb();
 var EmailService = ServiceLocator.emailService();
@@ -91,7 +92,7 @@ async function sendBatchEmailInvites(req: any, electionRoll: ElectionRoll[], ele
 }
 
 const sendInvitationController = async (req: any, res: any, next: any) => {
-    Logger.info(req, `${className}.sendInvite ${req.election.election_id} ${req.params.voter_id}`);
+    Logger.info(req, `${className}.sendInvite ${req.election.election_id} ${logSafeHash(req.params.voter_id)}`);
     expectPermission(req.user_auth.roles, permissions.canSendEmails)
 
     if (!(req.election.settings.voter_access === 'closed' && req.election.settings.invitation === 'email')) {
@@ -108,7 +109,7 @@ const sendInvitationController = async (req: any, res: any, next: any) => {
     const electionRoll = await ElectionRollModel.getByVoterID(electionId, voter_id, req)
     if (!electionRoll) {
         //this should hopefully never happen
-        Logger.error(req, `Could not find voter ${voter_id}`);
+        Logger.error(req, `Could not find voter ${logSafeHash(voter_id)}`);
         throw new InternalServerError('Could not find voter');
     }
 
@@ -123,7 +124,7 @@ async function handleSendInviteEvent(job: { id: string; data: SendInviteEvent; }
     const electionRoll = await ElectionRollModel.getByVoterID(event.election.election_id, event.electionRoll.voter_id, ctx)
     if (!electionRoll) {
         //this should hopefully never happen
-        Logger.error(ctx, `Could not find voter ${event.electionRoll.voter_id}`);
+        Logger.error(ctx, `Could not find voter ${logSafeHash(event.electionRoll.voter_id)}`);
         throw new InternalServerError('Could not find voter');
     }
     await sendInvitation(ctx, event.election, electionRoll, event.sender, event.url)

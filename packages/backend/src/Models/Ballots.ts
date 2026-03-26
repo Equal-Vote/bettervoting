@@ -2,6 +2,7 @@ import { Ballot } from '@equal-vote/star-vote-shared/domain_model/Ballot';
 import { Uid } from '@equal-vote/star-vote-shared/domain_model/Uid';
 import { ILoggingContext } from '../Services/Logging/ILogger';
 import Logger from '../Services/Logging/Logger';
+import { logSafeHash } from '../Services/Logging/logSafeHash';
 import { IBallotStore } from './IBallotStore';
 import { Kysely, sql, Transaction } from 'kysely';
 import { Database } from './Database';
@@ -106,7 +107,7 @@ export default class BallotsDB implements IBallotStore {
     }
 
     getBallotByVoterID(voter_id: string, election_id: string, ctx: ILoggingContext): Promise<Ballot | undefined> {
-        Logger.debug(ctx, `${tableName}.getBallotByVoterID ${voter_id} ${election_id}`);
+        Logger.debug(ctx, `${tableName}.getBallotByVoterID ${logSafeHash(voter_id)} ${election_id}`);
 
         return this._postgresClient
             .selectFrom(tableName)

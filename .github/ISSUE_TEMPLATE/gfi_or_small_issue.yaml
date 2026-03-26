@@ -1,5 +1,5 @@
-name: Blank Issue Form
-description: 'BetterVoting issue form'
+name: GFI or Small Issue 
+description: Use this template for "good first issues" or "small complexity" issues. These issues are for newer volunteers so having the context available is extra important.
 labels: ['Role: Missing', 'Complexity: Missing']
 projects: ['Equal-Vote/3']
 

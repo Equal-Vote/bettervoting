@@ -38,7 +38,7 @@ export default class ElectionRollDB implements IElectionRollStore{
     getByVoterID(election_id: string,voter_id:string, ctx:ILoggingContext): Promise<ElectionRoll | null> {
         Logger.debug(ctx, `MockElectionRolls getByVoterID ${election_id}, voter:${voter_id}`);
         const roll = this._electionRolls.find(electionRolls => electionRolls.election_id==election_id && electionRolls.voter_id==voter_id)
-        
+
         if (!roll){
             Logger.debug(ctx, "Mock ElectionRoll DB could not match election and voter. Current data:\n"+JSON.stringify(this._electionRolls));
             return Promise.resolve(null)
@@ -57,7 +57,7 @@ export default class ElectionRollDB implements IElectionRollStore{
             if (email && electionRolls.email === email) return true
             return false
         })
-        
+
         if (!roll || roll.length===0){
             Logger.debug(ctx, "Mock ElectionRoll DB could not match election and voter. Current data:\n"+JSON.stringify(this._electionRolls));
             return Promise.resolve(null)

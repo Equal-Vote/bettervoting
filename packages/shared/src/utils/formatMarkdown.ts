@@ -19,15 +19,13 @@ export interface FormatMarkdownOptions {
  * - \n\n → paragraph breaks
  * - __VOTE_BUTTON__ and __ELECTION_HOME_BUTTON__ (when allowButtons is true)
  *
- * Always sanitizes HTML first for security.
+ * Always sanitizes HTML at the end for security. This ensures any malicious HTML 
+ * elements or attributes created dynamically are safely stripped out.
  */
 export function formatMarkdown(text: string, options: FormatMarkdownOptions = {}): string {
   if (!text) return '';
 
   let body = text;
-
-  // Sanitize first
-  body = sanitizeHtml(body);
 
   // Links first: [text](url) → <a href="url">text</a>
   let linkParts = body.split(rLink);
@@ -44,6 +42,16 @@ export function formatMarkdown(text: string, options: FormatMarkdownOptions = {}
 
   // Paragraph breaks: \n\n → </p><p>
   body = `<p>${body.replaceAll('\n\n', '</p><p>')}</p>`;
+
+  // Sanitize user-provided inputs
+  body = sanitizeHtml(body, {
+    allowedTags: sanitizeHtml.defaults.allowedTags,
+    allowedAttributes: {
+      ...sanitizeHtml.defaults.allowedAttributes,
+      // Retain target and rel so external links open safely in new tabs
+      a: [ 'href', 'name', 'target', 'rel' ]
+    }
+  });
 
   // Buttons (for email templates only)
   if (options.allowButtons) {

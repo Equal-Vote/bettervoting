@@ -35,6 +35,11 @@ const AddElectionRoll = ({ onClose }: { onClose: () => void }) => {
         state?: string;
     };
 
+    const allowedColumns = [];
+    if(enableVoterID) allowedColumns.push('voter_id')
+    if(enableEmail) allowedColumns.push('email')
+    if(enablePrecinct) allowedColumns.push('precinct')
+
     const submitRolls = async (rolls) => {
 
         const newRolls = await postRoll.makeRequest({ electionRoll: rolls })
@@ -299,8 +304,9 @@ const AddElectionRoll = ({ onClose }: { onClose: () => void }) => {
                             Upload CSV
                         </Typography>
                         <Typography align='center' component="p">
-                            {`Upload a csv file of your voter data. Files can include ${emailListOnly ? "email addresses" : "voter IDs, email addresses,"} \
-                             and precincts. Files must include headers with the expected spelling:${emailListOnly ? "" : "voter_id,"}email,precinct.`}
+                            Upload a csv file of your voter data. Files must include the following headers: {
+                                allowedColumns.map((h) => (h)).join(', ')
+                            }
                         </Typography>
                     </Grid>
                     <Grid item sx={{ m: 1 }}>

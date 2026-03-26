@@ -15,7 +15,7 @@ const className = "VoterRolls.Controllers";
 const editElectionRoll = async (req: IElectionRequest, res: Response, next: NextFunction) => {
     expectPermission(req.user_auth.roles, permissions.canEditElectionRoll)
     const electinoRollInput = req.body.electionRollEntry;
-    Logger.info(req, `${className}.editElectionRoll`, { electionRollEntry: electinoRollInput });
+    Logger.info(req, `${className}.editElectionRoll election:${req.election.election_id}`);
     if (electinoRollInput.history == null) {
         electinoRollInput.history = [];
     }
