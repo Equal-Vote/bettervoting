@@ -11,6 +11,7 @@ export const ID_LENGTHS = {
 export const ID_PREFIXES = {
   BALLOT: 'b',
   CANDIDATE: 'c',
+  CANDIDATE_WRITE_IN: 'cwi',
   RACE: 'r',
   VOTER: 'v',
   VOTER_DISCORD: 'vd',
@@ -20,14 +21,12 @@ export const ID_PREFIXES = {
 // nota = none of the above, this won't collide with the standard pattern because it has vowels, and the id length is different
 export const NOTA_ID = 'c-nota';
 
-const WRITE_IN_CANDIDATE_PREFIX = 'cwi-';
-
 export function makeWriteInCandidateId(name: string): string {
-  return `${WRITE_IN_CANDIDATE_PREFIX}${name}`;
+  return `${ID_PREFIXES.CANDIDATE_WRITE_IN}-${name}`;
 }
 
 export function isWriteInCandidate(candidateId: string): boolean {
-  return candidateId.startsWith(WRITE_IN_CANDIDATE_PREFIX);
+  return candidateId.startsWith(ID_PREFIXES.CANDIDATE_WRITE_IN);
 }
 
 // Removing vowels to avoid spelling real words in IDS (especially don't want curse words)

@@ -11,6 +11,8 @@ import { ElectionResults, candidate, rawVote } from "@equal-vote/star-vote-share
 import { makeWriteInCandidateId } from "@equal-vote/star-vote-shared/utils/makeID";
 import { Candidate } from "@equal-vote/star-vote-shared/domain_model/Candidate";
 import { trimLower } from "@equal-vote/star-vote-shared/domain_model/Util";
+import {get as getTinyRand} from '../../Tabulators/tinyrand';
+import { validVotingMethods } from "@equal-vote/star-vote-shared/domain_model/Race";
 
 const BallotModel = ServiceLocator.ballotsDb();
 
@@ -131,6 +133,11 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
             } as unknown as ElectionResults; // ElectionResults is a discriminated union requiring method-specific candidate fields; not worth constructing for this degenerate case
             continue;
         }
+
+        // shuffle candidates for tiebreaking order
+        // we use a different offset for each voting method so that multi-method polls don't resolve the same way for each race
+        getTinyRand(0, cvr.length+(validVotingMethods.indexOf(voting_method) * 1000)).shuffle(candidates)
+        candidates.forEach((c, i) => c.tieBreakOrder = i)
 
         if (!VotingMethods[voting_method]) {
             throw new Error(`Invalid Voting Method: ${voting_method}`)
