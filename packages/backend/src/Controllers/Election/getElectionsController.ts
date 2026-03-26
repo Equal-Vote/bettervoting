@@ -149,15 +149,16 @@ const innerGetGlobalElectionStats = async (req: IRequest): Promise<GlobalElectio
         ?.filter(m => !priorElections.includes(m['election_id']))
         ?.filter(m => m['v'] >= 2)
         ?.forEach((m) => {
-            stats.elections += 1;
-            // Number() is required for some reason
-            stats.votes += Number(m['v']);
-
             const methodKey = electionMethodMap[m['election_id']];
             // there's some garbage elections with an invalid voting method of "STAR VOting" (proper term is "STAR"). We can skip those
             if (!methodKey) return; // throw new Error(`No voting method found for election ${m['election_id']}`);
+
+            stats.elections += 1;
+            // Number() is required for some reason
+            stats.votes += Number(m['v']);
             stats[`${methodKey}_elections`] += 1;
             stats[`${methodKey}_votes`] += Number(m['v']);
+        });
         });
 
     return stats;
