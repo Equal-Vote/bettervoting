@@ -43,5 +43,6 @@ export const sharedConfig = {
         // Real elections under Arend's account
         'pres24', 
         'meta_pets', 
+        'pet',
     ]
 };
