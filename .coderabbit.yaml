@@ -1,0 +1,65 @@
+language: en
+
+reviews:
+  profile: chill
+
+  auto_review:
+    auto_incremental_review: false
+
+  high_level_summary: true
+  high_level_summary_in_walkthrough: true
+  collapse_walkthrough: true
+  review_status: false
+  review_details: false
+  changed_files_summary: false
+  sequence_diagrams: false
+  estimate_code_review_effort: false
+  assess_linked_issues: false
+  related_issues: false
+  related_prs: false
+  suggested_labels: false
+  suggested_reviewers: false
+  poem: true
+
+  path_instructions:
+    - path: "**/*"
+      instructions: |
+        Assume inline comments are extremely expensive and should be avoided almost always.
+
+        Do not leave inline comments unless ALL of the following are true:
+        1. The issue is a high-confidence, concrete defect in the changed code.
+        2. The issue would likely cause production breakage, data loss, a security vulnerability,
+           severe reliability problems, or a clearly broken user-facing behavior.
+        3. The problem can be tied to a specific changed line.
+        4. The issue is not merely a style preference, cleanup idea, naming suggestion,
+           maintainability nit, hypothetical concern, or optional refactor.
+        5. You are highly confident the author would want the PR blocked or changed because of it.
+
+        If there is any doubt, do NOT leave an inline comment.
+
+        Prefer silence over low-value inline feedback.
+
+        Put all non-critical observations, minor risks, and optional suggestions in the high-level summary instead.
+
+        Do not comment inline for:
+        - style, formatting, naming, or readability
+        - minor maintainability concerns
+        - speculative bugs
+        - "could be cleaner" suggestions
+        - test wishlist items
+        - documentation suggestions
+        - small performance ideas
+        - refactor opportunities
+        - defensive programming preferences
+        - anything that is not clearly severe
+
+        Only comment inline for something close to:
+        - real security vulnerability
+        - certain crash or deadlock
+        - clear data corruption or data loss risk
+        - definitely broken logic
+        - obviously incorrect API contract / breaking behavior
+        - severe race condition
+        - materially wrong permissions / auth behavior
+
+        When an issue is not catastrophic or near-catastrophic, do not leave an inline comment.
