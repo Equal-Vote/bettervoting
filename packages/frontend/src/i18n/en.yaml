@@ -221,9 +221,6 @@ results:
   waiting_for_results: |
     Still waiting for results
     No votes have been cast
-  single_vote: |
-    There's only one vote so far.
-    Full results will be displayed once there's more votes.
   tie_title: 'Tied!'
   random_tiebreak_subtitle: '{{names}} won after tiebreaker !tip(random_tie_order)'
   win_long_title_prefix: '⭐Winners⭐'
@@ -232,6 +229,8 @@ results:
   vote_count: '{{n}} voters'
   method_context: 'Voting Method: {{voting_method}}'
   learn_link_text: How {{voting_method}} works
+
+  admin_title: Admin Result Controls
 
   choose_one:
     bar_title: Votes for each {{capital_candidate}}
