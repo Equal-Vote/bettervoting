@@ -10,7 +10,15 @@ import { trimLower } from '@equal-vote/star-vote-shared/domain_model/Util';
 
 var ElectionsModel = ServiceLocator.electionsDb();
 
+const MAX_WRITE_IN_CANDIDATES = 100;
+const MAX_CANDIDATE_NAME_LENGTH = 100;
+const MAX_ALIASES_PER_CANDIDATE = 20;
+const MAX_ALIAS_LENGTH = 100;
+
 function validateWriteInCandidates(candidates: unknown[]): WriteInCandidate[] {
+    if (candidates.length > MAX_WRITE_IN_CANDIDATES) {
+        throw new BadRequest(`Too many write-in candidates (max ${MAX_WRITE_IN_CANDIDATES})`);
+    }
     const result: WriteInCandidate[] = [];
     for (const c of candidates) {
         if (typeof c !== 'object' || c === null) {
@@ -20,11 +28,20 @@ function validateWriteInCandidates(candidates: unknown[]): WriteInCandidate[] {
         if (typeof obj.candidate_name !== 'string' || !obj.candidate_name.trim()) {
             throw new BadRequest('Each write_in_candidate must have a non-empty candidate_name string');
         }
+        if (obj.candidate_name.length > MAX_CANDIDATE_NAME_LENGTH) {
+            throw new BadRequest(`candidate_name exceeds max length of ${MAX_CANDIDATE_NAME_LENGTH}`);
+        }
         if (typeof obj.approved !== 'boolean') {
             throw new BadRequest('Each write_in_candidate must have a boolean approved field');
         }
         if (!Array.isArray(obj.aliases) || !obj.aliases.every((a: unknown) => typeof a === 'string')) {
             throw new BadRequest('Each write_in_candidate must have an aliases array of strings');
+        }
+        if (obj.aliases.length > MAX_ALIASES_PER_CANDIDATE) {
+            throw new BadRequest(`Too many aliases for "${obj.candidate_name}" (max ${MAX_ALIASES_PER_CANDIDATE})`);
+        }
+        if ((obj.aliases as string[]).some((a: string) => a.length > MAX_ALIAS_LENGTH)) {
+            throw new BadRequest(`Alias exceeds max length of ${MAX_ALIAS_LENGTH}`);
         }
         result.push({
             candidate_name: obj.candidate_name.trim(),

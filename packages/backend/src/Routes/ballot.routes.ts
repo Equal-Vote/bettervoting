@@ -243,8 +243,44 @@ ballotRouter.post('/Election/:id/vote', asyncHandler(castVoteController))
  *         description: Election not found */
 ballotRouter.post('/Election/:id/uploadBallots', asyncHandler(uploadBallotsController))
 
-
-// TODO: write swagger
+/**
+ * @swagger
+ * /Election/{id}/getWriteIns:
+ *   get:
+ *     summary: Get write-in candidate names and counts for an election
+ *     tags: [Ballots]
+ *     security:
+ *      - ApiKeyAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The election ID
+ *     responses:
+ *       200:
+ *         description: Write-in data per race
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 write_in_data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       race_id:
+ *                         type: string
+ *                       names:
+ *                         type: object
+ *                         additionalProperties:
+ *                           type: integer
+ *       400:
+ *         description: Ballots not found
+ *       404:
+ *         description: Election not found */
 ballotRouter.get('/Election/:id/getWriteIns', asyncHandler(getWriteInNamesController))
 
 //I don't really understand what the point of this is, but it's in the test suite so I'm including it
