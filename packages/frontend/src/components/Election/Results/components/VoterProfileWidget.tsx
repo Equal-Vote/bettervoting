@@ -64,6 +64,7 @@ const VoterProfileWidget = ({topScore, ranked=false} : {topScore: number, ranked
             defValue = 0;
         }
         scores.forEach(s => {
+            if(!avgBallot[s.candidate_id]) return;
             const score = s.score ?? defValue;
             avgBallot[s.candidate_id].score += score;
             if(s.candidate_id == left.id) leftScore = score;
