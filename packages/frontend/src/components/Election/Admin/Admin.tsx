@@ -8,7 +8,8 @@ import { Box, Typography } from '@mui/material';
 import Races from '~/components/ElectionForm/Races/Races';
 import useElection from '~/components/ElectionContextProvider';
 import TemporaryAccessWarning from '../TemporaryAccessWarning';
-import ElectionSettings from '~/components/ElectionForm/ElectionSettings';
+import ElectionSettings from './ElectionSettings';
+import PublishAndShare from './PublishAndShare';
 
 const AdminPage = ({title, children}) => {
     const {election} = useElection();
@@ -36,11 +37,12 @@ const Admin = () => {
         <Container>
             <Routes>
                 <Route path='/' element={<AdminPage title='Admin Home'><AdminHome key={id}/></AdminPage>}/>
-                <Route path='/ballot_builder' element={<AdminPage title='Ballot Builder'><Races/></AdminPage>}/>
+                <Route path='/build_ballot' element={<AdminPage title='Build Ballot'><Races/></AdminPage>}/>
                 <Route path='/voters' element={<AdminPage title='Manage Voters'><ViewElectionRolls /></AdminPage>} />
                 <Route path='/roles' element={<EditRoles />} />
                 <Route path='/writeins/:raceId' element={<WriteInApproval />} />
                 <Route path='/settings' element={<AdminPage title='Settings'><ElectionSettings/></AdminPage>} />
+                <Route path='/publish' element={<AdminPage title='Publish & Share'><PublishAndShare/></AdminPage>} />
             </Routes>
         </Container>
     )

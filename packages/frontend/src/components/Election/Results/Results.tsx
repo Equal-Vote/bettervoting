@@ -467,9 +467,8 @@ export default function Results({ race, results }: {race: Race, results: Electio
             </Typography>
           }
         </>}
-        {results.summaryData.candidates.length !== 1 && results.summaryData.nTallyVotes == 0 && <h2>{t('results.waiting_for_results')}</h2>}
-        {results.summaryData.candidates.length !== 1 && results.summaryData.nTallyVotes == 1 && <p>{t('results.single_vote')}</p> }
-        {results.summaryData.candidates.length !== 1 && results.summaryData.nTallyVotes > 1 && <>
+        {results.summaryData.nTallyVotes == 0 && <h2>{t('results.waiting_for_results')}</h2>}
+        {results.summaryData.nTallyVotes > 0 && <>
           {showTitleAsTie?
             <>
             <Typography variant="h5" sx={{fontWeight: 'bold'}}>{t('results.tie_title')}</Typography>
