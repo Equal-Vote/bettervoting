@@ -324,10 +324,10 @@ electionsRouter.delete('/Election/:id', asyncHandler(deleteElection))
  *                 star_pr_votes:
  *                   type: number
  *                   description: Votes cast in STAR PR elections
- *                 plurality_elections:
+ *                 choose_one_elections:
  *                   type: number
  *                   description: Elections using Plurality voting
- *                 plurality_votes:
+ *                 choose_one_votes:
  *                   type: number
  *                   description: Votes cast in Plurality elections
  *                 stv_elections:
