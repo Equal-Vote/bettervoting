@@ -155,6 +155,38 @@ describe("Write-In Candidates", () => {
         th.testComplete();
     });
 
+    test("Reject ballot with empty write-in name", async () => {
+        const ballot: NewBallot = {
+            election_id: election.election_id,
+            votes: [{
+                race_id: 'race0',
+                scores: [
+                    { candidate_id: '0', score: 3 },
+                    { candidate_id: 'cwi-empty', score: 5, write_in_name: '' },
+                ],
+            }],
+        } as NewBallot;
+        const response = await th.submitBallot(election.election_id, ballot, testInputs.user1token);
+        expect(response.statusCode).toBe(400);
+        th.testComplete();
+    });
+
+    test("Reject ballot with whitespace-only write-in name", async () => {
+        const ballot: NewBallot = {
+            election_id: election.election_id,
+            votes: [{
+                race_id: 'race0',
+                scores: [
+                    { candidate_id: '0', score: 3 },
+                    { candidate_id: 'cwi-spaces', score: 5, write_in_name: '   ' },
+                ],
+            }],
+        } as NewBallot;
+        const response = await th.submitBallot(election.election_id, ballot, testInputs.user1token);
+        expect(response.statusCode).toBe(400);
+        th.testComplete();
+    });
+
     test("Reject ballot with write-in name too long (>100 chars)", async () => {
         const longName = 'A'.repeat(101);
         const ballot: NewBallot = {

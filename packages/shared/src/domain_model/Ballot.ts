@@ -100,7 +100,7 @@ export function ballotValidation(election: Election, obj:NewBallot): string | nu
         })
 
         // Validate write-ins
-        const writeIns = vote.scores.filter(s => s.write_in_name)
+        const writeIns = vote.scores.filter(s => s.write_in_name !== undefined)
         if (!race.enable_write_in && writeIns.length > 0) {
             writeInError += `Race: ${race.title}, Write-ins not enabled for this race; `;
         }
@@ -108,7 +108,7 @@ export function ballotValidation(election: Election, obj:NewBallot): string | nu
             writeInError += `Race: ${race.title}, Too many write-ins (${writeIns.length}, max 10); `;
         }
         writeIns.forEach(s => {
-            if (typeof s.write_in_name !== 'string' || s.write_in_name.length > 100) {
+            if (typeof s.write_in_name !== 'string' || !s.write_in_name.trim() || s.write_in_name.length > 100) {
                 writeInError += `Race: ${race.title}, Invalid write-in name; `;
             }
         })
