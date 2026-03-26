@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import Results from './Results';
 import Box from '@mui/material/Box';
-import { Typography } from "@mui/material";
+import { Divider, Typography } from "@mui/material";
 import { useSubstitutedTranslation } from '../../util';
 import { useGetResults } from '../../../hooks/useAPI';
 import useElection from '../../ElectionContextProvider';
@@ -10,15 +10,18 @@ import ShareButton from '../ShareButton';
 import { BallotDataExport } from './BallotDataExport';
 import SupportBlurb from '../SupportBlurb';
 import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
+import ElectionStateWarning from '../ElectionStateWarning';
+import AdminResultControls from '../Admin/AdminResultControls';
 
 const ViewElectionResults = () => {
-    const { election } = useElection();
+    const { election, voterAuth } = useElection();
     const { data, isPending, makeRequest: getResults } = useGetResults(election.election_id)
     useEffect(() => { getResults() }, [])
     const {t} = useSubstitutedTranslation(election.settings.term_type);
 
     return (
       <>
+        
         <DraftWarning />
         <Box
           display="flex"
@@ -37,6 +40,7 @@ const ViewElectionResults = () => {
               "@media print": { boxShadow: "none" },
             }}
           >
+            <AdminResultControls/>
             <Typography variant="h3" component="h3" sx={{ marginBottom: 4 }}>
               {election.state === "closed"
                 ? t("results.official_title")
