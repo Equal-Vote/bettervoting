@@ -159,7 +159,6 @@ const innerGetGlobalElectionStats = async (req: IRequest): Promise<GlobalElectio
             stats[`${methodKey}_elections`] += 1;
             stats[`${methodKey}_votes`] += Number(m['v']);
         });
-        });
 
     return stats;
 }
