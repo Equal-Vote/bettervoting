@@ -117,7 +117,8 @@ const innerGetGlobalElectionStats = async (req: IRequest): Promise<GlobalElectio
         } else {
             const vm = [...methods][0] as VotingMethod;
             const key = methodValueToTextKey[vm];
-            if (!key) throw new Error(`Unknown voting method: ${vm} for election ${e.election_id}`);
+            // there's some garbage elections with an invalid voting method of "STAR VOting" (proper term is "STAR"). We can skip those
+            if (!key) return; //throw new Error(`Unknown voting method: ${vm} for election ${e.election_id}`);
             methodKey = key;
         }
         electionMethodMap[e.election_id] = methodKey;
@@ -145,7 +146,8 @@ const innerGetGlobalElectionStats = async (req: IRequest): Promise<GlobalElectio
             if (count >= 2) stats.elections += 1;
 
             const methodKey = electionMethodMap[m['election_id']];
-            if (!methodKey) throw new Error(`No voting method found for election ${m['election_id']}`);
+            // there's some garbage elections with an invalid voting method of "STAR VOting" (proper term is "STAR"). We can skip those
+            if (!methodKey) return; // throw new Error(`No voting method found for election ${m['election_id']}`);
             stats[`${methodKey}_votes`] += count;
             if (count >= 2) stats[`${methodKey}_elections`] += 1;
         });
