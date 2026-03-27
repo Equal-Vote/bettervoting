@@ -658,7 +658,7 @@ tabulation_logs:
 
     # Random tiebreak
     random_first: >
-      **Random Tiebreaker**: {{name}} is the first finalist after a random tiebreaker.
+      **Random Tiebreaker**: {{name}} is the first finalist after a random tiebreaker !tip(random_tie_order).
     random_second: >
       **Random Tiebreaker**: {{name}} is the second finalist after a random tiebreaker.
 
