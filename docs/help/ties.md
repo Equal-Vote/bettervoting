@@ -31,7 +31,7 @@ In the event that an election has already been conducted but no protocol was spe
 
 ## Random Tie-breakers
 
-In the event a random tiebreaker is needed, BetterVoting will shuffle the candidates to determine the tie breaking order. The specific shuffling implementation was careful chosen to maximize security, transparency, and fairnessy. The full details are documented in [our source code](https://github.com/Equal-Vote/bettervoting/tree/main/packages/backend/src/Tabulators/). 
+In the event a random tiebreaker is needed, BetterVoting will shuffle the candidates to determine the tie breaking order. The specific shuffling implementation was carefully chosen to maximize security, transparency, and fairness. The full details are documented in [our source code](https://github.com/Equal-Vote/bettervoting/tree/main/packages/backend/src/Tabulators/).
 
 ## Custom Tie-breakers
 
