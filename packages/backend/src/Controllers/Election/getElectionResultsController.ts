@@ -144,7 +144,7 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
         const tabulationResult = VotingMethods[voting_method](candidates, cvr, num_winners, election.settings)
         results[race_index] = {
             ...tabulationResult,
-            // @ts-ignore - roundResults is a complicated type but we're little returning a slightly modified version of the original so the type should be consistent
+            // @ts-ignore - roundResults is a complicated type but we're just returning a slightly modified version of the original so the type should be consistent
             roundResults: tabulationResult.roundResults.map(rr => ({
                 ...rr,
                 logs: rr.logs.map(log => {
