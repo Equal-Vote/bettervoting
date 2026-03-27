@@ -658,9 +658,9 @@ tabulation_logs:
 
     # Random tiebreak
     random_first: >
-      **Random Tiebreaker**: {{name}} is the first finalist after a random tiebreaker !tip(random_tie_order).
+      **Random Tiebreaker**: {{name}} is the first finalist after a random tiebreaker. !tip(random_tie_order)
     random_second: >
-      **Random Tiebreaker**: {{name}} is the second finalist after a random tiebreaker.
+      **Random Tiebreaker**: {{name}} is the second finalist after a random tiebreaker. !tip(random_tie_order)
 
     # Automatic runoff
     runoff_win: >
@@ -678,7 +678,7 @@ tabulation_logs:
     runoff_five_star_tiebreak: >
       **Five-Star Tiebreaker**: {{winner}} wins against {{runner_up}} with {{winner_votes}} 5 star scores to {{runner_up_votes}}.
     runoff_random: >
-      **Random Tiebreaker**: {{winner}} wins against {{runner_up}} after a random tiebreaker.
+      **Random Tiebreaker**: {{winner}} wins against {{runner_up}} after a random tiebreaker. !tip(random_tie_order)
 
 #######################################
 #### PRIORITY 4 : Info Bubbles ####
@@ -693,6 +693,10 @@ tips:
   nota:
     title: None of the Above
     description: This functions just like any other candidate, except that its guaranteed to be listed at the bottom of the ballot. Most methods will allow voters to support None of the Above (NOTA) in addition to the other candidates.
+
+  random_tie_order: 
+    title: Random Tiebreaker Order
+    description: Random ties are broken from highest to lowest priority in the order {{tiebreak_candidate_names}}. This order was determined from shuffling the original candidate list. [Read more about ties](https://docs.bettervoting.com/help/ties.html#random-tie-breakers)
 
   public_archive: 
     title: Public Election Archive
@@ -729,10 +733,6 @@ tips:
   public_results:
     title: Show Preliminary Results
     description: Allow voters to view preliminary results. (Administrators can make results public at any time.)
-
-  random_ties:
-    title: Enable Random Tie-Breakers
-    description: Break tie's randomly when the standard tie breaker protocol is insufficient
 
   voter_groups:
     title: Enable Voter Groups
@@ -1151,8 +1151,6 @@ election_settings:
   ballot_updates: Allow Voters To Edit Vote !tip(ballot_updates)
 
   public_results: Show Preliminary Results !tip(public_results)
-
-  random_ties: Enable Random Tie-Breakers !tip(random_ties)
 
   voter_groups: Enable Voter Groups !tip(voter_groups)
 

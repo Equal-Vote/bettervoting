@@ -11,8 +11,7 @@ import { ElectionResults, candidate, rawVote } from "@equal-vote/star-vote-share
 import { makeWriteInCandidateId } from "@equal-vote/star-vote-shared/utils/makeID";
 import { Candidate } from "@equal-vote/star-vote-shared/domain_model/Candidate";
 import { trimLower } from "@equal-vote/star-vote-shared/domain_model/Util";
-import {get as getTinyRand} from '../../Tabulators/tinyrand';
-import { validVotingMethods } from "@equal-vote/star-vote-shared/domain_model/Race";
+import shuffleCandidatesForRandomTiebreak from "../../Tabulators/shuffleCandidatesForRandomTiebreak";
 
 const BallotModel = ServiceLocator.ballotsDb();
 
@@ -134,33 +133,29 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
             continue;
         }
 
-        // shuffle candidates for tiebreaking order
-        // we use a different offset for each voting method so that multi-method polls don't resolve the same way for each race
-        getTinyRand(0, cvr.length+(validVotingMethods.indexOf(voting_method) * 1000)).shuffle(candidates)
-        candidates.forEach((c, i) => c.tieBreakOrder = i)
-        const randomTieBreakContext = {
-            tiebreak_candidate_names: candidates.map(c => c.name).join(', '),
-            tiebreak_seed_math: '43=whatever'
-        }
-
         if (!VotingMethods[voting_method]) {
             throw new Error(`Invalid Voting Method: ${voting_method}`)
         }
+
+        shuffleCandidatesForRandomTiebreak(election.create_date, candidates, cvr.length, voting_method);
+
         const msg = `Tabulating results for ${voting_method} election`
         Logger.info(req, msg);
         const tabulationResult = VotingMethods[voting_method](candidates, cvr, num_winners, election.settings)
         results[race_index] = {
-            ...{
-                ...tabulationResult,
-                roundResults: tabulationResult.roundResults.map(rr => ({
-                    ...rr,
-                    logs: rr.logs.map(log => {
-                        // A hacky approach that I'm still pretty confident in
-                        if(typeof log === 'object' && log.key.includes('random')) return {...log, ...randomTieBreakContext}
-                        return log
+            ...tabulationResult,
+            // @ts-ignore - roundResults is a complicated type but we're little returning a slightly modified version of the original so the type should be consistent
+            roundResults: tabulationResult.roundResults.map(rr => ({
+                ...rr,
+                logs: rr.logs.map(log => {
+                    // A hacky approach that I'm still pretty confident in it
+                    if(typeof log === 'object' && log.key.includes('random')) return {
+                        ...log,
+                        tiebreak_candidate_names: candidates.map(c => c.name).join(', '),
                     }
-                })
-            },
+                    return log
+                }),
+            })),
             writeInDiagnostics: race.enable_write_in ? {
                 numScoresDisregardedForUnprocessed: numUnprocessedWriteIns,
                 numScoresDisregarded: numExcludedWriteIns,

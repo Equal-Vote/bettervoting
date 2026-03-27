@@ -181,7 +181,7 @@ export const useSubstitutedTranslation = (electionTermType = 'election', v = {})
       if (typeof value === 'string') {
         if (key == 'datetime' || key == 'datetime2' || key == 'listed_datetime') {
           values[key] = new Date(value)
-        } else if (value.length > 2) {
+        } else if (value.length > 2 && !key.startsWith('capital_')) {
           values[`capital_${key}`] = capitalize(value)
         }
       }
@@ -196,7 +196,6 @@ export const useSubstitutedTranslation = (electionTermType = 'election', v = {})
     year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric',
     timeZoneName: 'short', timeZone: v['time_zone'] ?? undefined
   }
-
 
   const { t, i18n } = useTranslation()
 
@@ -225,7 +224,7 @@ export const useSubstitutedTranslation = (electionTermType = 'election', v = {})
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [t, electionTermType, methodKey, vKey])
 
-  const applySymbols = (txt, includeTips, newWindow) => {
+  const applySymbols = (txt, v) => {
     const applyLinks = (txt) => {
       if (typeof txt !== 'string') return txt;
       const parts = txt.split(rLink)
@@ -235,7 +234,7 @@ export const useSubstitutedTranslation = (electionTermType = 'election', v = {})
         if (parts[i + 1].startsWith('mailto')) {
           return <MailTo key={`link_${i}`}>{parts[i]}</MailTo>
         } else {
-          return <a key={`link_${i}`} href={parts[i + 1]} target={newWindow ? '_blank' : '_self'} rel={newWindow ? 'noreferrer' : undefined}>{parts[i]}</a>
+          return <a key={`link_${i}`} href={parts[i + 1]} target={v['newWindow'] ? '_blank' : '_self'} rel={v['newWindow'] ? 'noreferrer' : undefined}>{parts[i]}</a>
         }
       })
     }
@@ -248,12 +247,13 @@ export const useSubstitutedTranslation = (electionTermType = 'election', v = {})
       })
     }
 
-    const applyTips = (txt, keyPrefix, includeTips) => {
+    const applyTips = (txt, keyPrefix, v) => {
       if (typeof txt !== 'string') return txt;
       return txt.split(rTip).map((str, i) => {
         if (i % 2 == 0) return str;
-        if (!includeTips) return '';
-        return <Tip key={`tip_${keyPrefix}_${i}`} name={str} />
+        if (!(v['includeTips'] ?? true)) return '';
+
+        return <Tip key={`tip_${keyPrefix}_${i}`} name={str} values={v}/>
       })
     }
 
@@ -269,7 +269,7 @@ export const useSubstitutedTranslation = (electionTermType = 'election', v = {})
     if (!rLink.test(txt) && !rTip.test(txt) && !txt.includes('\n') && !rBold.test(txt)) return txt;
 
     const output = applyLinks(txt)
-        .map((comp, i) => applyTips(comp, i, includeTips)).flat()
+        .map((comp, i) => applyTips(comp, i, v)).flat()
         .map((comp, i) => applyLineBreaks(comp, i)).flat()
         .map((comp, i) => applyBold(comp, i)).flat()
     if(output.every(item => typeof item === 'string' )){
@@ -279,21 +279,24 @@ export const useSubstitutedTranslation = (electionTermType = 'election', v = {})
     }
   }
 
-  const handleObject = (obj, includeTips=true, newWindow=false, skipProcessing=false) => {
-    if (skipProcessing) return obj;
+  const handleObject = (obj, v) => {
+    if (v['skipProcessing']) return obj;
     if (typeof obj == 'number') return obj;
-    if (typeof obj === 'string') return applySymbols(obj, includeTips, newWindow);
-    if (Array.isArray(obj)) return obj.map(o => handleObject(o, includeTips, newWindow));
+    if (typeof obj === 'string') return applySymbols(obj, v);
+    if (Array.isArray(obj)) return obj.map(o => handleObject(o, v));
 
     const newObj = {};
     Object.entries(obj).forEach(([key, value]) => {
-      newObj[key] = handleObject(value, includeTips, newWindow);
+      newObj[key] = handleObject(value, v);
     })
     return newObj;
   }
   
   return {
-    t: (key, v = {}) => handleObject(t(key, { ...values, ...processValues(v) }), v['includeTips'], v['newWindow'], v['skipProcessing']),
+    t: (key, v = {}) => {
+      v = processValues(v)
+      return handleObject(t(key, { ...values, ...v }), v)
+    },
     i18n,
   }
 }
