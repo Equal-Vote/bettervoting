@@ -4,7 +4,6 @@ import { checkForDuplicates } from "./Util";
 import { candidateValidation } from "./Candidate";
 import { WriteInCandidate } from "./WriteIn";
 
-// be careful changing the order! It's used for seeding random tiebreakers so the order influences the results
 export const validVotingMethods = ['STAR', 'STAR_PR', 'Approval', 'RankedRobin', 'IRV', 'Plurality', 'STV'] as const;
 export type VotingMethod = typeof validVotingMethods[number];
 export interface Race {

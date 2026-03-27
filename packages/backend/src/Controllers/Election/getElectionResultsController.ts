@@ -137,7 +137,7 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
             throw new Error(`Invalid Voting Method: ${voting_method}`)
         }
 
-        shuffleCandidatesForRandomTiebreak(election.create_date, candidates, cvr.length, voting_method);
+        shuffleCandidatesForRandomTiebreak(election.create_date, candidates, cvr.length, race.race_id);
 
         const msg = `Tabulating results for ${voting_method} election`
         Logger.info(req, msg);

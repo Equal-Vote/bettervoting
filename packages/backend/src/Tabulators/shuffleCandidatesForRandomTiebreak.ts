@@ -14,8 +14,8 @@
  *       to the number of ballots you would see when downloading the full data, however the results page shows tally votes. The Tally Votes filters
  *       out invalid votes from the Raw Votes so the count is often smaller.
  * 
- *  2. Method Offset:
- *       Every voting method gets a different offset value. It's common for users to create multi-method polls on BetterVoting, and
+ *  2. Race Offset:
+ *       Each Race Id gets a different offset value. It's common for users to create multi-method polls with the same candidates on BetterVoting, and
  *       without the offset those polls would have the same tiebreaking result on each race. The offset helps ensure variation.
  *
  * ## Shuffling
@@ -25,14 +25,18 @@
  * TinyRand is small, and it's written to be language agnostic so that results can be easily reproduced in any programming language.
  */
 
-import { validVotingMethods, VotingMethod } from "@equal-vote/star-vote-shared/domain_model/Race";
 import {get as getTinyRand} from './tinyrand';
 import { candidate } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
 
-export default  (electionCreateDate: Date | string, candidates: candidate[], rawVoteCount: number, votingMethod: VotingMethod) => {
-    // NOTE: electionCreateDate is currently unused, but if we ever change the approach for shuffling the candidates then
-    //       we should use electionCreateDate to ensure that old elections still use the old approach
-    let seed = rawVoteCount + validVotingMethods.indexOf(votingMethod) * 1000;
+// NOTE: electionCreateDate is currently unused, but if we ever change the approach for shuffling the candidates then
+//       we should use electionCreateDate to ensure that old elections still use the old approach
+export default  (electionCreateDate: Date | string, candidates: candidate[], rawVoteCount: number, raceId: string) => {
+    const hashStringToInt = (str: string) => {
+        // this function just converts the string into a number we can feed into the seed;
+        return [...str].reduce((h, c) => (Math.imul(31, h) + c.charCodeAt(0)) | 0, 0);
+    }
+
+    let seed = rawVoteCount + hashStringToInt(raceId);
     getTinyRand(0, seed).shuffle(candidates)
     candidates.forEach((c, i) => c.tieBreakOrder = i)
 }
