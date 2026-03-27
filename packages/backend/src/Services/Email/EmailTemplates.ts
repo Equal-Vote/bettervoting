@@ -25,7 +25,7 @@ export function makeEmails(election: Election, voters: ElectionRoll[], url: stri
         return formatMarkdown(body, {
             allowButtons: true,
             buttonContext: {
-                voteUrl: `${url}/${election.election_id}/${election.settings.voter_authentication.voter_id === true && 'id/' + voter_id}`,
+                voteUrl: `${url}/${election.election_id}${election.settings.voter_authentication.voter_id ? '/id/' + voter_id : ''}`,
                 electionHomeUrl: `${url}/${election.election_id}`
             }
         });
@@ -66,7 +66,7 @@ export function Invites(election: Election, voters: ElectionRoll[], url: string,
 
           <p>Click the button to vote:</p>
 
-          ${makeButton('Vote', `${url}/${election.election_id}/${election.settings.voter_authentication.voter_id === true && 'id/' + voter.voter_id}`)}
+          ${makeButton('Vote', `${url}/${election.election_id}${election.settings.voter_authentication.voter_id ? '/id/' + voter.voter_id : ''}`)}
 
           <p>This link is unique to you, be careful not to share this email with others</p>
         `)
