@@ -148,7 +148,7 @@ export function singleWinnerStar(remainingCandidates: starCandidate[], summaryDa
     })
 
     // RANDOM TIEBREAK: At a certain some point there's no other way 🤷
-    sortCandidates(tiedCandidates, 'tieBreakOrder');
+    sortCandidates(tiedCandidates);
     while(finalists.length < 2){
       roundResults.logs.push({
         key: `tabulation_logs.star.random_${finalists.length == 0 ? 'first' : 'second'}`,

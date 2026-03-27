@@ -66,6 +66,8 @@ const singleWinnerRankedRobin = (remainingCandidates: rankedRobinCandidate[], su
   // Break Tie Randomly
   const randomWinner = winners.sort((a, b) => (a.tieBreakOrder - b.tieBreakOrder))[0]
   roundResults.winners.push(randomWinner)
+  roundResults.tied = winners;
+  roundResults.tieBreakType = 'random';
   roundResults.logs.push(`${winners[0].name} picked in random tie-breaker, more robust tiebreaker not yet implemented.`)
   return roundResults
 }

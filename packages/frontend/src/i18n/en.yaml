@@ -225,7 +225,7 @@ results:
     There's only one vote so far.
     Full results will be displayed once there's more votes.
   tie_title: 'Tied!'
-  tiebreak_subtitle: '{{names}} won after tie breaker'
+  random_tiebreak_subtitle: '{{names}} won after tiebreaker !tip(random_tie_order)'
   win_long_title_prefix: '⭐Winners⭐'
   win_title_postfix_one: 'wins!'
   win_title_postfix: 'win!'

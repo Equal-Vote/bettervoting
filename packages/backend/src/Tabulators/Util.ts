@@ -137,11 +137,14 @@ export type CandidateSortField<CandidateType extends candidate> = keyof Candidat
 
 export const sortCandidates = <CandidateType extends candidate>(
   candidates: CandidateType[],
-  fieldsExpr: CandidateSortField<CandidateType>[] | CandidateSortField<CandidateType> | undefined,
+  fieldsExpr?: CandidateSortField<CandidateType>[] | CandidateSortField<CandidateType> | undefined,
   roundResults?: roundResults<CandidateType>[]
 ) => {
-  if(fieldsExpr === undefined) return;
-  const fields = Array.isArray(fieldsExpr) ? fieldsExpr : [fieldsExpr];
+  const fields = 
+    Array.isArray(fieldsExpr) ? fieldsExpr :
+    (fieldsExpr === undefined ? [] :[fieldsExpr]);
+
+  if(!fields.includes('tieBreakOrder')) fields.push('tieBreakOrder' as CandidateSortField<CandidateType>);
 
   const evalField = (candidate: CandidateType, field: CandidateSortField<CandidateType>, subIndex?: number) => {
     const tryInversion = (fieldValue: number | typeof Fraction) => {

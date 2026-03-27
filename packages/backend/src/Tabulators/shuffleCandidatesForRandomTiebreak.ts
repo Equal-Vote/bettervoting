@@ -33,6 +33,8 @@ export default  (electionCreateDate: Date | string, candidates: candidate[], raw
     // NOTE: electionCreateDate is currently unused, but if we ever change the approach for shuffling the candidates then
     //       we should use electionCreateDate to ensure that old elections still use the old approach
     let seed = rawVoteCount + validVotingMethods.indexOf(votingMethod) * 1000;
-    getTinyRand(0, seed).shuffle(candidates)
+    //getTinyRand(0, seed).shuffle(candidates)
+    //candidates.reverse()
     candidates.forEach((c, i) => c.tieBreakOrder = i)
+
 }
