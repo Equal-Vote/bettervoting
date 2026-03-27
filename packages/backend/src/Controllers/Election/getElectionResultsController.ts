@@ -138,6 +138,10 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
         // we use a different offset for each voting method so that multi-method polls don't resolve the same way for each race
         getTinyRand(0, cvr.length+(validVotingMethods.indexOf(voting_method) * 1000)).shuffle(candidates)
         candidates.forEach((c, i) => c.tieBreakOrder = i)
+        const randomTieBreakContext = {
+            tiebreak_candidate_names: candidates.map(c => c.name).join(', '),
+            tiebreak_seed_math: '43=whatever'
+        }
 
         if (!VotingMethods[voting_method]) {
             throw new Error(`Invalid Voting Method: ${voting_method}`)
@@ -146,7 +150,17 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
         Logger.info(req, msg);
         const tabulationResult = VotingMethods[voting_method](candidates, cvr, num_winners, election.settings)
         results[race_index] = {
-            ...tabulationResult,
+            ...{
+                ...tabulationResult,
+                roundResults: tabulationResult.roundResults.map(rr => ({
+                    ...rr,
+                    logs: rr.logs.map(log => {
+                        // A hacky approach that I'm still pretty confident in
+                        if(typeof log === 'object' && log.key.includes('random')) return {...log, ...randomTieBreakContext}
+                        return log
+                    }
+                })
+            },
             writeInDiagnostics: race.enable_write_in ? {
                 numScoresDisregardedForUnprocessed: numUnprocessedWriteIns,
                 numScoresDisregarded: numExcludedWriteIns,
