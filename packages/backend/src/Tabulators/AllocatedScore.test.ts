@@ -163,6 +163,49 @@ describe("Allocated Score Tests", () => {
     //    expect(results.elected[1].name).toBe('Doug');
     //})
 
+    test("Tiebreak preserves order across rounds", () => {
+        // All 4 candidates are exactly tied in round 1 (score = 2 each).
+        // Tiebreak order: Allison(0) > Bill(1) > Carmen(2) > Doug(3).
+        // Voters who gave Allison 5 also gave Bill 5 (and nothing to Carmen/Doug).
+        // Bug: without the fix, the quota update zeroes those voters' weights, so Bill
+        // drops to 0 in round 2 and Carmen wins instead.
+        // Fix: when the winner is selected by tiebreak, skip ballot weight redistribution
+        // so the remaining tied candidates still have full representation next round.
+        const candidates = ['Allison', 'Bill', 'Carmen', 'Doug']
+        const votes = [
+            [5, 5, 0, 0],
+            [5, 5, 0, 0],
+            [0, 0, 5, 5],
+            [0, 0, 5, 5],
+        ]
+        const results = AllocatedScore(...mapMethodInputs(candidates, votes), 2)
+        expect(results.elected.length).toBe(2);
+        expect(results.elected[0].name).toBe('Allison');
+        expect(results.elected[1].name).toBe('Bill');
+    })
+
+    test("Tiebreak does not affect non-tiebreak rounds", () => {
+        // Allison wins round 1 outright (25 stars, no tie), so the normal quota-based
+        // ballot weight redistribution should still run and Doug should win round 2
+        // (same as the Basic Example test).
+        const candidates = ['Allison', 'Bill', 'Carmen', 'Doug']
+        const votes = [
+            [5, 5, 1, 0],
+            [5, 5, 1, 0],
+            [5, 5, 1, 0],
+            [5, 5, 1, 0],
+            [5, 4, 4, 0],
+            [0, 0, 0, 3],
+            [0, 0, 4, 5],
+            [0, 0, 4, 5],
+            [0, 0, 4, 5],
+            [0, 0, 4, 5]]
+        const results = AllocatedScore(...mapMethodInputs(candidates, votes), 2)
+        expect(results.elected.length).toBe(2);
+        expect(results.elected[0].name).toBe('Allison');
+        expect(results.elected[1].name).toBe('Doug');
+    })
+
     test("Test valid/invalid/under/bullet vote counts", () => {
         const candidates = ['Allison', 'Bill', 'Carmen']
         const votes = [

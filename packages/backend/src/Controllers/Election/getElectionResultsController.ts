@@ -42,7 +42,7 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
         const candidates: candidate[] = race.candidates.map((c: Candidate, i) => ({
             id: c.candidate_id,
             name: c.candidate_name,
-            tieBreakOrder: i,
+            tieBreakOrder: -1,
             votesPreferredOver: {},
             winsAgainst: {}
         }))
@@ -55,7 +55,7 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
                     candidates.push({
                         id: makeWriteInCandidateId(wc.candidate_name),
                         name: wc.candidate_name,
-                        tieBreakOrder: race.candidates.length + i,
+                        tieBreakOrder: -1,
                         votesPreferredOver: {},
                         winsAgainst: {}
                     })

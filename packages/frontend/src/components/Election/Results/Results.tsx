@@ -474,7 +474,8 @@ export default function Results({ race, results }: {race: Race, results: Electio
             <>
             <Typography variant="h5" sx={{fontWeight: 'bold'}}>{t('results.tie_title')}</Typography>
             {!removeTieBreakFromTitle && <Typography component="p" sx={{fontWeight: 'bold'}}>
-                {t('results.tiebreak_subtitle', {names: results.elected.map(c => c.name)})}
+                {/* HACK: the backend doesn't actually export the tiebreak list aside from the roundResult logs, but I happen to know that the backend pre-sorted candidates */}
+                {t('results.random_tiebreak_subtitle', {names: results.elected.map(c => c.name), tiebreak_candidate_names: results.summaryData.candidates.map(c => c.name)})}
             </Typography>}
             </>
           :
