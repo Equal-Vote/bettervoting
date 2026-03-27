@@ -10,7 +10,7 @@ import EnhancedTable, { HeadKey }  from "./../../EnhancedTable";
 import { useGetRolls, useSendEmails } from "../../../hooks/useAPI";
 import useElection from "../../ElectionContextProvider";
 import useFeatureFlags from "../../FeatureFlagContextProvider";
-import { ElectionRoll } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll";
+import { ElectionRollResponse } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll";
 import SendEmailDialog from "./SendEmailDialog";
 import { SecondaryButton } from "~/components/styles";
 
@@ -22,7 +22,7 @@ const ViewElectionRolls = () => {
     useEffect(() => { fetchRolls() }, [])
     const [isEditing, setIsEditing] = useState(false)
     const [addRollPage, setAddRollPage] = useState(false)
-    const [editedRoll, setEditedRoll] = useState<ElectionRoll|null>(null)
+    const [editedRoll, setEditedRoll] = useState<ElectionRollResponse|null>(null)
     const flags = useFeatureFlags();
     const navigate = useNavigate();
     const location = useLocation();

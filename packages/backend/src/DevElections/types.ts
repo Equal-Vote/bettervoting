@@ -1,5 +1,7 @@
 import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { Ballot } from '@equal-vote/star-vote-shared/domain_model/Ballot';
+import { ElectionRoll } from '@equal-vote/star-vote-shared/domain_model/ElectionRoll';
+import { EmailEvent } from '@equal-vote/star-vote-shared/domain_model/EmailEvent';
 import { devBallotId, validateDevElectionId, validateDevBallotId } from '@equal-vote/star-vote-shared/utils/makeID';
 
 export { devBallotId };
@@ -8,6 +10,8 @@ export interface DevElectionDefinition {
     electionId: string;
     election: Election;
     makeBallots: () => Ballot[];
+    makeElectionRolls?: () => ElectionRoll[];
+    makeEmailEvents?: () => Omit<EmailEvent, 'id'>[];
 }
 
 export function validateDefinition(def: DevElectionDefinition): void {
