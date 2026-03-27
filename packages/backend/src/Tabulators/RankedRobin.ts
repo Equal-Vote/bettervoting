@@ -1,5 +1,5 @@
 import { candidate, rankedRobinCandidate, rankedRobinResults, rankedRobinRoundResults, rankedRobinSummaryData, rawVote } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
-import { getSummaryData, makeAbstentionTest, makeBoundsTest, runBlocTabulator } from "./Util";
+import { getSummaryData, makeAbstentionTest, makeBoundsTest, runBlocTabulator, sortCandidates } from "./Util";
 import { ElectionSettings } from "@equal-vote/star-vote-shared/domain_model/ElectionSettings";
 
 export function RankedRobin(candidates: candidate[], votes: rawVote[], nWinners = 1, electionSettings?:ElectionSettings) {
@@ -64,7 +64,7 @@ const singleWinnerRankedRobin = (remainingCandidates: rankedRobinCandidate[], su
   }
 
   // Break Tie Randomly
-  const randomWinner = winners.sort((a, b) => (a.tieBreakOrder - b.tieBreakOrder))[0]
+  const randomWinner = sortCandidates(winners)[0];
   roundResults.winners.push(randomWinner)
   roundResults.tied = winners;
   roundResults.tieBreakType = 'random';

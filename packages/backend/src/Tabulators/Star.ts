@@ -236,7 +236,7 @@ export function singleWinnerStar(remainingCandidates: starCandidate[], summaryDa
     }
 
     // RANDOM TIEBREAK: At a certain some point there's no other way 🤷
-    let [winner, runnerUp] = sortCandidates([left, right], 'tieBreakOrder') as starCandidatePair;
+    let [winner, runnerUp] = sortCandidates([left, right]) as starCandidatePair;
     roundResults.logs.push({
       key: `tabulation_logs.star.runoff_random`,
       winner: winner.name,
