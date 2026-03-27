@@ -91,7 +91,7 @@ export function IRV_STV(candidates: candidate[], votes: rawVote[], nWinners = 1,
         summaryData.candidates.forEach(c => {
             c.hareScores.push(addWeightedVotes(candidateVoteLists[c.id].votes))
         });
-        sortCandidates(remainingCandidates, ['hareScores', 'tieBreakOrder'])
+        sortCandidates(remainingCandidates, 'hareScores')
 
         // get max number of votes
 
@@ -107,6 +107,9 @@ export function IRV_STV(candidates: candidate[], votes: rawVote[], nWinners = 1,
         if (maxVotes.compare(quota) >= 0) {
             // candidate meets the threshold
             // add winner, remove from remaining candidates
+            if(remainingCandidates.length > 1 && maxVotes.equals(remainingCandidates[1].hareScores.at(-1) as typeof Fraction)){
+                results.tieBreakType = 'random';
+            }
             results.elected.push(topCandidate)
             roundResults.winners.push(topCandidate)
             if (DEBUG) console.log("winner", topCandidate);
@@ -139,6 +142,9 @@ export function IRV_STV(candidates: candidate[], votes: rawVote[], nWinners = 1,
         else {
             // find candidate with least votes and remove from remaining candidates
             let eliminatedCandidate = remainingCandidates.pop() as irvCandidate;
+            if(remainingCandidates.length == 1 && (eliminatedCandidate.hareScores.at(-1) as typeof Fraction).equals(remainingCandidates[0].hareScores.at(-1) as typeof Fraction)){
+                results.tieBreakType = 'random';
+            }
             let eliminatedCandidateVotes = candidateVoteLists[eliminatedCandidate.id].votes;
             candidateVoteLists[eliminatedCandidate.id].votes = []
             distributeVotes(remainingCandidates, candidateVoteLists, eliminatedCandidateVotes, results, electionSettings)
@@ -151,7 +157,7 @@ export function IRV_STV(candidates: candidate[], votes: rawVote[], nWinners = 1,
 
     // HACK: If we add an early return we might miss this logic
     results.summaryData.candidates.forEach(c => c.hareScores = c.hareScores.map(h => h.valueOf()));
-    sortCandidates(summaryData.candidates, ['hareScores', 'tieBreakOrder'], results.roundResults)
+    sortCandidates(summaryData.candidates, 'hareScores', results.roundResults)
 
     return results
 }

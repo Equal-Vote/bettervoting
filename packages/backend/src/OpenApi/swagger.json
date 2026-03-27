@@ -1157,6 +1157,9 @@
           "description": {
             "type": "string"
           },
+          "enable_write_in": {
+            "type": "boolean"
+          },
           "num_winners": {
             "type": "number"
           },
@@ -1188,6 +1191,12 @@
           },
           "voting_method": {
             "$ref": "#/components/schemas/VotingMethod"
+          },
+          "write_in_candidates": {
+            "items": {
+              "$ref": "#/components/schemas/WriteInCandidate"
+            },
+            "type": "array"
           }
         },
         "required": [
@@ -1223,7 +1232,13 @@
             "type": "string"
           },
           "score": {
-            "type": "number"
+            "type": [
+              "null",
+              "number"
+            ]
+          },
+          "write_in_name": {
+            "type": "string"
           }
         },
         "required": [
@@ -1470,6 +1485,7 @@
                 "canFlagElectionRoll",
                 "canInvalidateBallot",
                 "canInvalidateElectionRoll",
+                "canProcessWriteIns",
                 "canQueryElections",
                 "canSendEmails",
                 "canUnflagElectionRoll",
@@ -1516,6 +1532,46 @@
           "STV"
         ],
         "type": "string"
+      },
+      "WriteInCandidate": {
+        "properties": {
+          "aliases": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "approved": {
+            "type": "boolean"
+          },
+          "candidate_name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "aliases",
+          "approved",
+          "candidate_name"
+        ],
+        "type": "object"
+      },
+      "WriteInData": {
+        "properties": {
+          "names": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object"
+          },
+          "race_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "names",
+          "race_id"
+        ],
+        "type": "object"
       },
       "allocatedScoreCandidate": {
         "properties": {
@@ -1595,6 +1651,21 @@
           "votingMethod": {
             "const": "STAR_PR",
             "type": "string"
+          },
+          "writeInDiagnostics": {
+            "properties": {
+              "numScoresDisregarded": {
+                "type": "number"
+              },
+              "numScoresDisregardedForUnprocessed": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "numScoresDisregarded",
+              "numScoresDisregardedForUnprocessed"
+            ],
+            "type": "object"
           }
         },
         "required": [
@@ -1777,6 +1848,21 @@
           "votingMethod": {
             "const": "Approval",
             "type": "string"
+          },
+          "writeInDiagnostics": {
+            "properties": {
+              "numScoresDisregarded": {
+                "type": "number"
+              },
+              "numScoresDisregardedForUnprocessed": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "numScoresDisregarded",
+              "numScoresDisregardedForUnprocessed"
+            ],
+            "type": "object"
           }
         },
         "required": [
@@ -1955,6 +2041,21 @@
           },
           "votingMethod": {
             "$ref": "#/components/schemas/votingMethod"
+          },
+          "writeInDiagnostics": {
+            "properties": {
+              "numScoresDisregarded": {
+                "type": "number"
+              },
+              "numScoresDisregardedForUnprocessed": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "numScoresDisregarded",
+              "numScoresDisregardedForUnprocessed"
+            ],
+            "type": "object"
           }
         },
         "required": [
@@ -2087,6 +2188,21 @@
               "STV"
             ],
             "type": "string"
+          },
+          "writeInDiagnostics": {
+            "properties": {
+              "numScoresDisregarded": {
+                "type": "number"
+              },
+              "numScoresDisregardedForUnprocessed": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "numScoresDisregarded",
+              "numScoresDisregardedForUnprocessed"
+            ],
+            "type": "object"
           }
         },
         "required": [
@@ -2266,6 +2382,21 @@
           "votingMethod": {
             "const": "Plurality",
             "type": "string"
+          },
+          "writeInDiagnostics": {
+            "properties": {
+              "numScoresDisregarded": {
+                "type": "number"
+              },
+              "numScoresDisregardedForUnprocessed": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "numScoresDisregarded",
+              "numScoresDisregardedForUnprocessed"
+            ],
+            "type": "object"
           }
         },
         "required": [
@@ -2420,6 +2551,21 @@
           "votingMethod": {
             "const": "RankedRobin",
             "type": "string"
+          },
+          "writeInDiagnostics": {
+            "properties": {
+              "numScoresDisregarded": {
+                "type": "number"
+              },
+              "numScoresDisregardedForUnprocessed": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "numScoresDisregarded",
+              "numScoresDisregardedForUnprocessed"
+            ],
+            "type": "object"
           }
         },
         "required": [
@@ -2899,6 +3045,21 @@
           "votingMethod": {
             "const": "STAR",
             "type": "string"
+          },
+          "writeInDiagnostics": {
+            "properties": {
+              "numScoresDisregarded": {
+                "type": "number"
+              },
+              "numScoresDisregardedForUnprocessed": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "numScoresDisregarded",
+              "numScoresDisregardedForUnprocessed"
+            ],
+            "type": "object"
           }
         },
         "required": [
@@ -3379,6 +3540,67 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "Election not found"
+          }
+        }
+      }
+    },
+    "/Election/{id}/getWriteIns": {
+      "get": {
+        "summary": "Get write-in candidate names and counts for an election",
+        "tags": [
+          "Ballots"
+        ],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "The election ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Write-in data per race",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "write_in_data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "race_id": {
+                            "type": "string"
+                          },
+                          "names": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "integer"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ballots not found"
           },
           "404": {
             "description": "Election not found"
@@ -4383,6 +4605,98 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/Election/{id}/setWriteInResults": {
+      "post": {
+        "summary": "Set write-in candidate approvals for a race",
+        "tags": [
+          "Elections"
+        ],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "The election ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "write_in_results": {
+                    "type": "object",
+                    "properties": {
+                      "race_id": {
+                        "type": "string"
+                      },
+                      "write_in_candidates": {
+                        "type": "array",
+                        "maxItems": 100,
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "candidate_name": {
+                              "type": "string",
+                              "maxLength": 100
+                            },
+                            "approved": {
+                              "type": "boolean"
+                            },
+                            "aliases": {
+                              "type": "array",
+                              "maxItems": 20,
+                              "items": {
+                                "type": "string",
+                                "maxLength": 100
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated election",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "election": {
+                      "type": "object",
+                      "$ref": "#/components/schemas/Election"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "404": {
+            "description": "Election not found"
           }
         }
       }

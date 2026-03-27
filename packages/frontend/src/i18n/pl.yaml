@@ -193,7 +193,7 @@ results:
     There's only one vote so far.
     Full results will be displayed once there's more votes.
   tie_title: 'Tied!'
-  tiebreak_subtitle: '{{names}} won after tie breaker'
+  random_tiebreak_subtitle: '{{names}} won after tie breaker'
   win_title_postfix_one: 'Wins!'
   win_title_postfix: 'Win!'
   vote_count: '{{n}} voters'
