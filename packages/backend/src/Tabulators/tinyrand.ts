@@ -1,4 +1,4 @@
-// DIRECTION COPIED FROM https://github.com/tim-one/tinyrand/blob/main/typescript/tinyrand.ts
+// DIRECTLY COPIED FROM https://github.com/tim-one/tinyrand/blob/main/typescript/tinyrand.ts
 
 const SUPPORTED_VERSIONS: readonly number[] = [0];
 const DEFAULT_VERSION: number = 0;
