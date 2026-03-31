@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Grid from "@mui/material/Grid";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormLabel from "@mui/material/FormLabel";
-import FormHelperText from "@mui/material/FormHelperText";
 import FormControl from "@mui/material/FormControl";
 import Typography from '@mui/material/Typography';
-import { Checkbox, FormGroup, Radio, RadioGroup, Dialog, DialogActions, DialogContent, DialogTitle, Paper, Box, IconButton, TextField, capitalize } from "@mui/material"
+import { FormGroup, Radio, RadioGroup, Dialog, DialogActions, DialogContent, DialogTitle, Paper, Box, IconButton, TextField, capitalize } from "@mui/material"
 import structuredClone from '@ungap/structured-clone';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -13,7 +12,7 @@ import { ElectionSettings as IElectionSettings, TermType, electionSettingsValida
 import { ElectionState } from '@equal-vote/star-vote-shared/domain_model/ElectionStates';
 import { Tip } from '~/components/styles';
 import useSnackbar from '~/components/SnackbarContext';
-import { useSubstitutedTranslation } from '~/components/util';
+import { useSubstitutedTranslation, SwitchSetting } from '~/components/util';
 import useElection from '~/components/ElectionContextProvider';
 export default function ElectionSettings() {
     const { election, refreshElection, updateElection } = useElection()
@@ -54,28 +53,6 @@ export default function ElectionSettings() {
         });
     };
 
-    interface CheckboxSettingProps {
-        setting: string
-        disabled?: boolean
-        checked?: boolean
-        onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void                
-        helperKey?: string
-    }
-
-    const CheckboxSetting = ({setting, disabled=undefined, checked=undefined, onChange=undefined, helperKey=undefined}: CheckboxSettingProps) => <>
-        <FormControlLabel disabled={disabled} control={
-            <Checkbox
-                id={setting}
-                name={`${t(`election_settings.${setting}`)}`}
-                checked={disabled ? !!checked : (checked ?? !!editedElectionSettings[setting])}
-                onChange={onChange ?? ((e) => applySettingsUpdate(settings => { settings[setting] = e.target.checked; }))}
-                sx={{mb: 1}}
-            />}
-            label={t(`election_settings.${setting}`)}
-        />
-        {disabled && <FormHelperText hidden={!disabled} sx={{ mb:2, mt:0, lineHeight: 0, fontStyle: 'italic', textAlign: 'center' }}>{t(`disabled_msgs.${helperKey ?? setting}`)}</FormHelperText>}
-    </>;
-
     return <Grid item xs={12} sx={{ m: 0, my: 0, p: 1 }}>
         <FormControl disabled={election.state !== 'draft'} component="fieldset" variant="standard">
             <FormGroup>
@@ -102,11 +79,11 @@ export default function ElectionSettings() {
                         <Tip name='polls_vs_elections'/>
                     </FormLabel>
                     <RadioGroup row>
-                        {['poll', 'election'].map( (type, i) => 
+                        {['poll', 'election'].map( (type, i) =>
                             <FormControlLabel
                                 key={i}
                                 control={<Radio
-                                    onChange={(() => {                                                
+                                    onChange={(() => {
                                         applySettingsUpdate(settings => settings.term_type = type as TermType )
                                     })}
                                     checked={editedElectionSettings.term_type === type}
@@ -117,15 +94,32 @@ export default function ElectionSettings() {
                         )}
                     </RadioGroup>
                 </Box>
-                
-                <CheckboxSetting setting='random_candidate_order' />
-                <CheckboxSetting setting='ballot_updates' />
-                <CheckboxSetting setting='require_instruction_confirmation'/>
-                <CheckboxSetting setting='draggable_ballot'/>
-                <CheckboxSetting setting='is_public'/>
-                <CheckboxSetting setting='max_rankings' onChange={(e) => applySettingsUpdate(settings => {
-                    settings.max_rankings = e.target.checked ? default_rankings : undefined })
-                }/>
+
+                <SwitchSetting
+                    label={t('election_settings.random_candidate_order')}
+                    toggled={!!editedElectionSettings.random_candidate_order}
+                    onToggle={async (v) => { await applySettingsUpdate(s => { s.random_candidate_order = v }); }}
+                />
+                <SwitchSetting
+                    label={t('election_settings.ballot_updates')}
+                    toggled={!!editedElectionSettings.ballot_updates}
+                    onToggle={async (v) => { await applySettingsUpdate(s => { s.ballot_updates = v }); }}
+                />
+                <SwitchSetting
+                    label={t('election_settings.require_instruction_confirmation')}
+                    toggled={!!editedElectionSettings.require_instruction_confirmation}
+                    onToggle={async (v) => { await applySettingsUpdate(s => { s.require_instruction_confirmation = v }); }}
+                />
+                <SwitchSetting
+                    label={t('election_settings.draggable_ballot')}
+                    toggled={!!editedElectionSettings.draggable_ballot}
+                    onToggle={async (v) => { await applySettingsUpdate(s => { s.draggable_ballot = v }); }}
+                />
+                <SwitchSetting
+                    label={t('election_settings.max_rankings')}
+                    toggled={!!editedElectionSettings.max_rankings}
+                    onToggle={async (v) => { await applySettingsUpdate(s => { s.max_rankings = v ? default_rankings : undefined }); }}
+                />
 
                 <TextField
                     id="rank-limit"
