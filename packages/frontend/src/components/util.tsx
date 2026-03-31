@@ -401,7 +401,7 @@ export function SwitchSetting({ label, toggled, onToggle, disabled, disabledMess
 
   return (
     <>
-      <Box display='flex' flexDirection='row' alignItems='center' justifyContent='space-between' sx={{ py: 0.5 }}>
+      <Box display='flex' flexDirection='row' alignItems='center' justifyContent='space-between' gap={2} sx={{ py: 0.5, width: {xs: '100%', md: 400} }}>
         <Typography component='span'>{label}</Typography>
         <Switch
           checked={localToggled}
@@ -413,14 +413,15 @@ export function SwitchSetting({ label, toggled, onToggle, disabled, disabledMess
             height: 26,
             '& .MuiSwitch-switchBase': {
               padding: 0,
-              margin: '2px',
-              '&.Mui-checked': { transform: 'translateX(16px)' },
-              '&.Mui-disabled': {
-                '& .MuiSwitch-thumb': { color: '#fff' },
-                '& + .MuiSwitch-track': { opacity: 0.5 },
+              margin: '3px',
+              color: '#fff',
+              '&.Mui-checked': {
+                transform: 'translateX(16px)',
+                '& + .MuiSwitch-track': { opacity: 1 },
               },
+              '&.Mui-disabled + .MuiSwitch-track': { opacity: 0.5 },
             },
-            '& .MuiSwitch-thumb': { width: 22, height: 22 },
+            '& .MuiSwitch-thumb': { width: 20, height: 20 },
             '& .MuiSwitch-track': { borderRadius: 13 },
           }}
         />
