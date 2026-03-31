@@ -21,7 +21,8 @@ const ViewElectionResults = () => {
 
     return (
       <>
-        {voterAuth?.roles?.length == 0 ? <DraftWarning /> : <AdminResultControls/>} 
+        <DraftWarning />
+        <AdminResultControls/>
         <Box
           display="flex"
           justifyContent="center"
