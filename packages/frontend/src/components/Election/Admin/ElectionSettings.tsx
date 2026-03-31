@@ -31,22 +31,10 @@ export default function ElectionSettings() {
         election.settings = value;
         se(value);
     }
-    //const [publicResults, setPublicResults] = useState(election.settings.public_results);
-    //const [ballotUpdates, setBallotUpdates] = useState(election.settings.ballot_updates);
-
-    // Enforce mutual exclusion of ballot updates feature and preliminary results
-    //const [publicResultsDisabled, setPublicResultsDisabled] = useState(election.settings.ballot_updates);
-    //const [ballotUpdatesDisabled, setBallotUpdatesDisabled] =       useState(!ballotUpdatesConditionsMet || election.settings.public_results);
-    //const [ballotUpdatesDisabledMsg, setBallotUpdatesDisabledMsg] = useState(ballotUpdatesConditionsMet && election.settings.public_results);
 
     // Sync state when election context changes
     useEffect(() => {
         setEditedElectionSettings(election.settings);
-        //setPublicResults(election.settings.public_results);
-        //setBallotUpdates(election.settings.ballot_updates);
-        //setBallotUpdatesDisabled(!ballotUpdatesConditionsMet || election.settings.public_results);
-        //setBallotUpdatesDisabledMsg(ballotUpdatesConditionsMet && election.settings.public_results);
-        //setPublicResultsDisabled(election.settings.ballot_updates);
     }, [election]);
 
     const applySettingsUpdate = async (updateFunc: (settings: IElectionSettings) => void) => {
@@ -73,19 +61,7 @@ export default function ElectionSettings() {
         onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void                
         helperKey?: string
     }
-    const onChangeBallotUpdates = async(e) => {
-         //setBallotUpdates(e.target.checked);
-         //setPublicResultsDisabled(e.target.checked);
-         applySettingsUpdate(settings => {
-             settings.ballot_updates = e.target.checked;
-         });
-    };
-    const onChangePublicResults = async(e) => {
-         //setPublicResults(e.target.checked);
-         //setBallotUpdatesDisabled(!ballotUpdatesConditionsMet || e.target.checked);
-         //setBallotUpdatesDisabledMsg(ballotUpdatesConditionsMet && e.target.checked);
-         applySettingsUpdate(settings => { settings.public_results = e.target.checked; });
-    };
+
     const CheckboxSetting = ({setting, disabled=undefined, checked=undefined, onChange=undefined, helperKey=undefined}: CheckboxSettingProps) => <>
         <FormControlLabel disabled={disabled} control={
             <Checkbox
@@ -99,12 +75,6 @@ export default function ElectionSettings() {
         />
         {disabled && <FormHelperText hidden={!disabled} sx={{ mb:2, mt:0, lineHeight: 0, fontStyle: 'italic', textAlign: 'center' }}>{t(`disabled_msgs.${helperKey ?? setting}`)}</FormHelperText>}
     </>;
-
-    const getBallotUpdateHelperKey = () => {
-        if(editedElectionSettings.voter_access == 'open' || editedElectionSettings.invitation !== 'email') return 'ballot_updates_when_open'
-        if(editedElectionSettings.public_results) return 'ballot_updates_with_prelim'
-        return undefined;
-    };
 
     return <Grid item xs={12} sx={{ m: 0, my: 0, p: 1 }}>
         <FormControl disabled={election.state !== 'draft'} component="fieldset" variant="standard">
@@ -149,13 +119,7 @@ export default function ElectionSettings() {
                 </Box>
                 
                 <CheckboxSetting setting='random_candidate_order' />
-
-                <CheckboxSetting
-                    setting='ballot_updates'
-                    disabled={getBallotUpdateHelperKey()  != undefined}
-                    helperKey={getBallotUpdateHelperKey()}
-                />
-                { ['draft', 'finalized', 'open'].includes(election.state) && <CheckboxSetting setting='public_results' disabled={editedElectionSettings.ballot_updates} />}
+                <CheckboxSetting setting='ballot_updates' />
                 <CheckboxSetting setting='require_instruction_confirmation'/>
                 <CheckboxSetting setting='draggable_ballot'/>
                 <CheckboxSetting setting='is_public'/>
