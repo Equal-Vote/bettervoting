@@ -21,8 +21,7 @@ const ViewElectionResults = () => {
 
     return (
       <>
-        
-        <DraftWarning />
+        {voterAuth?.roles?.length == 0 ? <DraftWarning /> : <AdminResultControls/>} 
         <Box
           display="flex"
           justifyContent="center"
@@ -40,7 +39,6 @@ const ViewElectionResults = () => {
               "@media print": { boxShadow: "none" },
             }}
           >
-            <AdminResultControls/>
             <Typography variant="h3" component="h3" sx={{ marginBottom: 4 }}>
               {election.state === "closed"
                 ? t("results.official_title")
