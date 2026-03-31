@@ -16,7 +16,7 @@ import AdminResultControls from '../Admin/AdminResultControls';
 const ViewElectionResults = () => {
     const { election, voterAuth } = useElection();
     const { data, isPending, makeRequest: getResults } = useGetResults(election.election_id)
-    useEffect(() => { getResults() }, [])
+    useEffect(() => { election.settings.public_results && getResults() }, [])
     const {t} = useSubstitutedTranslation(election.settings.term_type);
 
     return (
@@ -49,15 +49,15 @@ const ViewElectionResults = () => {
               {t("results.election_title", { title: election.title })}
             </Typography>
 
-              {isPending && <div> {t("results.loading_election")} </div>}
-            {!isPending && !data && (
+            {isPending && <div> {t("results.loading_election")} </div>}
+            {!election.settings.public_results && (
               <>
                 The election admins have not released the results yet. Feel free
                 to swing back later 😊.
               </>
             )}
 
-            {data?.results.map((results, race_index) => (
+            {election.settings.public_results && data?.results.map((results, race_index) => (
                 <Results
                     key={`results-${race_index}`}
                     race={election.races[race_index]}
@@ -88,8 +88,6 @@ const ViewElectionResults = () => {
                   <Box
                     sx={{
                       width: "100%",
-                      
-                     
                       p: 0.8,
                       px: { xs: 5, sm: 1 },
                     }}
