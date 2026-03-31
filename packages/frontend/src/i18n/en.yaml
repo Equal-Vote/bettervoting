@@ -1101,17 +1101,20 @@ admin_home:
 
   close_snack: 'Election successfully closed!'
   open_snack: 'Election successfully opened!'
-  election_is_open: '{{capital_election}} is open'
-  election_is_closed: '{{capital_election}} is closed'
+  election_is_open: '{{capital_election}} is open, and accepting votes'
+  election_is_closed: '{{capital_election}} is closed, and not accepting votes'
 
   share:
     description: Share {{capital_election}}
     # Button is defined in the top level share section
 
   finalize_invitations_will_send: Invitations will be sent to your voters
-  finalize_description: When finished setting up your {{election}}, finalize it. Once final, it can't be edited. 
-  finalize_voting_begins_later: Voting begins after your specified start time.
-  finalize_voting_begins_now: Voting begins immediately.
+  finalize_description: |
+    When finished setting up your {{election}}, finalize it. Once final, it can't be edited.
+
+    Voting is allowed immediately, but you can choose when your voters are notified.
+  # finalize_voting_begins_later: Voting begins after your specified start time.
+  # finalize_voting_begins_now: Voting begins immediately.
   finalize_button: Finalize {{capital_election}}
 
   voter_authentication:
