@@ -726,7 +726,10 @@ tips:
 
   public_results:
     title: Public Results
-    description: Allows voters to see the results of the election. If enabled while voting is open then voters will be shown to the preliminary results after completing their ballot.
+    description: |
+      Allows voters to see the results of the election.
+      If enabled while the {{election}} is open then voters will be shown to the preliminary results after completing their ballot.
+      High profile {{elections}} will usually keep the results hidden, and then reveal them after the {{election}} is closed.
 
   random_ties:
     title: Enable Random Tie-Breakers
