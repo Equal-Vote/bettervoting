@@ -394,7 +394,27 @@ export function SwitchSetting({ label, toggled, onToggle, disabled, disabledMess
     <>
       <Box display='flex' flexDirection='row' alignItems='center' justifyContent='space-between' sx={{ py: 0.5 }}>
         <Typography component='span'>{label}</Typography>
-        <Switch checked={localToggled} onChange={handleChange} disabled={disabled} />
+        <Switch
+          checked={localToggled}
+          onChange={handleChange}
+          disabled={disabled}
+          sx={{
+            padding: 0,
+            width: 42,
+            height: 26,
+            '& .MuiSwitch-switchBase': {
+              padding: 0,
+              margin: '2px',
+              '&.Mui-checked': { transform: 'translateX(16px)' },
+              '&.Mui-disabled': {
+                '& .MuiSwitch-thumb': { color: '#fff' },
+                '& + .MuiSwitch-track': { opacity: 0.5 },
+              },
+            },
+            '& .MuiSwitch-thumb': { width: 22, height: 22 },
+            '& .MuiSwitch-track': { borderRadius: 13 },
+          }}
+        />
       </Box>
       {disabled && disabledMessage && (
         <FormHelperText sx={{ mb: 2, mt: 0, fontStyle: 'italic', textAlign: 'center' }}>
