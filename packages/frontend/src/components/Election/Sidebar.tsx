@@ -57,8 +57,8 @@ export default function Sidebar() {
                             </>}
                         <ListItem text='Manage Voters' link={`/${id}/admin/voters`} icon={<PeopleAltIcon/>}/>
                         <ListItem text='Settings' link={`/${id}/admin/settings`} icon={<SettingsIcon/>}/>
-                        <ListItem text='Preview Ballot' link={`/${id}/`} icon={<PreviewIcon/>}/>
-                        <ListItem text='Preview Results' link={`/${id}/results`} icon={<BarChartIcon/>}/>
+                        <ListItem text={election.state == 'draft' ? 'Preview Ballot' : 'Live Ballot'} link={`/${id}/`} icon={<PreviewIcon/>}/>
+                        <ListItem text={election.state == 'draft' ? 'Preview Results' : 'Live Results'} link={`/${id}/results`} icon={<BarChartIcon/>}/>
                         <ListItem text='Publish & Share' link={`/${id}/admin/publish`} icon={<SendIcon/>}/>
                     </Paper>
                 </Box>
