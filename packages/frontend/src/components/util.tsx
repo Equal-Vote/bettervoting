@@ -1,4 +1,4 @@
-import { Box, Button, Divider, FormControlLabel, Link, TextField, Typography } from "@mui/material";
+import { Box, Button, Divider, FormControlLabel, FormHelperText, Link, Switch, TextField, Typography } from "@mui/material";
 import { DateTime } from "luxon";
 import { useTranslation } from "react-i18next";
 import { SecondaryButton, Tip } from "./styles";
@@ -372,4 +372,44 @@ export const isValidDate = (d) => {
 
 export const getLocalTimeZoneShort = () => {
   return DateTime.local().offsetNameShort
+}
+
+export interface SwitchSettingProps {
+  label: string
+  toggled: boolean
+  onToggle: (newValue: boolean) => Promise<false | void>
+  disabled?: boolean
+  disabledMessage?: string
+}
+
+export function SwitchSetting({ label, toggled, onToggle, disabled, disabledMessage }: SwitchSettingProps) {
+  const [localToggled, setLocalToggled] = useState(toggled);
+
+  useEffect(() => {
+    setLocalToggled(toggled);
+  }, [toggled]);
+
+  const handleChange = async () => {
+    const originalValue = localToggled;
+    const newValue = !localToggled;
+    setLocalToggled(newValue);
+    const result = await onToggle(newValue);
+    if (result === false) {
+      setLocalToggled(originalValue);
+    }
+  };
+
+  return (
+    <>
+      <Box display='flex' flexDirection='row' alignItems='center' justifyContent='space-between' sx={{ py: 0.5 }}>
+        <Typography component='span'>{label}</Typography>
+        <Switch checked={localToggled} onChange={handleChange} disabled={disabled} />
+      </Box>
+      {disabled && disabledMessage && (
+        <FormHelperText sx={{ mb: 2, mt: 0, fontStyle: 'italic', textAlign: 'center' }}>
+          {disabledMessage}
+        </FormHelperText>
+      )}
+    </>
+  );
 }
