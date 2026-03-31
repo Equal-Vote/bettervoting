@@ -10,7 +10,7 @@ import useConfirm from '../../ConfirmationDialogProvider';
 import useElection from '../../ElectionContextProvider';
 import useAuthSession from '../../AuthSessionContextProvider';
 import useSnackbar from "~/components/SnackbarContext";
-import SwitchSetting from "./SwitchSetting";
+import { SwitchSetting } from "~/components/util";
 
 type SectionProps = {
     text: {[key: string]: string}
