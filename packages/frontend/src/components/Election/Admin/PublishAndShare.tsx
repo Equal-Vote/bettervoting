@@ -1,5 +1,5 @@
 import Grid from "@mui/material/Grid";
-import { Box, Divider, Switch } from "@mui/material";
+import { Box, Divider } from "@mui/material";
 import { Typography } from "@mui/material";
 import { PrimaryButton } from "../../styles";
 import { Link, useNavigate } from 'react-router-dom';
@@ -10,6 +10,7 @@ import useConfirm from '../../ConfirmationDialogProvider';
 import useElection from '../../ElectionContextProvider';
 import useAuthSession from '../../AuthSessionContextProvider';
 import useSnackbar from "~/components/SnackbarContext";
+import SwitchSetting from "./SwitchSetting";
 
 type SectionProps = {
     text: {[key: string]: string}
@@ -86,7 +87,7 @@ export default () => {
         }
     }
 
-    const changeOpenState = async (open: boolean) => {
+    const changeOpenState = async (open: boolean): Promise<false | void> => {
         try {
             await setOpenState({open}) && setSnack({
                 message: t(`admin_home.${open ? 'open': 'close'}_snack`),
@@ -97,6 +98,7 @@ export default () => {
             await fetchElection();
         } catch (err) {
             console.error(err);
+            return false;
         }
     }
 
@@ -180,17 +182,13 @@ export default () => {
     
     return <>
         {(election.state === 'open' || election.state === 'closed') && !election.start_time && !election.end_time && (
-            <Box sx={{width: '100%'}}>
-                <Box display='flex' flexDirection='row' alignItems='center' justifyContent='space-between' sx={{ py: 0.5, maxWidth: 500, m: 'auto' }}>
-                    <Typography component='span'>
-                        {t(election.state === 'open' ? 'admin_home.election_is_open' : 'admin_home.election_is_closed')}
-                    </Typography>
-                    <Switch
-                        checked={election.state === 'open'}
-                        onChange={() => changeOpenState(election.state !== 'open')}
-                        disabled={!hasPermission('canEditElectionState')}
-                    />
-                </Box>
+            <Box sx={{width: '100%', maxWidth: 500, m: 'auto'}}>
+                <SwitchSetting
+                    label={t(election.state === 'open' ? 'admin_home.election_is_open' : 'admin_home.election_is_closed')}
+                    checked={election.state === 'open'}
+                    onToggle={changeOpenState}
+                    disabled={!hasPermission('canEditElectionState')}
+                />
                 {/*{election.state != 'archived' && <ArchiveElectionSection />}*/}
             </Box>
         )}
