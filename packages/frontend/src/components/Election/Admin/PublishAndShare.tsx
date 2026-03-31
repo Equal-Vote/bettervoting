@@ -4,7 +4,7 @@ import { Typography } from "@mui/material";
 import { PrimaryButton } from "../../styles";
 import { Link, useNavigate } from 'react-router-dom';
 import ShareButton from "../ShareButton";
-import { useArchiveEleciton, useSetOpenState, useFinalizeElection, useSetPublicResults } from "../../../hooks/useAPI";
+import { useArchiveEleciton, useSetOpenState, useFinalizeElection } from "../../../hooks/useAPI";
 import { useSubstitutedTranslation } from '../../util';
 import useConfirm from '../../ConfirmationDialogProvider';
 import useElection from '../../ElectionContextProvider';
@@ -22,13 +22,7 @@ export default () => {
     const authSession = useAuthSession()
     const { election, refreshElection: fetchElection, permissions } = useElection()
     const {t} = useSubstitutedTranslation(election.settings.term_type, {time_zone: election.settings.time_zone});
-    const { makeRequest } = useSetPublicResults(election.election_id)
     const { setSnack } = useSnackbar()
-    const togglePublicResults = async () => {
-        const public_results = !election.settings.public_results
-        await makeRequest({ public_results: public_results })
-        await fetchElection()
-    }
     const { makeRequest: finalize } = useFinalizeElection(election.election_id)
     const { makeRequest: archive } = useArchiveEleciton(election.election_id)
     const { makeRequest: setOpenState } = useSetOpenState(election.election_id)
@@ -130,27 +124,6 @@ export default () => {
             </Grid>
             {includeDivider && <Divider style={{width: '100%'}}/>}
         </Grid>
-
-    const TogglePublicResultsSection = () => {
-        const m = t('admin_home.public_results');
-        const text = {
-            ...m,
-            description: election.settings.public_results === true ? m.make_private : m.make_public
-        };
-        return <Section
-            text={text}
-            permission='canEditElectionState'
-            button={(<>
-                <PrimaryButton
-                    disabled={!hasPermission('canEditElectionState')}
-                    fullWidth
-                    onClick={togglePublicResults}
-                >
-                    {text.description}
-                </PrimaryButton>
-            </>)}
-        />
-    }
 
     const ArchiveElectionSection = () => <Section
         text={t('admin_home.archive')}
@@ -254,8 +227,7 @@ export default () => {
             </Box>
         }
         <Box sx={{width: '100%'}}>
-            {!['draft', 'finalized'].includes(election.state) && !(election.state === 'open' && election.settings.ballot_updates) && <TogglePublicResultsSection/>}
-            {(election.state === 'open') && !election.start_time && !election.end_time && <CloseElectionSection />}
+{(election.state === 'open') && !election.start_time && !election.end_time && <CloseElectionSection />}
             {(election.state === 'closed') && !election.start_time && !election.end_time && <OpenElectionSection />}
             {election.state != 'archived' && <ArchiveElectionSection />}
         </Box>

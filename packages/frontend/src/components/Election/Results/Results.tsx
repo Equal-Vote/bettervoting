@@ -505,16 +505,13 @@ export default function Results({ race, results }: {race: Race, results: Electio
             </Typography>
         </>}
         </Box>
-        {results.summaryData.nTallyVotes > 1 &&
-          <>
-          {results.votingMethod === "STAR" && <STARResultsViewer filterRandomFromLogs={removeTieBreakFromTitle}/>}
-          {results.votingMethod === "Approval" && <ApprovalResultsViewer/>}
-          {results.votingMethod === "RankedRobin" && <RankedRobinResultsViewer/>}
-          {results.votingMethod === "Plurality" && <PluralityResultsViewer/>}
-          {results.votingMethod === "IRV" && <IRVResultsViewer/>}
-          {results.votingMethod === "STV" && <STVResultsViewer/>}
-          {results.votingMethod === "STAR_PR" && <STARPRResultsViewer/>}
-        </>}
+        {results.votingMethod === "STAR" && <STARResultsViewer filterRandomFromLogs={removeTieBreakFromTitle}/>}
+        {results.votingMethod === "Approval" && <ApprovalResultsViewer/>}
+        {results.votingMethod === "RankedRobin" && <RankedRobinResultsViewer/>}
+        {results.votingMethod === "Plurality" && <PluralityResultsViewer/>}
+        {results.votingMethod === "IRV" && <IRVResultsViewer/>}
+        {results.votingMethod === "STV" && <STVResultsViewer/>}
+        {results.votingMethod === "STAR_PR" && <STARPRResultsViewer/>}
       </div>
     </RaceContextProvider>
   );
