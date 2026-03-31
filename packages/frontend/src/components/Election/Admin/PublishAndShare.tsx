@@ -1,5 +1,5 @@
 import Grid from "@mui/material/Grid";
-import { Box, Divider } from "@mui/material";
+import { Box, Divider, Switch } from "@mui/material";
 import { Typography } from "@mui/material";
 import { PrimaryButton } from "../../styles";
 import { Link, useNavigate } from 'react-router-dom';
@@ -140,34 +140,6 @@ export default () => {
         </>)}
     />
 
-    const CloseElectionSection = () => <Section
-        text={t('admin_home.close')}
-        permission='canEditElectionState'
-        button={(<>
-            <PrimaryButton
-                disabled={!hasPermission('canEditElectionState')}
-                fullWidth
-                onClick={() => changeOpenState(false)}
-            >
-                {t('admin_home.close.button')}
-            </PrimaryButton>
-        </>)}
-    />
-
-    const OpenElectionSection = () => <Section
-        text={t('admin_home.open')}
-        permission='canEditElectionState'
-        button={(<>
-            <PrimaryButton
-                disabled={!hasPermission('canEditElectionState')}
-                fullWidth
-                onClick={() => changeOpenState(true)}
-            >
-                {t('admin_home.open.button')}
-            </PrimaryButton>
-        </>)}
-    />
-
     const FinalizeSection = () => <Box sx={{maxWidth: 800}}>
         <Grid item xs={12} sx={{ p: 1, pt: 3, pb: 0 }}>
             <Typography align='center' variant="body1" sx={{ pl: 2 }}>
@@ -227,8 +199,18 @@ export default () => {
             </Box>
         }
         <Box sx={{width: '100%'}}>
-{(election.state === 'open') && !election.start_time && !election.end_time && <CloseElectionSection />}
-            {(election.state === 'closed') && !election.start_time && !election.end_time && <OpenElectionSection />}
+            {(election.state === 'open' || election.state === 'closed') && !election.start_time && !election.end_time && (
+                <Box display='flex' flexDirection='row' alignItems='center' justifyContent='space-between' sx={{ py: 0.5 }}>
+                    <Typography component='span'>
+                        {t(election.state === 'open' ? 'admin_home.election_is_open' : 'admin_home.election_is_closed')}
+                    </Typography>
+                    <Switch
+                        checked={election.state === 'open'}
+                        onChange={() => changeOpenState(election.state !== 'open')}
+                        disabled={!hasPermission('canEditElectionState')}
+                    />
+                </Box>
+            )}
             {election.state != 'archived' && <ArchiveElectionSection />}
         </Box>
 
