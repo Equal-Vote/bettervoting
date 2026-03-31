@@ -144,8 +144,6 @@ export default () => {
         <Grid item xs={12} sx={{ p: 1, pt: 3, pb: 0 }}>
             <Typography align='center' variant="body1" sx={{ pl: 2 }}>
                 {t('admin_home.finalize_description')}
-                {' '}
-                {t(election.start_time? 'admin_home.finalize_voting_begins_later' : 'admin_home.finalize_voting_begins_now')}
             </Typography>
             {!hasPermission('canEditElectionState') &&
                 <Typography align='center' variant="body1" sx={{ color: 'error.main', pl: 2 }}>
@@ -181,6 +179,22 @@ export default () => {
     </Box>
     
     return <>
+        {(election.state === 'open' || election.state === 'closed') && !election.start_time && !election.end_time && (
+            <Box sx={{width: '100%'}}>
+                <Box display='flex' flexDirection='row' alignItems='center' justifyContent='space-between' sx={{ py: 0.5, maxWidth: 500, m: 'auto' }}>
+                    <Typography component='span'>
+                        {t(election.state === 'open' ? 'admin_home.election_is_open' : 'admin_home.election_is_closed')}
+                    </Typography>
+                    <Switch
+                        checked={election.state === 'open'}
+                        onChange={() => changeOpenState(election.state !== 'open')}
+                        disabled={!hasPermission('canEditElectionState')}
+                    />
+                </Box>
+                {/*{election.state != 'archived' && <ArchiveElectionSection />}*/}
+            </Box>
+        )}
+
         {(election.state !== 'draft' && election.state !== 'finalized') && 
             <Box display='flex' sx={{flexDirection:{xs: 'column', sm: 'row'}}} alignItems='center' gap={2} justifyContent='space-evenly' width='100%'>
                 <Box sx={{width: '100%', maxWidth: 300}}>
@@ -198,22 +212,6 @@ export default () => {
                 }
             </Box>
         }
-        <Box sx={{width: '100%'}}>
-            {(election.state === 'open' || election.state === 'closed') && !election.start_time && !election.end_time && (
-                <Box display='flex' flexDirection='row' alignItems='center' justifyContent='space-between' sx={{ py: 0.5 }}>
-                    <Typography component='span'>
-                        {t(election.state === 'open' ? 'admin_home.election_is_open' : 'admin_home.election_is_closed')}
-                    </Typography>
-                    <Switch
-                        checked={election.state === 'open'}
-                        onChange={() => changeOpenState(election.state !== 'open')}
-                        disabled={!hasPermission('canEditElectionState')}
-                    />
-                </Box>
-            )}
-            {election.state != 'archived' && <ArchiveElectionSection />}
-        </Box>
-
         {election.state === 'draft' && <FinalizeSection /> }
     </>
 }
