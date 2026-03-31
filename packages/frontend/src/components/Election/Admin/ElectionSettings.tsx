@@ -15,7 +15,6 @@ import { Tip } from '~/components/styles';
 import useSnackbar from '~/components/SnackbarContext';
 import { useSubstitutedTranslation } from '~/components/util';
 import useElection from '~/components/ElectionContextProvider';
-
 export default function ElectionSettings() {
     const { election, refreshElection, updateElection } = useElection()
     const { setSnack } = useSnackbar()

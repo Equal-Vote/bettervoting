@@ -8,8 +8,6 @@ export default () => {
     const { election, refreshElection, permissions } = useElection();
     const { makeRequest } = useSetPublicResults(election.election_id);
 
-    const hasPermission = (p: string) => permissions?.includes(p);
-
     const showToggle = !['draft', 'finalized'].includes(election.state) &&
         !(election.state === 'open' && election.settings.ballot_updates);
 
@@ -18,21 +16,22 @@ export default () => {
         await refreshElection();
     };
 
+    // TODO: add some error scenarios where election is outside draft but can't be toggled
+    //  - if updatable ballots is enabled then the toggle should be disabled
+
     if(election.state === 'draft') return <></>
 
     return <ElectionStateWarning title='results.admin_title' description='' hideIcon>
         {showToggle && (
             <Box display='flex' flexDirection='row' alignItems='center' justifyContent='space-between' sx={{ py: 0.5 }}>
                 <Box display='flex' flexDirection='row' alignItems='center' gap={1}>
-                    <BarChartIcon fontSize='small' color='action' />
                     <Typography component='span'>
-                        Results are public
+                        Election results are {election.settings.public_results ? 'public' : 'hidden'}
                     </Typography>
                 </Box>
                 <Switch
                     checked={election.settings.public_results === true}
                     onChange={togglePublicResults}
-                    disabled={!hasPermission('canEditElectionState')}
                 />
             </Box>
         )}

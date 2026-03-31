@@ -36,6 +36,7 @@ export default function Sidebar() {
             {voterAuth?.roles?.length > 0 &&
                 <Box
                     display='flex'
+                    flexDirection='column'
                     justifyContent="center"
                     alignItems="center"
                     sx={{
@@ -43,7 +44,7 @@ export default function Sidebar() {
                             display: 'none',
                         }
                     }}>
-                    <Paper elevation={3} sx={{ width: 600 }} >
+                    <Paper elevation={3}>
                         <ListItem text='Admin Home' link={`/${id}/admin`} icon={<HomeIcon/>}/>
                         <ListItem text='Build Ballot' link={`/${id}/admin/build_ballot`} icon={<BallotIcon/>}/>
                         {election.state === 'draft' &&
