@@ -5,7 +5,7 @@ import BarChartIcon from '@mui/icons-material/BarChart';
 import { useSetPublicResults } from "../../../hooks/useAPI";
 
 export default () => {
-    const { election, refreshElection, permissions } = useElection();
+    const { election, refreshElection, t } = useElection();
     const { makeRequest } = useSetPublicResults(election.election_id);
 
     const showToggle = !['draft', 'finalized'].includes(election.state) &&
@@ -26,7 +26,7 @@ export default () => {
             <Box display='flex' flexDirection='row' alignItems='center' justifyContent='space-between' sx={{ py: 0.5 }}>
                 <Box display='flex' flexDirection='row' alignItems='center' gap={1}>
                     <Typography component='span'>
-                        Election results are {election.settings.public_results ? 'public' : 'hidden'}
+                        {t(election.settings.public_results ? 'results.admin_results_public': 'results.admin_results_hidden')}
                     </Typography>
                 </Box>
                 <Switch

@@ -205,6 +205,9 @@ number:
 
 # Results Example: bettervoting.com/tcvc7r/results
 results:
+  admin_results_public: '{{capital_election}} results are public !tip(public_results)'
+  admin_results_hidden: '{{capital_election}} results are hidden !tip(public_results)'
+
   preliminary_title: PRELIMINARY RESULTS
   official_title: OFFICIAL RESULTS
   election_title: |
@@ -1098,6 +1101,8 @@ admin_home:
 
   close_snack: 'Election successfully closed!'
   open_snack: 'Election successfully opened!'
+  election_is_open: '{{capital_election}} is open'
+  election_is_closed: '{{capital_election}} is closed'
 
   share:
     description: Share {{capital_election}}
