@@ -127,6 +127,7 @@ support_blurb: For support on this {{election}} please contact [{{email}}](mailt
 # Share Button dropdown (ex. https://bettervoting.com/pres24/thanks)
 share:
   button: Share {{capital_election}}
+  button_results: Share {{capital_election}} results
   facebook: Facebook
   X: X
   reddit: Reddit
