@@ -3,6 +3,8 @@ export default class GlobalData {
   mainUrl:string;
 
   constructor() {
-    this.mainUrl = process.env.MAIN_URL || "https://bettervoting.com";
+    let url = process.env.MAIN_URL || "https://bettervoting.com";
+    if (url.endsWith('/')) url = url.slice(0, -1);
+    this.mainUrl = url;
   }
 }
