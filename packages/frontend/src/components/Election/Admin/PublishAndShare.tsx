@@ -6,7 +6,7 @@ import { Typography } from "@mui/material";
 import { LinkButton, PrimaryButton, SecondaryButton } from "../../styles";
 import { Link, useNavigate } from 'react-router-dom';
 import ShareButton from "../ShareButton";
-import { useArchiveEleciton, useSetOpenState, useFinalizeElection, useSetEndTime } from "../../../hooks/useAPI";
+import { useArchiveEleciton, useSetOpenState, useFinalizeElection } from "../../../hooks/useAPI";
 import { useSubstitutedTranslation } from '../../util';
 import { dateToLocalLuxonDate } from '../../ElectionForm/Details/useEditElectionDetails';
 import useConfirm from '../../ConfirmationDialogProvider';
@@ -23,7 +23,7 @@ type SectionProps = {
 
 export default () => {
     const authSession = useAuthSession()
-    const { election, refreshElection: fetchElection, permissions } = useElection()
+    const { election, refreshElection: fetchElection, permissions, updateElection } = useElection()
     const [settingEndTime, setSettingEndTime] = useState(false);
     const [endTimeInput, setEndTimeInput] = useState('');
 
@@ -31,7 +31,7 @@ export default () => {
 
     const saveEndTime = async () => {
         if (!endTimeInput) return;
-        await setEndTime({ end_time: DateTime.fromISO(endTimeInput).setZone(timeZone, { keepLocalTime: true }).toJSDate() });
+        await updateElection(e => { e.end_time = DateTime.fromISO(endTimeInput).setZone(timeZone, { keepLocalTime: true }).toJSDate(); });
         await fetchElection();
         setSettingEndTime(false);
     };
@@ -39,7 +39,6 @@ export default () => {
     const { makeRequest: finalize } = useFinalizeElection(election.election_id)
     const { makeRequest: archive } = useArchiveEleciton(election.election_id)
     const { makeRequest: setOpenState } = useSetOpenState(election.election_id)
-    const { makeRequest: setEndTime } = useSetEndTime(election.election_id)
 
     const navigate = useNavigate()
     
@@ -94,7 +93,7 @@ export default () => {
         try {
             await setOpenState({open});
             if (!open && election.end_time) {
-                await setEndTime({ end_time: null });
+                await updateElection(e => { e.end_time = undefined; });
             }
             await fetchElection();
         } catch (err) {
