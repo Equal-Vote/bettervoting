@@ -201,7 +201,7 @@ export default () => {
     
     return <>
         {(election.state === 'open' || election.state === 'closed') && (
-            <Box sx={{width: '100%', maxWidth: 500, m: 'auto'}}>
+            <Box sx={{width: '100%', maxWidth: 500}}>
                 <SwitchSetting
                     label={t(election.state === 'open' ? 'admin_home.election_is_open' : 'admin_home.election_is_closed')}
                     toggled={election.state === 'open'}
@@ -236,20 +236,8 @@ export default () => {
         )}
 
         {(election.state !== 'draft' && election.state !== 'finalized') && 
-            <Box display='flex' sx={{flexDirection:{xs: 'column', sm: 'row'}}} alignItems='center' gap={2} justifyContent='space-evenly' width='100%'>
-                <Box sx={{width: '100%', maxWidth: 300}}>
-                    <ShareButton url={`${window.location.origin}/${election.election_id}`} />
-                </Box>
-                {(hasPermission('canViewPreliminaryResults') && election.settings.public_results || election.state === 'closed') &&
-                    <Box sx={{width: '100%', maxWidth: 300}}>
-                        <PrimaryButton
-                            fullWidth
-                            component={Link} to={`/${election.election_id}/results`}
-                        >
-                            {t('admin_home.view_results.button')}
-                        </PrimaryButton>
-                    </Box>
-                }
+            <Box sx={{width: '100%', maxWidth: 300}}>
+                <ShareButton url={`${window.location.origin}/${election.election_id}`} />
             </Box>
         }
         {election.state === 'draft' && <FinalizeSection /> }
