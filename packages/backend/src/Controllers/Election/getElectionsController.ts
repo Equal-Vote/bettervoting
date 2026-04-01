@@ -4,8 +4,10 @@ import { BadRequest } from "@curveball/http-errors";
 import { IElectionRequest, IRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
 import { Election, removeHiddenFields } from '@equal-vote/star-vote-shared/domain_model/Election';
+import { Race, VotingMethod, MethodTextKey, methodValueToTextKey } from '@equal-vote/star-vote-shared/domain_model/Race';
 import { expectPermission } from '../controllerUtils';
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
+import { sharedConfig } from '@equal-vote/star-vote-shared/config';
 
 
 var ElectionsModel = ServiceLocator.electionsDb();
@@ -82,30 +84,81 @@ const queryElections = async (req: IElectionRequest, res: Response, next: NextFu
     });
 }
 
-const innerGetGlobalElectionStats = async (req: IRequest) => {
+type ElectionMethodKey = MethodTextKey | 'multi_method';
+
+const ALL_METHOD_KEYS: ElectionMethodKey[] = [
+    ...(Object.values(methodValueToTextKey) as MethodTextKey[]),
+    'multi_method',
+];
+
+type GlobalElectionStats =
+    { elections: number; votes: number; legacy_elections: number; legacy_votes: number } &
+    Record<`${ElectionMethodKey}_votes`, number> &
+    Record<`${ElectionMethodKey}_elections`, number>;
+
+const innerGetGlobalElectionStats = async (req: IRequest): Promise<GlobalElectionStats> => {
     Logger.info(req, `getGlobalElectionStats `);
 
-    let electionVotes = await ElectionsModel.getBallotCountsForAllElections(req);
+    const [electionVotes, electionRaces, sourcedFromPrior] = await Promise.all([
+        ElectionsModel.getBallotCountsForAllElections(req),
+        ElectionsModel.getElectionRacesForAllElections(req),
+        ElectionsModel.getElectionsSourcedFromPrior(req),
+    ]);
 
-    let sourcedFromPrior = await ElectionsModel.getElectionsSourcedFromPrior(req);
-    let priorElections = sourcedFromPrior?.map(e => e.election_id) ?? [];
+    const priorElections = sourcedFromPrior?.map(e => e.election_id) ?? [];
+    const devElections: string[] = [];
 
-    let stats = {
-        elections: Number(process.env.CLASSIC_ELECTION_COUNT ?? 0),
-        votes: Number(process.env.CLASSIC_VOTE_COUNT ?? 0),
-    };
+    // Build election_id -> method_key map; elections with multiple distinct methods are 'multi_method'
+    const electionMethodMap: Record<string, ElectionMethodKey> = {};
+    electionRaces?.forEach(e => {
+        const methods = new Set((e.races as Race[]).map(r => r.voting_method));
+        if(sharedConfig.DEV_USERS.includes(e.owner_id) && !sharedConfig.REAL_ELECTIONS_FROM_DEVS.includes(e.election_id)) {
+            devElections.push(e.election_id);
+            return;
+        }
+        if (methods.size === 0) return; // drafted elections with no races yet — skip
+        let methodKey: ElectionMethodKey;
+        if (methods.size > 1) {
+            methodKey = 'multi_method';
+        } else {
+            const vm = [...methods][0] as VotingMethod;
+            const key = methodValueToTextKey[vm];
+            // there's some garbage elections with an invalid voting method of "STAR VOting" (proper term is "STAR"). We can skip those
+            if (!key) return; //throw new Error(`Unknown voting method: ${vm} for election ${e.election_id}`);
+            methodKey = key;
+        }
+        electionMethodMap[e.election_id] = methodKey;
+    });
+
+    const legacyVotes = Number(process.env.CLASSIC_VOTE_COUNT ?? 0);
+    const legacyElections = Number(process.env.CLASSIC_ELECTION_COUNT ?? 0);
+
+    // legacy_* holds pre-existing counts from classic star.vote; the per-method breakdowns
+    // cover only current elections, so: votes = legacy_votes + sum(method_votes),
+    // and: elections = legacy_elections + sum(method_elections)
+    const stats = {
+        elections: legacyElections,
+        votes: legacyVotes,
+        legacy_elections: legacyElections,
+        legacy_votes: legacyVotes,
+        ...Object.fromEntries(ALL_METHOD_KEYS.flatMap(k => [[`${k}_votes`, 0], [`${k}_elections`, 0]])),
+    } as GlobalElectionStats;
 
     electionVotes
+        ?.filter(m => !devElections.includes(m['election_id']))
         ?.filter(m => !priorElections.includes(m['election_id']))
-        ?.map(m => m['v'])
-        ?.forEach((count) => {
-            stats['votes'] = stats['votes'] + Number(count);
-            if(count >= 2){
-                stats['elections'] = stats['elections'] + 1;
-            }
-            return stats;
-        }
-    );
+        ?.filter(m => m['v'] >= 2)
+        ?.forEach((m) => {
+            const methodKey = electionMethodMap[m['election_id']];
+            // there's some garbage elections with an invalid voting method of "STAR VOting" (proper term is "STAR"). We can skip those
+            if (!methodKey) return; // throw new Error(`No voting method found for election ${m['election_id']}`);
+
+            stats.elections += 1;
+            // Number() is required for some reason
+            stats.votes += Number(m['v']);
+            stats[`${methodKey}_elections`] += 1;
+            stats[`${methodKey}_votes`] += Number(m['v']);
+        });
 
     return stats;
 }
