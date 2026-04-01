@@ -25,7 +25,6 @@ import {
     queryElections,
     claimElection,
     setWriteInResults,
-    setEndTime,
 } from '../Controllers/Election';
 import {upload, uploadImageController} from '../Controllers/uploadImageController';
 import asyncHandler from 'express-async-handler';
@@ -787,8 +786,6 @@ electionsRouter.post('/images',upload.single("file"), asyncHandler(uploadImageCo
  *       404:
  *         description: Election not found */
 electionsRouter.post('/Election/:id/setWriteInResults',asyncHandler(setWriteInResults))
-
-electionsRouter.post('/Election/:id/setEndTime', asyncHandler(setEndTime))
 
 
 electionsRouter.param('id', asyncHandler(getElectionByID))
