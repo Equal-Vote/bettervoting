@@ -203,7 +203,7 @@ results:
     Hay un solo voto hasta ahora.
     Los resultados totales serán mostrados una vez se hayan emitido más votos.
   tie_title: '¡Empate!'
-  tiebreak_subtitle: '{{names}} ganó después de un desempate.'
+  random_tiebreak_subtitle: '{{names}} ganó después de un desempate.'
   win_title_postfix_one: '¡Gana!'
   win_title_postfix: '¡Ganan!'
   vote_count: '{{n}} votantes'

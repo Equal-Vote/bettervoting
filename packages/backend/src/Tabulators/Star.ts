@@ -1,5 +1,5 @@
 import { candidate, starResults, roundResults, starSummaryData, starCandidate, rawVote, starRoundResults, tieBreakType } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
-import { getSummaryData, makeAbstentionTest, makeBoundsTest, runBlocTabulator, shuffleCandidates, sortCandidates } from "./Util";
+import { getSummaryData, makeAbstentionTest, makeBoundsTest, runBlocTabulator, sortCandidates } from "./Util";
 import { ElectionSettings } from "@equal-vote/star-vote-shared/domain_model/ElectionSettings";
 
 export function Star(candidates: candidate[], votes: rawVote[], nWinners = 1, electionSettings?:ElectionSettings) {
@@ -148,7 +148,7 @@ export function singleWinnerStar(remainingCandidates: starCandidate[], summaryDa
     })
 
     // RANDOM TIEBREAK: At a certain some point there's no other way 🤷
-    shuffleCandidates(tiedCandidates, summaryData.nTallyVotes);
+    sortCandidates(tiedCandidates);
     while(finalists.length < 2){
       roundResults.logs.push({
         key: `tabulation_logs.star.random_${finalists.length == 0 ? 'first' : 'second'}`,
@@ -157,7 +157,7 @@ export function singleWinnerStar(remainingCandidates: starCandidate[], summaryDa
       finalists.push(tiedCandidates.shift() as starCandidate);
     }
     setTieBreak(roundResults, 'random');
-    return logFinalistsAfterTiebreak(candidates.slice(0, 2) as starCandidatePair);
+    return logFinalistsAfterTiebreak(finalists as starCandidatePair);
   }
 
   function getRunoffResults(left: starCandidate, right: starCandidate): starCandidatePair{
@@ -236,7 +236,7 @@ export function singleWinnerStar(remainingCandidates: starCandidate[], summaryDa
     }
 
     // RANDOM TIEBREAK: At a certain some point there's no other way 🤷
-    let [winner, runnerUp] = shuffleCandidates([left, right], summaryData.nTallyVotes);
+    let [winner, runnerUp] = sortCandidates([left, right]) as starCandidatePair;
     roundResults.logs.push({
       key: `tabulation_logs.star.runoff_random`,
       winner: winner.name,
