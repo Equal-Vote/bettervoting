@@ -1,7 +1,8 @@
+import { useState } from 'react';
 import Grid from "@mui/material/Grid";
-import { Box, Divider } from "@mui/material";
+import { Box, Divider, TextField } from "@mui/material";
 import { Typography } from "@mui/material";
-import { PrimaryButton } from "../../styles";
+import { LinkButton, PrimaryButton, SecondaryButton } from "../../styles";
 import { Link, useNavigate } from 'react-router-dom';
 import ShareButton from "../ShareButton";
 import { useArchiveEleciton, useSetOpenState, useFinalizeElection } from "../../../hooks/useAPI";
@@ -21,7 +22,20 @@ type SectionProps = {
 
 export default () => {
     const authSession = useAuthSession()
-    const { election, refreshElection: fetchElection, permissions } = useElection()
+    const { election, refreshElection: fetchElection, permissions, updateElection } = useElection()
+    const [settingEndTime, setSettingEndTime] = useState(false);
+    const [endTimeInput, setEndTimeInput] = useState('');
+
+    const toDatetimeLocal = (date: Date) => {
+        return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    }
+
+    const saveEndTime = async () => {
+        if (!endTimeInput) return;
+        await updateElection(e => { e.end_time = new Date(endTimeInput); });
+        await fetchElection();
+        setSettingEndTime(false);
+    };
     const {t} = useSubstitutedTranslation(election.settings.term_type, {time_zone: election.settings.time_zone});
     const { setSnack } = useSnackbar()
     const { makeRequest: finalize } = useFinalizeElection(election.election_id)
@@ -89,12 +103,16 @@ export default () => {
 
     const changeOpenState = async (open: boolean): Promise<false | void> => {
         try {
-            await setOpenState({open}) && setSnack({
+            const result = await setOpenState({open});
+            result && setSnack({
                 message: t(`admin_home.${open ? 'open': 'close'}_snack`),
                 severity: 'success',
                 open: true,
                 autoHideDuration: 6000,
             });
+            if (!open && election.end_time) {
+                await updateElection(e => { e.end_time = undefined; });
+            }
             await fetchElection();
         } catch (err) {
             console.error(err);
@@ -181,15 +199,38 @@ export default () => {
     </Box>
     
     return <>
-        {(election.state === 'open' || election.state === 'closed') && !election.start_time && !election.end_time && (
+        {(election.state === 'open' || election.state === 'closed') && (
             <Box sx={{width: '100%', maxWidth: 500, m: 'auto'}}>
                 <SwitchSetting
                     label={t(election.state === 'open' ? 'admin_home.election_is_open' : 'admin_home.election_is_closed')}
-                    checked={election.state === 'open'}
+                    toggled={election.state === 'open'}
                     onToggle={changeOpenState}
                     disabled={!hasPermission('canEditElectionState')}
                 />
-                {/*{election.state != 'archived' && <ArchiveElectionSection />}*/}
+                {election.state === 'open' && !election.end_time && !settingEndTime && (
+                    <LinkButton onClick={() => {
+                        setEndTimeInput(toDatetimeLocal(new Date(Date.now() + 24*60*60*1000)));
+                        setSettingEndTime(true);
+                    }}>Set end time</LinkButton>
+                )}
+                {election.state === 'open' && settingEndTime && (
+                    <Box display='flex' flexDirection='row' alignItems='center' gap={1} sx={{mt: 1}}>
+                        <TextField
+                            type="datetime-local"
+                            value={endTimeInput}
+                            onChange={(e) => setEndTimeInput(e.target.value)}
+                            size="small"
+                        />
+                        <PrimaryButton onClick={saveEndTime} sx={{minWidth: 0}}>Save</PrimaryButton>
+                        <SecondaryButton onClick={() => setSettingEndTime(false)} sx={{minWidth: 0}}>Cancel</SecondaryButton>
+                    </Box>
+                )}
+                {election.state === 'closed' && election.end_time && (
+                    <Typography variant="body2">{t('admin_home.header_ended_time', {datetime: election.end_time})}</Typography>
+                )}
+                {election.state === 'open' && election.end_time && !settingEndTime && (
+                    <Typography variant="body2">{t('admin_home.header_end_time', {datetime: election.end_time})}</Typography>
+                )}
             </Box>
         )}
 
