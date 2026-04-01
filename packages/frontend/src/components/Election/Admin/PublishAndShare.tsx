@@ -28,18 +28,18 @@ export default () => {
     const [settingEndTime, setSettingEndTime] = useState(false);
     const [endTimeInput, setEndTimeInput] = useState('');
 
-    /* end time stuff */
+    /* will be uncommented for https://github.com/Equal-Vote/bettervoting/issues/1304
     const { editedElection, applyUpdate, onSave, errors, setErrors } = useEditElectionDetails()
     const timeZone = election.settings.time_zone ?? DateTime.now().zone.name;
     const [defaultEndTime, setDefaultEndTime] = useState(isValidDate(editedElection.end_time) ? editedElection.end_time : DateTime.now().plus({ days: 1 }).setZone(timeZone).toJSDate())
-    /* end - end time stuff */
 
     const saveEndTime = async () => {
         if (!endTimeInput) return;
         await updateElection(e => { e.end_time = DateTime.fromISO(endTimeInput).setZone(timeZone, { keepLocalTime: true }).toJSDate(); });
         await fetchElection();
         setSettingEndTime(false);
-    };
+    };*/
+
     let {t} = useSubstitutedTranslation(election.settings.term_type, {time_zone: timeZone});
     const { makeRequest: finalize } = useFinalizeElection(election.election_id)
     const { makeRequest: archive } = useArchiveEleciton(election.election_id)
@@ -107,6 +107,7 @@ export default () => {
         }
     }
 
+    /* will be uncommented for https://github.com/Equal-Vote/bettervoting/issues/1304
     const EndTimeForm = () => <Box display='flex' flexDirection='row' gap={2} sx={{maxWidth: '300'}}>
         <FormControl fullWidth>
             <InputLabel id="time-zone-label">{t('election_details.time_zone')}</InputLabel>
@@ -130,7 +131,7 @@ export default () => {
         </FormControl>
         <FormControl fullWidth>
             <InputLabel shrink>{t('election_details.end_date')}</InputLabel>
-            {/* datetime-local is formatted according to the OS locale, I don't think there's a way to override it*/}
+            {/* datetime-local is formatted according to the OS locale, I don't think there's a way to override it*}
             <Input
                 type='datetime-local'
                 inputProps={{ "aria-label": "End Time" }}
@@ -152,7 +153,7 @@ export default () => {
                 )}
             </FormHelperText>
         </FormControl>
-    </Box>
+    </Box>*/
 
     const Section = ({ text, button, permission, includeDivider=true }: SectionProps) => 
         <Grid container sx={{ maxWidth: 800}}>
