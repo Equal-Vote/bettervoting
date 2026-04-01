@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { DateTime } from 'luxon';
 import Grid from "@mui/material/Grid";
 import { Box, Divider, TextField } from "@mui/material";
 import { Typography } from "@mui/material";
@@ -7,6 +8,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import ShareButton from "../ShareButton";
 import { useArchiveEleciton, useSetOpenState, useFinalizeElection } from "../../../hooks/useAPI";
 import { useSubstitutedTranslation } from '../../util';
+import { dateToLocalLuxonDate } from '../../ElectionForm/Details/useEditElectionDetails';
 import useConfirm from '../../ConfirmationDialogProvider';
 import useElection from '../../ElectionContextProvider';
 import useAuthSession from '../../AuthSessionContextProvider';
@@ -26,13 +28,11 @@ export default () => {
     const [settingEndTime, setSettingEndTime] = useState(false);
     const [endTimeInput, setEndTimeInput] = useState('');
 
-    const toDatetimeLocal = (date: Date) => {
-        return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-    }
+    const timeZone = election.settings.time_zone ?? DateTime.now().zone.name;
 
     const saveEndTime = async () => {
         if (!endTimeInput) return;
-        await updateElection(e => { e.end_time = new Date(endTimeInput); });
+        await updateElection(e => { e.end_time = DateTime.fromISO(endTimeInput).setZone(timeZone, { keepLocalTime: true }).toJSDate(); });
         await fetchElection();
         setSettingEndTime(false);
     };
@@ -209,7 +209,7 @@ export default () => {
                 />
                 {election.state === 'open' && !election.end_time && !settingEndTime && (
                     <LinkButton onClick={() => {
-                        setEndTimeInput(toDatetimeLocal(new Date(Date.now() + 24*60*60*1000)));
+                        setEndTimeInput(dateToLocalLuxonDate(DateTime.now().plus({ days: 1 }).setZone(timeZone).toJSDate(), timeZone));
                         setSettingEndTime(true);
                     }}>Set end time</LinkButton>
                 )}
