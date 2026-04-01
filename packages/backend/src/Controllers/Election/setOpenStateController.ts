@@ -27,8 +27,6 @@ const setOpenState = async (req: IElectionRequest, res: Response, next: NextFunc
         msg = "Cannot open an election that is already open";
     } else if (!open && election.state === 'closed') {
         msg = "Cannot close an election that is already closed";
-    } else if (election.start_time || election.end_time) {
-        msg = "Cannot open or close an election with scheduled start and end times";
     }
     election.state = open ? "open" : "closed";
 

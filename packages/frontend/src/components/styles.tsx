@@ -187,7 +187,7 @@ export const PrimaryButton = (props: CustomButtonProps) => (
     </Button>
 )
 
-export const SecondaryButton = (props: ButtonProps) => (
+export const SecondaryButton = (props: CustomButtonProps) => (
     <Button
         variant="outlined"
         {...props}
