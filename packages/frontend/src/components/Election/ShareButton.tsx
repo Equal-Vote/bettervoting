@@ -16,7 +16,7 @@ import useElection from '../ElectionContextProvider';
 
 import IosShareIcon from '@mui/icons-material/IosShare';
 
-export default function ShareButton({ url }: { url: string }) {
+export default function ShareButton({ url, textKey='share.button' }: { url: string, textKey?: string }) {
     const { setSnack } = useSnackbar()
     const [anchorElNav, setAnchorElNav] = useState(null)
 
@@ -96,7 +96,7 @@ export default function ShareButton({ url }: { url: string }) {
             <SecondaryButton
                 fullWidth
                 onClick={handleOpenNavMenu}>
-                {t('share.button')}
+                {t(textKey)}
                 <IosShareIcon sx={{pl: 1}} />
             </SecondaryButton>
             <Fade timeout={350}>

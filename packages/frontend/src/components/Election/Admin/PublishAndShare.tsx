@@ -12,7 +12,6 @@ import { dateToLocalLuxonDate } from '../../ElectionForm/Details/useEditElection
 import useConfirm from '../../ConfirmationDialogProvider';
 import useElection from '../../ElectionContextProvider';
 import useAuthSession from '../../AuthSessionContextProvider';
-import useSnackbar from "~/components/SnackbarContext";
 import { SwitchSetting } from "~/components/util";
 
 type SectionProps = {
@@ -37,7 +36,6 @@ export default () => {
         setSettingEndTime(false);
     };
     const {t} = useSubstitutedTranslation(election.settings.term_type, {time_zone: election.settings.time_zone});
-    const { setSnack } = useSnackbar()
     const { makeRequest: finalize } = useFinalizeElection(election.election_id)
     const { makeRequest: archive } = useArchiveEleciton(election.election_id)
     const { makeRequest: setOpenState } = useSetOpenState(election.election_id)
@@ -62,12 +60,7 @@ export default () => {
         const confirmed = await confirm(t('admin_home.finalize_confirm'));
         if (!confirmed) return;
         try {
-            await finalize() && setSnack({
-                message: t('admin_home.finalize_snack'),
-                severity: 'success',
-                open: true,
-                autoHideDuration: 6000,
-            });
+            await finalize();
             await fetchElection();
         } catch (err) {
             console.error(err);
@@ -90,12 +83,7 @@ export default () => {
         const confirmed = await confirm(t('admin_home.archive_confirm'))
         if (!confirmed) return
         try {
-            await archive() && setSnack({
-                message: t('admin_home.archive_snack'),
-                severity: 'success',
-                open: true,
-                autoHideDuration: 6000,
-            });
+            await archive();
             await fetchElection()
         } catch (err) {
             console.error(err)
@@ -104,13 +92,7 @@ export default () => {
 
     const changeOpenState = async (open: boolean): Promise<false | void> => {
         try {
-            const result = await setOpenState({open});
-            result && setSnack({
-                message: t(`admin_home.${open ? 'open': 'close'}_snack`),
-                severity: 'success',
-                open: true,
-                autoHideDuration: 6000,
-            });
+            await setOpenState({open});
             if (!open && election.end_time) {
                 await setEndTime({ end_time: null });
             }
