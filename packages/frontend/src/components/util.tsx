@@ -398,7 +398,7 @@ export function SwitchSetting({ label, toggled, onToggle, disabled, disabledMess
 
   return (
     <>
-      <Box display='flex' flexDirection='row' alignItems='center' justifyContent='space-between' gap={2} sx={{ py: 0.5, width: {xs: '100%', md: 400} }}>
+      <Box display='flex' flexDirection='row' alignItems='center' justifyContent='space-between' gap={2} sx={{ py: 0.5, width: {xs: '100%', md: 400}, opacity: disabled ? 0.5 : 1 }}>
         <Typography component='span'>{label}</Typography>
         <Switch
           checked={localToggled}
