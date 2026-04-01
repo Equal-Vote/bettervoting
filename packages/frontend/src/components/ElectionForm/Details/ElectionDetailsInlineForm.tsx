@@ -4,15 +4,17 @@ import { Box, IconButton, Paper, Typography } from "@mui/material"
 import ElectionStateChip from './ElectionStateChip';
 import { PrimaryButton } from '../../styles';
 import useElection from '../../ElectionContextProvider';
-import { useSubstitutedTranslation } from '../../util';
+import { isValidDate, useSubstitutedTranslation } from '../../util';
 import EditIcon from '@mui/icons-material/Edit';
 import ElectionDetailsForm from './ElectionDetailsForm';
 import { useEditElectionDetails } from './useEditElectionDetails';
 import { FormattedDescription } from '../../FormattedDescription';
 import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
+import { DateTime } from 'luxon';
 
 export default function ElectionDetailsInlineForm() {
     const { editedElection, applyUpdate, onSave, errors, setErrors } = useEditElectionDetails()
+
     const { election } = useElection()
 
     const {t} = useSubstitutedTranslation(election.settings.term_type, {time_zone: election.settings.time_zone});
@@ -30,6 +32,7 @@ export default function ElectionDetailsInlineForm() {
         const success = await onSave()
         if (success) handleClose()
     }
+
     return (
         <Paper elevation={3} sx={{width:'100%'}}>
         <>
