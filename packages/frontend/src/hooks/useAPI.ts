@@ -123,6 +123,10 @@ export const useSetOpenState = (election_id: string) => {
     return useFetch<{ open: boolean }, { election: Election }>(`/API/Election/${election_id}/setOpenState`, 'post')
 }
 
+export const useSetEndTime = (election_id: string) => {
+    return useFetch<{ end_time: Date | null }, { election: Election }>(`/API/Election/${election_id}/setEndTime`, 'post')
+}
+
 export const useApproveRoll = (election_id: string) => {
     return useFetch<{ electionRollEntry: ElectionRoll }, object>(`/API/Election/${election_id}/rolls/approve`, 'post')
 }

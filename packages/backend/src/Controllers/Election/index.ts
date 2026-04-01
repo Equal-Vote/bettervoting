@@ -14,3 +14,4 @@ export * from './setPublicResultsController';
 export * from './sendEmailController';
 export * from './claimElectionController';
 export * from './setWriteInResultsController'
+export * from './setEndTimeController'
