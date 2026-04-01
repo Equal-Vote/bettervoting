@@ -414,6 +414,7 @@ export function SwitchSetting({ label, toggled, onToggle, disabled, disabledMess
               color: '#fff',
               '&.Mui-checked': {
                 transform: 'translateX(16px)',
+                color: '#fff',
                 '& + .MuiSwitch-track': { opacity: 1 },
               },
               '&.Mui-disabled + .MuiSwitch-track': { opacity: 0.5 },
