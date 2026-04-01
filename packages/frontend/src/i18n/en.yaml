@@ -682,6 +682,11 @@ tabulation_logs:
     runoff_random: >
       **Random Tiebreaker**: {{winner}} wins against {{runner_up}} after a random tiebreaker.
 
+disabled_msgs:
+    ballot_updates_with_prelim: not supported when the election starts off with public results (update under results section)
+    ballot_updates_when_open: only supported when election uses email list
+    public_results: not supported with vote editing
+
 #######################################
 #### PRIORITY 4 : Info Bubbles ####
 #######################################

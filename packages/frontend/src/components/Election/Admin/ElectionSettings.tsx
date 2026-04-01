@@ -104,6 +104,12 @@ export default function ElectionSettings() {
                     label={t('election_settings.ballot_updates')}
                     toggled={!!editedElectionSettings.ballot_updates}
                     onToggle={async (v) => { await applySettingsUpdate(s => { s.ballot_updates = v }); }}
+                    disabled={editedElectionSettings.voter_access === 'open' || editedElectionSettings.invitation !== 'email' || !!editedElectionSettings.public_results}
+                    disabledMessage={t(
+                        editedElectionSettings.voter_access === 'open' || editedElectionSettings.invitation !== 'email'
+                            ? 'disabled_msgs.ballot_updates_when_open'
+                            : 'disabled_msgs.ballot_updates_with_prelim'
+                    )}
                 />
                 <SwitchSetting
                     label={t('election_settings.require_instruction_confirmation')}
