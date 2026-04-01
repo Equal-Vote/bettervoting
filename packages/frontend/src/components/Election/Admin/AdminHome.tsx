@@ -111,22 +111,9 @@ const AdminHome = () => {
         }
     />
 
-    const getTimingMessage = () => {
-        if(election.state === 'finalized' && election.start_time)
-            return t('admin_home.header_start_time', {datetime: election.start_time})
-        if(election.state === 'open' && election.end_time)
-            return t('admin_home.header_end_time', {datetime: election.end_time})
-        if(election.state === 'closed' && election.end_time)
-            return t('admin_home.header_ended_time', {datetime: election.end_time})
-        if(election.state === 'archived' && election.end_time)
-            return t('admin_home.header_ended_time', {datetime: election.end_time})
-        return undefined;
-    }
-
     const flags = useFeatureFlags();
 
     return <>
-        {getTimingMessage() && <Box width={'100%'}><Typography align='center' gutterBottom variant="h6" component="h6"> {getTimingMessage()}</Typography></Box>}
         <ElectionDetailsInlineForm />
         <Box sx={{width: '100%'}}>
             {flags.isSet('ELECTION_ROLES') && <EditRolesSection />}
