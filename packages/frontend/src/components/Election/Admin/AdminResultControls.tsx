@@ -23,6 +23,8 @@ export default ({ onResultsToggle }: { onResultsToggle?: () => void }) => {
             label={t(election.settings.public_results ? 'results.admin_results_public' : 'results.admin_results_hidden')}
             toggled={election.settings.public_results === true}
             onToggle={togglePublicResults}
+            disabled={!!election.settings.ballot_updates}
+            disabledMessage={t('disabled_msgs.public_results')}
         />
         {election.state == 'draft' && <Typography component="p">
             This poll is still being drafted. All ballots will be counted as test votes and shall be reset prior to the final poll
