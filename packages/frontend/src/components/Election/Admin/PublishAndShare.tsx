@@ -1,18 +1,19 @@
 import { useState } from 'react';
 import { DateTime } from 'luxon';
 import Grid from "@mui/material/Grid";
-import { Box, Divider, TextField } from "@mui/material";
+import { Box, Divider, FormControl, FormHelperText, Input, InputLabel, MenuItem, Select, TextField } from "@mui/material";
 import { Typography } from "@mui/material";
 import { LinkButton, PrimaryButton, SecondaryButton } from "../../styles";
 import { Link, useNavigate } from 'react-router-dom';
 import ShareButton from "../ShareButton";
 import { useArchiveEleciton, useSetOpenState, useFinalizeElection } from "../../../hooks/useAPI";
-import { useSubstitutedTranslation } from '../../util';
-import { dateToLocalLuxonDate } from '../../ElectionForm/Details/useEditElectionDetails';
+import { isValidDate, TransitionBox, useSubstitutedTranslation } from '../../util';
+import { dateToLocalLuxonDate, useEditElectionDetails } from '../../ElectionForm/Details/useEditElectionDetails';
 import useConfirm from '../../ConfirmationDialogProvider';
 import useElection from '../../ElectionContextProvider';
 import useAuthSession from '../../AuthSessionContextProvider';
 import { SwitchSetting } from "~/components/util";
+import { TimeZone, timeZones } from '@equal-vote/star-vote-shared/domain_model/Util';
 
 type SectionProps = {
     text: {[key: string]: string}
@@ -27,7 +28,11 @@ export default () => {
     const [settingEndTime, setSettingEndTime] = useState(false);
     const [endTimeInput, setEndTimeInput] = useState('');
 
+    /* end time stuff */
+    const { editedElection, applyUpdate, onSave, errors, setErrors } = useEditElectionDetails()
     const timeZone = election.settings.time_zone ?? DateTime.now().zone.name;
+    const [defaultEndTime, setDefaultEndTime] = useState(isValidDate(editedElection.end_time) ? editedElection.end_time : DateTime.now().plus({ days: 1 }).setZone(timeZone).toJSDate())
+    /* end - end time stuff */
 
     const saveEndTime = async () => {
         if (!endTimeInput) return;
@@ -35,7 +40,7 @@ export default () => {
         await fetchElection();
         setSettingEndTime(false);
     };
-    const {t} = useSubstitutedTranslation(election.settings.term_type, {time_zone: election.settings.time_zone});
+    let {t} = useSubstitutedTranslation(election.settings.term_type, {time_zone: timeZone});
     const { makeRequest: finalize } = useFinalizeElection(election.election_id)
     const { makeRequest: archive } = useArchiveEleciton(election.election_id)
     const { makeRequest: setOpenState } = useSetOpenState(election.election_id)
@@ -101,6 +106,53 @@ export default () => {
             return false;
         }
     }
+
+    const EndTimeForm = () => <Box display='flex' flexDirection='row' gap={2} sx={{maxWidth: '300'}}>
+        <FormControl fullWidth>
+            <InputLabel id="time-zone-label">{t('election_details.time_zone')}</InputLabel>
+            <Select
+                labelId="time-zone-label"
+                id="time-zone-select"
+                value={timeZone}
+                label={t('election_details.time_zone')}
+                onChange={(e) => {
+                    applyUpdate(election => { election.settings.time_zone = e.target.value as TimeZone })
+                    const p = useSubstitutedTranslation(editedElection.settings.term_type, {time_zone: e.target.value});
+                    t = p.t;
+                }}
+            >
+                <MenuItem value={DateTime.now().zone.name}>{DateTime.now().zone.name}</MenuItem>
+                <Divider />
+                {timeZones.map(tz =>
+                    <MenuItem key={tz} value={tz}>{t(`time_zones.${tz}`)}</MenuItem>
+                )}
+            </Select>
+        </FormControl>
+        <FormControl fullWidth>
+            <InputLabel shrink>{t('election_details.end_date')}</InputLabel>
+            {/* datetime-local is formatted according to the OS locale, I don't think there's a way to override it*/}
+            <Input
+                type='datetime-local'
+                inputProps={{ "aria-label": "End Time" }}
+                error={errors.endTime !== ''}
+                value={dateToLocalLuxonDate(editedElection.end_time, timeZone)}
+                onChange={(e) => {
+                    setErrors({ ...errors, endTime: '' })
+                    if (e.target.value == null || e.target.value == '') {
+                        applyUpdate(election => { election.end_time = undefined})
+                    } else {
+                        applyUpdate(election => { election.end_time = DateTime.fromISO(e.target.value).setZone(timeZone, { keepLocalTime: true }).toJSDate()})
+                        setDefaultEndTime(DateTime.fromISO(e.target.value).setZone(timeZone, { keepLocalTime: true }).toJSDate())
+                    }
+                }}
+            />
+            <FormHelperText error={!!errors.endTime} sx={{ pl: 0, mt: 0 }}>
+                {errors.endTime || (editedElection.end_time && timeZone !== DateTime.now().zone.name &&
+                    `${DateTime.now().zone.name}: ${DateTime.fromJSDate(new Date(editedElection.end_time)).setZone(DateTime.now().zone.name).toLocaleString(DateTime.DATETIME_SHORT)}`
+                )}
+            </FormHelperText>
+        </FormControl>
+    </Box>
 
     const Section = ({ text, button, permission, includeDivider=true }: SectionProps) => 
         <Grid container sx={{ maxWidth: 800}}>
@@ -189,24 +241,7 @@ export default () => {
                     onToggle={changeOpenState}
                     disabled={!hasPermission('canEditElectionState')}
                 />
-                {election.state === 'open' && !election.end_time && !settingEndTime && (
-                    <LinkButton onClick={() => {
-                        setEndTimeInput(dateToLocalLuxonDate(DateTime.now().plus({ days: 1 }).setZone(timeZone).toJSDate(), timeZone));
-                        setSettingEndTime(true);
-                    }}>Set end time</LinkButton>
-                )}
-                {election.state === 'open' && settingEndTime && (
-                    <Box display='flex' flexDirection='row' alignItems='center' gap={1} sx={{mt: 1}}>
-                        <TextField
-                            type="datetime-local"
-                            value={endTimeInput}
-                            onChange={(e) => setEndTimeInput(e.target.value)}
-                            size="small"
-                        />
-                        <PrimaryButton onClick={saveEndTime} sx={{minWidth: 0}}>Save</PrimaryButton>
-                        <SecondaryButton onClick={() => setSettingEndTime(false)} sx={{minWidth: 0}}>Cancel</SecondaryButton>
-                    </Box>
-                )}
+                
                 {election.state === 'closed' && election.end_time && (
                     <Typography variant="body2">{t('admin_home.header_ended_time', {datetime: election.end_time})}</Typography>
                 )}
@@ -216,11 +251,32 @@ export default () => {
             </Box>
         )}
 
+        {/* Will be uncommented for https://github.com/Equal-Vote/bettervoting/issues/1304
+        {election.state == 'draft' &&
+            <Box sx={{
+                position: 'relative',
+                height: settingEndTime ? '120px' : '50px',
+                transition: 'height 0.5s',
+            }}>
+                <TransitionBox absolute enabled={!settingEndTime}>
+                    <LinkButton onClick={() => {
+                        setEndTimeInput(dateToLocalLuxonDate(DateTime.now().plus({ days: 1 }).setZone(timeZone).toJSDate(), timeZone));
+                        setSettingEndTime(true);
+                    }}>Set end time</LinkButton>
+                </TransitionBox>
+                <TransitionBox enabled={settingEndTime}>
+                    <EndTimeForm/>
+                </TransitionBox>
+            </Box>
+        } */ }
+
         {(election.state !== 'draft' && election.state !== 'finalized') && 
             <Box sx={{width: '100%', maxWidth: 300}}>
                 <ShareButton url={`${window.location.origin}/${election.election_id}`} />
             </Box>
         }
         {election.state === 'draft' && <FinalizeSection /> }
+
+        
     </>
 }
