@@ -23,7 +23,7 @@ export default ({ onResultsToggle }: { onResultsToggle?: () => void }) => {
     return <ElectionStateWarning title='results.admin_title' description='' hideIcon>
         <Box display='flex' flexDirection='column' gap={1}>
             <SwitchSetting
-                label={t(election.settings.public_results ? 'results.admin_results_public' : 'results.admin_results_hidden')}
+                label={t('results.admin_results_toggle')}
                 toggled={election.settings.public_results === true}
                 onToggle={togglePublicResults}
                 disabled={!!election.settings.ballot_updates}

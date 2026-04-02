@@ -24,7 +24,7 @@ type SectionProps = {
 
 export default () => {
     const authSession = useAuthSession()
-    const { election, refreshElection: fetchElection, permissions, updateElection } = useElection()
+    const { t, election, refreshElection: fetchElection, permissions, updateElection } = useElection()
     const [settingEndTime, setSettingEndTime] = useState(false);
     const [endTimeInput, setEndTimeInput] = useState('');
 
@@ -38,11 +38,10 @@ export default () => {
         await updateElection(e => { e.end_time = DateTime.fromISO(endTimeInput).setZone(timeZone, { keepLocalTime: true }).toJSDate(); });
         await fetchElection();
         setSettingEndTime(false);
-    };*/
+    };
 
-    let {t} = useSubstitutedTranslation(election.settings.term_type, {time_zone: timeZone});
+    let {t} = useSubstitutedTranslation(election.settings.term_type, {time_zone: timeZone});*/
     const { makeRequest: finalize } = useFinalizeElection(election.election_id)
-    const { makeRequest: archive } = useArchiveEleciton(election.election_id)
     const { makeRequest: setOpenState } = useSetOpenState(election.election_id)
 
     const navigate = useNavigate()
@@ -80,17 +79,6 @@ export default () => {
             if(await emailConfirm(t('admin_home.finalize_email_confirm'))){
                 navigate(`/${election.election_id}/admin/voters`)
             }
-        }
-    }
-
-    const archiveElection = async () => {
-        const confirmed = await confirm(t('admin_home.archive_confirm'))
-        if (!confirmed) return
-        try {
-            await archive();
-            await fetchElection()
-        } catch (err) {
-            console.error(err)
         }
     }
 
@@ -180,20 +168,7 @@ export default () => {
             {includeDivider && <Divider style={{width: '100%'}}/>}
         </Grid>
 
-    const ArchiveElectionSection = () => <Section
-        text={t('admin_home.archive')}
-        includeDivider={false}
-        permission='canEditElectionState'
-        button={(<>
-            <PrimaryButton
-                disabled={!hasPermission('canEditElectionState')}
-                fullWidth
-                onClick={() => archiveElection()}
-            >
-                {t('admin_home.archive.button')}
-            </PrimaryButton>
-        </>)}
-    />
+    
 
     const FinalizeSection = () => <Box sx={{maxWidth: 800}}>
         <Grid item xs={12} sx={{ p: 1, pt: 3, pb: 0 }}>
