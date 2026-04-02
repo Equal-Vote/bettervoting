@@ -160,7 +160,7 @@ const ViewElectionRolls = () => {
                                 if(usesEmail !== undefined && email === usesEmail) return;
 
                                 // update settings
-                                //setUsesEmail(email);
+                                setUsesEmail(email);
 
                                 updateElection((e) => e.settings.invitation = email ? 'email' : undefined).then((result) => {
                                     if(result === false){
