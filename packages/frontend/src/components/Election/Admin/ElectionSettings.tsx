@@ -2,7 +2,7 @@ import Grid from "@mui/material/Grid";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormLabel from "@mui/material/FormLabel";
 import FormControl from "@mui/material/FormControl";
-import { FormGroup, Radio, RadioGroup, Box, TextField, capitalize } from "@mui/material";
+import { FormGroup, Radio, RadioGroup, Box, TextField, capitalize, Typography } from "@mui/material";
 import structuredClone from '@ungap/structured-clone';
 import { ElectionSettings as IElectionSettings, TermType } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
 import { Tip } from '~/components/styles';
@@ -53,11 +53,11 @@ export default function ElectionSettings() {
                     }}
                 />
 
-                <Box sx={{mt: 3, mb: 2}}>
-                    <FormLabel>
+                <Box sx={{mt: 0, mb: 2}}>
+                    <Typography component='span'>
                         {t('wizard.term_question')}
                         <Tip name='polls_vs_elections'/>
-                    </FormLabel>
+                    </Typography>
                     <RadioGroup row>
                         {['poll', 'election'].map( (type, i) =>
                             <FormControlLabel
