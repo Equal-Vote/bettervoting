@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import useSnackbar from "~/components/SnackbarContext";
 
 /**
  * A hook that maintains a local state value kept in sync with a backend resource via optimistic updates.
@@ -12,28 +13,35 @@ import { useEffect, useRef, useState } from "react";
  * @param updateFunc - An async function that sends the new value to the backend and resolves to
  *                     `true` on success or `false` on failure.
  * @param delay - Debounce delay in milliseconds. The backend call is deferred until the setter
- *                hasn't been called again for this duration. Defaults to 0 (no debounce).
+ *                hasn't been called again for this duration. Defaults to 500.
  * @returns A tuple of [currentValue, setter], analogous to the tuple returned by `useState`.
  */
 
-export default <T>(defaultValue: T, updateFunc: (value: T) => Promise<boolean>, delay: number = 0) => {
+export default <T>(defaultValue: T, updateFunc: (value: T) => Promise<boolean>, delay: number = 500) => {
+    const { setSnack } = useSnackbar();
     const [localValue, setLocalValue] = useState(defaultValue);
     const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const committedValue = useRef(defaultValue);
 
     useEffect(() => {
+        committedValue.current = defaultValue;
         setLocalValue(defaultValue);
     }, [defaultValue]);
 
     return [
         localValue,
         (newValue: T) => {
-            let prevValue = localValue;
             setLocalValue(newValue); // set the value optimistically
 
             if (debounceTimer.current) clearTimeout(debounceTimer.current);
             debounceTimer.current = setTimeout(() => {
                 updateFunc(newValue).then(success => {
-                    if(!success) setLocalValue(prevValue) // reset value if the request failed
+                    if(success){
+                        committedValue.current = newValue;
+                    }else{
+                        setLocalValue(committedValue.current); // reset to last confirmed value if the request failed
+                        setSnack({ message: 'Election Update Failed', severity: 'error', open: true, autoHideDuration: 6000 });
+                    }
                 });
             }, delay);
         }
