@@ -375,7 +375,7 @@ export const getLocalTimeZoneShort = () => {
 export interface SwitchSettingProps {
   label: string
   toggled: boolean
-  onToggle: (newValue: boolean) => Promise<false | void>
+  onToggle: (newValue: boolean) => Promise<boolean>
   disabled?: boolean
   disabledMessage?: string
 }
@@ -405,7 +405,7 @@ export function SwitchSetting({ label, toggled, onToggle, disabled, disabledMess
         <Typography component='span'>{label}</Typography>
         <Switch
           checked={localToggled}
-          onChange={handleChange}
+          onChange={() => setLocalToggled(!localToggled)}
           disabled={disabled}
           sx={{
             padding: 0,
