@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * A hook that maintains a local state value kept in sync with a backend resource via optimistic updates.
@@ -20,6 +20,10 @@ export default <T>(defaultValue: T, updateFunc: (value: T) => Promise<boolean>, 
     const [localValue, setLocalValue] = useState(defaultValue);
     const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+    useEffect(() => {
+        setLocalValue(defaultValue);
+    }, [defaultValue]);
+
     return [
         localValue,
         (newValue: T) => {
@@ -33,5 +37,5 @@ export default <T>(defaultValue: T, updateFunc: (value: T) => Promise<boolean>, 
                 });
             }, delay);
         }
-    ]
+    ] as const
 }
