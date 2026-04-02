@@ -3,7 +3,7 @@ import { Box, Divider } from "@mui/material";
 import { Typography } from "@mui/material";
 import { PrimaryButton } from "../../styles";
 import { Link, useNavigate } from 'react-router-dom';
-import { usePostElection } from "../../../hooks/useAPI";
+import { useArchiveEleciton, usePostElection } from "../../../hooks/useAPI";
 import { useSubstitutedTranslation } from '../../util';
 import useConfirm from '../../ConfirmationDialogProvider';
 import useElection from '../../ElectionContextProvider';
@@ -21,8 +21,10 @@ type SectionProps = {
 
 const AdminHome = () => {
     const authSession = useAuthSession()
-    const { election, permissions } = useElection()
+    const { election, permissions, refreshElection: fetchElection } = useElection()
     const {t} = useSubstitutedTranslation(election.settings.term_type, {time_zone: election.settings.time_zone});
+
+    const { makeRequest: archive } = useArchiveEleciton(election.election_id)
 
     const navigate = useNavigate()
     const { makeRequest: postElection } = usePostElection()
@@ -57,6 +59,17 @@ const AdminHome = () => {
             throw Error("Error submitting election");
         }
         navigate(`/${newElection.election.election_id}/admin`)
+    }
+
+    const archiveElection = async () => {
+        const confirmed = await confirm(t('admin_home.archive_confirm'))
+        if (!confirmed) return
+        try {
+            await archive();
+            await fetchElection()
+        } catch (err) {
+            console.error(err)
+        }
     }
 
     const Section = ({ text, button, permission, includeDivider=true }: SectionProps) => 
@@ -111,6 +124,21 @@ const AdminHome = () => {
         }
     />
 
+    const ArchiveElectionSection = () => <Section
+        text={t('admin_home.archive')}
+        includeDivider={false}
+        permission='canEditElectionState'
+        button={(<>
+            <PrimaryButton
+                disabled={!hasPermission('canEditElectionState')}
+                fullWidth
+                onClick={() => archiveElection()}
+            >
+                {t('admin_home.archive.button')}
+            </PrimaryButton>
+        </>)}
+    />
+
     const flags = useFeatureFlags();
 
     return <>
@@ -118,6 +146,7 @@ const AdminHome = () => {
         <Box sx={{width: '100%'}}>
             {flags.isSet('ELECTION_ROLES') && <EditRolesSection />}
             <DuplicateElectionSection/>
+            <ArchiveElectionSection/>
         </Box>
     </>
 }
