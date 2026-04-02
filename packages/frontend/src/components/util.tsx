@@ -9,6 +9,7 @@ import { getEntry } from "@equal-vote/star-vote-shared/domain_model/Util";
 import { createHash } from "crypto-browserify";
 import RemoveCircleOutlineRoundedIcon from '@mui/icons-material/RemoveCircleOutlineRounded';
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import useSyncedState from "~/hooks/useSyncedState";
 
 // Holds a local copy of `value` for fast keystrokes, flushing to parent on blur.
 export const useLocalState = <T,>(value: T, onFlush: (v: T) => void): [T, (v: T) => void, () => void] => {
@@ -383,21 +384,23 @@ export interface SwitchSettingProps {
 }
 
 export function SwitchSetting({ label, toggled, onToggle, disabled, disabledMessage }: SwitchSettingProps) {
-  const [localToggled, setLocalToggled] = useState(toggled);
+  //const [localToggled, setLocalToggled] = useState(toggled);
 
-  useEffect(() => {
-    setLocalToggled(toggled);
-  }, [toggled]);
+  //useEffect(() => {
+  //  setLocalToggled(toggled);
+  //}, [toggled]);
 
-  const handleChange = async () => {
-    const originalValue = localToggled;
-    const newValue = !localToggled;
-    setLocalToggled(newValue);
-    const result = await onToggle(newValue);
-    if (result === false) {
-      setLocalToggled(originalValue);
-    }
-  };
+  //const handleChange = async () => {
+  //  const originalValue = localToggled;
+  //  const newValue = !localToggled;
+  //  setLocalToggled(newValue);
+  //  const result = await onToggle(newValue);
+  //  if (result === false) {
+  //    setLocalToggled(originalValue);
+  //  }
+  //};
+
+  const [localToggled, setLocalToggled] = useSyncedState(toggled, onToggle);
 
   return (
     <>
