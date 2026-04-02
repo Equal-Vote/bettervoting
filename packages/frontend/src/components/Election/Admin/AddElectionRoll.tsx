@@ -55,6 +55,7 @@ const AddElectionRoll = ({ onClose }: { onClose: () => void }) => {
             const rows = voterIDList.split('\n').filter(row => row.trim())
             const rolls = []
             const expectedCounts = Number(enableVoterID) + Number(enableEmail) + Number(enablePrecinct)
+            console.log(enableVoterID, enableEmail, enablePrecinct)
             rows.forEach((row) => {
                 const csvSplit = row.split(',')
                 if (csvSplit.length !== expectedCounts) {

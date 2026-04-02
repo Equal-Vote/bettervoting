@@ -29,12 +29,12 @@ const ViewElectionRolls = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [dialogOpen, setDialogOpen] = useState(false);
-    //const [voterAccess, sa] = useState(election.settings.voter_access);
-    //const setVoterAccess = (value) => {
-    //    // keeping the local election object in sync avoids consistency issues when navigating between pages
-    //    election.settings.voter_access = value;
-    //    sa(value);
-    //}
+    const [voterAccess, sa] = useState(election.settings.voter_access);
+    const setVoterAccess = (value) => {
+        // keeping the local election object in sync avoids consistency issues when navigating between pages
+        election.settings.voter_access = value;
+        sa(value);
+    }
     const [usesEmail, se] = useState(election.settings.invitation === 'email');
     const setUsesEmail = (email) => {
         // keeping the local election object in sync avoids consistency issues when navigating between pages
@@ -125,12 +125,12 @@ const ViewElectionRolls = () => {
                                 if(newAccess === election.settings.voter_access) return;
 
                                 // update settings
-                                //setVoterAccess(newAccess);
+                                setVoterAccess(newAccess);
                                 setUsesEmail(undefined);
                                 updateElection((e) => e.settings.voter_access = newAccess).then((result) => {
                                     console.log(result)
                                     if(result === false){
-                                        //setVoterAccess(election.settings.voter_access)
+                                        setVoterAccess(election.settings.voter_access)
                                         refreshElection()
                                     }
                                 });

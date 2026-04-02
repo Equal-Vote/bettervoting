@@ -9,6 +9,7 @@ import { getEntry } from "@equal-vote/star-vote-shared/domain_model/Util";
 import { createHash } from "crypto-browserify";
 import RemoveCircleOutlineRoundedIcon from '@mui/icons-material/RemoveCircleOutlineRounded';
 import { useEffect, useState } from "react";
+import useSyncedState from "~/hooks/useSyncedState";
 
 const rLink = /\[(.*?)\]\((.*?)\)/;
 const rBold = /\*\*(.*?)\*\*/;
@@ -374,21 +375,23 @@ export interface SwitchSettingProps {
 }
 
 export function SwitchSetting({ label, toggled, onToggle, disabled, disabledMessage }: SwitchSettingProps) {
-  const [localToggled, setLocalToggled] = useState(toggled);
+  //const [localToggled, setLocalToggled] = useState(toggled);
 
-  useEffect(() => {
-    setLocalToggled(toggled);
-  }, [toggled]);
+  //useEffect(() => {
+  //  setLocalToggled(toggled);
+  //}, [toggled]);
 
-  const handleChange = async () => {
-    const originalValue = localToggled;
-    const newValue = !localToggled;
-    setLocalToggled(newValue);
-    const result = await onToggle(newValue);
-    if (result === false) {
-      setLocalToggled(originalValue);
-    }
-  };
+  //const handleChange = async () => {
+  //  const originalValue = localToggled;
+  //  const newValue = !localToggled;
+  //  setLocalToggled(newValue);
+  //  const result = await onToggle(newValue);
+  //  if (result === false) {
+  //    setLocalToggled(originalValue);
+  //  }
+  //};
+
+  const [localToggled, setLocalToggled] = useSyncedState(toggled, onToggle);
 
   return (
     <>
