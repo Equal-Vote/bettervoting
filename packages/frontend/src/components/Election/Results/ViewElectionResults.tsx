@@ -16,7 +16,7 @@ import AdminResultControls from '../Admin/AdminResultControls';
 const ViewElectionResults = () => {
     const { election, voterAuth } = useElection();
     const { data, isPending, makeRequest: getResults } = useGetResults(election.election_id)
-    useEffect(() => { election.settings.public_results && getResults() }, [])
+    useEffect(() => { election.settings.public_results && getResults() }, [election.settings.public_results])
     const {t} = useSubstitutedTranslation(election.settings.term_type);
 
     return (
