@@ -45,10 +45,10 @@ export const ElectionContextProvider = ({ id, localElection=undefined, setLocalE
     }, [id])
 
     const applyElectionUpdate = async (updateFunc: (election: IElection) => void) => {
-        // NOTE: I'm applying the function directly to local election instead of a copy so that anything referingg to 
         if(id === undefined && localElection !== undefined){
-            updateFunc(localElection as IElection);
-            setLocalElection(localElection )
+            const electionCopy: IElection = structuredClone(localElection)
+            updateFunc(electionCopy);
+            setLocalElection(electionCopy)
             return
         }
         if (!data.election) return
