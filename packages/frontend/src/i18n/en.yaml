@@ -206,8 +206,7 @@ number:
 
 # Results Example: bettervoting.com/tcvc7r/results
 results:
-  admin_results_public: '{{capital_election}} results are public !tip(public_results)'
-  admin_results_hidden: '{{capital_election}} results are hidden !tip(public_results)'
+  admin_results_toggle: '{{capital_election}} results are public !tip(public_results)'
 
   preliminary_title: PRELIMINARY RESULTS
   official_title: OFFICIAL RESULTS
@@ -737,8 +736,8 @@ tips:
   public_results:
     title: Public Results
     description: |
-      Allows voters to see the results of the election.
-      If enabled while the {{election}} is open then voters will be shown to the preliminary results after completing their ballot.
+      Allows voters to see the results of the {{election}}.
+      If enabled while voting is open then voters will be shown to the preliminary results after completing their ballot.
       High profile {{elections}} will usually keep the results hidden, and then reveal them after the {{election}} is closed.
 
   voter_groups:
@@ -1121,7 +1120,10 @@ admin_home:
   finalize_description: |
     When finished setting up your {{election}}, finalize it. Once final, it can't be edited.
 
-    Voting is allowed immediately, but you can choose when your voters are notified.
+
+  # uncomment whe implementing https://github.com/Equal-Vote/bettervoting/issues/1304
+  # Voting is allowed immediately, but you can choose when your voters are notified.
+
   # finalize_voting_begins_later: Voting begins after your specified start time.
   # finalize_voting_begins_now: Voting begins immediately.
   finalize_button: Finalize {{capital_election}}
