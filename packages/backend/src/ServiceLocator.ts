@@ -2,6 +2,7 @@ import Logger from "./Services/Logging/Logger";
 import BallotsDB from "./Models/Ballots";
 import ElectionsDB from "./Models/Elections";
 import ElectionRollDB from "./Models/ElectionRolls";
+import EmailEventsDB from "./Models/EmailEvents";
 import CastVoteStore from "./Models/CastVoteStore";
 import EmailService from "./Services/Email/EmailService";
 import BlobService from "./Services/Blob/BlobService";
@@ -23,6 +24,7 @@ var _appInitContext = Logger.createContext("appInit");
 var _ballotsDb: IBallotStore;
 var _electionsDb: ElectionsDB;
 var _electionRollDb: ElectionRollDB;
+var _emailEventsDb: EmailEventsDB;
 var _castVoteStore: CastVoteStore;
 var _emailService: EmailService
 var _blobService: BlobService
@@ -124,6 +126,13 @@ function electionRollDb(): ElectionRollDB {
     return _electionRollDb;
 }
 
+function emailEventsDb(): EmailEventsDB {
+    if (_emailEventsDb == null) {
+        _emailEventsDb = new EmailEventsDB(database());
+    }
+    return _emailEventsDb;
+}
+
 
 function castVoteStore(): CastVoteStore {
     if (_castVoteStore == null) {
@@ -167,4 +176,4 @@ function globalData(): GlobalData {
     return _globalData;
 }
 
-export default { ballotsDb, electionsDb, electionRollDb, emailService, accountService, castVoteStore, globalData, eventQueue, database, blobService };
+export default { ballotsDb, electionsDb, electionRollDb, emailEventsDb, emailService, accountService, castVoteStore, globalData, eventQueue, database, blobService };

@@ -10,7 +10,7 @@ export interface ElectionRoll {
     ballot_id?:  Uid; //ID of ballot, unsure if this is needed
     ip_hash?: string; //IP Address of voter
     address?: string; // Address of voter
-    state: ElectionRollState; //state of election roll 
+    state: ElectionRollState; //state of election roll
     history?: ElectionRollAction[];// history of changes to election roll
     registration?: any; //Registration data for voter
     precinct?: string; // Precint of voter
@@ -21,6 +21,11 @@ export interface ElectionRoll {
     create_date:    Date | string; // Date this object was created
     update_date:    Date | string;  // Date this object was last updated
     head:           boolean;// Head version of this object
+}
+
+// API response type — extends the domain model with computed fields attached at response time
+export interface ElectionRollResponse extends ElectionRoll {
+    email_events?: { event_type: string; event_timestamp: string; details?: Record<string, unknown> }[];
 }
 
 export interface ElectionRollAction {
