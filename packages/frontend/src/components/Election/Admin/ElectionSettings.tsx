@@ -9,6 +9,7 @@ import { Tip } from '~/components/styles';
 import { useSubstitutedTranslation, SwitchSetting, SwitchSettingProps } from '~/components/util';
 import useElection from '~/components/ElectionContextProvider';
 import useSyncedState from "~/hooks/useSyncedState";
+import { AdminPageNavigation } from '../Sidebar';
 
 type SyncedSwitchSettingProps = Omit<SwitchSettingProps, 'onToggle'> & { onToggle: (newValue: boolean) => Promise<boolean> };
 
@@ -59,74 +60,77 @@ export default function ElectionSettings() {
         async (v) => !! await updateElection(e => e.settings.max_rankings = v)
     );
 
-    return <Grid item xs={12} sx={{ m: 0, my: 0, p: 1 }}>
-        <FormControl disabled={election.state !== 'draft'} component="fieldset" variant="standard">
-            <FormGroup>
-                <FormControlLabel control={
-                    <TextField
-                        id="contact_email"
-                        value={contactEmail}
-                        onChange={(e) => setContactEmail(e.target.value)}
-                        variant='standard'
-                        fullWidth
-                        sx={{ mt: -1, display: 'block'}}
-                    />}
-                    label={t('election_settings.contact_email')}
-                    labelPlacement='top'
-                    sx={{
-                        alignItems: 'start',
-                        mb: 3
-                    }}
-                />
+    return <>
+        <Grid item xs={12} sx={{ m: 0, my: 0, p: 1 }}>
+            <FormControl disabled={election.state !== 'draft'} component="fieldset" variant="standard">
+                <FormGroup>
+                    <FormControlLabel control={
+                        <TextField
+                            id="contact_email"
+                            value={contactEmail}
+                            onChange={(e) => setContactEmail(e.target.value)}
+                            variant='standard'
+                            fullWidth
+                            sx={{ mt: -1, display: 'block'}}
+                        />}
+                        label={t('election_settings.contact_email')}
+                        labelPlacement='top'
+                        sx={{
+                            alignItems: 'start',
+                            mb: 3
+                        }}
+                    />
 
-                <Box sx={{mt: 0, mb: 2}}>
-                    <Typography component='span'>
-                        {t('wizard.term_question')}
-                        <Tip name='polls_vs_elections'/>
-                    </Typography>
-                    <RadioGroup row>
-                        {['poll', 'election'].map( (type, i) =>
-                            <FormControlLabel
-                                key={i}
-                                control={<Radio
-                                    onChange={() => setTerm(type as TermType)}
-                                    checked={term === type}
-                                    value={t(`keyword.${type}.election`)}
-                                />}
-                                label={capitalize(t(`keyword.${type}.election`))}
-                            />
+                    <Box sx={{mt: 0, mb: 2}}>
+                        <Typography component='span'>
+                            {t('wizard.term_question')}
+                            <Tip name='polls_vs_elections'/>
+                        </Typography>
+                        <RadioGroup row>
+                            {['poll', 'election'].map( (type, i) =>
+                                <FormControlLabel
+                                    key={i}
+                                    control={<Radio
+                                        onChange={() => setTerm(type as TermType)}
+                                        checked={term === type}
+                                        value={t(`keyword.${type}.election`)}
+                                    />}
+                                    label={capitalize(t(`keyword.${type}.election`))}
+                                />
+                            )}
+                        </RadioGroup>
+                    </Box>
+
+                    <ElectionSwitchSetting settingKey="random_candidate_order" />
+                    <ElectionSwitchSetting
+                        settingKey="ballot_updates"
+                        disabled={election.settings.voter_access === 'open' || election.settings.invitation !== 'email' || !!election.settings.public_results}
+                        disabledMessage={t(
+                            election.settings.voter_access === 'open' || election.settings.invitation !== 'email'
+                                ? 'disabled_msgs.ballot_updates_when_open'
+                                : 'disabled_msgs.ballot_updates_with_prelim'
                         )}
-                    </RadioGroup>
-                </Box>
+                    />
+                    <ElectionSwitchSetting settingKey="require_instruction_confirmation" />
+                    <ElectionSwitchSetting settingKey="draggable_ballot" />
+                    <ElectionSwitchSetting
+                        settingKey="max_rankings"
+                        onToggle={async (v) => !! await updateElection(e => e.settings.max_rankings = v ? default_rankings : undefined)}
+                    />
 
-                <ElectionSwitchSetting settingKey="random_candidate_order" />
-                <ElectionSwitchSetting
-                    settingKey="ballot_updates"
-                    disabled={election.settings.voter_access === 'open' || election.settings.invitation !== 'email' || !!election.settings.public_results}
-                    disabledMessage={t(
-                        election.settings.voter_access === 'open' || election.settings.invitation !== 'email'
-                            ? 'disabled_msgs.ballot_updates_when_open'
-                            : 'disabled_msgs.ballot_updates_with_prelim'
-                    )}
-                />
-                <ElectionSwitchSetting settingKey="require_instruction_confirmation" />
-                <ElectionSwitchSetting settingKey="draggable_ballot" />
-                <ElectionSwitchSetting
-                    settingKey="max_rankings"
-                    onToggle={async (v) => !! await updateElection(e => e.settings.max_rankings = v ? default_rankings : undefined)}
-                />
-
-                <TextField
-                    id="rank-limit"
-                    type="number"
-                    value={currentMaxRankings}
-                    onChange={(e) => setCurrentMaxRankings(Number(e.target.value))}
-                    variant='standard'
-                    InputProps={{ inputProps: { min: min_rankings, max: max_rankings, "aria-label": "Rank Limit" } }}
-                    sx={{ pl: 4, mt: -1, display: 'block'}}
-                    disabled={election.state !== 'draft' || !election.settings.max_rankings}
-                />
-            </FormGroup>
-        </FormControl>
-    </Grid >
+                    <TextField
+                        id="rank-limit"
+                        type="number"
+                        value={currentMaxRankings}
+                        onChange={(e) => setCurrentMaxRankings(Number(e.target.value))}
+                        variant='standard'
+                        InputProps={{ inputProps: { min: min_rankings, max: max_rankings, "aria-label": "Rank Limit" } }}
+                        sx={{ pl: 4, mt: -1, display: 'block'}}
+                        disabled={election.state !== 'draft' || !election.settings.max_rankings}
+                    />
+                </FormGroup>
+            </FormControl>
+        </Grid>
+        <AdminPageNavigation />
+    </>
 }

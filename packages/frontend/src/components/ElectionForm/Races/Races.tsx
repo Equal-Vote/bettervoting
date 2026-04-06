@@ -3,6 +3,7 @@ import { Box, Stack } from "@mui/material"
 import useElection from '../../ElectionContextProvider';
 import Race from './Race';
 import AddRace from './AddRace';
+import { AdminPageNavigation } from '../../Election/Sidebar';
 
 export default function Races() {
     const { election, t } = useElection()
@@ -15,6 +16,7 @@ export default function Races() {
             }
 
             <AddRace/>
+            <AdminPageNavigation />
         </Stack >
     )
 }
