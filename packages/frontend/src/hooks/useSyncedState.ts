@@ -34,6 +34,9 @@ export default <T>(defaultValue: T, updateFunc: (value: T) => Promise<boolean>, 
             setLocalValue(newValue); // set the value optimistically
 
             if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+            if(committedValue.current == newValue) return; // detect no-op
+
             debounceTimer.current = setTimeout(() => {
                 updateFunc(newValue).then(success => {
                     if(success){
