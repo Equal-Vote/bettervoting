@@ -9,7 +9,6 @@ import { getEntry } from "@equal-vote/star-vote-shared/domain_model/Util";
 import { createHash } from "crypto-browserify";
 import RemoveCircleOutlineRoundedIcon from '@mui/icons-material/RemoveCircleOutlineRounded';
 import { useEffect, useState } from "react";
-import useSyncedState from "~/hooks/useSyncedState";
 
 const rLink = /\[(.*?)\]\((.*?)\)/;
 const rBold = /\*\*(.*?)\*\*/;
@@ -369,21 +368,19 @@ export const getLocalTimeZoneShort = () => {
 export interface SwitchSettingProps {
   label: string
   toggled: boolean
-  onToggle: (newValue: boolean) => Promise<boolean>
+  onToggle: (newValue: boolean) => void
   disabled?: boolean
   disabledMessage?: string
 }
 
 export function SwitchSetting({ label, toggled, onToggle, disabled, disabledMessage }: SwitchSettingProps) {
-  const [localToggled, setLocalToggled] = useSyncedState(toggled, onToggle);
-
   return (
     <>
       <Box display='flex' flexDirection='row' alignItems='center' justifyContent='space-between' gap={2} sx={{ py: 0.5, width: {xs: '100%', md: 400}, opacity: disabled ? 0.5 : 1 }}>
         <Typography component='span'>{label}</Typography>
         <Switch
-          checked={localToggled}
-          onChange={() => setLocalToggled(!localToggled)}
+          checked={toggled}
+          onChange={() => onToggle(!toggled)}
           disabled={disabled}
           sx={{
             padding: 0,
