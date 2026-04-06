@@ -96,16 +96,12 @@ const AddElectionRoll = ({ onClose }: { onClose: () => void }) => {
                 return;
             }
 
-
-
             const dialogTitle = 'You entered duplicate emails, which is not supported. Would you like us to remove duplicates?'
             const confirmed = await confirm({ title: dialogTitle, message: '', submit: 'Yes', cancel: 'No' });
             if (confirmed) {
                 const newRolls = removeDuplicates(rolls)
                 submitRolls(newRolls);
             }
-
-
         } catch (error) {
             console.error(error)
         }
@@ -159,7 +155,6 @@ const AddElectionRoll = ({ onClose }: { onClose: () => void }) => {
         };
         fileReader.readAsText(e.target.files[0]);
     }
-
 
     function removeDuplicates(checkRolls: RollInput[]): RollInput[] {
         const seen = new Set<string>();
