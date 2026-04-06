@@ -17,8 +17,32 @@ function SyncedSwitchSetting({ toggled, onToggle, ...rest }: SyncedSwitchSetting
     return <SwitchSetting toggled={localToggled} onToggle={setLocalToggled} {...rest} />;
 }
 
+type ElectionSwitchSettingProps = {
+    settingKey: keyof IElectionSettings;
+    disabled?: boolean;
+    disabledMessage?: string;
+    onToggle?: (newValue: boolean) => Promise<boolean>;
+}
+
+function ElectionSwitchSetting({ settingKey, disabled, disabledMessage, onToggle: onToggleOverride }: ElectionSwitchSettingProps) {
+    const { election, updateElection } = useElection();
+    const min_rankings = 3;
+    const max_rankings = Number(process.env.REACT_APP_MAX_BALLOT_RANKS) || 8;
+    const { t } = useSubstitutedTranslation(election.settings.term_type, { min_rankings, max_rankings });
+
+    const defaultOnToggle = async (v: boolean) => !! await updateElection(e => { (e.settings as unknown as Record<string, unknown>)[settingKey] = v; });
+
+    return <SyncedSwitchSetting
+        label={t(`election_settings.${settingKey}`)}
+        toggled={!!election.settings[settingKey]}
+        onToggle={onToggleOverride ?? defaultOnToggle}
+        disabled={disabled}
+        disabledMessage={disabledMessage}
+    />;
+}
+
 export default function ElectionSettings() {
-    const { election, refreshElection, updateElection } = useElection()
+    const { election, updateElection } = useElection()
     const min_rankings = 3;
     const max_rankings = Number(process.env.REACT_APP_MAX_BALLOT_RANKS) ? Number(process.env.REACT_APP_MAX_BALLOT_RANKS) : 8;
     const default_rankings = Number(process.env.REACT_APP_DEFAULT_BALLOT_RANKS) ? Number(process.env.REACT_APP_DEFAULT_BALLOT_RANKS) : 6;
@@ -80,15 +104,9 @@ export default function ElectionSettings() {
                     </RadioGroup>
                 </Box>
 
-                <SyncedSwitchSetting
-                    label={t('election_settings.random_candidate_order')}
-                    toggled={!!election.settings.random_candidate_order}
-                    onToggle={async (v) => !! await updateElection(e => e.settings.random_candidate_order = v)}
-                />
-                <SyncedSwitchSetting
-                    label={t('election_settings.ballot_updates')}
-                    toggled={!!election.settings.ballot_updates}
-                    onToggle={async (v) => !! await updateElection(e => e.settings.ballot_updates = v)}
+                <ElectionSwitchSetting settingKey="random_candidate_order" />
+                <ElectionSwitchSetting
+                    settingKey="ballot_updates"
                     disabled={election.settings.voter_access === 'open' || election.settings.invitation !== 'email' || !!election.settings.public_results}
                     disabledMessage={t(
                         election.settings.voter_access === 'open' || election.settings.invitation !== 'email'
@@ -96,19 +114,10 @@ export default function ElectionSettings() {
                             : 'disabled_msgs.ballot_updates_with_prelim'
                     )}
                 />
-                <SyncedSwitchSetting
-                    label={t('election_settings.require_instruction_confirmation')}
-                    toggled={!!election.settings.require_instruction_confirmation}
-                    onToggle={async (v) => !! await updateElection(e => e.settings.require_instruction_confirmation = v)}
-                />
-                <SyncedSwitchSetting
-                    label={t('election_settings.draggable_ballot')}
-                    toggled={!!election.settings.draggable_ballot}
-                    onToggle={async (v) => !! await updateElection(e => e.settings.draggable_ballot = v)}
-                />
-                <SyncedSwitchSetting
-                    label={t('election_settings.max_rankings')}
-                    toggled={!!election.settings.max_rankings}
+                <ElectionSwitchSetting settingKey="require_instruction_confirmation" />
+                <ElectionSwitchSetting settingKey="draggable_ballot" />
+                <ElectionSwitchSetting
+                    settingKey="max_rankings"
                     onToggle={async (v) => !! await updateElection(e => e.settings.max_rankings = v ? default_rankings : undefined)}
                 />
 
