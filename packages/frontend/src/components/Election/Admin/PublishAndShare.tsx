@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import useSyncedState from "~/hooks/useSyncedState";
 import { DateTime } from 'luxon';
 import Grid from "@mui/material/Grid";
 import { Box, Divider, FormControl, FormHelperText, Input, InputLabel, MenuItem, Select, TextField } from "@mui/material";
@@ -95,6 +96,11 @@ export default () => {
             return false;
         }
     }
+
+    const [isOpen, setIsOpen] = useSyncedState(
+        election.state === 'open',
+        async (open) => { const result = await changeOpenState(open); return result !== false; }
+    );
 
     /* will be uncommented for https://github.com/Equal-Vote/bettervoting/issues/1304
     const EndTimeForm = () => <Box display='flex' flexDirection='row' gap={2} sx={{maxWidth: '300'}}>
@@ -213,9 +219,9 @@ export default () => {
         {(election.state === 'open' || election.state === 'closed') && (
             <Box sx={{width: '100%', maxWidth: 500}}>
                 <SwitchSetting
-                    label={t(election.state === 'open' ? 'admin_home.election_is_open' : 'admin_home.election_is_closed')}
-                    toggled={election.state === 'open'}
-                    onToggle={changeOpenState}
+                    label={t(isOpen ? 'admin_home.election_is_open' : 'admin_home.election_is_closed')}
+                    toggled={isOpen}
+                    onToggle={setIsOpen}
                     disabled={!hasPermission('canEditElectionState')}
                 />
                 
