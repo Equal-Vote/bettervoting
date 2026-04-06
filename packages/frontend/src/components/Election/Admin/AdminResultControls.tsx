@@ -33,7 +33,7 @@ export default ({ onResultsToggle }: { onResultsToggle?: () => void }) => {
         <Box display='flex' flexDirection='column' gap={1}>
             <SwitchSetting
                 label={t('results.admin_results_toggle')}
-                toggled={election.settings.public_results === true}
+                toggled={publicResults}
                 onToggle={setPublicResults}
                 disabled={!!election.settings.ballot_updates}
                 disabledMessage={t('disabled_msgs.public_results')}
