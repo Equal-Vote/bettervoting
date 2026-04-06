@@ -13,6 +13,7 @@ import { dateToLocalLuxonDate, useEditElectionDetails } from '../../ElectionForm
 import useConfirm from '../../ConfirmationDialogProvider';
 import useElection from '../../ElectionContextProvider';
 import useAuthSession from '../../AuthSessionContextProvider';
+import { AdminPageNavigation } from '../Sidebar';
 import { SwitchSetting } from "~/components/util";
 import { TimeZone, timeZones } from '@equal-vote/star-vote-shared/domain_model/Util';
 
@@ -259,7 +260,6 @@ export default () => {
             </Box>
         }
         {election.state === 'draft' && <FinalizeSection /> }
-
-        
+        <AdminPageNavigation />
     </>
 }
