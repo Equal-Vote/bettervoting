@@ -24,23 +24,6 @@ type ElectionSwitchSettingProps = {
     onToggle?: (newValue: boolean) => Promise<boolean>;
 }
 
-function ElectionSwitchSetting({ settingKey, disabled, disabledMessage, onToggle: onToggleOverride }: ElectionSwitchSettingProps) {
-    const { election, updateElection } = useElection();
-    const min_rankings = 3;
-    const max_rankings = Number(process.env.REACT_APP_MAX_BALLOT_RANKS) || 8;
-    const { t } = useSubstitutedTranslation(election.settings.term_type, { min_rankings, max_rankings });
-
-    const defaultOnToggle = async (v: boolean) => !! await updateElection(e => { (e.settings as unknown as Record<string, unknown>)[settingKey] = v; });
-
-    return <SyncedSwitchSetting
-        label={t(`election_settings.${settingKey}`)}
-        toggled={!!election.settings[settingKey]}
-        onToggle={onToggleOverride ?? defaultOnToggle}
-        disabled={disabled}
-        disabledMessage={disabledMessage}
-    />;
-}
-
 export default function ElectionSettings() {
     const { election, updateElection } = useElection()
     const min_rankings = 3;
@@ -48,6 +31,18 @@ export default function ElectionSettings() {
     const default_rankings = Number(process.env.REACT_APP_DEFAULT_BALLOT_RANKS) ? Number(process.env.REACT_APP_DEFAULT_BALLOT_RANKS) : 6;
 
     const {t} = useSubstitutedTranslation(election.settings.term_type, {min_rankings, max_rankings});
+
+    function ElectionSwitchSetting({ settingKey, disabled, disabledMessage, onToggle: onToggleOverride }: ElectionSwitchSettingProps) {
+        const defaultOnToggle = async (v: boolean) => !! await updateElection(e => { (e.settings as unknown as Record<string, unknown>)[settingKey] = v; });
+
+        return <SyncedSwitchSetting
+            label={t(`election_settings.${settingKey}`)}
+            toggled={!!election.settings[settingKey]}
+            onToggle={onToggleOverride ?? defaultOnToggle}
+            disabled={disabled}
+            disabledMessage={disabledMessage}
+        />;
+    }
 
     const [contactEmail, setContactEmail] = useSyncedState(
         election.settings.contact_email ?? '',
