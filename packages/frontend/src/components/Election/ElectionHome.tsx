@@ -9,6 +9,7 @@ import DraftWarning from "./DraftWarning";
 import SupportBlurb from './SupportBlurb';
 import { PrimaryButton, SecondaryButton } from '../styles';
 import { FormattedDescription } from '../FormattedDescription';
+import { AdminPageNavigation } from './Sidebar';
 
 const ElectionHome = () => {
   const { election, voterAuth } = useElection();
@@ -138,6 +139,7 @@ const ElectionHome = () => {
         </Paper>
       }
       <SupportBlurb/>
+      <AdminPageNavigation />
     </>
   )
 }
