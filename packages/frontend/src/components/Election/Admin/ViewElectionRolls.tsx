@@ -14,6 +14,7 @@ import SendEmailDialog from "./SendEmailDialog";
 import { PrimaryButton, SecondaryButton } from "~/components/styles";
 import ElectionAuthForm from "~/components/ElectionForm/Details/ElectionAuthForm";
 import useConfirm from "~/components/ConfirmationDialogProvider";
+import useSyncedState from "~/hooks/useSyncedState";
 
 const ViewElectionRolls = () => {
     const { election, permissions, t, updateElection, refreshElection } = useElection()
@@ -29,18 +30,20 @@ const ViewElectionRolls = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [dialogOpen, setDialogOpen] = useState(false);
-    const [voterAccess, sa] = useState(election.settings.voter_access);
-    const setVoterAccess = (value) => {
-        // keeping the local election object in sync avoids consistency issues when navigating between pages
-        election.settings.voter_access = value;
-        sa(value);
-    }
-    const [usesEmail, se] = useState(election.settings.invitation === 'email');
-    const setUsesEmail = (email) => {
-        // keeping the local election object in sync avoids consistency issues when navigating between pages
-        election.settings.invitation = email? 'email' : undefined;
-        se(email);
-    }
+    
+    const [voterAccess, setVoterAccess] = useSyncedState(
+        election.settings.voter_access,
+        async (newAccess) => !! await updateElection(e => {
+            e.settings.voter_access = newAccess;
+            // voter id should be set regardless, it's relevant for email list, id list, and device
+            // the only time voter_id shouldn't be set is if "no" was selected for public access, and then it was changed in ElectionAuthForm afterwards
+            e.settings.voter_authentication = {voter_id: true};
+        })
+    )
+    const [usesEmail, setUsesEmail] = useSyncedState(election.settings.voter_access,
+        async (useEmail) => !! await updateElection(e => e.settings.invitation = useEmail ? 'email' : undefined )
+    )
+
     const confirm = useConfirm();
 
     const usesVoterIdAuthentication = !!election.settings.voter_authentication?.voter_id;
@@ -101,6 +104,8 @@ const ViewElectionRolls = () => {
         [data]
     );
 
+    TODO: make sure setUsesEmail, and setVoterAccess is being appropriately used
+
     return (
         <>
             <Box>
@@ -127,13 +132,6 @@ const ViewElectionRolls = () => {
                                 // update settings
                                 setVoterAccess(newAccess);
                                 setUsesEmail(undefined);
-                                updateElection((e) => e.settings.voter_access = newAccess).then((result) => {
-                                    console.log(result)
-                                    if(result === false){
-                                        setVoterAccess(election.settings.voter_access)
-                                        refreshElection()
-                                    }
-                                });
                             }}
                             checked={election.settings.voter_access === (restricted ? 'closed' : 'open')}
                         />
