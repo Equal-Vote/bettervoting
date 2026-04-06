@@ -12,6 +12,7 @@ import SupportBlurb from '../SupportBlurb';
 import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
 import ElectionStateWarning from '../ElectionStateWarning';
 import AdminResultControls from '../Admin/AdminResultControls';
+import { AdminPageNavigation } from '../Sidebar';
 
 const ViewElectionResults = () => {
     const { election, voterAuth } = useElection();
@@ -120,6 +121,7 @@ const ViewElectionResults = () => {
           </Box>
         </Box>
         <SupportBlurb />
+        <AdminPageNavigation />
       </>
     );
 }

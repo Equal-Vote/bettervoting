@@ -15,6 +15,7 @@ import { PrimaryButton, SecondaryButton } from "~/components/styles";
 import ElectionAuthForm from "~/components/ElectionForm/Details/ElectionAuthForm";
 import useConfirm from "~/components/ConfirmationDialogProvider";
 import useSyncedState from "~/hooks/useSyncedState";
+import { AdminPageNavigation } from '../Sidebar';
 
 const ViewElectionRolls = () => {
     const { election, permissions, t, updateElection, refreshElection } = useElection()
@@ -211,6 +212,7 @@ const ViewElectionRolls = () => {
 
                 <SendEmailDialog electionRoll={data?.electionRoll} open={dialogOpen} onClose={() => setDialogOpen(false)} onSubmit={onSendEmails}/>
             </>}
+            <AdminPageNavigation />
         </>
     )
 }

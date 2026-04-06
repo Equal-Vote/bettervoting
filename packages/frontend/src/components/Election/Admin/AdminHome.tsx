@@ -11,6 +11,7 @@ import ElectionDetailsInlineForm from '../../ElectionForm/Details/ElectionDetail
 import structuredClone from '@ungap/structured-clone';
 import useAuthSession from '../../AuthSessionContextProvider';
 import useFeatureFlags from '../../FeatureFlagContextProvider';
+import { AdminPageNavigation } from '../Sidebar';
 
 type SectionProps = {
     text: {[key: string]: string}
@@ -148,6 +149,7 @@ const AdminHome = () => {
             <DuplicateElectionSection/>
             <ArchiveElectionSection/>
         </Box>
+        <AdminPageNavigation />
     </>
 }
 
