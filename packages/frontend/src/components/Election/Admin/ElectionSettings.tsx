@@ -6,9 +6,16 @@ import { FormGroup, Radio, RadioGroup, Box, TextField, capitalize, Typography } 
 import structuredClone from '@ungap/structured-clone';
 import { ElectionSettings as IElectionSettings, TermType } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
 import { Tip } from '~/components/styles';
-import { useSubstitutedTranslation, SwitchSetting } from '~/components/util';
+import { useSubstitutedTranslation, SwitchSetting, SwitchSettingProps } from '~/components/util';
 import useElection from '~/components/ElectionContextProvider';
 import useSyncedState from "~/hooks/useSyncedState";
+
+type SyncedSwitchSettingProps = Omit<SwitchSettingProps, 'onToggle'> & { onToggle: (newValue: boolean) => Promise<boolean> };
+
+function SyncedSwitchSetting({ toggled, onToggle, ...rest }: SyncedSwitchSettingProps) {
+    const [localToggled, setLocalToggled] = useSyncedState(toggled, onToggle);
+    return <SwitchSetting toggled={localToggled} onToggle={setLocalToggled} {...rest} />;
+}
 
 export default function ElectionSettings() {
     const { election, refreshElection, updateElection } = useElection()
@@ -73,12 +80,12 @@ export default function ElectionSettings() {
                     </RadioGroup>
                 </Box>
 
-                <SwitchSetting
+                <SyncedSwitchSetting
                     label={t('election_settings.random_candidate_order')}
                     toggled={!!election.settings.random_candidate_order}
                     onToggle={async (v) => !! await updateElection(e => e.settings.random_candidate_order = v)}
                 />
-                <SwitchSetting
+                <SyncedSwitchSetting
                     label={t('election_settings.ballot_updates')}
                     toggled={!!election.settings.ballot_updates}
                     onToggle={async (v) => !! await updateElection(e => e.settings.ballot_updates = v)}
@@ -89,17 +96,17 @@ export default function ElectionSettings() {
                             : 'disabled_msgs.ballot_updates_with_prelim'
                     )}
                 />
-                <SwitchSetting
+                <SyncedSwitchSetting
                     label={t('election_settings.require_instruction_confirmation')}
                     toggled={!!election.settings.require_instruction_confirmation}
                     onToggle={async (v) => !! await updateElection(e => e.settings.require_instruction_confirmation = v)}
                 />
-                <SwitchSetting
+                <SyncedSwitchSetting
                     label={t('election_settings.draggable_ballot')}
                     toggled={!!election.settings.draggable_ballot}
                     onToggle={async (v) => !! await updateElection(e => e.settings.draggable_ballot = v)}
                 />
-                <SwitchSetting
+                <SyncedSwitchSetting
                     label={t('election_settings.max_rankings')}
                     toggled={!!election.settings.max_rankings}
                     onToggle={async (v) => !! await updateElection(e => e.settings.max_rankings = v ? default_rankings : undefined)}
