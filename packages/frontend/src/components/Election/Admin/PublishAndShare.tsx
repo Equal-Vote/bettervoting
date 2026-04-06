@@ -25,10 +25,11 @@ type SectionProps = {
 export default () => {
     const authSession = useAuthSession()
     const { t, election, refreshElection: fetchElection, permissions, updateElection } = useElection()
+    /* will be uncommented for https://github.com/Equal-Vote/bettervoting/issues/1304
+
     const [settingEndTime, setSettingEndTime] = useState(false);
     const [endTimeInput, setEndTimeInput] = useState('');
 
-    /* will be uncommented for https://github.com/Equal-Vote/bettervoting/issues/1304
     const { editedElection, applyUpdate, onSave, errors, setErrors } = useEditElectionDetails()
     const timeZone = election.settings.time_zone ?? DateTime.now().zone.name;
     const [defaultEndTime, setDefaultEndTime] = useState(isValidDate(editedElection.end_time) ? editedElection.end_time : DateTime.now().plus({ days: 1 }).setZone(timeZone).toJSDate())

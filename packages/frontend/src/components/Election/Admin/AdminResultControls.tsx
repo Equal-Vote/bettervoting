@@ -3,29 +3,38 @@ import ElectionStateWarning from "../ElectionStateWarning"
 import { SwitchSetting } from "~/components/util";
 import { useSetPublicResults } from "../../../hooks/useAPI";
 import { Box, Link, Typography } from "@mui/material";
-import { PrimaryButton, SecondaryButton } from "~/components/styles";
 import ShareButton from "../ShareButton";
+import useSyncedState from "~/hooks/useSyncedState";
 
 export default ({ onResultsToggle }: { onResultsToggle?: () => void }) => {
-    const { election, refreshElection, t } = useElection();
+    const { election, t } = useElection();
     const { makeRequest } = useSetPublicResults(election.election_id);
 
-    const togglePublicResults = async (newValue: boolean): Promise<false | void> => {
-        try {
-            await makeRequest({ public_results: newValue });
-            await refreshElection();
-            onResultsToggle?.();
-        } catch {
-            return false;
+    //const togglePublicResults = async (newValue: boolean): Promise<false | void> => {
+    //    try {
+    //        await makeRequest({ public_results: newValue });
+    //        await refreshElection();
+    //        onResultsToggle?.();
+    //    } catch {
+    //        return false;
+    //    }
+    //};
+
+    const [publicResults, setPublicResults] = useSyncedState( 
+        election.settings.public_results === true,
+        async (publicResults) => {
+            let output = !! await makeRequest({public_results: publicResults});
+            if(output) onResultsToggle();
+            return output;
         }
-    };
+    )
 
     return <ElectionStateWarning title='results.admin_title' description='' hideIcon>
         <Box display='flex' flexDirection='column' gap={1}>
             <SwitchSetting
                 label={t('results.admin_results_toggle')}
                 toggled={election.settings.public_results === true}
-                onToggle={togglePublicResults}
+                onToggle={setPublicResults}
                 disabled={!!election.settings.ballot_updates}
                 disabledMessage={t('disabled_msgs.public_results')}
             />

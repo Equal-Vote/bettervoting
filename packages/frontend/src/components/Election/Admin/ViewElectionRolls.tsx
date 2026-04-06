@@ -40,26 +40,20 @@ const ViewElectionRolls = () => {
             e.settings.voter_authentication = {voter_id: true};
         })
     )
-    const [usesEmail, setUsesEmail] = useSyncedState(election.settings.voter_access,
+
+    // NOTE: usesEmail can be true, false, or undefined. undefined means the user has not made a selection yet
+    const [usesEmail, setUsesEmail] = useSyncedState( 
+        election.settings.invitation == 'email',
         async (useEmail) => !! await updateElection(e => e.settings.invitation = useEmail ? 'email' : undefined )
     )
 
     const confirm = useConfirm();
-
-    const usesVoterIdAuthentication = !!election.settings.voter_authentication?.voter_id;
 
     const onOpen = (voter) => {
         setInspectingVoter(true)
         setEditedRoll(voter?.raw ?? null)
         navigate(`${location.pathname}?editing=true`, { replace: false });
     }
-
-    //useEffect(() => {
-    //    setVoterAccess(election.settings.voter_access);
-    //    if(usesEmail != undefined){ // the radio button is allowed to be out of sync with the database if it's set to undefined
-    //        setUsesEmail(election.settings.invitation === 'email');
-    //    }
-    //}, [election])
 
     const onSendEmails = ({
         subject,
@@ -84,7 +78,7 @@ const ViewElectionRolls = () => {
             if (!currentRoll) return null;
             // When voter IDs are redacted (email list elections), always match by email
             const voterIdsAreRedacted = election.settings.invitation === 'email';
-            const useEmail = voterIdsAreRedacted || !usesVoterIdAuthentication;
+            const useEmail = voterIdsAreRedacted || !election.settings.voter_authentication?.voter_id
             const identifier = useEmail ? currentRoll.email : currentRoll.voter_id;
             if (!identifier) return null;
             return results.electionRoll.find(roll =>
@@ -104,8 +98,6 @@ const ViewElectionRolls = () => {
         [data]
     );
 
-    TODO: make sure setUsesEmail, and setVoterAccess is being appropriately used
-
     return (
         <>
             <Box>
@@ -122,23 +114,17 @@ const ViewElectionRolls = () => {
                             disabled={electionRollData.length > 0}
                             label={t(`keyword.${restricted ? 'yes' : 'no'}`)}
                             onClick={async () => {
-                                let newAccess: 'closed' | 'open' = restricted ? 'closed' : 'open';
-
                                 if(electionRollData.length > 0) return; // not sure why disabled still allows me to do onclick
 
-                                // detect no-op
-                                if(newAccess === election.settings.voter_access) return;
-
-                                // update settings
-                                setVoterAccess(newAccess);
+                                setVoterAccess(restricted ? 'closed' : 'open');
                                 setUsesEmail(undefined);
                             }}
-                            checked={election.settings.voter_access === (restricted ? 'closed' : 'open')}
+                            checked={voterAccess === (restricted ? 'closed' : 'open')}
                         />
                     )}
                 </RadioGroup>
             </Box>
-            {election.settings.voter_access == 'closed' && <Box>
+            {voterAccess == 'closed' && <Box>
                 <Typography>
                     How would you like to identify your voters?
                 </Typography>
@@ -154,29 +140,19 @@ const ViewElectionRolls = () => {
                             onClick={async () => {
                                 if(electionRollData.length > 0) return; // not sure why disabled still allows me to do onclick
 
-                                // detect no-op
-                                if(usesEmail !== undefined && email === usesEmail) return;
-
-                                // update settings
                                 setUsesEmail(email);
-
-                                updateElection((e) => e.settings.invitation = email ? 'email' : undefined).then((result) => {
-                                    if(result === false){
-                                        setUsesEmail(election.settings.invitation === 'email');
-                                        refreshElection()
-                                    }
-                                });
                             }}
                             checked={usesEmail === email}
                         />
                     )}
                 </RadioGroup>
             </Box>}
-            {election.settings.voter_access == 'open' && <ElectionAuthForm />}
-            {election.settings.voter_access == 'closed' && usesEmail !== undefined && <>
+            {voterAccess == 'open' && <ElectionAuthForm />}
+            {/* NOTE: usesEmail === undefined would mean the selection is unset*/}
+            {voterAccess == 'closed' && usesEmail !== undefined && <>
                 {!inspectingVoter && !addRollPage &&
                     <Box>
-                        {election.settings.voter_access === 'closed' &&
+                        {voterAccess === 'closed' &&
                             <PermissionHandler permissions={permissions} requiredPermission={'canAddToElectionRoll'}>
                                 <SecondaryButton onClick={async () => {
                                     if(electionRollData.length > 0 || await confirm(t('admin_home.add_first_voter_roll_confirm'))){
@@ -186,7 +162,7 @@ const ViewElectionRolls = () => {
                             </PermissionHandler>
                         }
                         {usesEmail &&
-                            <SecondaryButton onClick={() => setDialogOpen(true)} sx={{ml: 2}}>Draft Email Blast </SecondaryButton>
+                            <SecondaryButton onClick={() => setDialogOpen(true)} sx={{ml: 2}}>Draft Email Blast</SecondaryButton>
                         }
                         <EnhancedTable
                             headKeys={headKeys}
