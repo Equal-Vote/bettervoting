@@ -3,7 +3,7 @@ import CandidateForm from "../Candidates/CandidateForm";
 import TextField from "@mui/material/TextField";
 import Typography from '@mui/material/Typography';
 import { Box, Button, Checkbox, FormControlLabel, FormHelperText, Link, Stack } from "@mui/material";
-import { AddIcon, MinusIcon, TransitionBox, useSubstitutedTranslation } from '../../util';
+import { AddIcon, MinusIcon, TransitionBox, useLocalState, useSubstitutedTranslation } from '../../util';
 import useConfirm from '../../ConfirmationDialogProvider';
 import useFeatureFlags from '../../FeatureFlagContextProvider';
 import { SortableList } from '~/components/DragAndDrop';
@@ -332,6 +332,15 @@ const TitleAndDescription = ({setErrors, errors, editedRace, applyRaceUpdate, op
     const { election, t } = useElection()
     const isDisabled = election.state !== 'draft';
 
+    const [localTitle, setLocalTitle, flushTitle] = useLocalState(
+        editedRace.title,
+        v => applyRaceUpdate(race => { race.title = v })
+    );
+    const [localDesc, setLocalDesc, flushDesc] = useLocalState(
+        editedRace.description,
+        v => applyRaceUpdate(race => { race.description = v })
+    );
+
     useEffect(() => {
         setShowDescription(editedRace.description != '')
     }, [open])
@@ -345,16 +354,17 @@ const TitleAndDescription = ({setErrors, errors, editedRace, applyRaceUpdate, op
                 label={t('wizard.title_label')}
                 type="text"
                 error={errors.raceTitle !== ''}
-                value={editedRace.title}
+                value={localTitle}
                 sx={{
                     m: 0,
                     boxShadow: 2,
                 }}
                 fullWidth
                 onChange={(e) => {
-                    setErrors({ ...errors, raceTitle: '' })
-                    applyRaceUpdate(race => { race.title = e.target.value })
+                    if (errors.raceTitle) setErrors({ ...errors, raceTitle: '' })
+                    setLocalTitle(e.target.value)
                 }}
+                onBlur={flushTitle}
             />
             <FormHelperText error sx={{ pl: 1, pt: 0 }}>
                 {errors.raceTitle}
@@ -378,16 +388,17 @@ const TitleAndDescription = ({setErrors, errors, editedRace, applyRaceUpdate, op
                     fullWidth
                     type="text"
                     error={errors.raceDescription !== ''}
-                    value={editedRace.description}
+                    value={localDesc}
                     minRows={3}
                     sx={{
                         m: 0,
                         boxShadow: 2,
                     }}
                     onChange={(e) => {
-                        setErrors({ ...errors, raceDescription: '' })
-                        applyRaceUpdate(race => { race.description = e.target.value })
+                        if (errors.raceDescription) setErrors({ ...errors, raceDescription: '' })
+                        setLocalDesc(e.target.value)
                     }}
+                    onBlur={flushDesc}
                 />
                 <FormHelperText error sx={{ pl: 1, pt: 0 }}>
                     {errors.raceDescription}

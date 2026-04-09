@@ -71,6 +71,7 @@ test('Full Runthrough', async ({ page }) => {
 	for (let i = 1; i <= 6; i++) {
 		await expect(page.getByRole('textbox', { name: `Candidate ${i} Name` })).toBeEnabled();
 		await page.getByRole('textbox', { name: `Candidate ${i} Name` }).fill(`Candidate ${i}`);
+		await page.getByRole('textbox', { name: `Candidate ${i} Name` }).blur();
 	}
 	await page.getByRole('button', { name: 'Save' }).click();
 
@@ -80,10 +81,12 @@ test('Full Runthrough', async ({ page }) => {
 		.click({ timeout: 10000 });
 	const raceDialog = await page.getByRole('dialog', { name: 'Edit Race' });
 	await raceDialog.getByRole('textbox', { name: 'Title' }).fill('Race 2');
+	await raceDialog.getByRole('textbox', { name: 'Title' }).blur();
 	await raceDialog.getByRole('button', { name: 'Description' }).click();
 	await raceDialog
 		.getByRole('textbox', { name: 'Description' })
 		.fill('Race 2 Description');
+	await raceDialog.getByRole('textbox', { name: 'Description' }).blur();
 	await raceDialog.getByRole('button', { name: 'Voting Method' }).click();
 	await raceDialog.getByRole('radio', { name: 'Single-Winner' }).check();
 	await raceDialog.getByLabel('Ranked Robin').click();
@@ -91,12 +94,15 @@ test('Full Runthrough', async ({ page }) => {
 	for (let i = 1; i <= 10; i++) {
 		await raceDialog
 			.getByRole('textbox', { name: `Candidate ${i} Name` }).fill(`Candidate ${i}`);
+		await raceDialog
+			.getByRole('textbox', { name: `Candidate ${i} Name` }).blur();
 	}
 	await raceDialog.getByRole('button', { name: 'Drag Candidate Number 10' }).click();
 	await raceDialog.getByRole('button', { name: 'Delete Candidate Number 10' }).click();
 	await page.getByRole('button', { name: 'Submit' }).click(); // must be page since it's a separate popup
 	await expect(raceDialog.getByLabel('Candidate 11 Form')).not.toBeVisible();
 	await raceDialog.getByRole('textbox', { name: `Candidate 10 Name` }).fill(`Candidate 10`);
+	await raceDialog.getByRole('textbox', { name: `Candidate 10 Name` }).blur();
 	const dragSource = await raceDialog.getByRole('button', { name: 'Drag Candidate Number 10' });
 	const dragTarget = await raceDialog.getByRole('button', { name: 'Drag Candidate Number 6' });
 	await dragSource.dragTo(dragTarget);
