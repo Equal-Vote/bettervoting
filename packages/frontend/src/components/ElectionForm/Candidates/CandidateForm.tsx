@@ -222,7 +222,15 @@ export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled
                         fullWidth
                         variant='standard'
                         margin='normal'
-                        onChange={(e) => setLocalName(e.target.value)}
+                        onChange={(e) => {
+                            const newVal = e.target.value;
+                            setLocalName(newVal);
+                            // Flush immediately when typing into the empty "new candidate" slot
+                            // so the parent adds it to the list and a new empty slot appears
+                            if (candidate.candidate_name === '' && newVal !== '') {
+                                onEditCandidate({ ...candidate, candidate_name: newVal });
+                            }
+                        }}
                         inputRef={inputRef}
                         onKeyDown={onKeyDown}
                         onFocus={() => setFocused(true)}

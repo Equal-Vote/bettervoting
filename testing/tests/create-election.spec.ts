@@ -14,16 +14,20 @@ test.describe('Create Election', () => {
         await page.getByRole('radio', { name: 'Just one' }).check();
         await page.getByRole('textbox', { name: 'Question Title' }).click();
         await page.getByRole('textbox', { name: 'Question Title' }).fill('Favorite Fruit');
+        await page.getByRole('textbox', { name: 'Question Title' }).blur();
         await page.getByRole('button', { name: 'Voting Method', exact: true }).click();
         await page.getByRole('radio', { name: 'Single-Winner' }).check();
         await page.getByRole('radio', { name: 'STAR Voting' }).check();
         await page.getByRole('button', { name: 'Choices' }).click();
         await page.getByRole('textbox', { name: 'Candidate 1 Name' }).click();
         await page.getByRole('textbox', { name: 'Candidate 1 Name' }).fill('Pear');
+        await page.getByRole('textbox', { name: 'Candidate 1 Name' }).blur();
         await page.getByRole('textbox', { name: 'Candidate 2 Name' }).click();
         await page.getByRole('textbox', { name: 'Candidate 2 Name' }).fill('Apple');
+        await page.getByRole('textbox', { name: 'Candidate 2 Name' }).blur();
         await page.getByRole('textbox', { name: 'Candidate 3 Name' }).click();
         await page.getByRole('textbox', { name: 'Candidate 3 Name' }).fill('Strawberry');
+        await page.getByRole('textbox', { name: 'Candidate 3 Name' }).blur();
         await page.getByRole('button', { name: 'Next' }).nth(2).click();
         await page.getByRole('button', { name: 'Publish Now' }).click();
 
@@ -84,6 +88,7 @@ test.describe('Create Election', () => {
         await page.getByRole('radio', { name: 'Just one' }).check();
         await page.getByRole('textbox', { name: 'Question Title' }).click();
         await page.getByRole('textbox', { name: 'Question Title' }).fill('Poll + Single Race + ID List');
+        await page.getByRole('textbox', { name: 'Question Title' }).blur();
         await page.getByRole('button', { name: 'Voting Method', exact: true }).click();
         await page.getByRole('radio', { name: 'Basic Multi-Winner' }).check();
         await page.getByRole('button', { name: 'Next' }).nth(1).click();
@@ -92,6 +97,7 @@ test.describe('Create Election', () => {
         await page.getByRole('textbox', { name: 'Candidate 1 Name' }).fill('A');
         await page.getByRole('textbox', { name: 'Candidate 1 Name' }).press('Tab');
         await page.getByRole('textbox', { name: 'Candidate 2 Name' }).fill('B');
+        await page.getByRole('textbox', { name: 'Candidate 2 Name' }).blur();
         await page.getByRole('button', { name: 'Next' }).nth(2).click();
         await page.getByRole('button', { name: 'See more options' }).click();
         await page.getByRole('radio', { name: 'Yes' }).check();
