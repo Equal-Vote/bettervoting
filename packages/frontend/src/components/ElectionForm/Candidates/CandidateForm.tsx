@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useEffect } from 'react'
+import { memo, useRef, useState, useCallback, useEffect } from 'react'
 import { Candidate } from "@equal-vote/star-vote-shared/domain_model/Candidate"
 import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
@@ -178,18 +178,29 @@ interface CandidateFormProps {
     onDeleteCandidate: () => void,
     disabled: boolean,
     special: boolean, // special candidates include none of the above and write in, and they can be deleted, but not edited
-    inputRef: (el: React.MutableRefObject<HTMLInputElement[]>) => React.MutableRefObject<HTMLInputElement[]>,
+    inputRef: (el: HTMLInputElement | null) => void,
     onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void,
     electionState: string
 }
 
-export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled, special, inputRef, onKeyDown, electionState}: CandidateFormProps) => {
+function CandidateForm({ onEditCandidate, candidate, index, onDeleteCandidate, disabled, special, inputRef, onKeyDown, electionState}: CandidateFormProps) {
     const [open, setOpen] = useState(false);
     const [linkOpen, setLinkOpen] = useState(false);
     // Track hover and focus so the UI (actions + textarea underline) appears on hover or when the textbox is focused
     const [hovered, setHovered] = useState(false);
     const [focused, setFocused] = useState(false);
     const isEmpty = candidate.candidate_name === '';
+    const renderCountRef = useRef(0);
+    renderCountRef.current += 1;
+
+    console.log('[RaceForm] CandidateForm render', {
+        renderCount: renderCountRef.current,
+        index,
+        candidateId: candidate.candidate_id,
+        candidateName: candidate.candidate_name,
+        disabled,
+        special,
+    });
  
     return (
         <Paper
@@ -259,3 +270,10 @@ export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled
         </Paper >
     )
 }
+
+export default memo(CandidateForm, (prevProps, nextProps) => (
+    prevProps.candidate === nextProps.candidate &&
+    prevProps.index === nextProps.index &&
+    prevProps.disabled === nextProps.disabled &&
+    prevProps.special === nextProps.special
+));

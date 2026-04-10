@@ -1,17 +1,10 @@
-import { Dispatch, useEffect } from 'react'
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { scrollToElement } from '../../util';
-import useElection, { IElectionContext } from '../../ElectionContextProvider';
+import useElection from '../../ElectionContextProvider';
 import { Race as iRace } from '@equal-vote/star-vote-shared/domain_model/Race';
-import structuredClone from '@ungap/structured-clone';
-import useConfirm from '../../ConfirmationDialogProvider';
-import { Election as IElection } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { makeID, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
 import { Candidate } from '@equal-vote/star-vote-shared/domain_model/Candidate';
-import { useDeleteAllBallots } from '~/hooks/useAPI';
-import useSnackbar from '~/components/SnackbarContext';
-import { Election, NewElection } from '@equal-vote/star-vote-shared/domain_model/Election';
 
 export interface RaceErrors {
     raceTitle?: string,
@@ -41,36 +34,20 @@ export const useEditRace = (
     open=false,
 ) => {
     const { election } = useElection()
-    
-    const [editedRace, setEditedRace] = useState(race !== null ? race : makeDefaultRace())
-    const [errors, setErrors] = useState({
+
+    const getEmptyErrors = (): RaceErrors => ({
         raceTitle: '',
         raceDescription: '',
         candidates: '',
         votingMethod: '',
-    } as RaceErrors)
+    });
+    const [errors, setErrors] = useState<RaceErrors>(getEmptyErrors())
 
     useEffect(() => {
-        setEditedRace(race !== null ? race : makeDefaultRace())
-        setErrors({
-            raceTitle: '',
-            raceDescription: '',
-            candidates: '',
-            votingMethod: '',
-        })
+        setErrors(getEmptyErrors())
     }, [race, race_index, open])
 
-    const applyRaceUpdate = (updateFunc: (race: iRace) => void) => {
-        const raceCopy: iRace = structuredClone(editedRace)
-        updateFunc(raceCopy)
-        setEditedRace(raceCopy)
-    };
-
-    const resetRace = () => setEditedRace(
-        makeDefaultRace()
-    )
-
-    const validateRace = () => {
+    const validateRace = (editedRace: iRace) => {
         let isValid = true
         const newErrors: RaceErrors = {}
 
@@ -119,7 +96,10 @@ export const useEditRace = (
             isValid = false;
         }
 
-        setErrors(errors => ({ ...errors, ...newErrors }))
+        setErrors({
+            ...getEmptyErrors(),
+            ...newErrors,
+        })
 
         // NOTE: I'm passing the element as a function so that we can delay the query until the elements have been updated
         scrollToElement(() => document.querySelectorAll('.Mui-error'))
@@ -127,5 +107,5 @@ export const useEditRace = (
         return isValid
     }
 
-    return { editedRace, resetRace, errors, setErrors, applyRaceUpdate, validateRace }
+    return { errors, setErrors, validateRace }
 }

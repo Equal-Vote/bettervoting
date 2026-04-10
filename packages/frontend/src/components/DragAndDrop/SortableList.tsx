@@ -23,11 +23,7 @@ import "./SortableList.css";
 import { DragHandle, SortableItem } from "./SortableItem";
 import {SortableOverlay}  from "./SortableOverlay";
 
-interface BaseItem {
-  id: UniqueIdentifier;
-}
-
-interface Props<T extends BaseItem> {
+interface Props<T> {
   items: T[];
   identifierKey: keyof T;
   onChange(items: T[]): void;
@@ -59,7 +55,7 @@ interface Props<T extends BaseItem> {
  *   )}
  * />
  */
-export function SortableList<T extends BaseItem>({
+export function SortableList<T>({
   items,
   identifierKey,
   onChange,
@@ -105,7 +101,7 @@ export function SortableList<T extends BaseItem>({
         </ul>
       </SortableContext>
       <SortableOverlay>
-        {activeItem ? renderItem(activeItem, items.findIndex(item => item[identifierKey] === activeItem.id)) : null}
+        {activeItem ? renderItem(activeItem, items.findIndex(item => item[identifierKey] === activeItem[identifierKey])) : null}
       </SortableOverlay>
     </DndContext>
   );
