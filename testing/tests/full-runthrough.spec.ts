@@ -29,7 +29,6 @@ test('Full Runthrough', async ({ page }) => {
 	await page.getByLabel('Enable Start/End Times?').click();
 	await page.getByLabel('Time Zone').click();
 	await page.getByRole('option', { name: 'Hawaii' }).click();
-	await page.getByRole('option', { name: 'Hawaii' }).click();
 	const endTimeInput = await page.getByRole('textbox', { name: 'End Time' });
 	const box = await endTimeInput.boundingBox();
 	if (!box) {
