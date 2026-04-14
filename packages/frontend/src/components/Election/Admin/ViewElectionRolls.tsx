@@ -112,10 +112,10 @@ const ViewElectionRolls = () => {
                             key={`${restricted}`}
                             value={restricted}
                             control={<Radio/>}
-                            disabled={electionRollData.length > 0}
+                            disabled={election.state !== 'draft' || electionRollData.length > 0}
                             label={t(`keyword.${restricted ? 'yes' : 'no'}`)}
                             onClick={async () => {
-                                if(electionRollData.length > 0) return; // not sure why disabled still allows me to do onclick
+                                if(election.state !== 'draft' || electionRollData.length > 0) return; // not sure why disabled still allows me to do onclick
 
                                 setVoterAccess(restricted ? 'closed' : 'open');
                                 setUsesEmail(undefined);
