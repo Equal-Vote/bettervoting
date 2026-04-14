@@ -35,12 +35,13 @@ export default function ElectionSettings() {
 
     function ElectionSwitchSetting({ settingKey, disabled, disabledMessage, onToggle: onToggleOverride }: ElectionSwitchSettingProps) {
         const defaultOnToggle = async (v: boolean) => !! await updateElection(e => { (e.settings as unknown as Record<string, unknown>)[settingKey] = v; });
+        const isDisabled = election.state !== 'draft' || disabled;
 
         return <SyncedSwitchSetting
             label={t(`election_settings.${settingKey}`)}
             toggled={!!election.settings[settingKey]}
             onToggle={onToggleOverride ?? defaultOnToggle}
-            disabled={disabled}
+            disabled={isDisabled}
             disabledMessage={disabledMessage}
         />;
     }
