@@ -28,27 +28,27 @@ const templateMappers = {
             },
         }
     }),
-    'email_list': (election) => ({
+    'auto_voter_id_yes':(election:NewElection):NewElection => ({
         ...election,
-        is_public: false,
-        settings: {
+        is_public:false,
+        settings:{
             ...election.settings,
-            voter_authentication: {
+            voter_authentication:{
                 ...election.settings.voter_authentication,
-                // email: true <- this means login will be required, that's not what we want for this setting. TODO: figure out refactored name
-                voter_id: true
+                voter_id:true
             },
-            invitation: 'email',
+            invitation:'email',
+
         }
     }),
-    'id_list': (election) => ({
+    'auto_voter_id_no':(election:NewElection):NewElection => ({
         ...election,
-        is_public: false,
-        settings: {
+        is_public:false,
+        settings:{
             ...election.settings,
-            voter_authentication: {
+            voter_authentication:{
                 ...election.settings.voter_authentication,
-                voter_id: true
+                voter_id:true
             },
         }
     }),
@@ -187,16 +187,40 @@ export default ({onBack, multiRace, onAddElection}) => {
                 <StepLabel>{t('wizard.template_title')}</StepLabel>
                 <StepContent>
                     <Typography>
-                        {t('wizard.template_prompt')}
+                        {election.settings.voter_access === 'closed'
+                            ? 'Automatically generate voter ID?'
+                            : t('wizard.template_prompt')}
                     </Typography>
                     <Box style={{ height: '10px' }} /> {/*hacky padding*/}
-                    {(election.settings.voter_access === 'closed' ? ['email_list', 'id_list'] : ['demo', 'unlisted']).map((name) =>
+                    {(election.settings.voter_access === 'closed' ? ['auto_voter_id_yes', 'auto_voter_id_no'] : ['demo', 'unlisted']).map((name) =>
                         <RowButtonWithArrow
-                            title={t(`wizard.${name}_title`)}
-                            description={t(`wizard.${name}_description`)}
+                            title={
+                                name === 'auto_voter_id_yes'
+                                ? 'Yes'
+                                :name === 'auto_voter_id_no'
+                                ? 'No'
+                                : t(`wizard.${name}_title`)
+                            }
+                            description={
+                                name ==='auto_voter_id_yes'
+                                ? 'Yes (auto-generate IDs)'
+                                : name === 'auto_voter_id_no'
+                                ? 'No (provide IDs manually)'
+                                : t(`wizard.${name}_description`)
+                            }
                             key={name}
-                            onClick={() => onAddElection(templateMappers[name](election), '/admin')}
-                            ariaLabel={t(`wizard.${name}_title`)}
+                            onClick={() => {
+                                const updated = templateMappers[name](election);
+                                onAddElection(updated, '/admin');
+                            }}
+                            ariaLabel={
+                                name === 'auto_voter_id_yes'
+                                ? 'Yes'
+                                : name === 'auto_voter_id_no'
+                                ? 'No'
+                                : t(`wizard.${name}_title`)
+
+                            }
                         />
                     )}
 
