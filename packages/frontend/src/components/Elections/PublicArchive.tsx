@@ -25,7 +25,7 @@ const PublicArchive = () => {
             pendingMessage='Loading Elections...'
             handleOnClick={(election) => navigate(`/${String(election.raw.election_id)}/results`)}
             defaultSortBy='update_date'
-            emptyContent='No Election Invitations'
+            emptyContent='No public elections found'
         />
     </Container>
 }

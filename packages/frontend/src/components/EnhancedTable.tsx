@@ -595,6 +595,15 @@ export default function EnhancedTable(props: EnhancedTableProps) {
                 setFilters={setFilters}
               />
               <TableBody>
+                {visibleRows.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={headCells.length} align="center" sx={{ py: 4 }}>
+                      <Typography variant="body1" color="text.secondary">
+                        {props.emptyContent}
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                )}
                 {visibleRows.map((row, index) => {
                   const labelId = `enhanced-table-checkbox-${index}`;
                   return (
