@@ -31,9 +31,21 @@ function useAdminPages() {
     ];
 }
 
-const ListItem = ({ text, link, icon }: { text:string, link: string, icon: any}) => {
+const ListItem = ({ text, link, icon, isActive }: { text:string, link: string, icon: any, isActive?: boolean }) => {
     return (
-        <Button component={Link} to={link} fullWidth sx={{ justifyContent: { xs: 'center', md: 'flex-start' }, pl: {xs: 0, md: 2} }}>
+        <Button
+            component={Link}
+            to={link}
+            fullWidth
+            sx={{
+                justifyContent: { xs: 'center', md: 'flex-start' },
+                pl: {xs: 0, md: 2},
+                backgroundColor: isActive ? 'rgba(0, 0, 0, 0.04)' : 'transparent',
+                '&:hover': {
+                    backgroundColor: 'rgba(0, 0, 0, 0.12)',
+                },
+            }}
+        >
             {icon}
             {/*<Typography gutterBottom variant="h6" component="h6" sx={{ml: 1}}>*/}
             <Typography gutterBottom component="p" sx={{ml: 1}}>
@@ -82,6 +94,8 @@ export function AdminPageNavigation() {
 export default function Sidebar() {
     const { voterAuth } = useElection();
     const pages = useAdminPages();
+    const location = useLocation();
+    const normalizedCurrent = location.pathname.replace(/\/$/, '') || '/';
     return (
         <>
             {voterAuth?.roles?.length > 0 &&
@@ -91,12 +105,23 @@ export default function Sidebar() {
                     justifyContent="center"
                     alignItems="center"
                     sx={{
+                        position: 'sticky',
+                        top: 16,
+                        alignSelf: 'flex-start',
                         "@media print": {
                             display: 'none',
                         }
                     }}>
                     <Paper elevation={3}>
-                        {pages.map(p => <ListItem key={p.path} text={p.label} link={p.path} icon={p.icon}/>)}
+                        {pages.map(p => (
+                            <ListItem
+                                key={p.path}
+                                text={p.label}
+                                link={p.path}
+                                icon={p.icon}
+                                isActive={p.path.replace(/\/$/, '') === normalizedCurrent}
+                            />
+                        ))}
                     </Paper>
                 </Box>
             }
