@@ -106,7 +106,7 @@ export default function Sidebar() {
                     alignItems="center"
                     sx={{
                         position: 'sticky',
-                        top: 16,
+                        top: '120px', // there's probably a more elegant solution than setting top manually
                         alignSelf: 'flex-start',
                         "@media print": {
                             display: 'none',
