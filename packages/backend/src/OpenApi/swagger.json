@@ -557,6 +557,107 @@
         ],
         "type": "object"
       },
+      "ElectionRollResponse": {
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "ballot_id": {
+            "type": "string"
+          },
+          "create_date": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "election_id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "email_data": {
+            "properties": {
+              "inviteResponse": {},
+              "reminderResponse": {}
+            },
+            "type": "object"
+          },
+          "email_events": {
+            "items": {
+              "properties": {
+                "details": {
+                  "$ref": "#/components/schemas/Record<string,unknown>"
+                },
+                "event_timestamp": {
+                  "type": "string"
+                },
+                "event_type": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "event_timestamp",
+                "event_type"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "head": {
+            "type": "boolean"
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/ElectionRollAction"
+            },
+            "type": "array"
+          },
+          "ip_hash": {
+            "type": "string"
+          },
+          "precinct": {
+            "type": "string"
+          },
+          "registration": {},
+          "state": {
+            "$ref": "#/components/schemas/ElectionRollState"
+          },
+          "submitted": {
+            "type": "boolean"
+          },
+          "update_date": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "voter_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "create_date",
+          "election_id",
+          "head",
+          "state",
+          "submitted",
+          "update_date",
+          "voter_id"
+        ],
+        "type": "object"
+      },
       "ElectionRollState": {
         "enum": [
           "approved",
@@ -785,6 +886,39 @@
       },
       "Email": {
         "type": "string"
+      },
+      "EmailEvent": {
+        "properties": {
+          "details": {
+            "$ref": "#/components/schemas/Record<string,unknown>"
+          },
+          "election_id": {
+            "type": "string"
+          },
+          "event_timestamp": {
+            "type": "string"
+          },
+          "event_type": {
+            "type": "string"
+          },
+          "id": {
+            "type": "number"
+          },
+          "message_id": {
+            "type": "string"
+          },
+          "voter_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "election_id",
+          "event_timestamp",
+          "event_type",
+          "message_id",
+          "voter_id"
+        ],
+        "type": "object"
       },
       "FormatMarkdownOptions": {
         "properties": {
@@ -1224,6 +1358,9 @@
           "candidate_id_order",
           "race_id"
         ],
+        "type": "object"
+      },
+      "Record<string,unknown>": {
         "type": "object"
       },
       "Score": {
