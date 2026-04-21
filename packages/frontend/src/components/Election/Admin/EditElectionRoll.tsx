@@ -17,7 +17,6 @@ import EmailEventsList from "./EmailEventsList";
 
 type Props = {
     roll: ElectionRollResponse,
-    onClose: () => void,
     fetchRolls: () => Promise<void>,
   }
 const EditElectionRoll = ({ roll, fetchRolls }:Props) => {
