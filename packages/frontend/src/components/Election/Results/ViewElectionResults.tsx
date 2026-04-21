@@ -11,18 +11,17 @@ import { BallotDataExport } from './BallotDataExport';
 import SupportBlurb from '../SupportBlurb';
 import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
 import ElectionStateWarning from '../ElectionStateWarning';
-import AdminResultControls from '../Admin/AdminResultControls';
 import { AdminPageNavigation } from '../Sidebar';
 
 const ViewElectionResults = () => {
-    const { election, voterAuth } = useElection();
+    const { election } = useElection();
     const { data, isPending, makeRequest: getResults } = useGetResults(election.election_id)
     useEffect(() => { election.settings.public_results && getResults() }, [election.settings.public_results])
     const {t} = useSubstitutedTranslation(election.settings.term_type);
 
     return (
       <>
-        {voterAuth?.roles?.length == 0 ? <DraftWarning /> : <AdminResultControls/>}
+        <DraftWarning />
         <Box
           display="flex"
           justifyContent="center"
