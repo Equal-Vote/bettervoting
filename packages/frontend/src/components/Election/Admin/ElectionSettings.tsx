@@ -10,19 +10,15 @@ import { useSubstitutedTranslation, SwitchSetting, SwitchSettingProps } from '~/
 import useElection from '~/components/ElectionContextProvider';
 import useSyncedState from "~/hooks/useSyncedState";
 import { AdminPageNavigation } from '../Sidebar';
-
-type SyncedSwitchSettingProps = Omit<SwitchSettingProps, 'onToggle'> & { onToggle: (newValue: boolean) => Promise<boolean> };
-
-function SyncedSwitchSetting({ toggled, onToggle, ...rest }: SyncedSwitchSettingProps) {
-    const [localToggled, setLocalToggled] = useSyncedState(toggled, onToggle);
-    return <SwitchSetting toggled={localToggled} onToggle={setLocalToggled} {...rest} />;
-}
+import ShareButton from '../ShareButton';
 
 type ElectionSwitchSettingProps = {
     settingKey: keyof IElectionSettings;
     disabled?: boolean;
     disabledMessage?: string;
     onToggle?: (newValue: boolean) => Promise<boolean>;
+    label?: string;
+    availableDuringElection?: boolean;
 }
 
 export default function ElectionSettings() {
@@ -33,14 +29,16 @@ export default function ElectionSettings() {
 
     const {t} = useSubstitutedTranslation(election.settings.term_type, {min_rankings, max_rankings});
 
-    function ElectionSwitchSetting({ settingKey, disabled, disabledMessage, onToggle: onToggleOverride }: ElectionSwitchSettingProps) {
+    function ElectionSwitchSetting({ settingKey, disabled, disabledMessage, onToggle: onToggleOverride, label, availableDuringElection=false}: ElectionSwitchSettingProps) {
         const defaultOnToggle = async (v: boolean) => !! await updateElection(e => { (e.settings as unknown as Record<string, unknown>)[settingKey] = v; });
-        const isDisabled = election.state !== 'draft' || disabled;
+        const isDisabled = disabled ?? (election.state !== 'draft' && !availableDuringElection);
 
-        return <SyncedSwitchSetting
-            label={t(`election_settings.${settingKey}`)}
-            toggled={!!election.settings[settingKey]}
-            onToggle={onToggleOverride ?? defaultOnToggle}
+        const [localToggled, setLocalToggled] = useSyncedState(!!election.settings[settingKey], onToggleOverride ?? defaultOnToggle);
+
+        return <SwitchSetting
+            label={label ?? t(`election_settings.${settingKey}`)}
+            toggled={localToggled}
+            onToggle={setLocalToggled}
             disabled={isDisabled}
             disabledMessage={disabledMessage}
         />;
@@ -103,15 +101,7 @@ export default function ElectionSettings() {
                     </Box>
 
                     <ElectionSwitchSetting settingKey="random_candidate_order" />
-                    <ElectionSwitchSetting
-                        settingKey="ballot_updates"
-                        disabled={election.settings.voter_access === 'open' || election.settings.invitation !== 'email' || !!election.settings.public_results}
-                        disabledMessage={t(
-                            election.settings.voter_access === 'open' || election.settings.invitation !== 'email'
-                                ? 'disabled_msgs.ballot_updates_when_open'
-                                : 'disabled_msgs.ballot_updates_with_prelim'
-                        )}
-                    />
+                    <ElectionSwitchSetting settingKey="ballot_updates" />
                     <ElectionSwitchSetting settingKey="require_instruction_confirmation" />
                     <ElectionSwitchSetting settingKey="draggable_ballot" />
                     <ElectionSwitchSetting
@@ -129,9 +119,17 @@ export default function ElectionSettings() {
                         sx={{ pl: 4, mt: -1, display: 'block'}}
                         disabled={election.state !== 'draft' || !election.settings.max_rankings}
                     />
+
+                    <ElectionSwitchSetting settingKey="draggable_ballot" />
+                    <ElectionSwitchSetting
+                        settingKey="public_results"
+                        label={election.state == 'closed' || election.state == 'archived' ? t('election_settings.public_results') : t('election_settings.preliminary_results')}
+                        availableDuringElection
+                    />
                 </FormGroup>
             </FormControl>
         </Grid>
+        
         <AdminPageNavigation />
     </>
 }
