@@ -16,13 +16,6 @@ import { AdminPageNavigation } from '../Sidebar';
 import { TimeZone, timeZones } from '@equal-vote/star-vote-shared/domain_model/Util';
 import useSyncedState from '~/hooks/useSyncedState';
 
-type SectionProps = {
-    text: {[key: string]: string}
-    button: JSX.Element
-    permission?: string
-    includeDivider?: boolean
-}
-
 export default () => {
     const authSession = useAuthSession()
     const { t, election, refreshElection: fetchElection, permissions } = useElection()
