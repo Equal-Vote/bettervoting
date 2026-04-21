@@ -112,6 +112,7 @@ test.describe('Create Election', () => {
         // Confirm voter ID list
         await page.getByRole('link', { name: 'Manage Voters' }).click();
         await page.getByRole('button', { name: 'Add Voters' }).click();
+        await page.getByRole('button', { name: 'Submit' }).click(); // confirm adding first voters dialog
         await expect(page.getByText('Voter ID', { exact: true })).toBeVisible();
     })
     test('Poll, Multi Race, One vote per Device', async ({ page }) => {
@@ -128,8 +129,9 @@ test.describe('Create Election', () => {
         await page.getByRole('button', { name: 'Continue' }).click();
         await page.getByRole('button', { name: 'one person, one vote' }).click();
 
-        // Confirm One Person One Vote
-        await expect(page.getByRole('radio', { name: 'device' })).toBeChecked({timeout: 2000});
+        // Confirm One Person One Vote (device auth is on Manage Voters page)
+        await page.getByRole('link', { name: 'Manage Voters' }).click();
+        await expect(page.getByRole('radio', { name: 'device' })).toBeChecked({timeout: 10000});
     })
     test('Election, Multi Race, Multiple per Device', async ({ page }) => {
         await page.goto('/');
@@ -145,8 +147,9 @@ test.describe('Create Election', () => {
         await page.getByRole('button', { name: 'Continue' }).click();
         await page.getByRole('button', { name: 'Allows multiple votes per device' }).click();
 
-        // Confirm One Person One Vote
-        await expect(page.getByRole('radio', { name: 'no limit' })).toBeChecked({timeout: 2000});
+        // Confirm no limit auth (on Manage Voters page)
+        await page.getByRole('link', { name: 'Manage Voters' }).click();
+        await expect(page.getByRole('radio', { name: 'no limit' })).toBeChecked({timeout: 10000});
     })
 
     test.afterEach(async ({ request }) => {

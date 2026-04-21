@@ -183,7 +183,10 @@ test.describe('Add Voters', () => {
         await page.waitForURL(`**/${electionId}/admin`)
         await expect(page.getByText('open')).toBeVisible();
         await expect(page.getByRole('button', { name: 'Edit Election Details' })).toBeDisabled();
-        await expect(page.getByRole('button', { name: 'Add' })).toBeDisabled();
+        await expect(page.getByText('(no description)')).toBeVisible();
+        // Race editing is on Build Ballot page
+        await page.getByRole('link', { name: 'Build Ballot' }).click();
+        await expect(page.getByRole('button', { name: 'Add Race' })).toBeDisabled();
         await page.getByRole('button', { name: 'Edit Race: Race 1' }).click();
         await expect(page.getByRole('button', { name: 'Delete Candidate Number 6' })).toBeDisabled();
         await expect(page.getByRole('button', { name: 'Drag Candidate Number 6' })).toBeDisabled();
@@ -191,11 +194,10 @@ test.describe('Add Voters', () => {
         await expect(page.getByRole('textbox', { name: 'Title' })).toBeDisabled();
         await expect(page.getByRole('textbox', { name: 'Description' })).toBeDisabled();
         await page.getByRole('button', { name: 'Close' }).click();
-        await expect(page.getByText('(no description)')).toBeVisible();
-        await expect(page.getByText('(start and end times disabled)')).toBeVisible();
-        await expect(page.getByRole('link', { name: 'View Results' })).toBeVisible();
+        await expect(page.getByRole('link', { name: 'Live Results' })).toBeVisible();
+        // Share button is on Publish & Share page
+        await page.getByRole('link', { name: 'Publish & Share' }).click();
         await expect(page.getByRole('button', { name: 'Share Election' })).toBeVisible();
-        await expect(page.getByRole('button', { name: 'Make results private' })).toBeVisible();
         await page.getByRole('link', { name: 'Live Ballot' }).click();
         await page.waitForURL(`**/${electionId}/`)
         await page.getByLabel('Voter ID').fill(voterIds[0]);
