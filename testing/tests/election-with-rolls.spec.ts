@@ -184,6 +184,7 @@ test.describe('Add Voters', () => {
         await expect(page.getByText('open')).toBeVisible();
         await expect(page.getByRole('button', { name: 'Edit Election Details' })).toBeDisabled();
         await expect(page.getByText('(no description)')).toBeVisible();
+        await expect(page.getByText('(start and end times disabled)')).toBeVisible();
         // Race editing is on Build Ballot page
         await page.getByRole('link', { name: 'Build Ballot' }).click();
         await expect(page.getByRole('button', { name: 'Add Race' })).toBeDisabled();
@@ -199,7 +200,6 @@ test.describe('Add Voters', () => {
         await page.getByRole('link', { name: 'Publish & Share' }).click();
         await expect(page.getByRole('button', { name: 'Share Election' })).toBeVisible();
         await page.getByRole('link', { name: 'Live Ballot' }).click();
-        await page.waitForURL(`**/${electionId}/`)
         await page.getByLabel('Voter ID').fill(voterIds[0]);
         await page.getByRole('button', { name: 'Submit' }).click();
         await page.getByRole('link', { name: 'Vote', exact: true }).click();
@@ -222,7 +222,6 @@ test.describe('Add Voters', () => {
         let voteResponse = await reponsePromise;
         console.log(`Vote response status: ${voteResponse.status()}`);
         await page.getByRole('link', { name: 'Live Ballot' }).click();
-        await page.waitForURL(`**/${electionId}/`)
         await page.getByLabel('Voter ID').fill(voterIds[0]);
         await page.getByRole('button', { name: 'Submit' }).click();
         await expect(page.getByRole('link', { name: 'Vote', exact: true })).not.toBeVisible();

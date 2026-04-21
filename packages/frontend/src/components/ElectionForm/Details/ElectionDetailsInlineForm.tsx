@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Grid from "@mui/material/Grid";
 import { Box, IconButton, Paper, Typography } from "@mui/material"
 import ElectionStateChip from './ElectionStateChip';
@@ -33,6 +33,18 @@ export default function ElectionDetailsInlineForm() {
         if (success) handleClose()
     }
 
+    const timeRange = useMemo(() => {
+        if (election.start_time && election.end_time) {
+            return t('admin_home.time_start_to_end', {datetime: election.start_time, datetime2: election.end_time})
+        } else if (election.start_time) {
+            return t('admin_home.time_only_start', {datetime: election.start_time})
+        } else if (election.end_time) {
+            return t('admin_home.time_only_end', {datetime: election.end_time})
+        } else {
+            return t('admin_home.time_none')
+        }
+    }, [election.start_time, election.end_time, election.settings.time_zone])
+
     return (
         <Paper elevation={3} sx={{width:'100%'}}>
         <>
@@ -61,6 +73,9 @@ export default function ElectionDetailsInlineForm() {
                                     gutterBottom
                                 />
                             )}
+                        </Grid>
+                        <Grid item xs={12}>
+                            <Typography sx={{mt: 2, opacity: (election.start_time || election.end_time)? 1 : .5}} component="p" variant='subtitle2'>{timeRange}</Typography>
                         </Grid>
                     </Grid>
                     <Grid item xs={1} sx={{ m: 0, p: 1 }}>
