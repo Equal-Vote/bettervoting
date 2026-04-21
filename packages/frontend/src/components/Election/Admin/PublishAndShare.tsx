@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import useSyncedState from "~/hooks/useSyncedState";
 import { DateTime } from 'luxon';
 import Grid from "@mui/material/Grid";
 import { Box, Divider, FormControl, FormHelperText, Input, InputLabel, MenuItem, Select, TextField } from "@mui/material";
@@ -7,15 +6,15 @@ import { Typography } from "@mui/material";
 import { LinkButton, PrimaryButton, SecondaryButton } from "../../styles";
 import { Link, useNavigate } from 'react-router-dom';
 import ShareButton from "../ShareButton";
-import { useArchiveEleciton, useSetOpenState, useFinalizeElection } from "../../../hooks/useAPI";
-import { isValidDate, TransitionBox, useSubstitutedTranslation } from '../../util';
+import { useArchiveEleciton, useFinalizeElection, useSetOpenState } from "../../../hooks/useAPI";
+import { isValidDate, SwitchSetting, TransitionBox, useSubstitutedTranslation } from '../../util';
 import { dateToLocalLuxonDate, useEditElectionDetails } from '../../ElectionForm/Details/useEditElectionDetails';
 import useConfirm from '../../ConfirmationDialogProvider';
 import useElection from '../../ElectionContextProvider';
 import useAuthSession from '../../AuthSessionContextProvider';
 import { AdminPageNavigation } from '../Sidebar';
-import { SwitchSetting } from "~/components/util";
 import { TimeZone, timeZones } from '@equal-vote/star-vote-shared/domain_model/Util';
+import useSyncedState from '~/hooks/useSyncedState';
 
 type SectionProps = {
     text: {[key: string]: string}
@@ -26,13 +25,14 @@ type SectionProps = {
 
 export default () => {
     const authSession = useAuthSession()
-    const { t, election, refreshElection: fetchElection, permissions, updateElection } = useElection()
+    const { t, election, refreshElection: fetchElection, permissions } = useElection()
     
     const { makeRequest: finalize } = useFinalizeElection(election.election_id)
+
     const { makeRequest: setOpenState } = useSetOpenState(election.election_id)
 
     const navigate = useNavigate()
-    
+
     const confirm = useConfirm()
     const emailConfirm = useConfirm()
 
@@ -68,24 +68,6 @@ export default () => {
             }
         }
     }
-
-    const changeOpenState = async (open: boolean): Promise<false | void> => {
-        try {
-            await setOpenState({open});
-            if (!open && election.end_time) {
-                await updateElection(e => { e.end_time = undefined; });
-            }
-            await fetchElection();
-        } catch (err) {
-            console.error(err);
-            return false;
-        }
-    }
-
-    const [isOpen, setIsOpen] = useSyncedState(
-        election.state === 'open',
-        async (open) => { const result = await changeOpenState(open); return result !== false; }
-    );
 
     const FinalizeSection = () => <Box sx={{maxWidth: 800}}>
         <Grid item xs={12} sx={{ p: 1, pt: 3, pb: 0 }}>
@@ -124,22 +106,30 @@ export default () => {
             </Typography>
         </Grid>}
     </Box>
+
+    const [isOpen, setIsOpen] = useSyncedState(election.state === 'open', async (toggled) => !!await setOpenState({open: toggled}));
     
+    const hasScheduledTimes = !!(election.start_time || election.end_time);
+    const canEditState = permissions?.includes('canEditElectionState') ?? false;
+
     return <>
-        {(election.state === 'open' || election.state === 'closed') && (
-            <Box sx={{width: '100%', maxWidth: 500}}>
+        {(election.state === 'finalized' || election.state === 'open' || election.state === 'closed') && (
+            <Box sx={{ m: 0, my: 0, p: 1 }}>
                 <SwitchSetting
-                    label={t(isOpen ? 'admin_home.election_is_open' : 'admin_home.election_is_closed')}
+                    label={t('admin_home.election_is_open')}
                     toggled={isOpen}
                     onToggle={setIsOpen}
-                    disabled={!hasPermission('canEditElectionState')}
+                    disabled={hasScheduledTimes || !canEditState}
+                    disabledMessage={hasScheduledTimes ? "Open/close is managed automatically based on start and end time" : undefined}
                 />
-                
                 {election.state === 'closed' && election.end_time && (
                     <Typography variant="body2">{t('admin_home.header_ended_time', {datetime: election.end_time})}</Typography>
                 )}
                 {election.state === 'open' && election.end_time && (
                     <Typography variant="body2">{t('admin_home.header_end_time', {datetime: election.end_time})}</Typography>
+                )}
+                {election.state === 'finalized' && election.start_time && (
+                    <Typography variant="body2">{t('admin_home.header_start_time', {datetime: election.start_time})}</Typography>
                 )}
             </Box>
         )}
