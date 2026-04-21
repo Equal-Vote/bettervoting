@@ -11,7 +11,7 @@ import useElection from '~/components/ElectionContextProvider';
 import useSyncedState from "~/hooks/useSyncedState";
 import { AdminPageNavigation } from '../Sidebar';
 import ShareButton from '../ShareButton';
-import { useSetOpenState } from '~/hooks/useAPI';
+import { useSetOpenState, useSetPublicResults } from '~/hooks/useAPI';
 
 type ElectionSwitchSettingProps = {
     settingKey: keyof IElectionSettings;
@@ -58,6 +58,16 @@ export default function ElectionSettings() {
     const [currentMaxRankings, setCurrentMaxRankings] = useSyncedState(
         election.settings.max_rankings ? election.settings.max_rankings : default_rankings,
         async (v) => !! await updateElection(e => e.settings.max_rankings = v)
+    );
+
+    const { makeRequest: makePublicResultsRequest } = useSetPublicResults(election.election_id)
+
+    const [publicResults, setPublicResults] = useSyncedState(
+        election.settings.public_results ?? false,
+        async (v) => {
+            const res = await makePublicResultsRequest({ public_results: v });
+            return !!res && res.election?.settings?.public_results === v;
+        }
     );
 
     return <>
@@ -122,31 +132,12 @@ export default function ElectionSettings() {
                     />
 
                     <ElectionSwitchSetting settingKey="draggable_ballot" />
-                    <ElectionSwitchSetting
-                        settingKey="public_results"
-                        label={election.state == 'closed' || election.state == 'archived' ? t('election_settings.public_results') : t('election_settings.preliminary_results')}
-                        availableDuringElection
+                    {/* Note: this can't use ElectionSwitchSetting because we need to use the results from makePublicResultsRequest as the source of truth */}
+                    <SwitchSetting
+                        label={election.state === 'closed' || election.state === 'archived' ? t('election_settings.public_results') : t('election_settings.preliminary_results')}
+                        toggled={publicResults}
+                        onToggle={setPublicResults}
                     />
-                    {(election.state === 'finalized' || election.state === 'open' || election.state === 'closed') && (
-                        <Box sx={{ m: 0, my: 0, p: 1 }}>
-                            <SwitchSetting
-                                label="Election is open"
-                                toggled={isOpen}
-                                onToggle={setIsOpen}
-                                disabled={hasScheduledTimes || !canEditState}
-                                disabledMessage={hasScheduledTimes ? "Open/close is managed automatically based on start and end time" : undefined}
-                            />
-                            {election.state === 'closed' && election.end_time && (
-                                <Typography variant="body2">{t('admin_home.header_ended_time', {datetime: election.end_time})}</Typography>
-                            )}
-                            {election.state === 'open' && election.end_time && (
-                                <Typography variant="body2">{t('admin_home.header_end_time', {datetime: election.end_time})}</Typography>
-                            )}
-                            {election.state === 'finalized' && election.start_time && (
-                                <Typography variant="body2">{t('admin_home.header_start_time', {datetime: election.start_time})}</Typography>
-                            )}
-                        </Box>
-                    )}
                 </FormGroup>
             </FormControl>
         </Grid>
