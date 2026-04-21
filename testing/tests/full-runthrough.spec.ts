@@ -45,14 +45,14 @@ test('Full Runthrough', async ({ page }) => {
 	await page.getByRole('button', { name: 'Save' }).click();
 
 	// Election Settings
-	await page.getByRole('button', { name: 'Edit Settings' }).click();
+	await page.getByRole('link', { name: 'Settings' }).click();
 	await page
 		.getByRole('checkbox', { name: 'Set Number of Rankings' })
 		.check();
 	await page.getByRole('spinbutton', { name: 'Rank Limit' }).fill('8');
-	await page.getByRole('button', { name: 'Save' }).click();
 
 	// Adding Race 1
+	await page.getByRole('link', { name: 'Build Ballot' }).click();
 	await page.getByRole('button', { name: 'Add Race' }).click();
 	await page.getByRole('textbox', { name: 'Title' }).fill('Race 1');
 	await page.getByRole('button', { name: 'Description' }).click();
