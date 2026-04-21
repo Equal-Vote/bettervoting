@@ -118,7 +118,7 @@ test('Full Runthrough', async ({ page }) => {
 	await page.getByRole('button', { name: 'Submit'}).click();
 
 	// Vote
-	await page.getByRole('link', { name: 'Voting Page' }).click();
+	await page.getByRole('link', { name: 'Live Ballot' }).click();
 	const vote = async (page) => {
 		await page.getByRole('link', { name: 'Vote', exact: true }).click();
 		await page.waitForURL(`**/${electionId}/vote`)
@@ -157,7 +157,7 @@ test('Full Runthrough', async ({ page }) => {
 		page.getByText("There's only one vote so far.").first()
 	).toBeVisible({ timeout: 10000 });
 
-	await page.getByRole('link', { name: 'Voting Page' }).click();
+	await page.getByRole('link', { name: 'Live Ballot' }).click();
 	await vote(page);
 	await page.goto(`/${electionId}/results`);
 	await expect(page.getByText('Candidate 1 Wins!')).toBeVisible({
