@@ -136,10 +136,10 @@ const ViewElectionRolls = () => {
                             key={`${email}`}
                             value={email}
                             control={<Radio />}
-                            disabled={electionRollData.length > 0}
+                            disabled={election.state !== 'draft' || electionRollData.length > 0}
                             label={t(`wizard.${email ? 'email_list' : 'id_list'}_title_with_tip`)}
                             onClick={async () => {
-                                if(electionRollData.length > 0) return; // not sure why disabled still allows me to do onclick
+                                if(election.state !== 'draft' || electionRollData.length > 0) return; // not sure why disabled still allows me to do onclick
 
                                 setUsesEmail(email);
                             }}
