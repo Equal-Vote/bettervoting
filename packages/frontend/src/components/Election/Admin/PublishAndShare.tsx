@@ -27,23 +27,7 @@ type SectionProps = {
 export default () => {
     const authSession = useAuthSession()
     const { t, election, refreshElection: fetchElection, permissions, updateElection } = useElection()
-    /* will be uncommented for https://github.com/Equal-Vote/bettervoting/issues/1304
-
-    const [settingEndTime, setSettingEndTime] = useState(false);
-    const [endTimeInput, setEndTimeInput] = useState('');
-
-    const { editedElection, applyUpdate, onSave, errors, setErrors } = useEditElectionDetails()
-    const timeZone = election.settings.time_zone ?? DateTime.now().zone.name;
-    const [defaultEndTime, setDefaultEndTime] = useState(isValidDate(editedElection.end_time) ? editedElection.end_time : DateTime.now().plus({ days: 1 }).setZone(timeZone).toJSDate())
-
-    const saveEndTime = async () => {
-        if (!endTimeInput) return;
-        await updateElection(e => { e.end_time = DateTime.fromISO(endTimeInput).setZone(timeZone, { keepLocalTime: true }).toJSDate(); });
-        await fetchElection();
-        setSettingEndTime(false);
-    };
-
-    let {t} = useSubstitutedTranslation(election.settings.term_type, {time_zone: timeZone});*/
+    
     const { makeRequest: finalize } = useFinalizeElection(election.election_id)
     const { makeRequest: setOpenState } = useSetOpenState(election.election_id)
 
@@ -103,81 +87,6 @@ export default () => {
         async (open) => { const result = await changeOpenState(open); return result !== false; }
     );
 
-    /* will be uncommented for https://github.com/Equal-Vote/bettervoting/issues/1304
-    const EndTimeForm = () => <Box display='flex' flexDirection='row' gap={2} sx={{maxWidth: '300'}}>
-        <FormControl fullWidth>
-            <InputLabel id="time-zone-label">{t('election_details.time_zone')}</InputLabel>
-            <Select
-                labelId="time-zone-label"
-                id="time-zone-select"
-                value={timeZone}
-                label={t('election_details.time_zone')}
-                onChange={(e) => {
-                    applyUpdate(election => { election.settings.time_zone = e.target.value as TimeZone })
-                    const p = useSubstitutedTranslation(editedElection.settings.term_type, {time_zone: e.target.value});
-                    t = p.t;
-                }}
-            >
-                <MenuItem value={DateTime.now().zone.name}>{DateTime.now().zone.name}</MenuItem>
-                <Divider />
-                {timeZones.map(tz =>
-                    <MenuItem key={tz} value={tz}>{t(`time_zones.${tz}`)}</MenuItem>
-                )}
-            </Select>
-        </FormControl>
-        <FormControl fullWidth>
-            <InputLabel shrink>{t('election_details.end_date')}</InputLabel>
-            {/* datetime-local is formatted according to the OS locale, I don't think there's a way to override it*}
-            <Input
-                type='datetime-local'
-                inputProps={{ "aria-label": "End Time" }}
-                error={errors.endTime !== ''}
-                value={dateToLocalLuxonDate(editedElection.end_time, timeZone)}
-                onChange={(e) => {
-                    setErrors({ ...errors, endTime: '' })
-                    if (e.target.value == null || e.target.value == '') {
-                        applyUpdate(election => { election.end_time = undefined})
-                    } else {
-                        applyUpdate(election => { election.end_time = DateTime.fromISO(e.target.value).setZone(timeZone, { keepLocalTime: true }).toJSDate()})
-                        setDefaultEndTime(DateTime.fromISO(e.target.value).setZone(timeZone, { keepLocalTime: true }).toJSDate())
-                    }
-                }}
-            />
-            <FormHelperText error={!!errors.endTime} sx={{ pl: 0, mt: 0 }}>
-                {errors.endTime || (editedElection.end_time && timeZone !== DateTime.now().zone.name &&
-                    `${DateTime.now().zone.name}: ${DateTime.fromJSDate(new Date(editedElection.end_time)).setZone(DateTime.now().zone.name).toLocaleString(DateTime.DATETIME_SHORT)}`
-                )}
-            </FormHelperText>
-        </FormControl>
-    </Box>*/
-
-    const Section = ({ text, button, permission, includeDivider=true }: SectionProps) => 
-        <Grid container sx={{ maxWidth: 800}}>
-            <Grid item xs={12} md={8} sx={{ p: 1 }}>
-                <Box sx={{ minHeight: { xs: 0, md: 60 } }}>
-                    <Typography variant="h5">
-                        {text.description}
-                    </Typography>
-                    {text.subtext && 
-                        <Typography variant="body1" sx={{ pl: 2 }}>
-                            {text.subtext}
-                        </Typography>
-                    }
-                    {permission && !hasPermission(permission) &&
-                        <Typography align='center' variant="body1" sx={{ color: 'error.main', pl: 2 }}>
-                            {t('admin_home.permissions_error')}
-                        </Typography>
-                    }
-                </Box>
-            </Grid>
-            <Grid item xs={12} md={4} sx={{ p: 1, pl: 2, display: 'flex', alignItems: 'center' }}>
-                {button}
-            </Grid>
-            {includeDivider && <Divider style={{width: '100%'}}/>}
-        </Grid>
-
-    
-
     const FinalizeSection = () => <Box sx={{maxWidth: 800}}>
         <Grid item xs={12} sx={{ p: 1, pt: 3, pb: 0 }}>
             <Typography align='center' variant="body1" sx={{ pl: 2 }}>
@@ -229,30 +138,11 @@ export default () => {
                 {election.state === 'closed' && election.end_time && (
                     <Typography variant="body2">{t('admin_home.header_ended_time', {datetime: election.end_time})}</Typography>
                 )}
-                {election.state === 'open' && election.end_time && !settingEndTime && (
+                {election.state === 'open' && election.end_time && (
                     <Typography variant="body2">{t('admin_home.header_end_time', {datetime: election.end_time})}</Typography>
                 )}
             </Box>
         )}
-
-        {/* Will be uncommented for https://github.com/Equal-Vote/bettervoting/issues/1304
-        {election.state == 'draft' &&
-            <Box sx={{
-                position: 'relative',
-                height: settingEndTime ? '120px' : '50px',
-                transition: 'height 0.5s',
-            }}>
-                <TransitionBox absolute enabled={!settingEndTime}>
-                    <LinkButton onClick={() => {
-                        setEndTimeInput(dateToLocalLuxonDate(DateTime.now().plus({ days: 1 }).setZone(timeZone).toJSDate(), timeZone));
-                        setSettingEndTime(true);
-                    }}>Set end time</LinkButton>
-                </TransitionBox>
-                <TransitionBox enabled={settingEndTime}>
-                    <EndTimeForm/>
-                </TransitionBox>
-            </Box>
-        } */ }
 
         {(election.state !== 'draft' && election.state !== 'finalized') && 
             <Box sx={{width: '100%', maxWidth: 300}}>
