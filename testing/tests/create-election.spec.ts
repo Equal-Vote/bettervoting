@@ -106,12 +106,11 @@ test.describe('Create Election', () => {
         await page.getByRole('button', { name: 'ID List' }).click();
 
         // Confirm support email
-        await page.getByRole('button', { name: 'Edit Settings' }).click({timeout: 2000});
+        await page.getByRole('link', { name: 'Settings' }).click();
         await expect(page.getByRole('textbox', { name: 'Election Support Email' })).toHaveValue('test@gmail.com')
-        await page.getByRole('button', { name: 'Save' }).click();
 
         // Confirm voter ID list
-        await page.getByRole('link', { name: 'Voters' }).click();
+        await page.getByRole('link', { name: 'Manage Voters' }).click();
         await page.getByRole('button', { name: 'Add Voters' }).click();
         await expect(page.getByText('Voter ID', { exact: true })).toBeVisible();
     })
