@@ -344,6 +344,7 @@ keyword:
     race_title: elected office title
     ballot: ballot
     vote: vote
+    votes: votes
 
   poll:
     election: poll
@@ -355,6 +356,7 @@ keyword:
     race_title: question title
     ballot: response
     vote: response
+    votes: responses
 
   # General Terms
   yes: Yes
@@ -1093,20 +1095,9 @@ admin_home:
 
   archive_snack: 'Election successfully archived!'
 
-  close:
-    description: Close
-    subtext: Closes the {{election}}, preventing new votes
-    button: Close
-
-  open:
-    description: Open
-    subtext: Opens the {{election}}, allowing votes
-    button: Open
-
   close_snack: 'Election successfully closed!'
   open_snack: 'Election successfully opened!'
-  election_is_open: '{{capital_election}} is open, and accepting votes'
-  election_is_closed: '{{capital_election}} is closed, and not accepting votes'
+  election_is_open: 'Open for {{votes}}'
 
   share:
     description: Share {{capital_election}}

@@ -11,6 +11,7 @@ import useElection from '~/components/ElectionContextProvider';
 import useSyncedState from "~/hooks/useSyncedState";
 import { AdminPageNavigation } from '../Sidebar';
 import ShareButton from '../ShareButton';
+import { useSetOpenState } from '~/hooks/useAPI';
 
 type ElectionSwitchSettingProps = {
     settingKey: keyof IElectionSettings;
@@ -22,7 +23,7 @@ type ElectionSwitchSettingProps = {
 }
 
 export default function ElectionSettings() {
-    const { election, updateElection } = useElection()
+    const { election, updateElection, permissions, refreshElection: fetchElection } = useElection()
     const min_rankings = 3;
     const max_rankings = Number(process.env.REACT_APP_MAX_BALLOT_RANKS) ? Number(process.env.REACT_APP_MAX_BALLOT_RANKS) : 8;
     const default_rankings = Number(process.env.REACT_APP_DEFAULT_BALLOT_RANKS) ? Number(process.env.REACT_APP_DEFAULT_BALLOT_RANKS) : 6;
@@ -126,10 +127,32 @@ export default function ElectionSettings() {
                         label={election.state == 'closed' || election.state == 'archived' ? t('election_settings.public_results') : t('election_settings.preliminary_results')}
                         availableDuringElection
                     />
+                    {(election.state === 'finalized' || election.state === 'open' || election.state === 'closed') && (
+                        <Box sx={{ m: 0, my: 0, p: 1 }}>
+                            <SwitchSetting
+                                label="Election is open"
+                                toggled={isOpen}
+                                onToggle={setIsOpen}
+                                disabled={hasScheduledTimes || !canEditState}
+                                disabledMessage={hasScheduledTimes ? "Open/close is managed automatically based on start and end time" : undefined}
+                            />
+                            {election.state === 'closed' && election.end_time && (
+                                <Typography variant="body2">{t('admin_home.header_ended_time', {datetime: election.end_time})}</Typography>
+                            )}
+                            {election.state === 'open' && election.end_time && (
+                                <Typography variant="body2">{t('admin_home.header_end_time', {datetime: election.end_time})}</Typography>
+                            )}
+                            {election.state === 'finalized' && election.start_time && (
+                                <Typography variant="body2">{t('admin_home.header_start_time', {datetime: election.start_time})}</Typography>
+                            )}
+                        </Box>
+                    )}
                 </FormGroup>
             </FormControl>
         </Grid>
         
+        
+
         <AdminPageNavigation />
     </>
 }
