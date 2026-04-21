@@ -43,7 +43,7 @@ All E2E tests should be run from the `testing` directory.
 Run all tests:
 
 ```
-npx run playwright test
+npx playwright test
 ```
 
 Run a specific test:
