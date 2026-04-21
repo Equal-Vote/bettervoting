@@ -124,7 +124,7 @@ test.beforeEach(async ({ context, request }) => {
 });
 
 test('vote in election restricted by account', async ({page}) => {
-    await page.goto(`/${electionId}/voters`);
+    await page.goto(`/${electionId}/admin/voters`);
     await page.getByLabel('user (login required)').click();
     await expect(page.getByLabel('user (login required)')).toBeChecked();
     await page.getByRole('link', { name: 'Publish & Share' }).click();
