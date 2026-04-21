@@ -1082,10 +1082,6 @@ admin_home:
     description: View Results
     button: View Results
 
-  public_results: 
-    make_public: Make results public
-    make_private: Make results private
-
   archive:
     description: Archive
     subtext: Archives {{election}}, preventing future changes and hiding it from the {{elections}} page
@@ -1178,7 +1174,9 @@ election_settings:
 
   ballot_updates: Allow Voters To Edit Vote !tip(ballot_updates)
 
-  public_results: Show Preliminary Results !tip(public_results)
+  preliminary_results: Show Preliminary Results !tip(public_results)
+
+  public_results: Make Results Public !tip(public_results)
 
   random_ties: Enable Random Tie-Breakers !tip(random_ties)
 
