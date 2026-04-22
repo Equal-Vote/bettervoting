@@ -52,6 +52,7 @@ test('Full Runthrough', async ({ page }) => {
 	await page
 		.getByRole('checkbox', { name: 'Set Number of Rankings' })
 		.check();
+	await page.locator('.MuiBox-root.css-1nkvh0 > .MuiSwitch-root > .MuiButtonBase-root > .PrivateSwitchBase-input').check()
 	await page.getByRole('spinbutton', { name: 'Rank Limit' }).fill('8');
 
 	// Adding Race 1
