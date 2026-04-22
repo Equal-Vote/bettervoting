@@ -2,8 +2,9 @@ import { Edit, ExpandLess, ExpandMore } from "@mui/icons-material";
 import { Box, Button, FormControlLabel, FormHelperText, IconButton, Radio, RadioGroup, TextField, Typography } from "@mui/material"
 import { useEffect, useState } from "react";
 import { PrimaryButton, SecondaryButton } from "~/components/styles";
-import { AddIcon, methodValueToTextKey, TransitionBox, useSubstitutedTranslation } from "~/components/util"
+import { AddIcon, TransitionBox, useSubstitutedTranslation } from "~/components/util"
 import EditIcon from '@mui/icons-material/Edit';
+import { methodValueToTextKey } from "@equal-vote/star-vote-shared/domain_model/Race";
 
 type MethodStep = 'unset' | 'family' | 'num_winners' | 'method' | 'done';
 const stepIndex = {

@@ -86,8 +86,6 @@ export function hashString(inputString: string) {
     return createHash('sha256').update(inputString).digest('hex')
 }
 
-export { methodValueToTextKey } from '@equal-vote/star-vote-shared/domain_model/Race';
-
 export const formatPercent = (f: number): string => {
   if(0 < f && f < .01) return '<1%';
   return `${Math.round(100*f)}%`
