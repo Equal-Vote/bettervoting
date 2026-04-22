@@ -106,10 +106,11 @@ Playwright E2E tests. `playwright.config.ts` reads `FRONTEND_URL` from `testing/
 - Toggle settings (public results, rankings, etc.) → Settings (`/admin/settings`)
 - Share button → Publish & Share (`/admin/publish`)
 
-**MUI Switch is not role="switch"** — `getByRole('switch')` never matches. MUI Switch renders a `<span role="checkbox">` (MuiButtonBase). Labels are not HTML-associated with the input, so `getByRole('checkbox', { name: '...' })` also fails. To target a specific switch, use an XPath anchor off a nearby element with a known id, e.g.:
+**MUI Switch targeting** — `getByRole('switch')` never matches (MUI renders `role="checkbox"`). `SwitchSetting` uses `FormControlLabel` with `labelPlacement="start"`, which creates a proper HTML label association, so switches can be targeted by label name:
 ```ts
-await page.locator('#rank-limit').locator('xpath=preceding::span[@role="checkbox"][1]').click();
+await page.getByRole('checkbox', { name: 'Random Candidate Order' }).click();
 ```
+For i18n labels with `!tip()` syntax, match a substring: `{ name: /Set Number of Rankings/, exact: false }`.
 
 **React Router trailing slash** — `waitForURL(**/${id}/)` always times out because React Router `<Link>` navigates to `/${id}` (no trailing slash). Remove these waits and rely on the next action's built-in wait instead.
 
