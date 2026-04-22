@@ -8,7 +8,19 @@ import { AddCircleOutlineRounded, ArrowForwardIos } from "@mui/icons-material";
 import { getEntry } from "@equal-vote/star-vote-shared/domain_model/Util";
 import { createHash } from "crypto-browserify";
 import RemoveCircleOutlineRoundedIcon from '@mui/icons-material/RemoveCircleOutlineRounded';
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+// Holds a local copy of `value` for fast keystrokes, flushing to parent on blur.
+export const useLocalState = <T,>(value: T, onFlush: (v: T) => void): [T, (v: T) => void, () => void] => {
+    const [local, setLocal] = useState(value);
+    const localRef = useRef(local);
+    localRef.current = local;
+    useEffect(() => setLocal(value), [value]);
+    const flush = useCallback(() => {
+        if (localRef.current !== value) onFlush(localRef.current);
+    }, [value, onFlush]);
+    return [local, setLocal, flush];
+};
 
 const rLink = /\[(.*?)\]\((.*?)\)/;
 const rBold = /\*\*(.*?)\*\*/;
@@ -74,17 +86,7 @@ export function hashString(inputString: string) {
     return createHash('sha256').update(inputString).digest('hex')
 }
 
-// mapping from method frontend version to backend version
-// TODO: we need make these consistent
-export const methodValueToTextKey = {
-    STAR_PR: 'star_pr',
-    STAR: 'star',
-    RankedRobin: 'ranked_robin',
-    Approval: 'approval',
-    STV: 'stv',
-    Plurality: 'choose_one',
-    IRV: 'rcv',
-};
+export { methodValueToTextKey } from '@equal-vote/star-vote-shared/domain_model/Race';
 
 export const formatPercent = (f: number): string => {
   if(0 < f && f < .01) return '<1%';
@@ -198,23 +200,30 @@ export const useSubstitutedTranslation = (electionTermType = 'election', v = {})
 
   const { t, i18n } = useTranslation()
 
-  const values = processValues({
+  const methodKey = v['methodKey'] ?? 'star';
+  const timeZone = v['time_zone'] ?? undefined;
+  // v is a new object literal each render, so useMemo would always re-run.
+  // Serialize it to a string so we get a stable dep that only changes when the contents change.
+  const vKey = JSON.stringify(v);
+
+  const values = useMemo(() => processValues({
     // Ignoring "error TS2698: Spread types may only be created from object types." since we know they'll return objects
     // @ts-ignore
     ...t('keyword'),
     // @ts-ignore
     ...t(`keyword.${electionTermType}`),
     // @ts-ignore
-    ...t(`keyword.${v['methodKey'] ?? 'star'}`),
+    ...t(`keyword.${methodKey}`),
     ...v, formatParams: {
       datetime: dt,
       datetime2: dt,
       listed_datetime: {
         year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric',
-        timeZoneName: undefined, timeZone: v['time_zone'] ?? undefined
+        timeZoneName: undefined, timeZone: timeZone,
       },
     }
-  })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [t, electionTermType, methodKey, vKey])
 
   const applySymbols = (txt, includeTips, newWindow) => {
     const applyLinks = (txt) => {
@@ -310,9 +319,6 @@ export const openFeedback = () => {
     )[0];
   (button as HTMLButtonElement).click();
 };
-
-
-
 
 export function scrollToElement(e) {
   setTimeout(() => {

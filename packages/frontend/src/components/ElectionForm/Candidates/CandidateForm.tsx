@@ -1,4 +1,5 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
+import { useLocalState } from '../../util'
 import { Candidate } from "@equal-vote/star-vote-shared/domain_model/Candidate"
 import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
@@ -189,7 +190,11 @@ export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled
     // Track hover and focus so the UI (actions + textarea underline) appears on hover or when the textbox is focused
     const [hovered, setHovered] = useState(false);
     const [focused, setFocused] = useState(false);
-    const isEmpty = candidate.candidate_name === '';
+    const [localName, setLocalName, flushName] = useLocalState(
+        candidate.candidate_name,
+        v => onEditCandidate({ ...candidate, candidate_name: v })
+    );
+    const isEmpty = localName === '';
  
     return (
         <Paper
@@ -213,15 +218,23 @@ export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled
                         // data-testid={`candidate-name-${index + 1}`}
                         disabled={disabled || special}
                         type="text"
-                        value={candidate.candidate_name}
+                        value={localName}
                         fullWidth
                         variant='standard'
                         margin='normal'
-                        onChange={(e) => onEditCandidate({ ...candidate, candidate_name: e.target.value })}
+                        onChange={(e) => {
+                            const newVal = e.target.value;
+                            setLocalName(newVal);
+                            // Flush immediately when typing into the empty "new candidate" slot
+                            // so the parent adds it to the list and a new empty slot appears
+                            if (candidate.candidate_name === '' && newVal !== '') {
+                                onEditCandidate({ ...candidate, candidate_name: newVal });
+                            }
+                        }}
                         inputRef={inputRef}
                         onKeyDown={onKeyDown}
                         onFocus={() => setFocused(true)}
-                        onBlur={() => setFocused(false)}
+                        onBlur={() => { setFocused(false); flushName(); }}
                         // show underline when hovered OR focused OR when the candidate name is empty; always hide if it's a special candidate
                         InputProps={{ disableUnderline: special || !(hovered || focused || isEmpty)}}
                         multiline
