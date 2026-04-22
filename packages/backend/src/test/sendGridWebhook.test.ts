@@ -152,7 +152,7 @@ describe("SendGrid Webhook", () => {
     test("strips .filter suffix correctly from sg_message_id", async () => {
         emailEventsDb._events.push({
             id: 1,
-            message_id: "14c5d75ce93.dfd.64b469",
+            message_id: "evEK_IhZSlKus235aGfxIQ",
             election_id: "elec1",
             voter_id: "v1",
             event_type: "sent",
@@ -162,7 +162,7 @@ describe("SendGrid Webhook", () => {
 
         const events = [{
             event: "delivered",
-            sg_message_id: "14c5d75ce93.dfd.64b469.filter0001.16648.5515E0B88.0",
+            sg_message_id: "evEK_IhZSlKus235aGfxIQ.filter0001.16648.5515E0B88.0",
             timestamp: 2000,
         }];
         const body = JSON.stringify(events);
@@ -172,6 +172,47 @@ describe("SendGrid Webhook", () => {
 
         expect(res.statusCode).toBe(200);
         expect(emailEventsDb._events).toHaveLength(2);
-        expect(emailEventsDb._events[1].message_id).toBe("14c5d75ce93.dfd.64b469");
+        expect(emailEventsDb._events[1].message_id).toBe("evEK_IhZSlKus235aGfxIQ");
+    });
+
+    test("strips .recvd- suffix (including canary variant) from sg_message_id", async () => {
+        emailEventsDb._events.push({
+            id: 1,
+            message_id: "Cgn9VOciTmKWBU8Ec3mfqw",
+            election_id: "elec1",
+            voter_id: "v1",
+            event_type: "sent",
+            event_timestamp: new Date(999000).toISOString(),
+        }, {
+            id: 2,
+            message_id: "GLtITr5eRUOanFH17dmGwQ",
+            election_id: "elec1",
+            voter_id: "v2",
+            event_type: "sent",
+            event_timestamp: new Date(999000).toISOString(),
+        });
+        emailEventsDb._nextId = 3;
+
+        const events = [
+            {
+                event: "delivered",
+                sg_message_id: "Cgn9VOciTmKWBU8Ec3mfqw.recvd-5756697cd6-qp4jz-1-69E90327-D.0",
+                timestamp: 2000,
+            },
+            {
+                event: "delivered",
+                sg_message_id: "GLtITr5eRUOanFH17dmGwQ.recvd-canary-648b498b67-n4zsd-1-69E90341-E.0",
+                timestamp: 2001,
+            },
+        ];
+        const body = JSON.stringify(events);
+        const timestamp = String(Math.floor(Date.now() / 1000));
+        const signature = signPayload(timestamp, body);
+        const res = await webhookPost(app, body, timestamp, signature);
+
+        expect(res.statusCode).toBe(200);
+        expect(emailEventsDb._events).toHaveLength(4);
+        expect(emailEventsDb._events[2].message_id).toBe("Cgn9VOciTmKWBU8Ec3mfqw");
+        expect(emailEventsDb._events[3].message_id).toBe("GLtITr5eRUOanFH17dmGwQ");
     });
 });
