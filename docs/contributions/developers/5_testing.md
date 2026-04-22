@@ -57,7 +57,7 @@ Playwright supports 3 browsers: Firefox, Chromium, and Webkit. Running all the t
 Viewing detailed report of previous run:
 
 ```
-npx playwright show-result
+npx playwright show-report
 ```
 
 ### Add Tests

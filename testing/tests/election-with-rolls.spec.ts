@@ -251,7 +251,7 @@ test.describe('Add Voters', () => {
         await expect(page.getByRole('heading', { name: 'Thank you for voting!' })).toBeVisible();
         await page.goto(`/${electionId}/admin/voters`)
         await page.getByRole('columnheader', { name: 'Has Voted' }).getByRole('combobox').click();
-        await page.getByRole('option', { name: 'Not Voted', exact: true }).getByRole('checkbox').click();
+        await page.getByRole('option', { name: 'Not Voted', exact: true }).getByRole('checkbox').uncheck();
         await page.locator('#menu- > .MuiBackdrop-root').click();
         await expect(page.getByText('1–2 of 2')).toBeVisible();
         await expect(page.getByRole('rowheader', { name: '1' })).toBeVisible();
