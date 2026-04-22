@@ -147,7 +147,7 @@ const AdminHome = () => {
         <Box sx={{width: '100%'}}>
             {flags.isSet('ELECTION_ROLES') && <EditRolesSection />}
             <DuplicateElectionSection/>
-            <ArchiveElectionSection/>
+             {election.state != 'archived' && <ArchiveElectionSection/>}
         </Box>
         <AdminPageNavigation />
     </>
