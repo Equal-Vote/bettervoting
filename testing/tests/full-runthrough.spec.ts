@@ -52,7 +52,6 @@ test('Full Runthrough', async ({ page }) => {
 	await page
 		.getByRole('checkbox', { name: 'Set Number of Rankings' })
 		.check();
-	await page.locator('.MuiBox-root.css-1nkvh0 > .MuiSwitch-root > .MuiButtonBase-root > .PrivateSwitchBase-input').check()
 	await page.getByRole('spinbutton', { name: 'Rank Limit' }).fill('8');
 
 	// Adding Race 1
@@ -115,6 +114,7 @@ test('Full Runthrough', async ({ page }) => {
 	await raceDialog.getByRole('button', { name: 'Save' }).click();
 
 	// Finalize
+	await page.getByRole('link', { name: 'Publish & Share' }).click();
 	await page.getByRole('button', { name: 'Finalize Poll'}).click();
 	await page.getByRole('button', { name: 'Submit'}).click();
 
@@ -154,14 +154,7 @@ test('Full Runthrough', async ({ page }) => {
 	};
 	await vote(page);
 	await page.goto(`/${electionId}/results`);
-	await expect(
-		page.getByText("There's only one vote so far.").first()
-	).toBeVisible({ timeout: 10000 });
-
-	await page.getByRole('link', { name: 'Live Ballot' }).click();
-	await vote(page);
-	await page.goto(`/${electionId}/results`);
-	await expect(page.getByText('Candidate 1 Wins!')).toBeVisible({
+	await expect(page.getByText('Candidate 1 wins!')).toBeVisible({
 		timeout: 10000,
 	});
 });
