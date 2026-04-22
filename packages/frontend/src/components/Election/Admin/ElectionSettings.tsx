@@ -130,8 +130,6 @@ export default function ElectionSettings() {
                         sx={{ pl: 4, mt: -1, display: 'block'}}
                         disabled={election.state !== 'draft' || !election.settings.max_rankings}
                     />
-
-                    <ElectionSwitchSetting settingKey="draggable_ballot" />
                     {/* Note: this can't use ElectionSwitchSetting because we need to use the results from makePublicResultsRequest as the source of truth */}
                     <SwitchSetting
                         label={election.state === 'closed' || election.state === 'archived' ? t('election_settings.public_results') : t('election_settings.preliminary_results')}

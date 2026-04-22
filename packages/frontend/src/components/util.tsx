@@ -382,32 +382,36 @@ export interface SwitchSettingProps {
 export function SwitchSetting({ label, toggled, onToggle, disabled=false, disabledMessage }: SwitchSettingProps) {
   return (
     <>
-      <Box display='flex' flexDirection='row' alignItems='center' justifyContent='space-between' gap={2} sx={{ py: 0.5, width: {xs: '100%', md: 400}, opacity: disabled ? 0.5 : 1 }}>
-        <Typography component='span'>{label}</Typography>
-        <Switch
-          checked={toggled}
-          onChange={() => onToggle(!toggled)}
-          disabled={disabled}
-          sx={{
-            padding: 0,
-            width: 42,
-            height: 26,
-            '& .MuiSwitch-switchBase': {
+      <FormControlLabel
+        label={label}
+        labelPlacement='start'
+        control={
+          <Switch
+            checked={toggled}
+            onChange={() => onToggle(!toggled)}
+            disabled={disabled}
+            sx={{
               padding: 0,
-              margin: '3px',
-              color: '#fff',
-              '&.Mui-checked': {
-                transform: 'translateX(16px)',
+              width: 42,
+              height: 26,
+              '& .MuiSwitch-switchBase': {
+                padding: 0,
+                margin: '3px',
                 color: '#fff',
-                '& + .MuiSwitch-track': { opacity: 1 },
+                '&.Mui-checked': {
+                  transform: 'translateX(16px)',
+                  color: '#fff',
+                  '& + .MuiSwitch-track': { opacity: 1 },
+                },
+                '&.Mui-disabled + .MuiSwitch-track': { opacity: 0.5 },
               },
-              '&.Mui-disabled + .MuiSwitch-track': { opacity: 0.5 },
-            },
-            '& .MuiSwitch-thumb': { width: 20, height: 20 },
-            '& .MuiSwitch-track': { borderRadius: 13 },
-          }}
-        />
-      </Box>
+              '& .MuiSwitch-thumb': { width: 20, height: 20 },
+              '& .MuiSwitch-track': { borderRadius: 13 },
+            }}
+          />
+        }
+        sx={{ display: 'flex', justifyContent: 'space-between', width: {xs: '100%', md: 400}, py: 0.5, mx: 0, gap: 2, opacity: disabled ? 0.5 : 1 }}
+      />
       {disabled && disabledMessage && (
         <FormHelperText sx={{ mb: 2, mt: 0, fontStyle: 'italic', textAlign: 'center' }}>
           {disabledMessage}
