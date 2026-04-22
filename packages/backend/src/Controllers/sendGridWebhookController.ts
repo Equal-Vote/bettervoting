@@ -15,8 +15,11 @@ interface SendGridEvent {
 const EmailEventsDB = ServiceLocator.emailEventsDb();
 
 function extractBaseMessageId(sg_message_id: string): string {
-    const filterIdx = sg_message_id.indexOf('.filter');
-    return filterIdx >= 0 ? sg_message_id.substring(0, filterIdx) : sg_message_id;
+    // SendGrid appends routing suffixes after the base XMessageID, separated
+    // by '.' (e.g. ".filter...", ".recvd-...", ".recvd-canary-..."). The base
+    // ID is base64url and never contains '.', so strip from the first dot.
+    const dotIdx = sg_message_id.indexOf('.');
+    return dotIdx >= 0 ? sg_message_id.substring(0, dotIdx) : sg_message_id;
 }
 
 export const sendGridWebhookController = async (req: IRequest, res: Response) => {
