@@ -43,7 +43,7 @@ const ViewElectionRolls = () => {
     )
 
     // NOTE: usesEmail can be true, false, or undefined. undefined means the user has not made a selection yet
-    const [usesEmail, setUsesEmail] = useSyncedState( 
+    const [usesEmail, setUsesEmail] = useSyncedState<boolean | undefined>( 
         election.settings.invitation == 'email',
         async (useEmail) => !! await updateElection(e => e.settings.invitation = useEmail ? 'email' : undefined )
     )
