@@ -153,8 +153,6 @@ export default function ElectionDetailsForm({editedElection, applyUpdate, errors
                                 label={t('election_details.time_zone')}
                                 onChange={(e) => {
                                     applyUpdate(election => { election.settings.time_zone = e.target.value as TimeZone })
-                                    const p = useSubstitutedTranslation(editedElection.settings.term_type, {time_zone: e.target.value});
-                                    t = p.t;
                                 }}
                             >
                                 <MenuItem value={DateTime.now().zone.name}>{DateTime.now().zone.name}</MenuItem>

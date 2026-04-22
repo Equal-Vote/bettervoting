@@ -4,11 +4,11 @@ import Widget from "./Widget";
 import useRace from "~/components/RaceContextProvider";
 import { useState } from "react";
 import { Box, Divider, MenuItem, Select, Typography } from "@mui/material";
-import { CHART_COLORS, methodValueToTextKey } from "~/components/util";
+import { CHART_COLORS} from "~/components/util";
 import { Candidate } from "@equal-vote/star-vote-shared/domain_model/Candidate";
 import HeadToHeadChart from "./HeadToHeadChart";
 import ResultsKey from "./ResultsKey";
-import { candidate } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
+import { methodValueToTextKey } from "@equal-vote/star-vote-shared/domain_model/Race";
 
 interface IMatchup {
     name: string
