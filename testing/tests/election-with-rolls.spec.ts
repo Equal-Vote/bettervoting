@@ -249,6 +249,7 @@ test.describe('Add Voters', () => {
         voteResponse = await reponsePromise;
         console.log(`Vote response status: ${voteResponse.status()}`);
         await expect(page.getByRole('heading', { name: 'Thank you for voting!' })).toBeVisible();
+        await page.waitForTimeout(200) // give the backend a short window to process to ensure that both voters show up int he table
         await page.goto(`/${electionId}/admin/voters`)
         await page.getByRole('columnheader', { name: 'Has Voted' }).getByRole('combobox').click();
         await page.getByRole('option', { name: 'Not Voted', exact: true }).getByRole('checkbox').uncheck();

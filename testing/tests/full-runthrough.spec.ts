@@ -153,6 +153,7 @@ test('Full Runthrough', async ({ page }) => {
 		await page.getByRole('button', { name: 'Submit' }).click();
 	};
 	await vote(page);
+	await page.waitForTimeout(200) // give the backend a short window to process to ensure that the most recent vote is reflected in the results page
 	await page.goto(`/${electionId}/results`);
 	await expect(page.getByText('Candidate 1 wins!')).toBeVisible({
 		timeout: 10000,
