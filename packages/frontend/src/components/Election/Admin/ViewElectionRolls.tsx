@@ -201,7 +201,7 @@ const ViewElectionRolls = () => {
                 >
                     <DialogTitle sx={{m: 0}}>Adding Voters</DialogTitle>
                     <DialogContent>
-                        <AddElectionRoll onClose={() => setAddRollPage(false)}/>
+                        <AddElectionRoll onClose={() => { setAddRollPage(false); fetchRolls(); }}/>
                     </DialogContent>
                     <DialogActions>
                         <PrimaryButton onClick={() => setAddRollPage(false)}>
