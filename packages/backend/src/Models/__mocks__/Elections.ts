@@ -3,6 +3,7 @@ import { Uid } from '@equal-vote/star-vote-shared/domain_model/Uid';
 import { ILoggingContext } from '../../Services/Logging/ILogger';
 import Logger from '../../Services/Logging/Logger';
 import { IElectionStore } from '../IElectionStore';
+import { Conflict } from "@curveball/http-errors";
 
 export default class ElectionsDB implements IElectionStore {
 
@@ -14,19 +15,21 @@ export default class ElectionsDB implements IElectionStore {
     createElection(election: Election, ctx:ILoggingContext, reason:string): Promise<Election>{
         Logger.debug(ctx, "Election Mock Creates Election: ", election);
         var copy = JSON.parse(JSON.stringify(election));
+        copy.update_date = Date.now().toString();
+        copy.head = true;
         this.elections.push(copy);
         var res = JSON.parse(JSON.stringify(copy));
         return Promise.resolve(res);
     }
 
-    
+
     updateElection(election: Election, ctx:ILoggingContext, reason:string, expected_update_date: string): Promise<Election> {
         var foundIndex = this.elections.findIndex(dbElection => dbElection.election_id == election.election_id);
         if(foundIndex == -1){
             throw new Error("Election Not Found")
         }
         if (this.elections[foundIndex].update_date !== expected_update_date) {
-            throw new Error("Concurrent write detected, please try again")
+            throw new Conflict("Election was updated by someone else; please refresh and try again.")
         }
         var copy = JSON.parse(JSON.stringify(election));
         copy.update_date = Date.now().toString();
