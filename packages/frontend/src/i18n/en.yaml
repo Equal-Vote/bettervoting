@@ -685,9 +685,9 @@ tabulation_logs:
       **Random Tiebreaker**: {{winner}} wins against {{runner_up}} after a random tiebreaker.
 
 disabled_msgs:
-    ballot_updates_with_prelim: Not supported when the election starts off with public results. This can be adjusted under the preview results tab.
+    ballot_updates_with_prelim: Not supported when "Show Preliminary Results" is enabled below.
     ballot_updates_when_open: Only supported when election uses email list
-    public_results: Not supported with vote editing. This can be adjusted under the setting tab.
+    public_results: Not supported when "Allow Voters To Edit Vote" is enabled above.
 
 #######################################
 #### PRIORITY 4 : Info Bubbles ####
