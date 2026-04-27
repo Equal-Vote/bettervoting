@@ -53,16 +53,11 @@ export const ElectionContextProvider = ({ id, localElection=undefined, setLocalE
     }, [id])
 
     // Sync internal state with the fetched election whenever the server pushes a new value.
+    // (Local-only mode reads localElection directly from props — no sync needed.)
     useEffect(() => {
         if (id === undefined) return;
         if (data?.election) setInternalElection(data.election);
     }, [data?.election, id])
-
-    // In local-only mode (new election form before save), mirror the parent-controlled localElection.
-    useEffect(() => {
-        if (id !== undefined) return;
-        if (localElection !== undefined) setInternalElection(localElection);
-    }, [localElection, id])
 
     const trackSave = async <T,>(promise: Promise<T>): Promise<T> => {
         setSavingCount(c => c + 1);
@@ -73,16 +68,23 @@ export const ElectionContextProvider = ({ id, localElection=undefined, setLocalE
         }
     };
 
+    // Resolve the election to expose: in local mode the parent owns it; otherwise prefer our internal
+    // (optimistically-updated) state, falling back to the freshly-fetched data on the first render
+    // before the sync useEffect has had a chance to run.
+    const election: Election | NewElection | null =
+        id === undefined
+            ? (localElection ?? null)
+            : (internalElection ?? data?.election ?? null);
+
     const applyElectionUpdate = async (updateFunc: (election: IElection) => void) => {
         if(id === undefined && localElection !== undefined){
             const electionCopy: IElection = structuredClone(localElection)
             updateFunc(electionCopy);
             setLocalElection(electionCopy)
-            setInternalElection(electionCopy)
             return
         }
-        if (!internalElection) return
-        const optimistic: IElection = structuredClone(internalElection)
+        if (!election) return
+        const optimistic: IElection = structuredClone(election)
         updateFunc(optimistic);
         setInternalElection(optimistic)
         const result = await trackSave(editElection({ Election: optimistic }))
@@ -100,7 +102,7 @@ export const ElectionContextProvider = ({ id, localElection=undefined, setLocalE
 
     return (<ElectionContext.Provider
         value={{
-            election: id == undefined ? localElection : internalElection,
+            election,
             precinctFilteredElection: data?.precinctFilteredElection,
             voterAuth: data?.voterAuth,
             refreshElection: fetchData,
@@ -110,7 +112,9 @@ export const ElectionContextProvider = ({ id, localElection=undefined, setLocalE
             permissions: data?.voterAuth?.permissions,
             t,
         }}>
-        {(data || id == undefined) && children}
+        {/* Match the prior gate: children render once we have an election to expose, or when in
+            local-only mode (id===undefined) where Sandbox-style consumers may render without one. */}
+        {(election || id === undefined) && children}
     </ElectionContext.Provider>
     )
 }
