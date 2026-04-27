@@ -14,11 +14,9 @@ import useElection from '../../ElectionContextProvider';
 import useAuthSession from '../../AuthSessionContextProvider';
 import { AdminPageNavigation } from '../Sidebar';
 import { TimeZone, timeZones } from '@equal-vote/star-vote-shared/domain_model/Util';
-import useSyncedState from '~/hooks/useSyncedState';
-
 export default () => {
     const authSession = useAuthSession()
-    const { t, election, refreshElection: fetchElection, permissions } = useElection()
+    const { t, election, refreshElection: fetchElection, permissions, trackSave } = useElection()
     
     const { makeRequest: finalize } = useFinalizeElection(election.election_id)
 
@@ -100,7 +98,11 @@ export default () => {
         </Grid>}
     </Box>
 
-    const [isOpen, setIsOpen] = useSyncedState(election.state === 'open', async (toggled) => !!await setOpenState({open: toggled}));
+    const isOpen = election.state === 'open';
+    const setIsOpen = async (toggled: boolean) => {
+        const res = await trackSave(setOpenState({ open: toggled }));
+        if (res !== false) await fetchElection();
+    };
     
     const hasScheduledTimes = !!(election.start_time || election.end_time);
     const canEditState = permissions?.includes('canEditElectionState') ?? false;

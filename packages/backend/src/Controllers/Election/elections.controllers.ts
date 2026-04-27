@@ -144,7 +144,8 @@ async function updateElectionStateIfNeeded(req:IRequest, election:Election):Prom
         }
     }
     if (stateChange) {
-        election = await ElectionsModel.updateElection(election, req, stateChangeMsg);
+        const expected_update_date = election.update_date as string;
+        election = await ElectionsModel.updateElection(election, req, stateChangeMsg, expected_update_date);
         Logger.info(req, stateChangeMsg);
     }
     return election;

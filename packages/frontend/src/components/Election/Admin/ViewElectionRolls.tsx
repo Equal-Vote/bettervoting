@@ -14,7 +14,6 @@ import SendEmailDialog from "./SendEmailDialog";
 import { PrimaryButton, SecondaryButton } from "~/components/styles";
 import ElectionAuthForm from "~/components/ElectionForm/Details/ElectionAuthForm";
 import useConfirm from "~/components/ConfirmationDialogProvider";
-import useSyncedState from "~/hooks/useSyncedState";
 import { AdminPageNavigation } from '../Sidebar';
 
 const ViewElectionRolls = () => {
@@ -32,21 +31,18 @@ const ViewElectionRolls = () => {
     const location = useLocation();
     const [dialogOpen, setDialogOpen] = useState(false);
     
-    const [voterAccess, setVoterAccess] = useSyncedState(
-        election.settings.voter_access,
-        async (newAccess) => !! await updateElection(e => {
-            e.settings.voter_access = newAccess;
-            // voter id should be set regardless, it's relevant for email list, id list, and device
-            // the only time voter_id shouldn't be set is if "no" was selected for public access, and then it was changed in ElectionAuthForm afterwards
-            e.settings.voter_authentication = {voter_id: true};
-        })
-    )
+    const voterAccess = election.settings.voter_access;
+    const setVoterAccess = (newAccess: typeof voterAccess) => updateElection(e => {
+        e.settings.voter_access = newAccess;
+        // voter id should be set regardless, it's relevant for email list, id list, and device
+        // the only time voter_id shouldn't be set is if "no" was selected for public access, and then it was changed in ElectionAuthForm afterwards
+        e.settings.voter_authentication = {voter_id: true};
+        e.settings.invitation = undefined;
+    });
 
     // NOTE: usesEmail can be true, false, or undefined. undefined means the user has not made a selection yet
-    const [usesEmail, setUsesEmail] = useSyncedState<boolean | undefined>( 
-        election.settings.invitation == 'email',
-        async (useEmail) => !! await updateElection(e => e.settings.invitation = useEmail ? 'email' : undefined )
-    )
+    const usesEmail: boolean | undefined = election.settings.invitation === 'email' ? true : (election.settings.invitation === undefined ? undefined : false);
+    const setUsesEmail = (useEmail: boolean | undefined) => updateElection(e => { e.settings.invitation = useEmail ? 'email' : undefined; });
 
     const confirm = useConfirm();
 
@@ -114,11 +110,10 @@ const ViewElectionRolls = () => {
                             control={<Radio/>}
                             disabled={election.state !== 'draft' || electionRollData.length > 0}
                             label={t(`keyword.${restricted ? 'yes' : 'no'}`)}
-                            onClick={async () => {
+                            onClick={() => {
                                 if(election.state !== 'draft' || electionRollData.length > 0) return; // not sure why disabled still allows me to do onclick
 
                                 setVoterAccess(restricted ? 'closed' : 'open');
-                                setUsesEmail(undefined);
                             }}
                             checked={voterAccess === (restricted ? 'closed' : 'open')}
                         />

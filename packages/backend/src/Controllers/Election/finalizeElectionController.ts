@@ -37,8 +37,9 @@ const finalizeElection = async (req: IElectionRequest, res: Response, next: Next
     }
 
     var failMsg = "Failed to update Election";
+    const expected_update_date = req.election.update_date as string;
     req.election.state = 'finalized'
-    const updatedElection = await ElectionsModel.updateElection(req.election, req, `Finalizing election`);
+    const updatedElection = await ElectionsModel.updateElection(req.election, req, `Finalizing election`, expected_update_date);
     if (!updatedElection) {
         Logger.info(req, failMsg);
         throw new BadRequest(failMsg)

@@ -6,7 +6,7 @@ import { Kysely, sql } from 'kysely'
 import { Election, electionValidation } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { sharedConfig } from '@equal-vote/star-vote-shared/config';
 import { IElectionStore } from './IElectionStore';
-import { InternalServerError } from '@curveball/http-errors';
+import { Conflict, InternalServerError } from '@curveball/http-errors';
 import { BadRequest } from "@curveball/http-errors";
 
 const tableName = 'electionDB';
@@ -57,7 +57,7 @@ export default class ElectionsDB implements IElectionStore {
         return newElection
     }
 
-    async updateElection(election: Election, ctx: ILoggingContext, reason: string, expected_update_date?: string): Promise<Election> {
+    async updateElection(election: Election, ctx: ILoggingContext, reason: string, expected_update_date: string): Promise<Election> {
         Logger.debug(ctx, `${tableName}.updateElection`);
         const validationFailure = electionValidation(election);
         if (validationFailure) {
@@ -68,18 +68,15 @@ export default class ElectionsDB implements IElectionStore {
         election.head = true
         // Transaction to insert updated election and set old version's head to false
         const updatedElection = await this._postgresClient.transaction().execute(async (trx) => {
-            let query = trx.updateTable('electionDB')
+            const result = await trx.updateTable('electionDB')
                 .where('election_id', '=', election.election_id)
                 .where('head', '=', true)
-            if (expected_update_date !== undefined) {
-                query = query.where('update_date', '=', expected_update_date)
-            }
-            const result = await query
+                .where('update_date', '=', expected_update_date)
                 .set('head', false)
                 .executeTakeFirst()
 
-            if (expected_update_date !== undefined && result.numUpdatedRows === BigInt(0)) {
-                throw new InternalServerError('Concurrent write detected, please try again');
+            if (result.numUpdatedRows === BigInt(0)) {
+                throw new Conflict('Election was updated by someone else; please refresh and try again.');
             }
 
             return await trx.insertInto('electionDB')

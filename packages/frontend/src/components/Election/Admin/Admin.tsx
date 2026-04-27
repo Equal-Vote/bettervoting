@@ -12,7 +12,7 @@ import ElectionSettings from './ElectionSettings';
 import PublishAndShare from './PublishAndShare';
 
 const AdminPage = ({title, children}) => {
-    const {election} = useElection();
+    const {election, isSaving} = useElection();
     return <Box
         display='flex'
         justifyContent="flex-start"
@@ -26,7 +26,18 @@ const AdminPage = ({title, children}) => {
             <Typography variant="h3">{`${title}`}</Typography>
             <TemporaryAccessWarning />
         </Box>
-        {children}
+        {/* Form-lock: while a save is in flight, gray out the form area and block clicks. Mirrors GitHub's "saving..." pattern. */}
+        <Box
+            sx={{
+                width: '100%',
+                opacity: isSaving ? 0.55 : 1,
+                pointerEvents: isSaving ? 'none' : 'auto',
+                transition: 'opacity 150ms',
+            }}
+            aria-busy={isSaving}
+        >
+            {children}
+        </Box>
     </Box>
 }
 

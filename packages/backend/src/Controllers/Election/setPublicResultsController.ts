@@ -15,13 +15,14 @@ const setPublicResults = async (req: IElectionRequest, res: Response, next: Next
     Logger.info(req, `${className}.setPublicResults ${req.election.election_id}`);
     expectPermission(req.user_auth.roles, permissions.canEditElectionState)
     const election: Election = req.election
+    const expected_update_date = election.update_date as string;
     const public_results = req.body.public_results
     if (typeof public_results !== 'boolean') {
         throw new BadRequest('public_results setting not provided or incorrect type')
     }
     election.settings.public_results = public_results
 
-    const updatedElection = await ElectionsModel.updateElection(election, req, `Publish Results`);
+    const updatedElection = await ElectionsModel.updateElection(election, req, `Publish Results`, expected_update_date);
     if (!updatedElection) {
         const failMsg = 'could not update public_results setting'
         Logger.info(req, failMsg);

@@ -16,6 +16,7 @@ const setOpenState = async (req: IElectionRequest, res: Response, next: NextFunc
     expectPermission(req.user_auth.roles, permissions.canEditElectionState)
 
     const election: Election = req.election
+    const expected_update_date = election.update_date as string;
     const open = req.body.open
 
     let msg;
@@ -42,7 +43,7 @@ const setOpenState = async (req: IElectionRequest, res: Response, next: NextFunc
         throw new BadRequest(msg);
     }
 
-    const updatedElection = await ElectionsModel.updateElection(req.election, req, "Open or close election");
+    const updatedElection = await ElectionsModel.updateElection(req.election, req, "Open or close election", expected_update_date);
     if (!updatedElection) {
         const failMsg = `Failed to set election state to ${election.state}`;
         Logger.info(req, failMsg);

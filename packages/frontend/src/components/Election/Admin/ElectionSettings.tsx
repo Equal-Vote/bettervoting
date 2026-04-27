@@ -1,29 +1,26 @@
 import Grid from "@mui/material/Grid";
 import FormControlLabel from "@mui/material/FormControlLabel";
-import FormLabel from "@mui/material/FormLabel";
 import FormControl from "@mui/material/FormControl";
 import { FormGroup, Radio, RadioGroup, Box, TextField, capitalize, Typography } from "@mui/material";
-import structuredClone from '@ungap/structured-clone';
+import { useEffect, useState } from "react";
 import { ElectionSettings as IElectionSettings, TermType } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
 import { Tip } from '~/components/styles';
-import { useSubstitutedTranslation, SwitchSetting, SwitchSettingProps } from '~/components/util';
+import { useSubstitutedTranslation, SwitchSetting } from '~/components/util';
 import useElection from '~/components/ElectionContextProvider';
-import useSyncedState from "~/hooks/useSyncedState";
 import { AdminPageNavigation } from '../Sidebar';
-import ShareButton from '../ShareButton';
-import { useSetOpenState, useSetPublicResults } from '~/hooks/useAPI';
+import { useSetPublicResults } from '~/hooks/useAPI';
 
 type ElectionSwitchSettingProps = {
     settingKey: keyof IElectionSettings;
     disabled?: boolean;
     disabledMessage?: string;
-    onToggle?: (newValue: boolean) => Promise<boolean>;
+    onToggle?: (newValue: boolean) => Promise<unknown>;
     label?: string;
     availableDuringElection?: boolean;
 }
 
 export default function ElectionSettings() {
-    const { election, updateElection, permissions, refreshElection: fetchElection } = useElection()
+    const { election, updateElection, trackSave, refreshElection } = useElection()
     const min_rankings = 3;
     const max_rankings = Number(process.env.REACT_APP_MAX_BALLOT_RANKS) ? Number(process.env.REACT_APP_MAX_BALLOT_RANKS) : 8;
     const default_rankings = Number(process.env.REACT_APP_DEFAULT_BALLOT_RANKS) ? Number(process.env.REACT_APP_DEFAULT_BALLOT_RANKS) : 6;
@@ -31,44 +28,33 @@ export default function ElectionSettings() {
     const {t} = useSubstitutedTranslation(election.settings.term_type, {min_rankings, max_rankings});
 
     function ElectionSwitchSetting({ settingKey, disabled, disabledMessage, onToggle: onToggleOverride, label, availableDuringElection=false}: ElectionSwitchSettingProps) {
-        const defaultOnToggle = async (v: boolean) => !! await updateElection(e => { (e.settings as unknown as Record<string, unknown>)[settingKey] = v; });
+        const defaultOnToggle = (v: boolean) => updateElection(e => { (e.settings as unknown as Record<string, unknown>)[settingKey] = v; });
         const isDisabled = disabled ?? (election.state !== 'draft' && !availableDuringElection);
-
-        const [localToggled, setLocalToggled] = useSyncedState(!!election.settings[settingKey], onToggleOverride ?? defaultOnToggle);
+        const toggled = !!election.settings[settingKey];
 
         return <SwitchSetting
             label={label ?? t(`election_settings.${settingKey}`)}
-            toggled={localToggled}
-            onToggle={setLocalToggled}
+            toggled={toggled}
+            onToggle={onToggleOverride ?? defaultOnToggle}
             disabled={isDisabled}
             disabledMessage={disabledMessage}
         />;
     }
 
-    const [contactEmail, setContactEmail] = useSyncedState(
-        election.settings.contact_email ?? '',
-        async (v) => !! await updateElection(e => e.settings.contact_email = v)
-    );
+    // Text fields hold local state and commit on blur, so each keystroke doesn't fire a save.
+    const [contactEmailDraft, setContactEmailDraft] = useState(election.settings.contact_email ?? '');
+    useEffect(() => { setContactEmailDraft(election.settings.contact_email ?? ''); }, [election.settings.contact_email]);
 
-    const [term, setTerm] = useSyncedState(
-        election.settings.term_type,
-        async (v) => !! await updateElection(e => e.settings.term_type = v )
-    );
-
-    const [currentMaxRankings, setCurrentMaxRankings] = useSyncedState(
-        election.settings.max_rankings ? election.settings.max_rankings : default_rankings,
-        async (v) => !! await updateElection(e => e.settings.max_rankings = v)
-    );
+    const [maxRankingsDraft, setMaxRankingsDraft] = useState<number>(election.settings.max_rankings ?? default_rankings);
+    useEffect(() => { setMaxRankingsDraft(election.settings.max_rankings ?? default_rankings); }, [election.settings.max_rankings, default_rankings]);
 
     const { makeRequest: makePublicResultsRequest } = useSetPublicResults(election.election_id)
 
-    const [publicResults, setPublicResults] = useSyncedState(
-        election.settings.public_results ?? false,
-        async (v) => {
-            const res = await makePublicResultsRequest({ public_results: v });
-            return !!res && res.election?.settings?.public_results === v;
-        }
-    );
+    const publicResults = election.settings.public_results ?? false;
+    const togglePublicResults = async (v: boolean) => {
+        const res = await trackSave(makePublicResultsRequest({ public_results: v }));
+        if (res !== false) await refreshElection();
+    };
 
     return <>
         <Grid item xs={12} sx={{ m: 0, my: 0, p: 1 }}>
@@ -77,8 +63,13 @@ export default function ElectionSettings() {
                     <FormControlLabel control={
                         <TextField
                             id="contact_email"
-                            value={contactEmail}
-                            onChange={(e) => setContactEmail(e.target.value)}
+                            value={contactEmailDraft}
+                            onChange={(e) => setContactEmailDraft(e.target.value)}
+                            onBlur={() => {
+                                if (contactEmailDraft !== (election.settings.contact_email ?? '')) {
+                                    updateElection(e => e.settings.contact_email = contactEmailDraft);
+                                }
+                            }}
                             variant='standard'
                             fullWidth
                             sx={{ mt: -1, display: 'block'}}
@@ -101,8 +92,8 @@ export default function ElectionSettings() {
                                 <FormControlLabel
                                     key={i}
                                     control={<Radio
-                                        onChange={() => setTerm(type as TermType)}
-                                        checked={term === type}
+                                        onChange={() => updateElection(e => e.settings.term_type = type as TermType)}
+                                        checked={election.settings.term_type === type}
                                         value={t(`keyword.${type}.election`)}
                                     />}
                                     label={capitalize(t(`keyword.${type}.election`))}
@@ -117,24 +108,29 @@ export default function ElectionSettings() {
                     <ElectionSwitchSetting settingKey="draggable_ballot" />
                     <ElectionSwitchSetting
                         settingKey="max_rankings"
-                        onToggle={async (v) => !! await updateElection(e => e.settings.max_rankings = v ? default_rankings : undefined)}
+                        onToggle={(v) => updateElection(e => e.settings.max_rankings = v ? default_rankings : undefined)}
                     />
 
                     <TextField
                         id="rank-limit"
                         type="number"
-                        value={currentMaxRankings}
-                        onChange={(e) => setCurrentMaxRankings(Number(e.target.value))}
+                        value={maxRankingsDraft}
+                        onChange={(e) => setMaxRankingsDraft(Number(e.target.value))}
+                        onBlur={() => {
+                            if (maxRankingsDraft !== election.settings.max_rankings) {
+                                updateElection(e => e.settings.max_rankings = maxRankingsDraft);
+                            }
+                        }}
                         variant='standard'
                         InputProps={{ inputProps: { min: min_rankings, max: max_rankings, "aria-label": "Rank Limit" } }}
                         sx={{ pl: 4, mt: -1, display: 'block'}}
                         disabled={election.state !== 'draft' || !election.settings.max_rankings}
                     />
-                    {/* Note: this can't use ElectionSwitchSetting because we need to use the results from makePublicResultsRequest as the source of truth */}
+                    {/* setPublicResults goes through its own endpoint, so it bypasses updateElection but still participates in the form-lock via trackSave. */}
                     <SwitchSetting
                         label={election.state === 'closed' || election.state === 'archived' ? t('election_settings.public_results') : t('election_settings.preliminary_results')}
                         toggled={publicResults}
-                        onToggle={setPublicResults}
+                        onToggle={togglePublicResults}
                     />
                 </FormGroup>
             </FormControl>
