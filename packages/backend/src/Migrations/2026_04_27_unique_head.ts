@@ -10,7 +10,7 @@ export async function up(db: Kysely<any>): Promise<void> {
 
     await db.schema.createIndex('ballotDB_unique_head')
         .on('ballotDB')
-        .column('ballot_id')
+        .columns(['ballot_id', 'election_id'])
         .unique()
         .where(sql.ref('head'), '=', true)
         .execute()
