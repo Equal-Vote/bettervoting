@@ -8,11 +8,13 @@ import { DevElectionDefinition, validateDefinition } from './types'
 import wizardstar from './elections/wizardstar'
 import emailtracking from './elections/emailtracking'
 import writeins from './elections/writeins'
+import tiechecks from './elections/tiechecks'
 
 const allDefinitions: DevElectionDefinition[] = [
     wizardstar,
     emailtracking,
     writeins,
+    tiechecks,
 ];
 
 async function main() {

@@ -48,7 +48,7 @@ function STARResultsViewer({ filterRandomFromLogs }: {filterRandomFromLogs: bool
         <STARDetailedResults/>
         <DetailExpander level={1}>
           <STARResultDetailedStepsWidget results={results} rounds={rounds} t={t} filterRandomFromLogs={filterRandomFromLogs}/>
-          <STAREqualPreferencesWidget frontRunners={candidates.slice(0, 2) as [starCandidate, starCandidate]}/>
+          <STAREqualPreferencesWidget frontRunners={[results.roundResults[0].winners[0], results.roundResults[0].runner_up[0]] as [starCandidate, starCandidate]}/>
           <HeadToHeadWidget/>
           <VoterProfileWidget topScore={5}/>
           {flags.isSet('ALL_STATS') && <ScoreRangeWidget/>}
@@ -427,7 +427,22 @@ function STVResultsViewer() {
 
 export default function Results({ race, results }: {race: Race, results: ElectionResults}) {
   const { election } = useElection();
-  const showTitleAsTie = ['random', 'five_star', 'head_to_head'].includes(results.tieBreakType);
+  // For STAR, only call the result a "tie" when the WINNER was determined by a
+  // tiebreaker — i.e., the runoff head-to-head between winner and runner-up was
+  // genuinely equal. A score-round tiebreaker that only picks the runner-up
+  // (e.g. five-star tiebreak between two candidates the score leader would
+  // have beaten head-to-head anyway) is not a tie of the election outcome and
+  // shouldn't trigger the "Tied!" banner.
+  const showTitleAsTie = (() => {
+    if (results.votingMethod === 'STAR') {
+      const finalRound = results.roundResults[results.roundResults.length - 1];
+      const winner = finalRound?.winners[0] as starCandidate | undefined;
+      const runnerUp = finalRound?.runner_up[0] as starCandidate | undefined;
+      if (!winner || !runnerUp) return false;
+      return winner.votesPreferredOver[runnerUp.id] === runnerUp.votesPreferredOver[winner.id];
+    }
+    return ['random', 'five_star', 'head_to_head'].includes(results.tieBreakType);
+  })();
   // added a null check for sandbox support
   const removeTieBreakFromTitle = (election?.settings.break_ties_randomly ?? false) && results.tieBreakType == 'random';
 

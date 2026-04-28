@@ -4,10 +4,12 @@ import Widget from "./Widget";
 import useRace from "~/components/RaceContextProvider";
 import { useState } from "react";
 import {  Divider, MenuItem, Select, Typography } from "@mui/material";
-import { formatPercent } from "~/components/util";
+import { CHART_COLORS, formatPercent, methodValueToTextKey } from "~/components/util";
 import ResultsBarChart from "./ResultsBarChart";
 import HeadToHeadChart from "./HeadToHeadChart";
+import ResultsKey from "./ResultsKey";
 import { getVoterErrorData } from "./VoterErrorStatsWidget";
+import { starResults } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
 
 // candidates helps define the order
 const VoterProfileWidget = ({topScore, ranked=false} : {topScore: number, ranked?: boolean}) => {
@@ -20,7 +22,16 @@ const VoterProfileWidget = ({topScore, ranked=false} : {topScore: number, ranked
 
     const refCandidate = candidates.find(c => c.id == refCandidateId);
 
-    const [left, right] = candidates.slice(0, 2);
+    // For single-winner STAR the two "frontrunners" should be the actual
+    // runoff finalists chosen by the tabulator, not the top two by score —
+    // a five-star/random tiebreaker can promote a runner-up that isn't the
+    // second-highest scorer in candidate-list order.
+    let [left, right] = candidates.slice(0, 2);
+    if (race.voting_method === 'STAR' && results.elected.length === 1) {
+        const starRes = results as starResults;
+        left = starRes.roundResults[0].winners[0];
+        right = starRes.roundResults[0].runner_up[0];
+    }
 
     const avgBallot: {[key: string]:{name, score}} = {};
     candidates.forEach((c) => {
@@ -112,17 +123,24 @@ const VoterProfileWidget = ({topScore, ranked=false} : {topScore: number, ranked
         <Typography variant='h6'>{t('results_ext.voter_profile_count', {count: totalTopScored, name: refCandidate.name})}</Typography>
         <Divider variant='middle' sx={{width: '100%', m:1}}/>
         <Typography variant='h6'>{t('results_ext.voter_profile_preferred_frontrunner', {name: refCandidate.name})}</Typography>
-        {totalTopScored == 0 ? 'n/a' : <HeadToHeadChart 
-            leftName={left.name}
-            rightName={right.name}
-            leftVotes={leftVotes}
-            rightVotes={rightVotes}
-            total={total}
-            equalContent={{
-                title: 'Distribution of Equal Support',
-                description: equalPreferences
-            }}
-        />}
+        {totalTopScored == 0 ? 'n/a' : <>
+            <HeadToHeadChart
+                leftName={left.name}
+                rightName={right.name}
+                leftVotes={leftVotes}
+                rightVotes={rightVotes}
+                total={total}
+                equalContent={{
+                    title: 'Distribution of Equal Support',
+                    description: equalPreferences
+                }}
+            />
+            <ResultsKey items={[
+                [CHART_COLORS[0], t(`results_ext.head_to_head_key.${methodValueToTextKey[race.voting_method]}.higher`, {name: left.name, other_name: right.name})],
+                ['var(--brand-gray-1)', t(`results_ext.head_to_head_key.${methodValueToTextKey[race.voting_method]}.equal`)],
+                [CHART_COLORS[1], t(`results_ext.head_to_head_key.${methodValueToTextKey[race.voting_method]}.higher`, {name: right.name, other_name: left.name})],
+            ]} />
+        </>}
         <Divider variant='middle' sx={{width: '100%', m:1}}/>
         <Typography variant='h6'>{t(`results_ext.voter_profile_average_${ranked? 'ranks' : 'scores'}`, {name: refCandidate.name})}</Typography>
         {totalTopScored == 0 ? 'n/a' : <>

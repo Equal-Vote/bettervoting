@@ -261,7 +261,7 @@ results:
     first_choice_title: First Choice Preferences
     final_round_title: Final Runoff
     table_title: Ranked Choice Tabulation Rounds
-    runoff_majority: majority of remaining active votes
+    runoff_majority: majority threshold (½ of remaining active votes)
     exhausted: Exhausted
     tabulation_candidate_column: '{{capital_candidate}}'
     round_column: Round {{n}}
@@ -279,7 +279,7 @@ results:
     runoff_description:
       - Each vote goes to the voter's preferred finalist.
       - Finalist with most votes wins.
-    runoff_majority: majority of voters with preference
+    runoff_majority: majority threshold (½ of voters with preference)
     runoff_no_preference_footnote: "{{percentage}}% of voters expressed no preference between the two finalists."
     score_table_title: Scores Table
     score_table_columns:
@@ -650,9 +650,9 @@ tabulation_logs:
 
     # Five-star tiebreak
     five_star_first: >
-      **Five-Star Tiebreaker**: {{names}} is the first finalists with most five-star scores at {{votes}} votes.
+      **Five-Star Tiebreaker**: {{name}} is the first finalist with the most five-star scores at {{votes}} votes.
     five_star_second: >
-      **Five-Star Tiebreaker**: {{names}} is the second finalists with most five-star scores at {{votes}} votes.
+      **Five-Star Tiebreaker**: {{name}} is the second finalist with the most five-star scores at {{votes}} votes.
     five_star_tied: >
       **Five-Star Tiebreaker**: {{names}} remain tied with {{votes}} five-star votes each.
 

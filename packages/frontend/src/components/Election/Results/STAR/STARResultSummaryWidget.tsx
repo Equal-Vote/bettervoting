@@ -35,9 +35,17 @@ const STARResultSummaryWidget = ({ results, roundIndex, t }: {results: starResul
     if(results.roundResults[roundIndex].runner_up.length == 0)
         return <Typography>{t('results.single_candidate_result', {name: histData[0].name})}</Typography>
 
-    const pieData = candidates.slice(0, 2).map((c, i) => ({
+    // The runoff is between the winner and the actual runner-up chosen by the
+    // tabulator, NOT just the top two by score — those can diverge when a
+    // five-star or random tiebreaker picks a runner-up that isn't the
+    // second-highest scorer in candidate-list order.
+    const finalists = [
+        results.roundResults[roundIndex].winners[0],
+        results.roundResults[roundIndex].runner_up[0],
+    ];
+    const pieData = finalists.map((c, i) => ({
         name: c.name,
-        votes: c.votesPreferredOver[candidates[1-i].id]
+        votes: c.votesPreferredOver[finalists[1-i].id]
     }));
 
     const noPreferenceVotes = results.summaryData.nTallyVotes - pieData[0].votes - pieData[1].votes;
