@@ -875,7 +875,7 @@ wizard:
   restricted_question: Would you like your {{election}} to be restricted to a pre-defined voter list? !tip(restricted)
 
   template_title: Choose Voters
-  template_prompt: (You can change this later, if needed.)
+  template_prompt: Choose how voter IDs should be managed.
 
   demo_title: Allows multiple votes per device
   demo_description: Great for demonstrations where multiple people are using the same device
@@ -886,11 +886,11 @@ wizard:
   unlisted_title: one person, one vote 
   unlisted_description: '{{capital_election}} will be open to anyone who has been given the ballot link'
 
-  email_list_title: Email List
-  email_list_description: Provide a list of emails for your voters. Personal links will be sent to each of these voters once the election starts
+  email_list_title: BetterVoting-managed voter IDs
+  email_list_description: Provide voter emails. BetterVoting will create private voting links and send them by email once the election starts
 
-  id_list_title: ID List
-  id_list_description: Provide a list of IDs for your voters. Voters will authenticate themselves using their ID before voting
+  id_list_title: Admin-managed voter IDs
+  id_list_description: Provide voter IDs yourself. Voters will use the IDs you give them to access their ballots
 
   add_races_later: '{{capital_races}} will be added later'
 
