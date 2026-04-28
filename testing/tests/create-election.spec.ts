@@ -42,7 +42,7 @@ test.describe('Create Election', () => {
         await expect(page.getByRole('heading', { name: 'Strawberry', exact: true })).toBeVisible();
     });
 
-    test('From About Us, Election, More than one race, Email List ', async ({ page }) => {
+    test('From About Us, Election, More than one race, BetterVoting-managed voter IDs', async ({ page }) => {
         await page.goto('/');
         
         // Start from About Page (to test nav)
@@ -63,7 +63,7 @@ test.describe('Create Election', () => {
         await page.getByRole('textbox', { name: 'Election Support Email' }).click();
         await page.getByRole('textbox', { name: 'Election Support Email' }).fill('test@gmail.com');
         await page.getByRole('button', { name: 'Continue' }).click();
-        await page.getByRole('button', { name: 'Email List' }).click();
+        await page.getByRole('button', { name: 'BetterVoting-managed voter IDs' }).click();
 
         // Confirm title
         await expect(page.getByText('Multiple Racesdraft')).toBeVisible({timeout: 2000});
@@ -79,7 +79,7 @@ test.describe('Create Election', () => {
         await expect(page.getByText('Voter ID', { exact: true })).toBeHidden();
     });
 
-    test('Poll, Single Race, ID List', async ({ page }) => {
+    test('Poll, Single Race, Admin-managed voter IDs', async ({ page }) => {
         await page.goto('/');
 
         // Fill out form
@@ -87,7 +87,7 @@ test.describe('Create Election', () => {
         await page.getByRole('radio', { name: 'Poll' }).check();
         await page.getByRole('radio', { name: 'Just one' }).check();
         await page.getByRole('textbox', { name: 'Question Title' }).click();
-        await page.getByRole('textbox', { name: 'Question Title' }).fill('Poll + Single Race + ID List');
+        await page.getByRole('textbox', { name: 'Question Title' }).fill('Poll + Single Race + Admin-managed voter IDs');
         await page.getByRole('textbox', { name: 'Question Title' }).blur();
         await page.getByRole('button', { name: 'Voting Method', exact: true }).click();
         await page.getByRole('radio', { name: 'Basic Multi-Winner' }).check();
@@ -104,7 +104,7 @@ test.describe('Create Election', () => {
         await page.getByRole('textbox', { name: 'Election Support Email' }).click();
         await page.getByRole('textbox', { name: 'Election Support Email' }).fill('test@gmail.com');
         await page.getByRole('button', { name: 'Continue' }).click();
-        await page.getByRole('button', { name: 'ID List' }).click();
+        await page.getByRole('button', { name: 'Admin-managed voter IDs' }).click();
 
         // Confirm support email
         await page.getByRole('button', { name: 'Edit Settings' }).click({timeout: 2000});

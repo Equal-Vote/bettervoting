@@ -4,7 +4,7 @@ export const createElection = async (
     page:Page, 
     electionOrPoll:'Election' | 'Poll', 
     title:string, restricted:boolean, 
-    choseVoters: 'Email List' | 'ID List' | 'Allows multiple votes per device' | 'one person, one vote') => 
+    choseVoters: 'BetterVoting-managed voter IDs' | 'Admin-managed voter IDs' | 'Allows multiple votes per device' | 'one person, one vote') => 
     {
     await page.goto('/');
     await page.getByRole('button', { name: 'New Election' }).click();
