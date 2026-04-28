@@ -1,3 +1,7 @@
+:root {
+  color-scheme: only light;
+}
+
 * {
   /* NOTE: these variables are named based on where they're used
   but in the future we should consider reducing them and giving generic names*/
