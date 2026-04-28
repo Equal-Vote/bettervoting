@@ -377,7 +377,8 @@ const VotePage = () => {
             {t('ballot.dialog_cancel')}
           </SecondaryButton>
           <PrimaryButton
-            onClick={() => submit()}>
+            onClick={() => submit()}
+            disabled={isPending}>
             {t('ballot.dialog_submit')}
           </PrimaryButton>
         </DialogActions>
