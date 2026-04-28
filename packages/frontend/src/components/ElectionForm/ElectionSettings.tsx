@@ -27,6 +27,7 @@ export default function ElectionSettings() {
     const {t} = useSubstitutedTranslation(election.settings.term_type, {min_rankings, max_rankings});
 
     const [editedElectionSettings, setEditedElectionSettings] = useState(election.settings);
+    const [editedIsPublic, setEditedIsPublic] = useState(!!election.is_public);
     const [publicResults, setPublicResults] = useState(election.settings.public_results);
     const [ballotUpdates, setBallotUpdates] = useState(election.settings.ballot_updates);
 
@@ -38,6 +39,7 @@ export default function ElectionSettings() {
     // Sync state when election context changes
     const syncState = () => {
         setEditedElectionSettings(election.settings);
+        setEditedIsPublic(!!election.is_public);
         setPublicResults(election.settings.public_results);
         setBallotUpdates(election.settings.ballot_updates);
         setBallotUpdatesDisabled(!ballotUpdatesConditionsMet || election.settings.public_results);
@@ -78,6 +80,7 @@ export default function ElectionSettings() {
         }
         const success = await updateElection(election => {
             election.settings = editedElectionSettings
+            election.is_public = editedIsPublic
         })
         if (!success) return false
         await refreshElection()
@@ -103,6 +106,9 @@ export default function ElectionSettings() {
          setBallotUpdatesDisabled(!ballotUpdatesConditionsMet || e.target.checked);
          setBallotUpdatesDisabledMsg(ballotUpdatesConditionsMet && e.target.checked);
          applySettingsUpdate(settings => { settings.public_results = e.target.checked; });
+    };
+    const onChangeIsPublic = async(e) => {
+         setEditedIsPublic(e.target.checked);
     };
     const CheckboxSetting = ({setting, disabled=undefined, checked=undefined, onChange=undefined, hidden=false, helperText=false}: CheckboxSettingProps) => <>
             <FormControlLabel hidden = {hidden} disabled={disabled} control={
@@ -192,7 +198,7 @@ export default function ElectionSettings() {
                                     onChange={onChangePublicResults} disabled={election.state !== 'draft' || publicResultsDisabled} helperText={publicResultsDisabled}/>}
                                 <CheckboxSetting setting='require_instruction_confirmation'/>
                                 <CheckboxSetting setting='draggable_ballot'/>
-                                <CheckboxSetting setting='is_public'/>
+                                <CheckboxSetting setting='is_public' checked={editedIsPublic} onChange={onChangeIsPublic}/>
                                 <CheckboxSetting setting='max_rankings' onChange={(e) => applySettingsUpdate(settings => {
                                     settings.max_rankings = e.target.checked ? default_rankings : undefined })
                                 }/>
