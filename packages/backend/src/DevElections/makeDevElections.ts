@@ -9,12 +9,14 @@ import wizardstar from './elections/wizardstar'
 import emailtracking from './elections/emailtracking'
 import writeins from './elections/writeins'
 import tiechecks from './elections/tiechecks'
+import starprordering from './elections/starprordering'
 
 const allDefinitions: DevElectionDefinition[] = [
     wizardstar,
     emailtracking,
     writeins,
     tiechecks,
+    starprordering,
 ];
 
 async function main() {
