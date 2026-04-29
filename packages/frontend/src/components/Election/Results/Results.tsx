@@ -521,7 +521,7 @@ export default function Results({ race, results }: {race: Race, results: Electio
             </Typography>
         </>}
         </Box>
-        {results.summaryData.nTallyVotes > 1 &&
+        {results.summaryData.nTallyVotes > 1 && results.summaryData.candidates.length > 1 &&
           <>
           {results.votingMethod === "STAR" && <STARResultsViewer filterRandomFromLogs={removeTieBreakFromTitle}/>}
           {results.votingMethod === "Approval" && <ApprovalResultsViewer/>}
