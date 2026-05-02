@@ -138,7 +138,7 @@ const sendEmailsController = async (req: IElectionRequest, res: Response, next: 
 
     const Jobs: email_request_event[] = []
     const reqId = req.contextId ? req.contextId : randomUUID();
-    const url = req.protocol + '://' + req.get('host')
+    const url = ServiceLocator.globalData().mainUrl;
     electionRoll.forEach(roll => {
         Jobs.push(
             {
