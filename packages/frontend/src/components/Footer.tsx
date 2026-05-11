@@ -95,7 +95,7 @@ export default function Footer() {
 						<Box
 							component="img"
 							alt="Equal Vote Coalition Logo"
-							src="https://assets.nationbuilder.com/unifiedprimary/sites/1/meta_images/original/evc_logo.png?1730324377"
+							src="/images/evc_logo.png"
 							
 							sx={{
 								width: '100%',
