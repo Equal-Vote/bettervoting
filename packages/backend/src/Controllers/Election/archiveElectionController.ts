@@ -25,7 +25,8 @@ const archiveElection = async (req: IElectionRequest, res: Response, next: NextF
 
     var failMsg = "Failed to update Election";
     election.state = 'archived'
-    const updatedElection = await ElectionsModel.updateElection(req.election, req, `Archive election`);
+    const expected_update_date = req.body.expected_update_date;
+    const updatedElection = await ElectionsModel.updateElection(req.election, req, `Archive election`, expected_update_date);
     if (!updatedElection) {
         Logger.info(req, failMsg);
         throw new BadRequest(failMsg)

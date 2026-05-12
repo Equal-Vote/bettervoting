@@ -6,7 +6,7 @@ import { Kysely, sql } from 'kysely'
 import { Election, electionValidation } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { sharedConfig } from '@equal-vote/star-vote-shared/config';
 import { IElectionStore } from './IElectionStore';
-import { InternalServerError } from '@curveball/http-errors';
+import { Conflict, InternalServerError } from '@curveball/http-errors';
 import { BadRequest } from "@curveball/http-errors";
 
 const tableName = 'electionDB';
@@ -79,7 +79,7 @@ export default class ElectionsDB implements IElectionStore {
                 .executeTakeFirst()
 
             if (expected_update_date !== undefined && result.numUpdatedRows === BigInt(0)) {
-                throw new InternalServerError('Concurrent write detected, please try again');
+                throw new Conflict('Concurrent write detected, please try again');
             }
 
             return await trx.insertInto('electionDB')

@@ -38,7 +38,8 @@ const editElection = async (req: IElectionRequest, res: Response, next: NextFunc
     Logger.debug(req, `election ID = ${inputElection}`);
     var failMsg = `Failed to update election`;
 
-    const updatedElection = await ElectionsModel.updateElection(inputElection, req, `User editing draft Election`);
+    const expected_update_date = req.body.expected_update_date;
+    const updatedElection = await ElectionsModel.updateElection(inputElection, req, `User editing draft Election`, expected_update_date);
     if (!updatedElection) {
         Logger.error(req, failMsg);
         throw new BadRequest(failMsg)
