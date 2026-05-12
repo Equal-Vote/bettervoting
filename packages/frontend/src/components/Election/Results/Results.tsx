@@ -389,7 +389,7 @@ function STVResultsViewer() {
 
   const winIndex = (aa) => {
     const i = results.elected.findIndex(e => e.id == aa.id);
-    if(i == -1) return results.elected.length;
+    if(i == -1) return Infinity;
     return i;
   }
 
