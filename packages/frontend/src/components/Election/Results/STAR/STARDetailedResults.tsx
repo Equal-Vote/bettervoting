@@ -17,26 +17,21 @@ const STARDetailedResults = () => {
     const {t} = useRace();
     results = results as starResults;
 
-    // Finalists come from the round's winner + runner-up — not from
-    // summaryData.candidates positions 0 and 1, which are score-ordered and
-    // can disagree with the tabulator's actual finalists when a tiebreaker
-    // (five-star, random, etc.) advances the lower-listed of two score-tied
-    // candidates.
-    const winner = results.roundResults[0].winners[0];
-    const runnerUp = results.roundResults[0].runner_up[0];
+    // Relies on summaryData.candidates being ordered by the backend so that
+    // position 0 is the runoff winner and position 1 is the runoff runner-up
+    // (see Star.ts's winRound / runnerUpRound sort key). The score table
+    // gold-highlights rows 1 and 2 via CSS (.starScoreTable tr:nth-child),
+    // so this ordering is what makes the highlight track the actual finalists
+    // rather than score-position — a tiebreaker (five-star, random, etc.)
+    // can advance a runner-up that isn't the second-highest scorer.
+    // Only reached for single-winner STAR (see Results.tsx).
+    const [winner, runnerUp] = results.summaryData.candidates;
     const finalistOpponent: Record<string, string> = {
         [winner.id]: runnerUp.id,
         [runnerUp.id]: winner.id,
     };
 
-    // Score table rows 1 and 2 are gold-highlighted via CSS (.starScoreTable
-    // tr:nth-child) on the assumption that they're the finalists. Pin the
-    // actual winner + runner-up there before listing the rest by score, so
-    // the highlight tracks who really advanced rather than score-position.
-    const restCandidates = results.summaryData.candidates
-        .filter(c => c.id !== winner.id && c.id !== runnerUp.id);
-    const orderedCandidates = [winner, runnerUp, ...restCandidates];
-    const tableData: candidateTableEntry[] = orderedCandidates.map((c) => ({
+    const tableData: candidateTableEntry[] = results.summaryData.candidates.map((c) => ({
         name: c.name,
         votes: c.score,
         runoffVotes: finalistOpponent[c.id] !== undefined

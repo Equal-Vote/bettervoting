@@ -35,10 +35,12 @@ const STARResultSummaryWidget = ({ results, roundIndex, t }: {results: starResul
     if(results.roundResults[roundIndex].runner_up.length == 0)
         return <Typography>{t('results.single_candidate_result', {name: histData[0].name})}</Typography>
 
-    // The runoff is between the winner and the actual runner-up chosen by the
-    // tabulator, NOT just the top two by score — those can diverge when a
-    // five-star or random tiebreaker picks a runner-up that isn't the
-    // second-highest scorer in candidate-list order.
+    // Read finalists from this round's roundResults rather than from
+    // summaryData.candidates[0..1]. The backend's candidate sort puts the
+    // single-winner runoff pair at positions 0 and 1, but for bloc STAR with
+    // multiple rounds those positions are [round-0 winner, round-1 winner],
+    // not [round-N winner, round-N runner-up]. roundResults[roundIndex] is
+    // the only source that's right for every round.
     const finalists = [
         results.roundResults[roundIndex].winners[0],
         results.roundResults[roundIndex].runner_up[0],
