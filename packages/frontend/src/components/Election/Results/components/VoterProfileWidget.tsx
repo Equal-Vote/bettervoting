@@ -10,7 +10,6 @@ import ResultsBarChart from "./ResultsBarChart";
 import HeadToHeadChart from "./HeadToHeadChart";
 import ResultsKey from "./ResultsKey";
 import { getVoterErrorData } from "./VoterErrorStatsWidget";
-import { starResults } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
 
 // candidates helps define the order
 const VoterProfileWidget = ({topScore, ranked=false} : {topScore: number, ranked?: boolean}) => {
@@ -23,16 +22,15 @@ const VoterProfileWidget = ({topScore, ranked=false} : {topScore: number, ranked
 
     const refCandidate = candidates.find(c => c.id == refCandidateId);
 
-    // For single-winner STAR the two "frontrunners" should be the actual
-    // runoff finalists chosen by the tabulator, not the top two by score —
-    // a five-star/random tiebreaker can promote a runner-up that isn't the
-    // second-highest scorer in candidate-list order.
+    // Assumes summaryData.candidates is ordered meaningfully by the backend:
+    // position 0 is the winner and position 1 is the runner-up. Each tabulator
+    // is responsible for producing that order (STAR via the winRound/
+    // runnerUpRound sort key in Star.ts; IRV/STV via the hareScores +
+    // roundResults sort; Approval/Plurality by score; STAR_PR via its
+    // post-tabulation reorder in AllocatedScore.ts). Multi-winner races are
+    // gated out below (race.num_winners <= 1) because the "runner-up"
+    // concept stops being sharp once there are several winners.
     let [left, right] = candidates.slice(0, 2);
-    if (race.voting_method === 'STAR' && results.elected.length === 1) {
-        const starRes = results as starResults;
-        left = starRes.roundResults[0].winners[0];
-        right = starRes.roundResults[0].runner_up[0];
-    }
 
     const avgBallot: {[key: string]:{name, score}} = {};
     candidates.forEach((c) => {
