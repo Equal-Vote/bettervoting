@@ -32,7 +32,8 @@ const claimElection = async (req: IElectionRequest, res: Response, next: NextFun
     }
 
     req.election.owner_id = req.user.sub;
-    await ElectionsModel.updateElection(req.election, req, `Transferring Ownership`);
+    const expected_update_date = req.body.expected_update_date;
+    await ElectionsModel.updateElection(req.election, req, `Transferring Ownership`, expected_update_date);
 
     res.send()
 }
