@@ -23,8 +23,6 @@ const finalizeElection = async (req: IElectionRequest, res: Response, next: Next
         throw new BadRequest(msg)
     }
 
-    innerDeleteAllBallotsForElectionID(req);
-
     const electionId = req.election.election_id;
     let electionRoll: ElectionRoll[] | null = null
     if (req.election.settings.voter_access === 'closed' && req.election.settings.invitation === 'email') {
@@ -37,13 +35,17 @@ const finalizeElection = async (req: IElectionRequest, res: Response, next: Next
     }
 
     var failMsg = "Failed to update Election";
-    req.election.state = 'finalized'
+    // Use a finalized copy for the OC-protected update; leave req.election in draft state
+    // so the subsequent ballot-deletion's draft-state guard still passes.
+    const finalizedElection = { ...req.election, state: 'finalized' as const }
     const expected_update_date = req.body.expected_update_date;
-    const updatedElection = await ElectionsModel.updateElection(req.election, req, `Finalizing election`, expected_update_date);
+    const updatedElection = await ElectionsModel.updateElection(finalizedElection, req, `Finalizing election`, expected_update_date);
     if (!updatedElection) {
         Logger.info(req, failMsg);
         throw new BadRequest(failMsg)
     }
+
+    await innerDeleteAllBallotsForElectionID(req);
 
     res.json({ election: updatedElection })
 }
