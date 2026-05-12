@@ -4,7 +4,7 @@ import { checkForDuplicates } from "./Util";
 import { candidateValidation } from "./Candidate";
 import { WriteInCandidate } from "./WriteIn";
 
-const validVotingMethods = ['STAR', 'STAR_PR', 'Approval', 'RankedRobin', 'IRV', 'Plurality', 'STV'] as const;
+export const validVotingMethods = ['STAR', 'STAR_PR', 'Approval', 'RankedRobin', 'IRV', 'Plurality', 'STV'] as const;
 export type VotingMethod = typeof validVotingMethods[number];
 
 export const methodValueToTextKey = {

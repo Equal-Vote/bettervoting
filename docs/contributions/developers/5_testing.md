@@ -43,7 +43,7 @@ All E2E tests should be run from the `testing` directory.
 Run all tests:
 
 ```
-npx run playwright test
+npx playwright test
 ```
 
 Run a specific test:
@@ -57,7 +57,7 @@ Playwright supports 3 browsers: Firefox, Chromium, and Webkit. Running all the t
 Viewing detailed report of previous run:
 
 ```
-npx playwright show-result
+npx playwright show-report
 ```
 
 ### Add Tests

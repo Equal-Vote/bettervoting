@@ -68,7 +68,7 @@ const sendInvitationsController = async (req: IElectionRequest, res: Response, n
 async function sendBatchEmailInvites(req: any, electionRoll: ElectionRoll[], election: Election) {
     const Jobs: SendInviteEvent[] = []
     const reqId = req.contextId ? req.contextId : randomUUID();
-    const url = req.protocol + '://' + req.get('host')
+    const url = ServiceLocator.globalData().mainUrl;
     electionRoll.forEach(roll => {
         Jobs.push(
             {
@@ -99,7 +99,7 @@ const sendInvitationController = async (req: any, res: any, next: any) => {
     if (!(req.election.settings.voter_access === 'closed' && req.election.settings.invitation === 'email')) {
         throw new BadRequest('Email invitations not enabled')
     }
-    const url = req.protocol + '://' + req.get('host')
+    const url = ServiceLocator.globalData().mainUrl;
 
     const electionId = req.election.election_id;
     const election = req.election

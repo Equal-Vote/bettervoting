@@ -127,6 +127,7 @@ support_blurb: For support on this {{election}} please contact [{{email}}](mailt
 # Share Button dropdown (ex. https://bettervoting.com/pres24/thanks)
 share:
   button: Share {{capital_election}}
+  button_results: Share {{capital_election}} results
   facebook: Facebook
   X: X
   reddit: Reddit
@@ -205,6 +206,8 @@ number:
 
 # Results Example: bettervoting.com/tcvc7r/results
 results:
+  admin_results_toggle: '{{capital_election}} results are public !tip(public_results)'
+
   preliminary_title: PRELIMINARY RESULTS
   official_title: OFFICIAL RESULTS
   election_title: |
@@ -221,17 +224,16 @@ results:
   waiting_for_results: |
     Still waiting for results
     No votes have been cast
-  single_vote: |
-    There's only one vote so far.
-    Full results will be displayed once there's more votes.
   tie_title: 'Tied!'
-  tiebreak_subtitle: '{{names}} won after tie breaker'
+  random_tiebreak_subtitle: '{{names}} won after tiebreaker !tip(random_tie_order)'
   win_long_title_prefix: '⭐Winners⭐'
   win_title_postfix_one: 'wins!'
   win_title_postfix: 'win!'
   vote_count: '{{n}} voters'
   method_context: 'Voting Method: {{voting_method}}'
   learn_link_text: How {{voting_method}} works
+
+  admin_title: Admin Result Controls
 
   choose_one:
     bar_title: Votes for each {{capital_candidate}}
@@ -342,6 +344,7 @@ keyword:
     race_title: elected office title
     ballot: ballot
     vote: vote
+    votes: votes
 
   poll:
     election: poll
@@ -353,6 +356,7 @@ keyword:
     race_title: question title
     ballot: response
     vote: response
+    votes: responses
 
   # General Terms
   yes: Yes
@@ -658,9 +662,9 @@ tabulation_logs:
 
     # Random tiebreak
     random_first: >
-      **Random Tiebreaker**: {{name}} is the first finalist after a random tiebreaker.
+      **Random Tiebreaker**: {{name}} is the first finalist after a random tiebreaker. !tip(random_tie_order)
     random_second: >
-      **Random Tiebreaker**: {{name}} is the second finalist after a random tiebreaker.
+      **Random Tiebreaker**: {{name}} is the second finalist after a random tiebreaker. !tip(random_tie_order)
 
     # Automatic runoff
     runoff_win: >
@@ -678,21 +682,26 @@ tabulation_logs:
     runoff_five_star_tiebreak: >
       **Five-Star Tiebreaker**: {{winner}} wins against {{runner_up}} with {{winner_votes}} 5 star scores to {{runner_up_votes}}.
     runoff_random: >
-      **Random Tiebreaker**: {{winner}} wins against {{runner_up}} after a random tiebreaker.
+      **Random Tiebreaker**: {{winner}} wins against {{runner_up}} after a random tiebreaker. !tip(random_tie_order)
+
+disabled_msgs:
+    ballot_updates_with_prelim: Not supported when the election starts off with public results. This can be adjusted under the preview results tab.
+    ballot_updates_when_open: Only supported when election uses email list
+    public_results: Not supported with vote editing. This can be adjusted under the setting tab.
 
 #######################################
 #### PRIORITY 4 : Info Bubbles ####
 #######################################
-
-disabled_msgs:
-    ballot_updates: not supported with preliminary results
-    public_results: not supported with vote editing
 
 # Info bubbles
 tips:
   nota:
     title: None of the Above
     description: This functions just like any other candidate, except that its guaranteed to be listed at the bottom of the ballot. Most methods will allow voters to support None of the Above (NOTA) in addition to the other candidates.
+
+  random_tie_order: 
+    title: Random Tiebreaker Order
+    description: Random ties are broken from highest to lowest priority in the order {{tiebreak_candidate_names}}. This order was determined from shuffling the original candidate list. [Read more about ties](https://docs.bettervoting.com/help/ties.html#random-tie-breakers)
 
   public_archive: 
     title: Public Election Archive
@@ -727,16 +736,23 @@ tips:
     description: Allow voters to change their vote while election is still open
 
   public_results:
-    title: Show Preliminary Results
-    description: Allow voters to view preliminary results. (Administrators can make results public at any time.)
-
-  random_ties:
-    title: Enable Random Tie-Breakers
-    description: Break tie's randomly when the standard tie breaker protocol is insufficient
+    title: Public Results
+    description: |
+      Allows voters to see the results of the {{election}}.
+      If enabled while voting is open then voters will be shown to the preliminary results after completing their ballot.
+      High profile {{elections}} will usually keep the results hidden, and then reveal them after the {{election}} is closed.
 
   voter_groups:
     title: Enable Voter Groups
     description: Allow different voter groups access to different races within a larger election (ex. districts within jurisdiction).
+
+  email_list:
+    title: $t(wizard.email_list_title)
+    description: $t(wizard.email_list_description) Recommended to maximize security.
+
+  id_list:
+    title: $t(wizard.id_list_title)
+    description: $t(wizard.id_list_description) Offers more flexibility than the email list option.
 
   custom_email_invite: 
     title: Customize Emails To Voters
@@ -875,7 +891,7 @@ wizard:
   restricted_question: Would you like your {{election}} to be restricted to a pre-defined voter list? !tip(restricted)
 
   template_title: Choose Voters
-  template_prompt: (You can change this later, if needed.)
+  template_prompt: Choose how voter IDs should be managed.
 
   demo_title: Allows multiple votes per device
   demo_description: Great for demonstrations where multiple people are using the same device
@@ -886,11 +902,13 @@ wizard:
   unlisted_title: one person, one vote 
   unlisted_description: '{{capital_election}} will be open to anyone who has been given the ballot link'
 
-  email_list_title: Email List
-  email_list_description: Provide a list of emails for your voters. Personal links will be sent to each of these voters once the election starts
+  email_list_title: BetterVoting-managed voter IDs
+  email_list_title_with_tip: $t(wizard.email_list_title) !tip(email_list)
+  email_list_description: Provide voter emails. BetterVoting will create private voting links and send them by email once the election starts
 
-  id_list_title: ID List
-  id_list_description: Provide a list of IDs for your voters. Voters will authenticate themselves using their ID before voting
+  id_list_title: Admin-managed voter IDs
+  id_list_title_with_tip: $t(wizard.id_list_title) !tip(id_list)
+  id_list_description: Provide voter IDs yourself. Voters will use the IDs you give them to access their ballots
 
   add_races_later: '{{capital_races}} will be added later'
 
@@ -1066,10 +1084,6 @@ admin_home:
     description: View Results
     button: View Results
 
-  public_results: 
-    make_public: Make results public
-    make_private: Make results private
-
   archive:
     description: Archive
     subtext: Archives {{election}}, preventing future changes and hiding it from the {{elections}} page
@@ -1081,27 +1095,24 @@ admin_home:
 
   archive_snack: 'Election successfully archived!'
 
-  close:
-    description: Close
-    subtext: Closes the {{election}}, preventing new votes
-    button: Close
-
-  open:
-    description: Open
-    subtext: Opens the {{election}}, allowing votes
-    button: Open
-
   close_snack: 'Election successfully closed!'
   open_snack: 'Election successfully opened!'
+  election_is_open: 'Open for {{votes}}'
 
   share:
     description: Share {{capital_election}}
     # Button is defined in the top level share section
 
   finalize_invitations_will_send: Invitations will be sent to your voters
-  finalize_description: When finished setting up your {{election}}, finalize it. Once final, it can't be edited. 
-  finalize_voting_begins_later: Voting begins after your specified start time.
-  finalize_voting_begins_now: Voting begins immediately.
+  finalize_description: |
+    When finished setting up your {{election}}, finalize it. Once final, it can't be edited.
+
+
+  # uncomment whe implementing https://github.com/Equal-Vote/bettervoting/issues/1304
+  # Voting is allowed immediately, but you can choose when your voters are notified.
+
+  # finalize_voting_begins_later: Voting begins after your specified start time.
+  # finalize_voting_begins_now: Voting begins immediately.
   finalize_button: Finalize {{capital_election}}
 
   voter_authentication:
@@ -1115,6 +1126,10 @@ admin_home:
   finalize_confirm:
     title: Confirm Finalize Election
     message: Are you sure you want to finalize your election? Once finalized you won't be able to edit it.
+
+  add_first_voter_roll_confirm:
+    title: Confirm Adding First Voters
+    message: Once your first voters have been added, your voter list settings will be locked in for this election. Would you like to continue?
 
   finalize_email_confirm:
     title: Send Email Blast
@@ -1150,9 +1165,9 @@ election_settings:
 
   ballot_updates: Allow Voters To Edit Vote !tip(ballot_updates)
 
-  public_results: Show Preliminary Results !tip(public_results)
+  preliminary_results: Show Preliminary Results !tip(public_results)
 
-  random_ties: Enable Random Tie-Breakers !tip(random_ties)
+  public_results: Make Results Public !tip(public_results)
 
   voter_groups: Enable Voter Groups !tip(voter_groups)
 

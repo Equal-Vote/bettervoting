@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import Results from './Results';
 import Box from '@mui/material/Box';
-import { Typography } from "@mui/material";
+import { Divider, Typography } from "@mui/material";
 import { useSubstitutedTranslation } from '../../util';
 import { useGetResults } from '../../../hooks/useAPI';
 import useElection from '../../ElectionContextProvider';
@@ -10,11 +10,13 @@ import ShareButton from '../ShareButton';
 import { BallotDataExport } from './BallotDataExport';
 import SupportBlurb from '../SupportBlurb';
 import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
+import ElectionStateWarning from '../ElectionStateWarning';
+import { AdminPageNavigation } from '../Sidebar';
 
 const ViewElectionResults = () => {
     const { election } = useElection();
     const { data, isPending, makeRequest: getResults } = useGetResults(election.election_id)
-    useEffect(() => { getResults() }, [])
+    useEffect(() => { election.settings.public_results && getResults() }, [election.settings.public_results])
     const {t} = useSubstitutedTranslation(election.settings.term_type);
 
     return (
@@ -46,15 +48,15 @@ const ViewElectionResults = () => {
               {t("results.election_title", { title: election.title })}
             </Typography>
 
-              {isPending && <div> {t("results.loading_election")} </div>}
-            {!isPending && !data && (
+            {isPending && <div> {t("results.loading_election")} </div>}
+            {!election.settings.public_results && (
               <>
                 The election admins have not released the results yet. Feel free
                 to swing back later 😊.
               </>
             )}
 
-            {data?.results.map((results, race_index) => (
+            {election.settings.public_results && data?.results.map((results, race_index) => (
                 <Results
                     key={`results-${race_index}`}
                     race={election.races[race_index]}
@@ -85,8 +87,6 @@ const ViewElectionResults = () => {
                   <Box
                     sx={{
                       width: "100%",
-                      
-                     
                       p: 0.8,
                       px: { xs: 5, sm: 1 },
                     }}
@@ -120,6 +120,7 @@ const ViewElectionResults = () => {
           </Box>
         </Box>
         <SupportBlurb />
+        <AdminPageNavigation />
       </>
     );
 }

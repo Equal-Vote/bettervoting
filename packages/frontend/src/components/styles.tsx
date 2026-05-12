@@ -13,7 +13,7 @@ import { ButtonProps } from "@mui/material";
 type TipName = keyof typeof en.tips;
 
 
-export const Tip = (props: {name?: TipName, children?: ReactNode, content?: {title:string, description:string | JSX.Element}}) => {
+export const Tip = (props: {name?: TipName, children?: ReactNode, content?: {title:string, description:string | JSX.Element}, values? : object}) => {
     // TODO: maybe I can insert useElection and useRace within useSubstitutedTranslation?
     const {t: ts, i18n} = useSubstitutedTranslation('election');
     const {t: te} = useElection();
@@ -28,9 +28,9 @@ export const Tip = (props: {name?: TipName, children?: ReactNode, content?: {tit
     return <ClickAwayListener onClickAway={() => setClicked(false)}>
         <Tooltip
             title={<>
-                <strong>{props.name ? t(`tips.${props.name as string}.title`) : props.content.title}</strong>
+                <strong>{props.name ? t(`tips.${props.name as string}.title`, props.values ?? {}) : props.content.title}</strong>
                 <br/>
-                {props.name ? t(`tips.${props.name as string}.description`) : props.content.description}
+                {props.name ? t(`tips.${props.name as string}.description`, props.values ?? {}) : props.content.description}
                 {i18n.exists(learnLinkKey) && <a href={t(learnLinkKey)} target='_blank' rel="noreferrer">Learn More</a>}
             </>}
             onOpen={() => setHovered(true)}
@@ -187,7 +187,7 @@ export const PrimaryButton = (props: CustomButtonProps) => (
     </Button>
 )
 
-export const SecondaryButton = (props: ButtonProps) => (
+export const SecondaryButton = (props: CustomButtonProps) => (
     <Button
         variant="outlined"
         {...props}

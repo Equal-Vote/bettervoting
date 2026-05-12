@@ -1,4 +1,4 @@
-import { Box, Paper, Typography } from "@mui/material";
+import { Box, Divider, Paper, Typography } from "@mui/material";
 import useElection from "../ElectionContextProvider";
 import type { ElectionState } from "@equal-vote/star-vote-shared/domain_model/Election"
 import { ReportProblemOutlined } from "@mui/icons-material";
@@ -10,15 +10,15 @@ export default function ElectionStateWarning
     
     if(state && election.state !== state) return <></>
 
-    return <Paper sx={{display: 'flex', flexDirection: 'column', maxWidth: 600, gap: 2, padding: 2, m: 'auto', mb:4}}>
-        <Box display='flex' flexDirection='row' gap={2} sx={{p: 2, m: 'auto'}}>
+    return <Paper sx={{display: 'flex', flexDirection: 'column', maxWidth: 600, gap: 2, padding: 2, m: 'auto', mb:4, width: '100%'}}>
+        <Box display='flex' flexDirection='row' gap={2} sx={{p: 2, m: 'auto', width: '100%'}}>
             {!hideIcon && <ReportProblemOutlined />}
-            <Box>
+            <Box sx={{width: '100%'}}>
                 <Typography component="p"><b>{t(title)}</b></Typography>
-                <hr/>
-                <Typography component="p">{t(description)}</Typography>
+                <hr/> {/* I think the basic styling looks a bit better than mui's <Divider/>*/}
+                {description && <Typography component="p">{t(description)}</Typography>}
+                {children}
             </Box>
         </Box>
-        {children}
     </Paper>
 }

@@ -2,12 +2,12 @@ import { Box, Button, Pagination } from "@mui/material";
 import React, { ReactNode } from "react";
 import { useState } from 'react';
 import Typography from '@mui/material/Typography';
-import { commaListFormatter, formatPercent, methodValueToTextKey, useSubstitutedTranslation } from '../../util';
+import { commaListFormatter, formatPercent, useSubstitutedTranslation } from '../../util';
 import STARResultSummaryWidget from "./STAR/STARResultSummaryWidget";
 import STARDetailedResults from "./STAR/STARDetailedResults";
 import STARResultDetailedStepsWidget from "./STAR/STARResultDetailedStepsWidget";
 import WinnerResultPages from "./WinnerResultPages";
-import { Race } from "@equal-vote/star-vote-shared/domain_model/Race";
+import { methodValueToTextKey, Race } from "@equal-vote/star-vote-shared/domain_model/Race";
 import { allocatedScoreResults, approvalResults, ElectionResults, irvResults, rankedRobinResults, starCandidate, starResults } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
 import useElection from "../../ElectionContextProvider";
 import DetailExpander from "./components/DetailExpander";
@@ -482,14 +482,14 @@ export default function Results({ race, results }: {race: Race, results: Electio
             </Typography>
           }
         </>}
-        {results.summaryData.candidates.length !== 1 && results.summaryData.nTallyVotes == 0 && <h2>{t('results.waiting_for_results')}</h2>}
-        {results.summaryData.candidates.length !== 1 && results.summaryData.nTallyVotes == 1 && <p>{t('results.single_vote')}</p> }
-        {results.summaryData.candidates.length !== 1 && results.summaryData.nTallyVotes > 1 && <>
+        {results.summaryData.nTallyVotes == 0 && <h2>{t('results.waiting_for_results')}</h2>}
+        {results.summaryData.nTallyVotes > 0 && <>
           {showTitleAsTie?
             <>
             <Typography variant="h5" sx={{fontWeight: 'bold'}}>{t('results.tie_title')}</Typography>
             {!removeTieBreakFromTitle && <Typography component="p" sx={{fontWeight: 'bold'}}>
-                {t('results.tiebreak_subtitle', {names: results.elected.map(c => c.name)})}
+                {/* HACK: the backend doesn't actually export the tiebreak list aside from the roundResult logs, but I happen to know that the backend pre-sorted candidates */}
+                {t('results.random_tiebreak_subtitle', {names: results.elected.map(c => c.name), tiebreak_candidate_names: results.summaryData.candidates.map(c => c.name)})}
             </Typography>}
             </>
           :
@@ -521,7 +521,7 @@ export default function Results({ race, results }: {race: Race, results: Electio
             </Typography>
         </>}
         </Box>
-        {results.summaryData.nTallyVotes > 1 && results.summaryData.candidates.length > 1 &&
+        {results.summaryData.nTallyVotes >= 1 && results.summaryData.candidates.length > 1 &&
           <>
           {results.votingMethod === "STAR" && <STARResultsViewer filterRandomFromLogs={removeTieBreakFromTitle}/>}
           {results.votingMethod === "Approval" && <ApprovalResultsViewer/>}

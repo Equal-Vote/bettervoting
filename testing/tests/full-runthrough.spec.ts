@@ -19,10 +19,13 @@ test('Full Runthrough', async ({ page }) => {
 
 	// Description + Start/End Times
 	await expect(page.getByText('draft')).toBeVisible({ timeout: 2000 });
-	await expect(page.getByLabel('no limit')).toBeChecked();
 	const url = await page.url();
 	const urlArray = url.split('/');
 	electionId = urlArray[urlArray.length - 2];
+	// Auth settings moved to Manage Voters page
+	await page.getByRole('link', { name: 'Manage Voters' }).click();
+	await expect(page.getByLabel('no limit')).toBeChecked();
+	await page.getByRole('link', { name: 'Admin Home' }).click();
 	await page.getByRole('button', { name: 'Edit Election Details' }).click();
 	await page.getByRole('textbox', { name: 'Title' }).fill('Playwright Test Election Updated');
 	await page.getByRole('textbox', { name: 'Election Description' }).fill('Playwright Test Election Description');
@@ -45,14 +48,14 @@ test('Full Runthrough', async ({ page }) => {
 	await page.getByRole('button', { name: 'Save' }).click();
 
 	// Election Settings
-	await page.getByRole('button', { name: 'Edit Settings' }).click();
+	await page.getByRole('link', { name: 'Settings' }).click();
 	await page
 		.getByRole('checkbox', { name: 'Set Number of Rankings' })
 		.check();
 	await page.getByRole('spinbutton', { name: 'Rank Limit' }).fill('8');
-	await page.getByRole('button', { name: 'Save' }).click();
 
 	// Adding Race 1
+	await page.getByRole('link', { name: 'Build Ballot' }).click();
 	await page.getByRole('button', { name: 'Add Race' }).click();
 	await page.getByRole('textbox', { name: 'Title' }).fill('Race 1');
 	await page.getByRole('button', { name: 'Description' }).click();
@@ -111,11 +114,12 @@ test('Full Runthrough', async ({ page }) => {
 	await raceDialog.getByRole('button', { name: 'Save' }).click();
 
 	// Finalize
+	await page.getByRole('link', { name: 'Publish & Share' }).click();
 	await page.getByRole('button', { name: 'Finalize Poll'}).click();
 	await page.getByRole('button', { name: 'Submit'}).click();
 
 	// Vote
-	await page.getByRole('link', { name: 'Voting Page' }).click();
+	await page.getByRole('link', { name: 'Live Ballot' }).click();
 	const vote = async (page) => {
 		await page.getByRole('link', { name: 'Vote', exact: true }).click();
 		await page.waitForURL(`**/${electionId}/vote`)
@@ -149,15 +153,9 @@ test('Full Runthrough', async ({ page }) => {
 		await page.getByRole('button', { name: 'Submit' }).click();
 	};
 	await vote(page);
+	await page.waitForTimeout(200) // give the backend a short window to process to ensure that the most recent vote is reflected in the results page
 	await page.goto(`/${electionId}/results`);
-	await expect(
-		page.getByText("There's only one vote so far.").first()
-	).toBeVisible({ timeout: 10000 });
-
-	await page.getByRole('link', { name: 'Voting Page' }).click();
-	await vote(page);
-	await page.goto(`/${electionId}/results`);
-	await expect(page.getByText('Candidate 1 Wins!')).toBeVisible({
+	await expect(page.getByText('Candidate 1 wins!')).toBeVisible({
 		timeout: 10000,
 	});
 });

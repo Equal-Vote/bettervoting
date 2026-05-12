@@ -94,6 +94,30 @@ React 17 app with Material-UI, built via RSBuild. Entry point is `src/index.tsx`
 ### Testing (`testing/`)
 Playwright E2E tests. `playwright.config.ts` reads `FRONTEND_URL` from `testing/.env`. Authentication is handled by the `auth.setup.ts` setup project; all other tests depend on it. Browsers: Chromium and Firefox (2 workers).
 
+#### E2E Testing Gotchas
+
+**Admin page URLs** — Admin sub-pages use `/${id}/admin/<page>`, e.g. `/${id}/admin/voters`, `/${id}/admin/build_ballot`. A common mistake is omitting `/admin/`.
+
+**Admin sidebar links by election state** — In draft, the ballot link is labeled "Voting Page". Once finalized/open, it becomes "Live Ballot". Results link is always "Live Results" (not "View Results").
+
+**Admin page layout after the rework** — Components are split across dedicated pages:
+- Election auth settings (voter ID/email/device/no-limit radios) → Manage Voters (`/admin/voters`)
+- Race editing → Build Ballot (`/admin/build_ballot`)
+- Toggle settings (public results, rankings, etc.) → Settings (`/admin/settings`)
+- Share button → Publish & Share (`/admin/publish`)
+
+**MUI Switch targeting** — `getByRole('switch')` never matches (MUI renders `role="checkbox"`). `SwitchSetting` uses `FormControlLabel` with `labelPlacement="start"`, which creates a proper HTML label association, so switches can be targeted by label name:
+```ts
+await page.getByRole('checkbox', { name: 'Random Candidate Order' }).click();
+```
+For i18n labels with `!tip()` syntax, match a substring: `{ name: /Set Number of Rankings/, exact: false }`.
+
+**React Router trailing slash** — `waitForURL(**/${id}/)` always times out because React Router `<Link>` navigates to `/${id}` (no trailing slash). Remove these waits and rely on the next action's built-in wait instead.
+
+**"Add Voters" confirmation dialog** — The first time "Add Voters" is clicked (zero existing voters), a confirmation dialog appears before the voter form. Always click `Submit` to dismiss it, then interact with the voter form.
+
+**i18n `!tip()` syntax** — Translation strings like `"Set Number Of Rankings Allowed !tip(max_rankings)"` render as text followed by a tooltip icon button. `getByText` on the parent element will include the icon, so use `{ exact: false }` or match just a substring of the label text.
+
 ### Key Environment Variables
 - `DATABASE_URL` — PostgreSQL connection string
 - `KEYCLOAK_URL`, `KEYCLOAK_SECRET` — Auth

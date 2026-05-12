@@ -28,7 +28,7 @@ const OpenElections = () => {
             pendingMessage='Loading Elections...'
             handleOnClick={(election) => navigate(`/${String(election.raw.election_id)}`)}
             defaultSortBy='update_date'
-            emptyContent='No Election Invitations'
+            emptyContent='No open elections at this time'
         />
     </Container>
 }

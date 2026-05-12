@@ -124,13 +124,14 @@ test.beforeEach(async ({ context, request }) => {
 });
 
 test('vote in election restricted by account', async ({page}) => {
-    await page.goto(`/${electionId}/admin`);
+    await page.goto(`/${electionId}/admin/voters`);
     await page.getByLabel('user (login required)').click();
     await expect(page.getByLabel('user (login required)')).toBeChecked();
+    await page.getByRole('link', { name: 'Publish & Share' }).click();
+    await page.waitForURL(`**/${electionId}/admin/publish`)
     await page.getByRole('button', { name: 'Finalize Election' }).click();
     await page.getByRole('button', { name: 'Submit' }).click();
-    await page.getByRole('link', { name: 'Voting Page' }).click();
-    await page.waitForURL(`**/${electionId}/`)
+    await page.getByRole('link', { name: 'Live Ballot' }).click();
     await page.getByRole('link', { name: 'Vote', exact: true }).click();
     await page.getByLabel('I have read the instructions').check();
     await page.getByRole('button', { name: 'Score Candidate 1 0' }).click();
@@ -160,8 +161,7 @@ test('vote in election restricted by account', async ({page}) => {
     await page.getByRole('button', { name: 'Submit' }).click();
     await expect(page.getByRole('heading', { name: 'Ballot Submitted' })).toBeVisible();
     await page.waitForTimeout(1000);
-    await page.getByRole('link', { name: 'Voting Page' }).click();
-    await page.waitForURL(`**/${electionId}/`)
+    await page.getByRole('link', { name: 'Live Ballot' }).click();
     await expect(page.getByRole('heading', { name: 'Ballot Submitted' })).toBeVisible();
     await expect(page.locator('#root')).toContainText('Ballot Submitted');
     await page.getByRole('button', { name: 'Hello, Test' }).click();

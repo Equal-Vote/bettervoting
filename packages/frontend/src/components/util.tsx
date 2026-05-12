@@ -1,4 +1,4 @@
-import { Box, Button, Divider, FormControlLabel, Link, TextField, Typography } from "@mui/material";
+import { Box, Button, Divider, FormControlLabel, FormHelperText, Link, Switch, TextField, Typography } from "@mui/material";
 import { DateTime } from "luxon";
 import { useTranslation } from "react-i18next";
 import { SecondaryButton, Tip } from "./styles";
@@ -85,8 +85,6 @@ export const capitalize = (str = '') =>
 export function hashString(inputString: string) {
     return createHash('sha256').update(inputString).digest('hex')
 }
-
-export { methodValueToTextKey } from '@equal-vote/star-vote-shared/domain_model/Race';
 
 export const formatPercent = (f: number): string => {
   if(0 < f && f < .01) return '<1%';
@@ -181,7 +179,7 @@ export const useSubstitutedTranslation = (electionTermType = 'election', v = {})
       if (typeof value === 'string') {
         if (key == 'datetime' || key == 'datetime2' || key == 'listed_datetime') {
           values[key] = new Date(value)
-        } else if (value.length > 2) {
+        } else if (value.length > 2 && !key.startsWith('capital_')) {
           values[`capital_${key}`] = capitalize(value)
         }
       }
@@ -196,7 +194,6 @@ export const useSubstitutedTranslation = (electionTermType = 'election', v = {})
     year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric',
     timeZoneName: 'short', timeZone: v['time_zone'] ?? undefined
   }
-
 
   const { t, i18n } = useTranslation()
 
@@ -225,7 +222,7 @@ export const useSubstitutedTranslation = (electionTermType = 'election', v = {})
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [t, electionTermType, methodKey, vKey])
 
-  const applySymbols = (txt, includeTips, newWindow) => {
+  const applySymbols = (txt, v) => {
     const applyLinks = (txt) => {
       if (typeof txt !== 'string') return txt;
       const parts = txt.split(rLink)
@@ -235,7 +232,7 @@ export const useSubstitutedTranslation = (electionTermType = 'election', v = {})
         if (parts[i + 1].startsWith('mailto')) {
           return <MailTo key={`link_${i}`}>{parts[i]}</MailTo>
         } else {
-          return <a key={`link_${i}`} href={parts[i + 1]} target={newWindow ? '_blank' : '_self'} rel={newWindow ? 'noreferrer' : undefined}>{parts[i]}</a>
+          return <a key={`link_${i}`} href={parts[i + 1]} target={v['newWindow'] ? '_blank' : '_self'} rel={v['newWindow'] ? 'noreferrer' : undefined}>{parts[i]}</a>
         }
       })
     }
@@ -248,12 +245,13 @@ export const useSubstitutedTranslation = (electionTermType = 'election', v = {})
       })
     }
 
-    const applyTips = (txt, keyPrefix, includeTips) => {
+    const applyTips = (txt, keyPrefix, v) => {
       if (typeof txt !== 'string') return txt;
       return txt.split(rTip).map((str, i) => {
         if (i % 2 == 0) return str;
-        if (!includeTips) return '';
-        return <Tip key={`tip_${keyPrefix}_${i}`} name={str} />
+        if (!(v['includeTips'] ?? true)) return '';
+
+        return <Tip key={`tip_${keyPrefix}_${i}`} name={str} values={v}/>
       })
     }
 
@@ -269,7 +267,7 @@ export const useSubstitutedTranslation = (electionTermType = 'election', v = {})
     if (!rLink.test(txt) && !rTip.test(txt) && !txt.includes('\n') && !rBold.test(txt)) return txt;
 
     const output = applyLinks(txt)
-        .map((comp, i) => applyTips(comp, i, includeTips)).flat()
+        .map((comp, i) => applyTips(comp, i, v)).flat()
         .map((comp, i) => applyLineBreaks(comp, i)).flat()
         .map((comp, i) => applyBold(comp, i)).flat()
     if(output.every(item => typeof item === 'string' )){
@@ -279,21 +277,24 @@ export const useSubstitutedTranslation = (electionTermType = 'election', v = {})
     }
   }
 
-  const handleObject = (obj, includeTips=true, newWindow=false, skipProcessing=false) => {
-    if (skipProcessing) return obj;
+  const handleObject = (obj, v) => {
+    if (v['skipProcessing']) return obj;
     if (typeof obj == 'number') return obj;
-    if (typeof obj === 'string') return applySymbols(obj, includeTips, newWindow);
-    if (Array.isArray(obj)) return obj.map(o => handleObject(o, includeTips, newWindow));
+    if (typeof obj === 'string') return applySymbols(obj, v);
+    if (Array.isArray(obj)) return obj.map(o => handleObject(o, v));
 
     const newObj = {};
     Object.entries(obj).forEach(([key, value]) => {
-      newObj[key] = handleObject(value, includeTips, newWindow);
+      newObj[key] = handleObject(value, v);
     })
     return newObj;
   }
   
   return {
-    t: (key, v = {}) => handleObject(t(key, { ...values, ...processValues(v) }), v['includeTips'], v['newWindow'], v['skipProcessing']),
+    t: (key, v = {}) => {
+      v = processValues(v)
+      return handleObject(t(key, { ...values, ...v }), v)
+    },
     i18n,
   }
 }
@@ -369,4 +370,54 @@ export const isValidDate = (d) => {
 
 export const getLocalTimeZoneShort = () => {
   return DateTime.local().offsetNameShort
+}
+
+export interface SwitchSettingProps {
+  label: string
+  toggled: boolean
+  onToggle: (newValue: boolean) => void
+  disabled?: boolean
+  disabledMessage?: string
+}
+
+export function SwitchSetting({ label, toggled, onToggle, disabled=false, disabledMessage }: SwitchSettingProps) {
+  return (
+    <>
+      <FormControlLabel
+        label={label}
+        labelPlacement='start'
+        control={
+          <Switch
+            checked={toggled}
+            onChange={() => onToggle(!toggled)}
+            disabled={disabled}
+            sx={{
+              padding: 0,
+              width: 42,
+              height: 26,
+              '& .MuiSwitch-switchBase': {
+                padding: 0,
+                margin: '3px',
+                color: '#fff',
+                '&.Mui-checked': {
+                  transform: 'translateX(16px)',
+                  color: '#fff',
+                  '& + .MuiSwitch-track': { opacity: 1 },
+                },
+                '&.Mui-disabled + .MuiSwitch-track': { opacity: 0.5 },
+              },
+              '& .MuiSwitch-thumb': { width: 20, height: 20 },
+              '& .MuiSwitch-track': { borderRadius: 13 },
+            }}
+          />
+        }
+        sx={{ display: 'flex', justifyContent: 'space-between', width: {xs: '100%', md: 400}, py: 0.5, mx: 0, gap: 2, opacity: disabled ? 0.5 : 1 }}
+      />
+      {disabled && disabledMessage && (
+        <FormHelperText sx={{ mb: 2, mt: 0, fontStyle: 'italic', textAlign: 'center' }}>
+          {disabledMessage}
+        </FormHelperText>
+      )}
+    </>
+  );
 }

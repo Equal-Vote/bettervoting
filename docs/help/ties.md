@@ -31,10 +31,9 @@ In the event that an election has already been conducted but no protocol was spe
 
 ## Random Tie-breakers
 
-In the event a random tiebreaker is needed, BetterVoting will shuffle the tied candidates using the number of voters as a seed. The implementation is available [open source](https://github.com/Equal-Vote/bettervoting/blob/f95431ddbaa4a41f21a77a5c16b06f1e19d8cb6c/packages/backend/src/Tabulators/Util.ts#L138) for those interested.
-
-Other common random tiebreaker approaches include doing a coin toss or drawing a name out of a hat.
+In the event a random tiebreaker is needed, BetterVoting will shuffle the candidates to determine the tie breaking order. The specific shuffling implementation was carefully chosen to maximize security, transparency, and fairness. The full details are documented in [our source code](https://github.com/Equal-Vote/bettervoting/tree/main/packages/backend/src/Tabulators/).
 
 ## Custom Tie-breakers
 
-If an election body opts for a different tiebreaker, they can retrieve the full list of anonymized ballots from the results page for their election. The winners can then be determined outside of BetterVoting using protocols established by the body. 
+Tiebreakers can also be determined outside of BetterVoting using protocols established by the body. Common random approaches include doing a coin toss or drawing a name out of a hat. The full list of anonymized ballots can also be utilized if it's required for the preferred tiebreaker method.
+

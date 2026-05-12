@@ -1,7 +1,7 @@
 import { candidate, allocatedScoreResults, allocatedScoreSummaryData, rawVote, allocatedScoreCandidate, vote } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
 
 const Fraction = require('fraction.js');
-import { getSummaryData, makeAbstentionTest, makeBoundsTest } from "./Util";
+import { getSummaryData, makeAbstentionTest, makeBoundsTest, sortCandidates } from "./Util";
 import { ElectionSettings } from "@equal-vote/star-vote-shared/domain_model/ElectionSettings";
 
 interface winner_scores {
@@ -171,6 +171,10 @@ export function AllocatedScore(candidates: candidate[], votes: rawVote[], nWinne
 
     results.other = remainingCandidates;
 
+    if(results.elected.some(elected => results.tied.includes(elected))){
+        results.tieBreakType = 'random';
+    }
+
     return results
 }
 
@@ -239,7 +243,7 @@ function indexOfMax(arr: typeof Fraction[], candidates: candidate[]) {
         }
     }
     if (ties.length > 1) {
-        maxIndex = candidates.indexOf(ties.sort((a, b) => -(a.tieBreakOrder-b.tieBreakOrder))[0]);
+        maxIndex = candidates.indexOf(sortCandidates(ties)[0]);
     }
     return { maxIndex, ties };
 }

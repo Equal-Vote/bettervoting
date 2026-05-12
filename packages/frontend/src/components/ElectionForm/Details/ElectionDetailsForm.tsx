@@ -71,7 +71,7 @@ export default function ElectionDetailsForm({editedElection, applyUpdate, errors
 
     const timeZone = editedElection.settings.time_zone ? editedElection.settings.time_zone : DateTime.now().zone.name
 
-    const {t} = useSubstitutedTranslation(editedElection.settings.term_type, {time_zone: timeZone});
+    let {t} = useSubstitutedTranslation(editedElection.settings.term_type, {time_zone: timeZone});
 
     const [enableStartEndTime, setEnableStartEndTime] = useState(isValidDate(editedElection.start_time) || isValidDate(editedElection.end_time))
     const [defaultStartTime, setDefaultStartTime] = useState(isValidDate(editedElection.start_time) ? editedElection.start_time : DateTime.now().setZone(timeZone).toJSDate())

@@ -1,22 +1,17 @@
 import Grid from "@mui/material/Grid";
-import { Box, Button, Divider } from "@mui/material";
+import { Box, Divider } from "@mui/material";
 import { Typography } from "@mui/material";
 import { PrimaryButton } from "../../styles";
 import { Link, useNavigate } from 'react-router-dom';
-import ShareButton from "../ShareButton";
-import { useArchiveEleciton, useSetOpenState, useFinalizeElection, usePostElection, useSetPublicResults } from "../../../hooks/useAPI";
+import { useArchiveEleciton, usePostElection } from "../../../hooks/useAPI";
 import { useSubstitutedTranslation } from '../../util';
 import useConfirm from '../../ConfirmationDialogProvider';
 import useElection from '../../ElectionContextProvider';
 import ElectionDetailsInlineForm from '../../ElectionForm/Details/ElectionDetailsInlineForm';
-import Races from '../../ElectionForm/Races/Races';
-import ElectionSettings from '../../ElectionForm/ElectionSettings';
 import structuredClone from '@ungap/structured-clone';
 import useAuthSession from '../../AuthSessionContextProvider';
 import useFeatureFlags from '../../FeatureFlagContextProvider';
-import ElectionAuthForm from '~/components/ElectionForm/Details/ElectionAuthForm';
-import useSnackbar from "~/components/SnackbarContext";
-import TemporaryAccessWarning from "../TemporaryAccessWarning";
+import { AdminPageNavigation } from '../Sidebar';
 
 type SectionProps = {
     text: {[key: string]: string}
@@ -27,24 +22,15 @@ type SectionProps = {
 
 const AdminHome = () => {
     const authSession = useAuthSession()
-    const { election, refreshElection: fetchElection, permissions } = useElection()
+    const { election, permissions, refreshElection: fetchElection } = useElection()
     const {t} = useSubstitutedTranslation(election.settings.term_type, {time_zone: election.settings.time_zone});
-    const { makeRequest } = useSetPublicResults(election.election_id)
-    const { setSnack } = useSnackbar()
-    const togglePublicResults = async () => {
-        const public_results = !election.settings.public_results
-        await makeRequest({ public_results: public_results })
-        await fetchElection()
-    }
-    const { makeRequest: finalize } = useFinalizeElection(election.election_id)
+
     const { makeRequest: archive } = useArchiveEleciton(election.election_id)
-    const { makeRequest: setOpenState } = useSetOpenState(election.election_id)
 
     const navigate = useNavigate()
     const { makeRequest: postElection } = usePostElection()
     
     const confirm = useConfirm()
-    const emailConfirm = useConfirm()
 
     const hasPermission = (requiredPermission: string) => {
         return (permissions && permissions.includes(requiredPermission))
@@ -55,50 +41,6 @@ const AdminHome = () => {
             {t('admin_home.admin_access_denied')}
         </Typography>
     </Box>
-
-    const finalizeElection = async () => {
-        const confirmed = await confirm(t('admin_home.finalize_confirm'));
-        if (!confirmed) return;
-        try {
-            await finalize() && setSnack({
-                message: t('admin_home.finalize_snack'),
-                severity: 'success',
-                open: true,
-                autoHideDuration: 6000,
-            });
-            await fetchElection();
-        } catch (err) {
-            console.error(err);
-        }
-
-        const currentTime = new Date();
-        if (
-            election.settings.voter_access === 'closed' &&
-            election.settings.invitation === 'email' &&
-            (!election.start_time || currentTime.getTime() > new Date(election.start_time).getTime()) &&
-            (!election.end_time || currentTime.getTime() < new Date(election.end_time).getTime())
-        ){
-            if(await emailConfirm(t('admin_home.finalize_email_confirm'))){
-                navigate(`/${election.election_id}/admin/voters`)
-            }
-        }
-    }
-
-    const archiveElection = async () => {
-        const confirmed = await confirm(t('admin_home.archive_confirm'))
-        if (!confirmed) return
-        try {
-            await archive() && setSnack({
-                message: t('admin_home.archive_snack'),
-                severity: 'success',
-                open: true,
-                autoHideDuration: 6000,
-            });
-            await fetchElection()
-        } catch (err) {
-            console.error(err)
-        }
-    }
 
     const duplicateElection = async () => {
         const confirmed = await confirm(t('admin_home.duplicate_confirm'))
@@ -120,17 +62,14 @@ const AdminHome = () => {
         navigate(`/${newElection.election.election_id}/admin`)
     }
 
-    const changeOpenState = async (open: boolean) => {
+    const archiveElection = async () => {
+        const confirmed = await confirm(t('admin_home.archive_confirm'))
+        if (!confirmed) return
         try {
-            await setOpenState({open}) && setSnack({
-                message: t(`admin_home.${open ? 'open': 'close'}_snack`),
-                severity: 'success',
-                open: true,
-                autoHideDuration: 6000,
-            });
-            await fetchElection();
+            await archive();
+            await fetchElection()
         } catch (err) {
-            console.error(err);
+            console.error(err)
         }
     }
 
@@ -173,21 +112,6 @@ const AdminHome = () => {
         </>)}
     />
 
-    const TestBallotSection = () => <Section
-        text={t('admin_home.test_ballot')}
-        permission='canViewElectionRoll'
-        button={(<>
-            <PrimaryButton
-                type='button'
-                role='button'
-                fullWidth
-                component={Link} to={`/${election.election_id}`}
-            >
-                {t('admin_home.test_ballot.button')}
-            </PrimaryButton>
-        </>)}
-    />
-
     const DuplicateElectionSection = () => <Section
         text={t('admin_home.duplicate')}
         button={
@@ -200,27 +124,6 @@ const AdminHome = () => {
             </PrimaryButton>
         }
     />
-
-    const TogglePublicResultsSection = () => {
-        const m = t('admin_home.public_results');
-        const text = {
-            ...m,
-            description: election.settings.public_results === true ? m.make_private : m.make_public
-        };
-        return <Section
-            text={text}
-            permission='canEditElectionState'
-            button={(<>
-                <PrimaryButton
-                    disabled={!hasPermission('canEditElectionState')}
-                    fullWidth
-                    onClick={togglePublicResults}
-                >
-                    {text.description}
-                </PrimaryButton>
-            </>)}
-        />
-    }
 
     const ArchiveElectionSection = () => <Section
         text={t('admin_home.archive')}
@@ -237,144 +140,17 @@ const AdminHome = () => {
         </>)}
     />
 
-    const CloseElectionSection = () => <Section
-        text={t('admin_home.close')}
-        permission='canEditElectionState'
-        button={(<>
-            <PrimaryButton
-                disabled={!hasPermission('canEditElectionState')}
-                fullWidth
-                onClick={() => changeOpenState(false)}
-            >
-                {t('admin_home.close.button')}
-            </PrimaryButton>
-        </>)}
-    />
-
-    const OpenElectionSection = () => <Section
-        text={t('admin_home.open')}
-        permission='canEditElectionState'
-        button={(<>
-            <PrimaryButton
-                disabled={!hasPermission('canEditElectionState')}
-                fullWidth
-                onClick={() => changeOpenState(true)}
-            >
-                {t('admin_home.open.button')}
-            </PrimaryButton>
-        </>)}
-    />
-
-    const HeaderSection = () => {
-        return <Box width='100%'>
-            {election.state === 'finalized' && election.start_time &&
-                <Typography align='center' gutterBottom variant="h6" component="h6" >
-                    {t('admin_home.header_start_time', {datetime: election.start_time})}
-                </Typography>
-            }
-            {election.state === 'open' && election.end_time &&
-                <Typography align='center' gutterBottom variant="h6" component="h6">
-                    {t('admin_home.header_end_time', {datetime: election.end_time})}
-                </Typography>
-            }
-            {election.state === 'closed' && election.end_time && 
-                <Typography align='center' gutterBottom variant="h6" component="h6">
-                    {t('admin_home.header_ended_time', {datetime: election.end_time})}
-                </Typography>
-            }
-            {election.state === 'archived' && election.end_time &&
-                <Typography align='center' gutterBottom variant="h6" component="h6">
-                    {t('admin_home.header_ended_time', {datetime: election.end_time})}
-                </Typography>
-            }
-        </Box>
-    }
-
-    const FinalizeSection = () => <Box sx={{maxWidth: 800}}>
-        <Grid item xs={12} sx={{ p: 1, pt: 3, pb: 0 }}>
-            <Typography align='center' variant="body1" sx={{ pl: 2 }}>
-                {t('admin_home.finalize_description')}
-                {' '}
-                {t(election.start_time? 'admin_home.finalize_voting_begins_later' : 'admin_home.finalize_voting_begins_now')}
-            </Typography>
-            {!hasPermission('canEditElectionState') &&
-                <Typography align='center' variant="body1" sx={{ color: 'error.main', pl: 2 }}>
-                    {t('admin_home.permissions_error')}
-                </Typography>
-            }
-        </Grid>
-        <Grid item xs={12} sx={{ p: 1, pt: 0, display: 'flex', alignItems: 'center' }}>
-            <PrimaryButton
-                disabled={election.title.length === 0 || election.races.length === 0 || !hasPermission('canEditElectionState') || !authSession.isLoggedIn()}
-                fullWidth
-                onClick={() => finalizeElection()}
-                sx={{mt: 2}}
-            >
-                <Typography align='center' variant="h4" fontWeight={'bold'}>
-                   {t('admin_home.finalize_button')}
-                </Typography>
-            </PrimaryButton>
-        </Grid>
-        {!authSession.isLoggedIn() && 
-        <Grid xs={12} sx={{ p: 1, pt: 0, display: 'flex', alignItems: 'center' }}>
-            <Typography align='center' variant="body1" sx={{ pl: 2, m:'auto' }}>
-                {/* I'm setting an href here and an onClick, so that the url styling will work like other a-href components*/}
-                <a href='#free-account-text' id='free-account-text' onClick={() => {
-                    sessionStorage.setItem('election_to_claim', election.election_id)
-                    authSession.openLogin()
-                }}>
-                    Create a free account
-                </a>
-                &nbsp;to finalize your election!
-            </Typography>
-        </Grid>}
-    </Box>
-    
     const flags = useFeatureFlags();
 
-    return <Box
-        display='flex'
-        justifyContent="center"
-        alignItems="center"
-        flexDirection='column'
-        gap={6}
-        sx={{ width: '100%', maxWidth: 800, margin: 'auto' }}
-    >
-        <TemporaryAccessWarning />
-        <HeaderSection />
+    return <>
         <ElectionDetailsInlineForm />
-        {(election.state !== 'draft' && election.state !== 'finalized') && 
-            <Box display='flex' sx={{flexDirection:{xs: 'column', sm: 'row'}}} alignItems='center' gap={2} justifyContent='space-evenly' width='100%'>
-                <Box sx={{width: '100%', maxWidth: 300}}>
-                    <ShareButton url={`${window.location.origin}/${election.election_id}`} />
-                </Box>
-                {(hasPermission('canViewPreliminaryResults') && election.settings.public_results || election.state === 'closed') &&
-                    <Box sx={{width: '100%', maxWidth: 300}}>
-                        <PrimaryButton
-                            fullWidth
-                            component={Link} to={`/${election.election_id}/results`}
-                        >
-                            {t('admin_home.view_results.button')}
-                        </PrimaryButton>
-                    </Box>
-                }
-            </Box>
-        }
-        {(election.settings.voter_access === 'open') && <ElectionAuthForm />}
-        <ElectionSettings />
-        <Races />
         <Box sx={{width: '100%'}}>
-            {(election.state === 'draft') && <TestBallotSection /> }
-            {!['draft', 'finalized'].includes(election.state) && !(election.state === 'open' && election.settings.ballot_updates) && <TogglePublicResultsSection/>}
             {flags.isSet('ELECTION_ROLES') && <EditRolesSection />}
             <DuplicateElectionSection/>
-            {(election.state === 'open') && !election.start_time && !election.end_time && <CloseElectionSection />}
-            {(election.state === 'closed') && !election.start_time && !election.end_time && <OpenElectionSection />}
-            {election.state != 'archived' && <ArchiveElectionSection />}
+             {election.state != 'archived' && <ArchiveElectionSection/>}
         </Box>
-
-        {election.state === 'draft' && <FinalizeSection /> }
-    </Box>
+        <AdminPageNavigation />
+    </>
 }
 
 export default AdminHome
