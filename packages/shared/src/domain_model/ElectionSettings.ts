@@ -45,27 +45,24 @@ function authenticationValidation(obj:authentication): string | null {
   if (!obj){
     return "Authentication is null";
   }
-  if (obj.voter_id && typeof obj.voter_id !== 'boolean'){
+  if (obj.voter_id !== undefined && typeof obj.voter_id !== 'boolean'){
     return "Invalid Voter ID";
   }
-  if (obj.email && typeof obj.email !== 'boolean'){
+  if (obj.email !== undefined && typeof obj.email !== 'boolean'){
     return "Invalid Email";
   }
-  if (obj.phone && typeof obj.phone !== 'boolean'){
-    return "Invalid Phone";
-  }
-  if (obj.address && typeof obj.address !== 'boolean'){
-    return "Invalid Address";
-  }
-  if (obj.ip_address && typeof obj.ip_address !== 'boolean'){
+  if (obj.ip_address !== undefined && typeof obj.ip_address !== 'boolean'){
     return "Invalid IP Address";
   }
-  if (obj.registration_data){
-    for (let field of obj.registration_data){
-      if (!field.field_name || !field.field_type){
-        return "Invalid Registration Field";
-      }
-    }
+  // phone, address, registration_data, registration_api_endpoint are latent fields
+  // not exposed by any UI; reject them to keep elections in one of the 6 canonical shapes.
+  if (obj.phone !== undefined || obj.address !== undefined ||
+      obj.registration_data !== undefined || obj.registration_api_endpoint !== undefined){
+    return "Unsupported voter_authentication field (phone/address/registration_data/registration_api_endpoint)";
+  }
+  const trueCount = [obj.voter_id, obj.email, obj.ip_address].filter(v => v === true).length;
+  if (trueCount > 1){
+    return "Only one of voter_id, email, or ip_address may be enabled";
   }
   return null;
 }
@@ -90,8 +87,11 @@ export function electionSettingsValidation(obj:ElectionSettings, electionState?:
   if (!obj){
     return "ElectionSettings is null";
   }
-  if (obj.voter_access && !VoterAcessArray.includes(obj.voter_access)){
-    return "Invalid Voter Access";
+  // voter_access is required and restricted to the two canonical values.
+  // 'registration' remains a latent value in VoterAcessArray (registerVoterController
+  // still handles it for any historical rows) but the create/edit path no longer accepts it.
+  if (obj.voter_access !== 'open' && obj.voter_access !== 'closed'){
+    return "Invalid Voter Access: must be 'open' or 'closed'";
   }
   if (!obj.voter_authentication){
     return "Invalid Voter Authentication";
@@ -100,8 +100,23 @@ export function electionSettingsValidation(obj:ElectionSettings, electionState?:
   if (authError){
     return authError;
   }
-  if (obj.invitation && !InvitationTypes.includes(obj.invitation)){
-    return "Invalid Invitation";
+  // invitation is only 'email', and only on closed elections.
+  if (obj.invitation !== undefined){
+    if (obj.invitation !== 'email'){
+      return "Invalid Invitation: only 'email' is supported";
+    }
+    if (obj.voter_access !== 'closed'){
+      return "invitation='email' requires voter_access='closed'";
+    }
+  }
+  // Closed elections must authenticate voters by voter_id.
+  if (obj.voter_access === 'closed'){
+    if (obj.voter_authentication.voter_id !== true){
+      return "Closed elections require voter_authentication.voter_id=true";
+    }
+    if (obj.voter_authentication.email === true || obj.voter_authentication.ip_address === true){
+      return "Closed elections must use voter_id authentication only";
+    }
   }
   if (obj.reminders && typeof obj.reminders !== 'boolean'){
     return "Invalid Reminders";

@@ -92,19 +92,21 @@ describe("Edit Election", () => {
         })
 
         test("edits roll type", async () => {
-            // I'm testing roll type specifically to make sure nested fields are applied correctly        
+            // I'm testing roll type specifically to make sure nested fields are applied correctly
             const ID = await setupInitialElection()
             // I wanted to use structuredClone here, but I had trouble getting it to work with jest :'(
             var election1Copy = JSON.parse(JSON.stringify(testInputs.Election1))
-            election1Copy.settings.voter_authentication.phone = true;
+            // Election1 starts as open + ip_address (type 4); replace with open + email (type 3)
+            election1Copy.settings.voter_authentication = {email: true};
             election1Copy.election_id = ID;
 
             const response = await th.editElection(election1Copy, testInputs.user1token);
 
             expect(response.statusCode).toBe(200)
-            
+
             const reFetchedElection = await fetchElectionById(ID);
-            expect(election1Copy.settings.voter_authentication.phone).toEqual(true);
+            expect(reFetchedElection.settings.voter_authentication.email).toEqual(true);
+            expect(reFetchedElection.settings.voter_authentication.ip_address).toBeFalsy();
             th.testComplete();
         })
         test("edits voter ids", async () => {

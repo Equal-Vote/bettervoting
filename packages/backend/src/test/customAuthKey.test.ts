@@ -33,7 +33,10 @@ describe("Election with custom auth key", () => {
         }
       }); 
 
-    const election = {...testInputs.EmailRollElection};
+    // This test only cares about the custom JWT verification flow, so use an
+    // open+email election (type 3) — the closed+email-invite election the test
+    // previously used would now require simulating the invite/voter_id cookie flow.
+    const election = {...testInputs.OpenEmailElection};
     election.auth_key = customKey.publicKey;
 
     const user1TokenCustomSigned = jwt.sign({ 
