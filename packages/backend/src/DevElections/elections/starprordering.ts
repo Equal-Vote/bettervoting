@@ -6,10 +6,11 @@ import { devElectionId } from '@equal-vote/star-vote-shared/utils/makeID';
 const ELECTION_ID = devElectionId('starprordering');
 const RACE_ID = 'devteststarprordering_race0';
 
-// AllocatedScore (STAR_PR) does not sort summaryData.candidates — the frontend
-// receives them in this input order. VoterProfileWidget defaults Left/Right to
-// summaryData.candidates[0..1], so on this race it picks Anchovy vs. Brussels
-// Sprouts (both losers) instead of the actual elected pair (Carrot, Eggplant).
+// AllocatedScore (STAR_PR) reorders summaryData.candidates at the end of
+// tabulation: elected first in election order, then non-elected by
+// final-round weighted score (descending). On this race the input order is
+// [Anchovy, Brussels, Carrot, Durian, Eggplant] but the result should come
+// back ordered roughly [Carrot, Eggplant, Brussels, Durian, Anchovy].
 const candidates = [
     { candidate_id: 'anchovy', candidate_name: 'Anchovy' },
     { candidate_id: 'brussels', candidate_name: 'Brussels Sprouts' },
@@ -21,7 +22,7 @@ const candidates = [
 const election: Election = {
     election_id: ELECTION_ID,
     title: 'Dev Test: STAR_PR Candidate Ordering',
-    description: 'Demonstrates that STAR_PR returns summaryData.candidates in the input order rather than by any metric. VoterProfileWidget therefore shows a head-to-head between Anchovy and Brussels Sprouts — the first two candidates in input order, both losers — even though the actual elected winners are Carrot and Eggplant.',
+    description: 'Regression fixture for STAR_PR candidate ordering. Candidates are submitted in alphabetical input order [Anchovy, Brussels, Carrot, Durian, Eggplant]; Carrot and Eggplant are elected (in that order). The result should come back with winners first (Carrot, Eggplant) followed by non-elected sorted by final-round weighted score descending — historically AllocatedScore left summaryData.candidates in input order.',
     frontend_url: '',
     owner_id: '7bdcad1b-55cd-4cfd-842f-6be3fa89f1c3', // PlayWrightTest user from dev-realm.json
     state: 'open',
@@ -54,8 +55,8 @@ const election: Election = {
 // Total stars: Anchovy=3, Brussels=30, Carrot=47, Durian=3, Eggplant=43.
 // Carrot wins round 1; Eggplant wins round 2 after weight redistribution.
 // Brussels has noticeable support but never reaches a quota; Anchovy is
-// essentially ignored. Yet [Anchovy, Brussels] are at indices [0, 1] of the
-// (unsorted) summaryData.candidates that the frontend receives.
+// essentially ignored. With the backend reorder, summaryData.candidates
+// should now lead with [Carrot, Eggplant, ...] instead of [Anchovy, Brussels, ...].
 const ballotPatterns: number[][] = [
     [0, 3, 5, 0, 4],
     [0, 3, 5, 0, 4],
