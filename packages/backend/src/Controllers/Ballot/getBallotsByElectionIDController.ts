@@ -1,7 +1,7 @@
 import ServiceLocator from "../../ServiceLocator";
 import Logger from "../../Services/Logging/Logger";
 import { Unauthorized } from "@curveball/http-errors";
-import { expectPermission } from "../controllerUtils";
+import { expectPermission, secureShuffle } from "../controllerUtils";
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
@@ -32,8 +32,13 @@ const getBallotsByElectionID = async (req: IElectionRequest, res: Response, next
         ip_hash: undefined
     }));
 
-    Logger.debug(req, "ballots = ", scrubbedBallots);
-    res.json({ election: req.election, ballots: scrubbedBallots })
+    // Shuffle so the response order doesn't reveal ballot submission order —
+    // an admin could otherwise zip it against the roll's per-voter timestamps
+    // to deanonymize every vote.
+    const shuffledBallots = secureShuffle(scrubbedBallots);
+
+    Logger.debug(req, "ballots = ", shuffledBallots);
+    res.json({ election: req.election, ballots: shuffledBallots })
 }
 
 export {
