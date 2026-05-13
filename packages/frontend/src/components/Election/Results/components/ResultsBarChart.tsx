@@ -180,7 +180,22 @@ const [rawNumbers, setRawNumbers] = useState(false);
           strokeDasharray="6 6"
           legendType="plainline"
         />
-        {majorityLegend && <Legend />}
+        {majorityLegend && <Legend content={() => (
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            marginTop: 4,
+            padding: '4px 10px',
+            border: '1px solid var(--brand-gray-1)',
+            borderRadius: 4,
+          }}>
+            <svg width="36" height="6" viewBox="0 0 36 6" style={{flexShrink: 0}}>
+              <line x1="0" y1="3" x2="36" y2="3" stroke="black" strokeWidth="3" strokeDasharray="6 6"/>
+            </svg>
+            <span style={{fontSize: '0.8rem'}}>{majorityLegend}</span>
+          </div>
+        )}/>}
       </ComposedChart>
     </ResponsiveContainer>
     </div>

@@ -21,8 +21,11 @@ describe("Allocated Score Tests", () => {
         expect(results.elected.length).toBe(2);
         expect(results.elected[0].name).toBe('Allison');
         expect(results.elected[1].name).toBe('Doug');
-        expect(results.summaryData.weightedScoresByRound[0]).toStrictEqual([25, 24, 24, 23]);  
-        expect(results.summaryData.weightedScoresByRound[1]).toStrictEqual([0, 0, 16, 23]);  
+        // candidates now reorder to [Allison, Doug, Carmen, Bill]: elected first
+        // in election order, then non-elected by final-round weighted score desc.
+        expect(results.summaryData.candidates.map(c => c.name)).toStrictEqual(['Allison', 'Doug', 'Carmen', 'Bill']);
+        expect(results.summaryData.weightedScoresByRound[0]).toStrictEqual([25, 23, 24, 24]);
+        expect(results.summaryData.weightedScoresByRound[1]).toStrictEqual([0, 23, 16, 0]);
     })
     test("Single vote fractional surplus", () => {
         // Two winners, two main parties
@@ -47,9 +50,11 @@ describe("Allocated Score Tests", () => {
         expect(results.elected.length).toBe(2);
         expect(results.elected[0].name).toBe('Allison');
         expect(results.elected[1].name).toBe('Doug');
-        expect(results.summaryData.weightedScoresByRound[0]).toStrictEqual([24, 20, 16, 18]);  
-        expect(results.summaryData.weightedScoresByRound[1]).toStrictEqual([0, 0, 14, 18]);  
-        expect(results.summaryData.splitPoints[0]).toStrictEqual(0.8);  
+        // candidates reorder to [Allison, Doug, Carmen, Bill]
+        expect(results.summaryData.candidates.map(c => c.name)).toStrictEqual(['Allison', 'Doug', 'Carmen', 'Bill']);
+        expect(results.summaryData.weightedScoresByRound[0]).toStrictEqual([24, 18, 16, 20]);
+        expect(results.summaryData.weightedScoresByRound[1]).toStrictEqual([0, 18, 14, 0]);
+        expect(results.summaryData.splitPoints[0]).toStrictEqual(0.8);
     })
     test("Voters < Winners", () => {
         const candidates = ['Allison', 'Bill', 'Carmen', 'Doug']
@@ -87,8 +92,10 @@ describe("Allocated Score Tests", () => {
         expect(results.elected.length).toBe(2);
         expect(results.elected[0].name).toBe('Allison');
         expect(results.elected[1].name).toBe('Doug');
-        expect(results.summaryData.weightedScoresByRound[0]).toStrictEqual([40, 39, 23, 18]);  
-        expect(results.summaryData.weightedScoresByRound[1]).toStrictEqual([0, 9.75, 14.75, 18]);
+        // candidates reorder to [Allison, Doug, Carmen, Bill]
+        expect(results.summaryData.candidates.map(c => c.name)).toStrictEqual(['Allison', 'Doug', 'Carmen', 'Bill']);
+        expect(results.summaryData.weightedScoresByRound[0]).toStrictEqual([40, 18, 23, 39]);
+        expect(results.summaryData.weightedScoresByRound[1]).toStrictEqual([0, 18, 14.75, 9.75]);
     })
 
     test("Fractional surplus on lower split", () => {
@@ -113,8 +120,10 @@ describe("Allocated Score Tests", () => {
         expect(results.elected.length).toBe(2);
         expect(results.elected[0].name).toBe('Allison');
         expect(results.elected[1].name).toBe('Doug');
-        expect(results.summaryData.weightedScoresByRound[0]).toStrictEqual([36, 35, 23, 18]);  
-        expect(results.summaryData.weightedScoresByRound[1]).toStrictEqual([0, 8, 14, 18]);
+        // candidates reorder to [Allison, Doug, Carmen, Bill]
+        expect(results.summaryData.candidates.map(c => c.name)).toStrictEqual(['Allison', 'Doug', 'Carmen', 'Bill']);
+        expect(results.summaryData.weightedScoresByRound[0]).toStrictEqual([36, 18, 23, 35]);
+        expect(results.summaryData.weightedScoresByRound[1]).toStrictEqual([0, 18, 14, 8]);
     })
 
     //test("Random Tiebreaker", () => {
