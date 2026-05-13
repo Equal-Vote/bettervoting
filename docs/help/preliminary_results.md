@@ -19,7 +19,7 @@ When the setting is on:
 - The tally updates as ballots come in. A new ballot changes the numbers immediately.
 - After the election closes, the same view becomes the final results.
 
-When the setting is off, the tally is hidden from everyone (including voters and the public) until the election is closed and the admin chooses to publish.
+When the setting is off, the tally is hidden from everyone (both admins and voters) until the election is closed and the admin chooses to publish.
 
 ## What admins can see during an election
 
@@ -39,7 +39,7 @@ This is a legitimate feature for some kinds of polls (e.g. deliberative groups t
 - When their preferred candidate is behind, they can direct supporters to switch their vote to a backup choice, change rankings, or alter scores.
 - Because edits are silent and there is no rate limit, a coordinated swing in the final minutes can land before other voters notice.
 
-In voting methods like STAR, IRV, and STV, which are designed to reduce the incentive to vote strategically, this combination partially undoes that benefit. **If you are running a serious election and want sincere ballots, we recommend either leaving preliminary results off until the election closes, or turning off editable ballots.** BetterVoting will let you enable both, but you should do so deliberately.
+The methods on BetterVoting, are designed to reduce the incentive to vote strategically, but this combination partially undoes that benefit. **If you are running a serious election and want sincere ballots, we recommend either leaving preliminary results off until the election closes, or turning off editable ballots.** BetterVoting will let you enable both, but you should do so deliberately.
 
 ## Turning the setting off after it has been on
 
@@ -47,7 +47,7 @@ An admin can turn **Show Preliminary Results** off at any time, and the tally pa
 
 > **Turning the setting off does not un-reveal what has already been seen.** Anyone who looked at the tally while it was visible may have screenshotted, shared, or simply remembered it. Search engines, social media, and chat platforms can also retain copies. Treat the decision to show preliminary results as effectively one-way for any number you wouldn't want public, even briefly.
 
-The reverse switch — turning preliminary results **on** mid-election — is also possible, and it immediately exposes the full current tally, including ballots cast before the toggle.
+The reverse switch — turning preliminary results **on** mid-election — is also possible, and it immediately exposes the full current tally.
 
 ## Recommendations
 
