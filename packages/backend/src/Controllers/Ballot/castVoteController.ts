@@ -3,7 +3,7 @@ import { ElectionRoll } from "@equal-vote/star-vote-shared/domain_model/Election
 import { Ballot, ballotValidation, NewBallot, OrderedNewBallot, RaceCandidateOrder } from '@equal-vote/star-vote-shared/domain_model/Ballot';
 import ServiceLocator from "../../ServiceLocator";
 import Logger from "../../Services/Logging/Logger";
-import { BadRequest, InternalServerError, Unauthorized } from "@curveball/http-errors";
+import { BadRequest, Conflict, InternalServerError, Unauthorized } from "@curveball/http-errors";
 import { ILoggingContext } from "../../Services/Logging/ILogger";
 import { randomUUID } from "crypto";
 import { Uid } from "@equal-vote/star-vote-shared/domain_model/Uid";
@@ -261,7 +261,7 @@ async function castVoteController(req: IElectionRequest, res: Response, next: Ne
         }
         if (e.message === "CONCURRENT_BALLOT_UPDATE_DETECTED" || e.message === "CONCURRENT_ROLL_EDIT_DETECTED") {
             Logger.info(req, `Ballot Rejected: ${e.message}`);
-            throw new BadRequest("Concurrent edit detected, aborting.");
+            throw new Conflict("Concurrent edit detected, please retry.");
         }
         throw e;
     }

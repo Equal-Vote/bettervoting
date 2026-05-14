@@ -21,9 +21,6 @@ export default class CastVoteStore {
         this._db = db;
     }
 
-    // Postgres error code for unique_violation
-    private readonly POSTGRES_UNIQUE_VIOLATION = '23505';
-
     async submitBallotEvent(event: CastVoteEvent, ctx: ILoggingContext): Promise<void> {
         return this._db.transaction().execute(async (trx) => {
                 // Strip legacy fields (see Ballot.ts) so a crafted request body can't populate them.
@@ -68,15 +65,22 @@ export default class CastVoteStore {
                         .execute();
                     
                     if (Number(updateResult[0].numUpdatedRows) === 0) {
-                        const existingCount = await trx.selectFrom('electionRollDB')
+                        // OCC missed: someone updated this roll since we read it.
+                        // Distinguish "they already voted" (submitted=true on the winning
+                        // head row) from a true concurrent edit (admin state change,
+                        // sendInvites email_data update, etc.).
+                        const winningHead = await trx.selectFrom('electionRollDB')
                             .where('election_id', '=', event.roll.election_id)
                             .where('voter_id', '=', event.roll.voter_id)
                             .where('head', '=', true)
-                            .select('voter_id')
+                            .select(['submitted'])
                             .executeTakeFirst();
 
-                        if (existingCount) {
-                            throw new Error("CONCURRENT_ROLL_EDIT_DETECTED"); 
+                        if (winningHead?.submitted) {
+                            throw new Error("ALREADY_VOTED");
+                        }
+                        if (winningHead) {
+                            throw new Error("CONCURRENT_ROLL_EDIT_DETECTED");
                         }
                     }
 
@@ -88,12 +92,6 @@ export default class CastVoteStore {
                         
                     Logger.debug(ctx, `User submits a ballot`);
                 }
-        }).catch((e: any) => {
-            if (e?.code === this.POSTGRES_UNIQUE_VIOLATION && 
-                (e?.constraint === 'electionRollDB_unique_head' || e?.constraint === 'electionRollDB_pkey')) {
-                throw new Error("ALREADY_VOTED");
-            }
-            throw e;
         });
     }
 }
