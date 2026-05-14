@@ -37,10 +37,10 @@ export default class BallotsDB implements IBallotStore {
         return this.makeSubmitBallotsQuery(ballot, ctx, reason, db) as Promise<Ballot>
     }
 
-    async updateBallot(ballot: Ballot, ctx: ILoggingContext, reason: string): Promise<Ballot> {
+    async updateBallot(ballot: Ballot, ctx: ILoggingContext, reason: string, db?: Kysely<Database> | Transaction<Database>): Promise<Ballot> {
         Logger.debug(ctx, `${tableName}.update`);
-        return this._postgresClient.transaction().execute( async (tx) => {
-            const update_response = await tx.updateTable(tableName)
+        const executeWork = async (activeDb: Kysely<Database> | Transaction<Database>) => {
+            await activeDb.updateTable(tableName)
                 .where('ballot_id', '=', ballot.ballot_id)
                 .where('election_id', '=', ballot.election_id)
                 .where('head', '=', true)
@@ -48,13 +48,19 @@ export default class BallotsDB implements IBallotStore {
                 //TODO: replace with DB trigger
                 .set('update_date', Date.now().toString())
                 .execute();
-            return this.submitBallot(ballot, ctx, reason, tx);
-        });
+            return this.submitBallot(ballot, ctx, reason, activeDb);
+        };
+
+        if (db) {
+            return await executeWork(db);
+        } else {
+            return await this._postgresClient.transaction().execute(executeWork);
+        }
     }
 
-    bulkSubmitBallots(ballots: Ballot[], ctx: ILoggingContext, reason: string): Promise<Ballot[]> {
+    bulkSubmitBallots(ballots: Ballot[], ctx: ILoggingContext, reason: string, db?: Kysely<Database> | Transaction<Database>): Promise<Ballot[]> {
         Logger.debug(ctx, `${tableName}.bulkSubmit`) // removed ballot to make logging less noisy
-        return this.makeSubmitBallotsQuery(ballots, ctx, reason) as Promise<Ballot[]>
+        return this.makeSubmitBallotsQuery(ballots, ctx, reason, db) as Promise<Ballot[]>
     }
 
     private makeSubmitBallotsQuery(inputBallots: Ballot | Ballot[], ctx: ILoggingContext, reason: string,
@@ -95,10 +101,11 @@ export default class BallotsDB implements IBallotStore {
     }
 
 
-    getBallotsByElectionID(election_id: string, ctx: ILoggingContext): Promise<Ballot[]> {
+    getBallotsByElectionID(election_id: string, ctx: ILoggingContext, db?: Kysely<Database> | Transaction<Database>): Promise<Ballot[]> {
         Logger.debug(ctx, `${tableName}.getBallotsByElectionID ${election_id}`);
+        const client = db || this._postgresClient;
 
-        return this._postgresClient
+        return client
             .selectFrom(tableName)
             .selectAll()
             .where('election_id', '=', election_id)
@@ -106,10 +113,11 @@ export default class BallotsDB implements IBallotStore {
             .execute();
     }
 
-    getBallotByVoterID(voter_id: string, election_id: string, ctx: ILoggingContext): Promise<Ballot | undefined> {
+    getBallotByVoterID(voter_id: string, election_id: string, ctx: ILoggingContext, db?: Kysely<Database> | Transaction<Database>): Promise<Ballot | undefined> {
         Logger.debug(ctx, `${tableName}.getBallotByVoterID ${logSafeHash(voter_id)} ${election_id}`);
+        const client = db || this._postgresClient;
 
-        return this._postgresClient
+        return client
             .selectFrom(tableName)
             .innerJoin(electionRollTableName,
                 (join) => join
@@ -123,10 +131,11 @@ export default class BallotsDB implements IBallotStore {
             .executeTakeFirst();
     }
 
-    deleteAllBallotsForElectionID(election_id: string, ctx: ILoggingContext): Promise<boolean> {
+    deleteAllBallotsForElectionID(election_id: string, ctx: ILoggingContext, db?: Kysely<Database> | Transaction<Database>): Promise<boolean> {
         Logger.debug(ctx, `${tableName}.deleteAllBallotsForElectionID ${election_id}`);
+        const client = db || this._postgresClient;
 
-        return this._postgresClient
+        return client
             .deleteFrom(tableName)
             .where('election_id', '=', election_id)
             .returningAll()
@@ -135,10 +144,11 @@ export default class BallotsDB implements IBallotStore {
             .catch(() => false);
     }
 
-    delete(ballot_id: Uid, ctx: ILoggingContext, reason: string): Promise<boolean> {
+    delete(ballot_id: Uid, ctx: ILoggingContext, reason: string, db?: Kysely<Database> | Transaction<Database>): Promise<boolean> {
         Logger.debug(ctx, `${tableName}.delete ${ballot_id}`);
+        const client = db || this._postgresClient;
 
-        return this._postgresClient
+        return client
             .deleteFrom(tableName)
             .where('ballot_id', '=', ballot_id)
             .returningAll()
