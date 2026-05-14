@@ -91,10 +91,6 @@ async function makeBallotEvent(req: IElectionRequest, targetElection: Election, 
             async (id: string) => await BallotModel.getBallotByID(id, req) !== null
         );
     }
-    if (!inputBallot.user_id) {
-        inputBallot.user_id = voter_id || req.user?.sub || undefined;
-    }
-
     inputBallot.history.push({
         action_type: submitType,
         actor: roll===null ? '' : roll.voter_id ,

@@ -30,15 +30,20 @@ export default class ElectionRollDB implements IElectionRollStore {
 
     submitElectionRoll(electionRolls: ElectionRoll[], ctx: ILoggingContext, reason: string): Promise<boolean> {
         Logger.debug(ctx, `${tableName}.submit`);
-        electionRolls.forEach(roll => {
-            roll.update_date = Date.now().toString()
-            roll.head = true
-            roll.create_date = new Date().toISOString()
-        })
+        // Strip legacy fields (see ElectionRoll.ts) so callers can't write them.
+        const sanitized = electionRolls.map(roll => {
+            const { address: _address, registration: _registration, ...rest } = roll;
+            return {
+                ...rest,
+                update_date: Date.now().toString(),
+                head: true,
+                create_date: new Date().toISOString(),
+            };
+        });
 
         return this._postgresClient
             .insertInto(tableName)
-            .values(electionRolls)
+            .values(sanitized)
             .execute().then((res) => { return true })
     }
 
@@ -155,6 +160,9 @@ export default class ElectionRollDB implements IElectionRollStore {
         election_roll.update_date = Date.now().toString()
         election_roll.head = true
 
+        // Strip legacy fields (see ElectionRoll.ts) so callers can't write them.
+        const { address: _address, registration: _registration, ...sanitizedRoll } = election_roll;
+
         const executeWork = async (activeDb: Kysely<Database> | Transaction<Database>) => {
             await activeDb.updateTable(tableName)
                 .where('election_id', '=', election_roll.election_id)
@@ -164,7 +172,7 @@ export default class ElectionRollDB implements IElectionRollStore {
                 .execute()
 
             return await activeDb.insertInto(tableName)
-                .values(election_roll)
+                .values(sanitizedRoll)
                 .returningAll()
                 .executeTakeFirstOrThrow()
         };

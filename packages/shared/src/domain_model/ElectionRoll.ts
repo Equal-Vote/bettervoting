@@ -7,12 +7,12 @@ export interface ElectionRoll {
     election_id: Uid; //ID of election ballot is cast in
     email?: string; // Email address of voter
     submitted: boolean; //has ballot been submitted
-    ballot_id?:  Uid; //ID of ballot, unsure if this is needed
-    ip_hash?: string; //IP Address of voter
-    address?: string; // Address of voter
+    ballot_id?:  Uid; // ID of the head ballot for this voter; used to join ballotDB to electionRollDB
+    ip_hash?: string; // sha256(req.ip); set when voter_authentication.ip_address is enabled
+    address?: string; // LEGACY: never written by current code, never read.
     state: ElectionRollState; //state of election roll
     history?: ElectionRollAction[];// history of changes to election roll
-    registration?: any; //Registration data for voter
+    registration?: any; // LEGACY: only set by the dormant registerVoterController; never read.
     precinct?: string; // Precint of voter
     email_data?: {
         inviteResponse?: any,

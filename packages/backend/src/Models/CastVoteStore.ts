@@ -26,20 +26,8 @@ export default class CastVoteStore {
 
     async submitBallotEvent(event: CastVoteEvent, ctx: ILoggingContext): Promise<void> {
         return this._db.transaction().execute(async (trx) => {
-                if (event.inputBallot.user_id && !event.isBallotUpdate) {
-                    const duplicateBallot = await trx.selectFrom('ballotDB')
-                        .select(['ballot_id'])
-                        .where('election_id', '=', event.inputBallot.election_id)
-                        .where('user_id', '=', event.inputBallot.user_id)
-                        .where('head', '=', true)
-                        .executeTakeFirst();
-                    
-                    if (duplicateBallot) {
-                        Logger.info(ctx, `Duplicate ballot detected for roll-less election user_id: ${event.inputBallot.user_id}`);
-                    }
-                }
-
-                const ballotToInsert = { ...event.inputBallot };
+                // Strip legacy fields (see Ballot.ts) so a crafted request body can't populate them.
+                const { user_id: _user_id, ip_hash: _ip_hash, ...ballotToInsert } = event.inputBallot;
                 ballotToInsert.update_date = Date.now().toString();
                 ballotToInsert.head = true;
                 ballotToInsert.create_date = new Date().toISOString();
@@ -92,8 +80,10 @@ export default class CastVoteStore {
                         }
                     }
 
+                    // Strip legacy fields (see ElectionRoll.ts) so callers can't write them.
+                    const { address: _address, registration: _registration, ...rollToInsert } = event.roll;
                     await trx.insertInto('electionRollDB')
-                        .values(event.roll)
+                        .values(rollToInsert)
                         .execute();
                         
                     Logger.debug(ctx, `User submits a ballot`);

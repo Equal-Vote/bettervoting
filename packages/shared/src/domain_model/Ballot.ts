@@ -12,10 +12,10 @@ export interface NewBallotWithVoterID {
 export interface Ballot {
     ballot_id:  Uid; //ID if ballot
     election_id: Uid; //ID of election ballot is cast in
-    user_id?: Uid; //ID of user who cast ballot TODO: replace with voter ID
+    user_id?: Uid; // LEGACY: never written by current code, never read. Use the election roll's voter_id instead.
     status: string; //Status of string (saved, submitted)
     date_submitted: number; //time ballot was submitted, represented as unix timestamp (Date.now())
-    ip_hash?: string; // ip address if once_per_ip is enabled
+    ip_hash?: string; // LEGACY: never written by current code, never read. IP-based dedup uses electionRollDB.ip_hash.
     votes: Vote[];         // One per poll
     history?: BallotAction[];
     precinct?: string; // Precint of voter

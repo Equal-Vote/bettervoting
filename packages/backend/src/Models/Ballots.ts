@@ -67,15 +67,20 @@ export default class BallotsDB implements IBallotStore {
                                    db: Kysely<Database> | Transaction<Database> = this._postgresClient): Promise<Ballot[] | Ballot> {
         let ballots = Array.isArray(inputBallots)? inputBallots : [inputBallots];
 
-        ballots.forEach(b => {
-            b.update_date = Date.now().toString()// Use now() because it doesn't change with time zone 
-            b.head = true
-            b.create_date = new Date().toISOString()
-        })
+        // Strip legacy fields (see Ballot.ts) so callers can't write them.
+        const sanitizedBallots = ballots.map(b => {
+            const { user_id: _user_id, ip_hash: _ip_hash, ...rest } = b;
+            return {
+                ...rest,
+                update_date: Date.now().toString(), // Use now() because it doesn't change with time zone
+                head: true,
+                create_date: new Date().toISOString(),
+            };
+        });
 
         let query = db
             .insertInto(tableName)
-            .values(ballots)
+            .values(sanitizedBallots)
             .returningAll()
 
         if(Array.isArray(inputBallots)){
