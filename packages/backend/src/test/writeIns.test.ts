@@ -39,7 +39,7 @@ const WriteInElection: Election = {
     ] as Race[],
     settings: {
         voter_access: 'open',
-        voter_authentication: { ip_address: true },
+        voter_authentication: {},
         public_results: true,
     } as ElectionSettings,
 } as Election;

@@ -2,7 +2,7 @@ import { ILoggingContext } from '../Services/Logging/ILogger';
 import Logger from '../Services/Logging/Logger';
 import { logSafeHash } from '../Services/Logging/logSafeHash';
 import { IElectionRollStore } from './IElectionRollStore';
-import { Expression, Kysely } from 'kysely'
+import { Expression, Kysely, Transaction } from 'kysely'
 import { Database } from './Database';
 import { ElectionRoll } from '@equal-vote/star-vote-shared/domain_model/ElectionRoll';
 const tableName = 'electionRollDB';
@@ -30,15 +30,20 @@ export default class ElectionRollDB implements IElectionRollStore {
 
     submitElectionRoll(electionRolls: ElectionRoll[], ctx: ILoggingContext, reason: string): Promise<boolean> {
         Logger.debug(ctx, `${tableName}.submit`);
-        electionRolls.forEach(roll => {
-            roll.update_date = Date.now().toString()
-            roll.head = true
-            roll.create_date = new Date().toISOString()
-        })
+        // Strip legacy fields (see ElectionRoll.ts) so callers can't write them.
+        const sanitized = electionRolls.map(roll => {
+            const { address: _address, registration: _registration, ...rest } = roll;
+            return {
+                ...rest,
+                update_date: Date.now().toString(),
+                head: true,
+                create_date: new Date().toISOString(),
+            };
+        });
 
         return this._postgresClient
             .insertInto(tableName)
-            .values(electionRolls)
+            .values(sanitized)
             .execute().then((res) => { return true })
     }
 
@@ -149,28 +154,39 @@ export default class ElectionRollDB implements IElectionRollStore {
             }))
     }
 
-    update(election_roll: ElectionRoll, ctx: ILoggingContext, reason: string): Promise<ElectionRoll | null> {
+    async update(election_roll: ElectionRoll, ctx: ILoggingContext, reason: string, db?: Kysely<Database> | Transaction<Database>): Promise<ElectionRoll | null> {
         Logger.debug(ctx, `${tableName}.updateRoll`);
         Logger.debug(ctx, "", election_roll)
         election_roll.update_date = Date.now().toString()
         election_roll.head = true
-        // Transaction to insert updated roll and set old version's head to false
-        return this._postgresClient.transaction().execute(async (trx) => {
-            await trx.updateTable(tableName)
+
+        // Strip legacy fields (see ElectionRoll.ts) so callers can't write them.
+        const { address: _address, registration: _registration, ...sanitizedRoll } = election_roll;
+
+        const executeWork = async (activeDb: Kysely<Database> | Transaction<Database>) => {
+            await activeDb.updateTable(tableName)
                 .where('election_id', '=', election_roll.election_id)
                 .where('voter_id', '=', election_roll.voter_id)
                 .where('head', '=', true)
                 .set('head', false)
                 .execute()
 
-            return await trx.insertInto(tableName)
-                .values(election_roll)
+            return await activeDb.insertInto(tableName)
+                .values(sanitizedRoll)
                 .returningAll()
                 .executeTakeFirstOrThrow()
-        }).catch((reason: any) => {
+        };
+
+        try {
+            if (db) {
+                return await executeWork(db);
+            } else {
+                return await this._postgresClient.transaction().execute(executeWork);
+            }
+        } catch (reason: any) {
             Logger.debug(ctx, ".get null");
             return null;
-        })
+        }
     }
 
     delete(election_roll: ElectionRoll, ctx: ILoggingContext, reason: string): Promise<boolean> {
