@@ -1,17 +1,25 @@
 import { FormControl, FormControlLabel, FormLabel, Grid, Paper, Radio, Typography } from "@mui/material"
 import useElection from '../../ElectionContextProvider';
 import { useSubstitutedTranslation } from '~/components/util';
+import {
+    getVoterAuthenticationMode,
+    setVoterAuthenticationMode,
+    VoterAuthenticationMode,
+} from '@equal-vote/star-vote-shared/domain_model/VoterAuthenticationMode';
 
 export default function ElectionAuthForm() {
 
     const { election, refreshElection, updateElection } = useElection()
-    const ip = election.settings.voter_authentication.ip_address == true
-    const device_id = election.settings.voter_authentication.voter_id == true
-    const email = election.settings.voter_authentication.email == true
-    const none = !(ip || device_id || email)
+    // Try to read the canonical mode; legacy non-canonical rows leave all radios unchecked.
+    let currentMode: VoterAuthenticationMode | null;
+    try { currentMode = getVoterAuthenticationMode(election.settings); } catch { currentMode = null; }
+    const device_id = currentMode === 'open_unique_cookie';
+    const email     = currentMode === 'open_unique_keycloak';
+    const ip        = currentMode === 'open_unique_ip_address';
+    const none      = currentMode === 'open_open';
 
-    const handleUpdate = async (voter_authentication) => {
-        await updateElection(election => election.settings.voter_authentication = voter_authentication)
+    const handleUpdate = async (mode: VoterAuthenticationMode) => {
+        await updateElection(e => { e.settings = setVoterAuthenticationMode(e.settings, mode); })
         await refreshElection()
     }
 
@@ -38,7 +46,7 @@ export default function ElectionAuthForm() {
                         <Radio
                             disabled = {election.state !== 'draft'}
                             checked={device_id}
-                            onChange={() => handleUpdate({ voter_id: true })}
+                            onChange={() => handleUpdate('open_unique_cookie')}
                             value="device_id"
                         />}
                         label={t('admin_home.voter_authentication.device_label')} />
@@ -46,7 +54,7 @@ export default function ElectionAuthForm() {
                         <Radio
                             disabled = {election.state !== 'draft'}
                             checked={email}
-                            onChange={() => handleUpdate({ email: true })}
+                            onChange={() => handleUpdate('open_unique_keycloak')}
                             value="email"
                         />}
                         label={t('admin_home.voter_authentication.email_label')} />
@@ -54,7 +62,7 @@ export default function ElectionAuthForm() {
                         <Radio
                             disabled = {election.state !== 'draft'}
                             checked={ip}
-                            onChange={() => handleUpdate({ ip_address: true })}
+                            onChange={() => handleUpdate('open_unique_ip_address')}
                             value="ip"
                         />}
                         label={t('admin_home.voter_authentication.ip_label')} />
@@ -62,7 +70,7 @@ export default function ElectionAuthForm() {
                         <Radio
                             disabled = {election.state !== 'draft'}
                             checked={none}
-                            onChange={() => handleUpdate({})}
+                            onChange={() => handleUpdate('open_open')}
                             value="none"
                         />}
                         label={t('admin_home.voter_authentication.no_limit_label')} />

@@ -10,11 +10,11 @@ import { useGetRolls, useSendEmails } from "../../../hooks/useAPI";
 import useElection from "../../ElectionContextProvider";
 import useFeatureFlags from "../../FeatureFlagContextProvider";
 import { ElectionRollResponse } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll";
+import { getVoterAuthenticationMode, setVoterAuthenticationMode } from "@equal-vote/star-vote-shared/domain_model/VoterAuthenticationMode";
 import SendEmailDialog from "./SendEmailDialog";
 import { PrimaryButton, SecondaryButton } from "~/components/styles";
 import ElectionAuthForm from "~/components/ElectionForm/Details/ElectionAuthForm";
 import useConfirm from "~/components/ConfirmationDialogProvider";
-import useSyncedState from "~/hooks/useSyncedState";
 import { AdminPageNavigation } from '../Sidebar';
 
 const ViewElectionRolls = () => {
@@ -32,21 +32,13 @@ const ViewElectionRolls = () => {
     const location = useLocation();
     const [dialogOpen, setDialogOpen] = useState(false);
     
-    const [voterAccess, setVoterAccess] = useSyncedState(
-        election.settings.voter_access,
-        async (newAccess) => !! await updateElection(e => {
-            e.settings.voter_access = newAccess;
-            // voter id should be set regardless, it's relevant for email list, id list, and device
-            // the only time voter_id shouldn't be set is if "no" was selected for public access, and then it was changed in ElectionAuthForm afterwards
-            e.settings.voter_authentication = {voter_id: true};
-        })
-    )
-
-    // NOTE: usesEmail can be true, false, or undefined. undefined means the user has not made a selection yet
-    const [usesEmail, setUsesEmail] = useSyncedState<boolean | undefined>( 
-        election.settings.invitation == 'email',
-        async (useEmail) => !! await updateElection(e => e.settings.invitation = useEmail ? 'email' : undefined )
-    )
+    // Radios are pure projections of the canonical mode. Each click computes the
+    // next mode and fires one updateElection — no racing useSyncedState debounces.
+    const mode = getVoterAuthenticationMode(election.settings);
+    const voterAccess: 'open' | 'closed' = mode.startsWith('closed') ? 'closed' : 'open';
+    const usesEmail = mode === 'closed_bv_managed_ids';
+    const writeMode = (m: Parameters<typeof setVoterAuthenticationMode>[1]) =>
+        updateElection(e => { e.settings = setVoterAuthenticationMode(e.settings, m); });
 
     const confirm = useConfirm();
 
@@ -117,8 +109,7 @@ const ViewElectionRolls = () => {
                             onClick={async () => {
                                 if(election.state !== 'draft' || electionRollData.length > 0) return; // not sure why disabled still allows me to do onclick
 
-                                setVoterAccess(restricted ? 'closed' : 'open');
-                                setUsesEmail(undefined);
+                                writeMode(restricted ? 'closed_admin_managed_ids' : 'open_unique_cookie');
                             }}
                             checked={voterAccess === (restricted ? 'closed' : 'open')}
                         />
@@ -141,7 +132,7 @@ const ViewElectionRolls = () => {
                             onClick={async () => {
                                 if(election.state !== 'draft' || electionRollData.length > 0) return; // not sure why disabled still allows me to do onclick
 
-                                setUsesEmail(email);
+                                writeMode(email ? 'closed_bv_managed_ids' : 'closed_admin_managed_ids');
                             }}
                             checked={usesEmail === email}
                         />
@@ -149,8 +140,7 @@ const ViewElectionRolls = () => {
                 </RadioGroup>
             </Box>}
             {voterAccess == 'open' && <ElectionAuthForm />}
-            {/* NOTE: usesEmail === undefined would mean the selection is unset*/}
-            {voterAccess == 'closed' && usesEmail !== undefined && <>
+            {voterAccess == 'closed' && <>
                 {!inspectingVoter && !addRollPage &&
                     <Box>
                         {voterAccess === 'closed' &&

@@ -3,56 +3,24 @@ import { RowButtonWithArrow, useSubstitutedTranslation } from "../../util";
 import { useEffect, useState } from "react";
 import { PrimaryButton, SecondaryButton } from "../../styles";
 import { NewElection } from "@equal-vote/star-vote-shared/domain_model/Election";
+import { setVoterAuthenticationMode, VoterAuthenticationMode } from "@equal-vote/star-vote-shared/domain_model/VoterAuthenticationMode";
 import useAuthSession from "../../AuthSessionContextProvider";
 import { usePostElection } from "~/hooks/useAPI";
 import { useNavigate } from "react-router";
 import useElection from "../../ElectionContextProvider";
 import { useCookie } from "~/hooks/useCookie";
 
-const templateMappers = {
-    'demo': (election: NewElection): NewElection => ({
-        ...election,
-        settings: {
-            ...election.settings,
-            voter_authentication: {}
-        }
-    }),
-    'unlisted': (election: NewElection): NewElection => ({
-        ...election,
-        is_public: false,
-        settings: {
-            ...election.settings,
-            voter_authentication: {
-                ...election.settings.voter_authentication,
-                voter_id: true
-            },
-        }
-    }),
-    'email_list': (election) => ({
-        ...election,
-        is_public: false,
-        settings: {
-            ...election.settings,
-            voter_authentication: {
-                ...election.settings.voter_authentication,
-                // email: true <- this means login will be required, that's not what we want for this setting. TODO: figure out refactored name
-                voter_id: true
-            },
-            invitation: 'email',
-        }
-    }),
-    'id_list': (election) => ({
-        ...election,
-        is_public: false,
-        settings: {
-            ...election.settings,
-            voter_authentication: {
-                ...election.settings.voter_authentication,
-                voter_id: true
-            },
-        }
-    }),
-}
+const TEMPLATE_MODES: Record<string, VoterAuthenticationMode> = {
+    demo:       'open_open',
+    unlisted:   'open_unique_cookie',
+    email_list: 'closed_bv_managed_ids',
+    id_list:    'closed_admin_managed_ids',
+};
+
+const applyTemplate = (election: NewElection, templateName: string): NewElection => ({
+    ...election,
+    settings: setVoterAuthenticationMode(election.settings, TEMPLATE_MODES[templateName]),
+});
 
 export default ({onBack, multiRace, onAddElection}) => {
     const authSession = useAuthSession();
@@ -195,7 +163,7 @@ export default ({onBack, multiRace, onAddElection}) => {
                             title={t(`wizard.${name}_title`)}
                             description={t(`wizard.${name}_description`)}
                             key={name}
-                            onClick={() => onAddElection(templateMappers[name](election), '/admin')}
+                            onClick={() => onAddElection(applyTemplate(election, name), '/admin')}
                             ariaLabel={t(`wizard.${name}_title`)}
                         />
                     )}

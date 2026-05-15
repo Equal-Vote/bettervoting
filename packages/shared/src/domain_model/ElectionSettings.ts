@@ -1,5 +1,6 @@
 import { timeZones, TimeZone } from "./Util";
 import { ElectionState } from "./ElectionStates"
+import { getVoterAuthenticationMode } from "./VoterAuthenticationMode";
 
 export interface registration_field {
   field_name: string;
@@ -41,35 +42,6 @@ export interface ElectionSettings {
     exhaust_on_N_repeated_skipped_marks?: number; // number of skipped ranks before exhausting
     draggable_ballot?: boolean; // Use draggable interface for IRV ballots
 }
-function authenticationValidation(obj:authentication): string | null {
-  if (!obj){
-    return "Authentication is null";
-  }
-  if (obj.voter_id && typeof obj.voter_id !== 'boolean'){
-    return "Invalid Voter ID";
-  }
-  if (obj.email && typeof obj.email !== 'boolean'){
-    return "Invalid Email";
-  }
-  if (obj.phone && typeof obj.phone !== 'boolean'){
-    return "Invalid Phone";
-  }
-  if (obj.address && typeof obj.address !== 'boolean'){
-    return "Invalid Address";
-  }
-  if (obj.ip_address && typeof obj.ip_address !== 'boolean'){
-    return "Invalid IP Address";
-  }
-  if (obj.registration_data){
-    for (let field of obj.registration_data){
-      if (!field.field_name || !field.field_type){
-        return "Invalid Registration Field";
-      }
-    }
-  }
-  return null;
-}
-
 function settingsCompatiblityValidation(settings: ElectionSettings, electionState?: ElectionState): string {
     let errorMsg = ''
     if (settings.ballot_updates) {
@@ -90,18 +62,12 @@ export function electionSettingsValidation(obj:ElectionSettings, electionState?:
   if (!obj){
     return "ElectionSettings is null";
   }
-  if (obj.voter_access && !VoterAcessArray.includes(obj.voter_access)){
-    return "Invalid Voter Access";
-  }
-  if (!obj.voter_authentication){
-    return "Invalid Voter Authentication";
-  }
-  const authError = authenticationValidation(obj.voter_authentication);
-  if (authError){
-    return authError;
-  }
-  if (obj.invitation && !InvitationTypes.includes(obj.invitation)){
-    return "Invalid Invitation";
+  // VoterAuthenticationMode is the single source of truth for the
+  // {voter_access, voter_authentication, invitation} triple.
+  try {
+    getVoterAuthenticationMode(obj);
+  } catch (e) {
+    return e instanceof Error ? e.message : String(e);
   }
   if (obj.reminders && typeof obj.reminders !== 'boolean'){
     return "Invalid Reminders";

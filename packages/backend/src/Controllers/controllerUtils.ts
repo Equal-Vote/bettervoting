@@ -12,6 +12,9 @@ const ElectionsModel =  ServiceLocator.electionsDb();
 
 export async function expectValidElectionFromRequest(req:IRequest):Promise<Election> {
     const inputElection = req.body.Election;
+    if (inputElection?.auth_key !== undefined) {
+        throw new BadRequest("auth_key is not a supported field");
+    }
     inputElection.election_id = await makeUniqueID(
         null,
         ID_LENGTHS.ELECTION,

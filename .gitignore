@@ -12,3 +12,6 @@
 .idea
 .gitattributes
 .claude/**
+
+# Generated build artifacts
+packages/backend/src/OpenApi/swagger.json

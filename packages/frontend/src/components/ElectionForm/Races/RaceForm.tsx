@@ -125,7 +125,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
     }, [applyRaceUpdate]);
 
     const onDeleteCandidate = useCallback(async (uiIndex) => {
-        let index = uiIndexToActualIndex(uiIndex);
+        const index = uiIndexToActualIndex(uiIndex);
         if (editedRace.candidates.length < 2) {
             setErrors(prev => ({ ...prev, candidates: 'At least 2 candidates are required' }));
             return;
@@ -204,14 +204,14 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
 
     const handlePhotoDrop = async (e) =>  {
         // load file data
-        let names = []
-        let promises = []
+        const names = []
+        const promises = []
         // forEach doesn't exist on fileList type
         // I'm keeping the loops separate since all the files need to be retrieved from dataTransfer before any await functions are called
         for(let i = 0; i < e.dataTransfer.files.length; i++){ 
-            let f = e.dataTransfer.files[i];
+            const f = e.dataTransfer.files[i];
 
-            let parts = f.name.split('\.');
+            const parts = f.name.split('\.');
             parts.pop(); // drop extension
             names.push(parts.join('.'))
 
@@ -219,11 +219,11 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
         }
 
         // get photos
-        let photos = (await Promise.all(promises)).map(res => res.photo_filename);
+        const photos = (await Promise.all(promises)).map(res => res.photo_filename);
 
         // create candidates
         const existingIds = new Set(editedRace.candidates.map(c => c.candidate_id));
-        let newCandidates = names.map((n, i) => {
+        const newCandidates = names.map((n, i) => {
             const hasCollision = (id: string) => existingIds.has(id);
 
             const newId = makeUniqueIDSync(

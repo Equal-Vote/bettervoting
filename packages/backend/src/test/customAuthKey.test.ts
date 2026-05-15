@@ -19,7 +19,11 @@ afterEach(() => {
   th.afterEach();
 });
 
-describe("Election with custom auth key", () => {
+// Skipped: per-election custom auth_key writes are rejected at the controller
+// boundary (see expectValidElectionFromRequest and editElectionController), and
+// electionSpecificAuth is a no-op. Preserved for if/when the feature is wired
+// up with a proper admin UI and validation; un-skip by removing the `.skip`.
+describe.skip("Election with custom auth key", () => {
 
     const customKey = crypto.generateKeyPairSync('rsa', {
         modulusLength: 2048,
@@ -33,7 +37,10 @@ describe("Election with custom auth key", () => {
         }
       }); 
 
-    const election = {...testInputs.EmailRollElection};
+    // This test only cares about the custom JWT verification flow, so use an
+    // open+email election (type 3) — the closed+email-invite election the test
+    // previously used would now require simulating the invite/voter_id cookie flow.
+    const election = {...testInputs.OpenEmailElection};
     election.auth_key = customKey.publicKey;
 
     const user1TokenCustomSigned = jwt.sign({ 

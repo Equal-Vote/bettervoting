@@ -39,15 +39,9 @@ const electionExistsByID = async (req: any, res: any, next: any) => {
 }
 
 const electionSpecificAuth = async (req: IRequest, res: any, next: any) => {
-    if (!req.election){
-        return next();
-    }
-    const electionKey = req.election.auth_key;
-    if (electionKey == null || electionKey == ""){
-        return next();
-    }
-    var user = accountService.extractUserFromRequest(req, electionKey);
-    req.user = user;
+    // Per-election custom JWT auth is unimplemented; auth_key writes are stripped in
+    // electionValidation, so this middleware is intentionally a no-op. Leaving the
+    // middleware in place to preserve the route param hook ordering.
     return next();
 }
 

@@ -61,6 +61,8 @@ export default {
         owner_id: '0',
     } as Election,
     
+    // Type 2: closed + voter_id + invitation=email (bv-managed email list).
+    // Voters are pre-listed by email; finalize/sendInvites assigns voter_ids and emails them.
     EmailRollElection : {
         election_id: "0",
         title: 'Election 1',
@@ -92,8 +94,45 @@ export default {
         ] as Race[],
         settings: {
             voter_access: 'closed',
-            voter_authentication: {email: true},
+            voter_authentication: {voter_id: true},
             invitation: 'email',
+        } as ElectionSettings
+    } as Election,
+
+    // Type 3: open + email (anyone with a verified email may vote, deduped by email).
+    // Used by tests that exercise email-based voter matching against the roll.
+    OpenEmailElection : {
+        election_id: "0",
+        title: 'Election 1',
+        state: 'open',
+        frontend_url: '',
+        owner_id: 'Alice1234',
+        credential_ids: ['Alice@email.com'],
+        races: [
+            {
+                race_id: '0',
+                title:'Race 0',
+                num_winners: 1,
+                voting_method:'STAR',
+                candidates:[
+                    {
+                        candidate_id:'0',
+                        candidate_name: 'A',
+                    },
+                    {
+                        candidate_id:'1',
+                        candidate_name: 'B',
+                    },
+                    {
+                        candidate_id:'2',
+                        candidate_name: 'C',
+                    }
+                ]
+            }
+        ] as Race[],
+        settings: {
+            voter_access: 'open',
+            voter_authentication: {email: true},
         } as ElectionSettings
     } as Election,
 
@@ -513,7 +552,7 @@ export default {
             }
         ] as Race[],
         settings: {
-            voter_access: 'closed',
+            voter_access: 'open',
             voter_authentication: {email: true},
         } as ElectionSettings
     } as Election,
