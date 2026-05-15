@@ -2,7 +2,7 @@ import { electionValidation } from '@equal-vote/star-vote-shared/domain_model/El
 import ServiceLocator from '../../ServiceLocator';
 import Logger from '../../Services/Logging/Logger';
 import { responseErr } from '../../Util';
-import { expectPermission } from "../controllerUtils";
+import { expectPermission, expectUpdateDate } from "../controllerUtils";
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { BadRequest } from "@curveball/http-errors";
 import { IElectionRequest } from "../../IRequest";
@@ -38,7 +38,7 @@ const editElection = async (req: IElectionRequest, res: Response, next: NextFunc
     Logger.debug(req, `election ID = ${inputElection}`);
     var failMsg = `Failed to update election`;
 
-    const expected_update_date = req.body.expected_update_date;
+    const expected_update_date = expectUpdateDate(req);
     const updatedElection = await ElectionsModel.updateElection(inputElection, req, `User editing draft Election`, expected_update_date);
     if (!updatedElection) {
         Logger.error(req, failMsg);

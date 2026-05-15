@@ -65,7 +65,7 @@ export default function ElectionSettings() {
     const [publicResults, setPublicResults] = useSyncedState(
         election.settings.public_results ?? false,
         async (v) => {
-            const res = await makePublicResultsRequest({ public_results: v });
+            const res = await makePublicResultsRequest({ public_results: v, expected_update_date: election.update_date as string });
             return !!res && res.election?.settings?.public_results === v;
         }
     );

@@ -43,7 +43,7 @@ export default () => {
         const confirmed = await confirm(t('admin_home.finalize_confirm'));
         if (!confirmed) return;
         try {
-            await finalize();
+            await finalize({ expected_update_date: election.update_date as string });
             await fetchElection();
         } catch (err) {
             console.error(err);
@@ -100,7 +100,7 @@ export default () => {
         </Grid>}
     </Box>
 
-    const [isOpen, setIsOpen] = useSyncedState(election.state === 'open', async (toggled) => !!await setOpenState({open: toggled}));
+    const [isOpen, setIsOpen] = useSyncedState(election.state === 'open', async (toggled) => !!await setOpenState({open: toggled, expected_update_date: election.update_date as string}));
     
     const hasScheduledTimes = !!(election.start_time || election.end_time);
     const canEditState = permissions?.includes('canEditElectionState') ?? false;
