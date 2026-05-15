@@ -66,7 +66,7 @@ const AdminHome = () => {
         const confirmed = await confirm(t('admin_home.archive_confirm'))
         if (!confirmed) return
         try {
-            await archive();
+            await archive({ expected_update_date: election.update_date as string });
             await fetchElection()
         } catch (err) {
             console.error(err)

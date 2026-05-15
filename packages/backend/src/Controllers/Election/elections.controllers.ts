@@ -9,6 +9,7 @@ import { getOrCreateElectionRoll, checkForMissingAuthenticationData, getVoterAut
 import { ElectionRoll } from '@equal-vote/star-vote-shared/domain_model/ElectionRoll';
 import { sharedConfig } from '@equal-vote/star-vote-shared/config';
 import { hashString } from '../controllerUtils';
+import { Conflict } from '@curveball/http-errors';
 
 var ElectionsModel =  ServiceLocator.electionsDb();
 var accountService = ServiceLocator.accountService();
@@ -144,8 +145,20 @@ async function updateElectionStateIfNeeded(req:IRequest, election:Election):Prom
         }
     }
     if (stateChange) {
-        election = await ElectionsModel.updateElection(election, req, stateChangeMsg);
-        Logger.info(req, stateChangeMsg);
+        const expected_update_date = election.update_date as string;
+        try {
+            election = await ElectionsModel.updateElection(election, req, stateChangeMsg, expected_update_date);
+            Logger.info(req, stateChangeMsg);
+        } catch (err: any) {
+            // Concurrent GETs can both decide to transition state. Whichever loses
+            // the OCC race re-reads to get the version that the winner installed.
+            if (err instanceof Conflict) {
+                Logger.info(req, `Lost state-transition race for ${election.election_id}, refetching`);
+                const refreshed = await ElectionsModel.getElectionByID(election.election_id, req);
+                if (refreshed) return refreshed;
+            }
+            throw err;
+        }
     }
     return election;
 }

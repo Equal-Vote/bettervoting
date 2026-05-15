@@ -36,7 +36,7 @@ const EditRoles = () => {
             const audit_ids = auditorList == '' ? null : auditorList.split('\n')
             const credential_ids = credentialList == '' ? null : credentialList.split('\n')
 
-            const newRoles = await putRoles.makeRequest({ admin_ids, audit_ids, credential_ids })
+            const newRoles = await putRoles.makeRequest({ admin_ids, audit_ids, credential_ids, expected_update_date: election.update_date as string })
             if (newRoles) {
                 refreshElection()
             }

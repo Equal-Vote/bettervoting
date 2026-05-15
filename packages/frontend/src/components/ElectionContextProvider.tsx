@@ -52,8 +52,13 @@ export const ElectionContextProvider = ({ id, localElection=undefined, setLocalE
             return
         }
         if (!data.election) return
+        // Capture the version we're branching from BEFORE the local mutation, so
+        // concurrent edits (e.g. two useSyncedState debounces firing in the same
+        // tick) all see the same expected_update_date — the loser gets a clean
+        // 409 from the backend's OCC check.
+        const expected_update_date = data.election.update_date as string
         updateFunc(data.election)
-        return await editElection({ Election: data.election }).then(result => {
+        return await editElection({ Election: data.election, expected_update_date }).then(result => {
             if(result === false) fetchData();
             return result;
         })
