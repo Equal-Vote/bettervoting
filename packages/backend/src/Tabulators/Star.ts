@@ -28,7 +28,7 @@ export function Star(candidates: candidate[], votes: rawVote[], nWinners = 1, el
     singleWinnerStar,
     (candidate: starCandidate, roundResults: roundResults<starCandidate>[]) => {
       let winRound = roundResults.findIndex(round => round.winners[0].id == candidate.id)
-      let runnerUpRound = roundResults.findIndex(round => round.winners[0].id == candidate.id)
+      let runnerUpRound = roundResults.findIndex(round => round.runner_up[0]?.id == candidate.id)
       return [
         // sort first by winning round
         winRound == -1 ? -Infinity : -winRound,

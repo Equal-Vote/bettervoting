@@ -135,6 +135,10 @@ export interface allocatedScoreSummaryData extends genericSummaryData<allocatedS
     splitPoints: number[],
     spentAboves: number[],
     weight_on_splits: number[],
+    // HAZARD: weightedScoresByRound[round][i] is keyed by the candidate's
+    // position in summaryData.candidates. Reordering candidates without also
+    // permuting these inner arrays will silently misalign scores. Other
+    // tabulators avoid this by living on the candidate (see irvCandidate.hareScores).
     weightedScoresByRound: number[][]
 }
 

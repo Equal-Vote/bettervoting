@@ -26,7 +26,8 @@ const editElectionRoles = async (req: IElectionRequest, res: Response, next: Nex
     req.election.admin_ids = req.body.admin_ids
     req.election.audit_ids = req.body.audit_ids
     req.election.credential_ids = req.body.credential_ids
-    const updatedElection = await ElectionsModel.updateElection(req.election, req, `Update election roles`);
+    const expected_update_date = req.body.expected_update_date;
+    const updatedElection = await ElectionsModel.updateElection(req.election, req, `Update election roles`, expected_update_date);
     if (!updatedElection) {
         Logger.info(req, failMsg);
         throw new BadRequest(failMsg)

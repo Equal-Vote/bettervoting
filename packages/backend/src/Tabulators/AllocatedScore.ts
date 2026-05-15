@@ -78,6 +78,8 @@ export function AllocatedScore(candidates: candidate[], votes: rawVote[], nWinne
             // sum scores for each candidate
             // weighted_sums[r] = sumArray(weighted_scores[r]);
         });
+        // HAZARD: inner array is positionally aligned with summaryData.candidates.
+        // See allocatedScoreSummaryData.weightedScoresByRound — reorders must permute both.
         summaryData.weightedScoresByRound.push(weighted_sums.map(w => {
             return w.valueOf()
         }))
@@ -174,6 +176,31 @@ export function AllocatedScore(candidates: candidate[], votes: rawVote[], nWinne
     if(results.elected.some(elected => results.tied.includes(elected))){
         results.tieBreakType = 'random';
     }
+
+    // Reorder candidates so the natural index conveys meaning: elected first in
+    // election order, then non-elected by final-round weighted score (descending).
+    // Mirrors the STARPRResultsViewer sort in Results.tsx so other consumers
+    // (e.g. non-frontend viewers) get the same default ordering "for free".
+    // weightedScoresByRound is positionally aligned with summaryData.candidates,
+    // so we permute the inner arrays in lockstep.
+    const finalRoundScores = summaryData.weightedScoresByRound.at(-1) ?? [];
+    const electedOrder = new Map(results.elected.map((c, i) => [c.id, i]));
+    const electedRank = (c: allocatedScoreCandidate) =>
+        electedOrder.has(c.id) ? (electedOrder.get(c.id) as number) : results.elected.length;
+    const permutation = summaryData.candidates
+        .map((c, oldIndex) => oldIndex)
+        .sort((a, b) => {
+            const ca = summaryData.candidates[a];
+            const cb = summaryData.candidates[b];
+            const ra = electedRank(ca);
+            const rb = electedRank(cb);
+            if (ra !== rb) return ra - rb;
+            return (finalRoundScores[b] ?? 0) - (finalRoundScores[a] ?? 0);
+        });
+    summaryData.candidates = permutation.map(i => summaryData.candidates[i]);
+    summaryData.weightedScoresByRound = summaryData.weightedScoresByRound.map(
+        round => permutation.map(i => round[i])
+    );
 
     return results
 }

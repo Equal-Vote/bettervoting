@@ -21,7 +21,8 @@ const setPublicResults = async (req: IElectionRequest, res: Response, next: Next
     }
     election.settings.public_results = public_results
 
-    const updatedElection = await ElectionsModel.updateElection(election, req, `Publish Results`);
+    const expected_update_date = req.body.expected_update_date;
+    const updatedElection = await ElectionsModel.updateElection(election, req, `Publish Results`, expected_update_date);
     if (!updatedElection) {
         const failMsg = 'could not update public_results setting'
         Logger.info(req, failMsg);

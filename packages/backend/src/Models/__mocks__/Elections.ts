@@ -3,6 +3,7 @@ import { Uid } from '@equal-vote/star-vote-shared/domain_model/Uid';
 import { ILoggingContext } from '../../Services/Logging/ILogger';
 import Logger from '../../Services/Logging/Logger';
 import { IElectionStore } from '../IElectionStore';
+import { Conflict } from '@curveball/http-errors';
 
 export default class ElectionsDB implements IElectionStore {
 
@@ -26,7 +27,7 @@ export default class ElectionsDB implements IElectionStore {
             throw new Error("Election Not Found")
         }
         if (expected_update_date !== undefined && this.elections[foundIndex].update_date !== expected_update_date) {
-            throw new Error("Concurrent write detected, please try again")
+            throw new Conflict("Concurrent write detected, please try again")
         }
         var copy = JSON.parse(JSON.stringify(election));
         copy.update_date = Date.now().toString();

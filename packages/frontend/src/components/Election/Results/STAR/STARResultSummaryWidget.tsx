@@ -35,9 +35,19 @@ const STARResultSummaryWidget = ({ results, roundIndex, t }: {results: starResul
     if(results.roundResults[roundIndex].runner_up.length == 0)
         return <Typography>{t('results.single_candidate_result', {name: histData[0].name})}</Typography>
 
-    const pieData = candidates.slice(0, 2).map((c, i) => ({
+    // Read finalists from this round's roundResults rather than from
+    // summaryData.candidates[0..1]. The backend's candidate sort puts the
+    // single-winner runoff pair at positions 0 and 1, but for bloc STAR with
+    // multiple rounds those positions are [round-0 winner, round-1 winner],
+    // not [round-N winner, round-N runner-up]. roundResults[roundIndex] is
+    // the only source that's right for every round.
+    const finalists = [
+        results.roundResults[roundIndex].winners[0],
+        results.roundResults[roundIndex].runner_up[0],
+    ];
+    const pieData = finalists.map((c, i) => ({
         name: c.name,
-        votes: c.votesPreferredOver[candidates[1-i].id]
+        votes: c.votesPreferredOver[finalists[1-i].id]
     }));
 
     const noPreferenceVotes = results.summaryData.nTallyVotes - pieData[0].votes - pieData[1].votes;

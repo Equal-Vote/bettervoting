@@ -4,9 +4,11 @@ import Widget from "./Widget";
 import useRace from "~/components/RaceContextProvider";
 import { useState } from "react";
 import {  Divider, MenuItem, Select, Typography } from "@mui/material";
-import { formatPercent } from "~/components/util";
+import { CHART_COLORS, formatPercent } from "~/components/util";
+import { methodValueToTextKey } from "@equal-vote/star-vote-shared/domain_model/Race";
 import ResultsBarChart from "./ResultsBarChart";
 import HeadToHeadChart from "./HeadToHeadChart";
+import ResultsKey from "./ResultsKey";
 import { getVoterErrorData } from "./VoterErrorStatsWidget";
 
 // candidates helps define the order
@@ -20,7 +22,15 @@ const VoterProfileWidget = ({topScore, ranked=false} : {topScore: number, ranked
 
     const refCandidate = candidates.find(c => c.id == refCandidateId);
 
-    const [left, right] = candidates.slice(0, 2);
+    // Assumes summaryData.candidates is ordered meaningfully by the backend:
+    // position 0 is the winner and position 1 is the runner-up. Each tabulator
+    // is responsible for producing that order (STAR via the winRound/
+    // runnerUpRound sort key in Star.ts; IRV/STV via the hareScores +
+    // roundResults sort; Approval/Plurality by score; STAR_PR via its
+    // post-tabulation reorder in AllocatedScore.ts). Multi-winner races are
+    // gated out below (race.num_winners <= 1) because the "runner-up"
+    // concept stops being sharp once there are several winners.
+    let [left, right] = candidates.slice(0, 2);
 
     const avgBallot: {[key: string]:{name, score}} = {};
     candidates.forEach((c) => {
@@ -110,19 +120,35 @@ const VoterProfileWidget = ({topScore, ranked=false} : {topScore: number, ranked
             {candidates.map((c, i) => <MenuItem key={i} value={c.id}>{c.name}</MenuItem>)}
         </Select>
         <Typography variant='h6'>{t('results_ext.voter_profile_count', {count: totalTopScored, name: refCandidate.name})}</Typography>
+        {/* The "preferred frontrunner" panel compares two stand-in frontrunners
+            against each other. The concept is sharp only in single-winner races
+            (winner vs runner-up). For multi-winner methods (STAR_PR, bloc STAR,
+            STV) left/right falls back to "first elected vs second elected" —
+            both winners, not rivals — which answers a much fuzzier question
+            than the label promises. Hidden until we design a multi-winner
+            version. See Race.tsx / AllocatedScore.ts for the candidate order. */}
+        {race.num_winners <= 1 && <>
         <Divider variant='middle' sx={{width: '100%', m:1}}/>
         <Typography variant='h6'>{t('results_ext.voter_profile_preferred_frontrunner', {name: refCandidate.name})}</Typography>
-        {totalTopScored == 0 ? 'n/a' : <HeadToHeadChart 
-            leftName={left.name}
-            rightName={right.name}
-            leftVotes={leftVotes}
-            rightVotes={rightVotes}
-            total={total}
-            equalContent={{
-                title: 'Distribution of Equal Support',
-                description: equalPreferences
-            }}
-        />}
+        {totalTopScored == 0 ? 'n/a' : <>
+            <HeadToHeadChart
+                leftName={left.name}
+                rightName={right.name}
+                leftVotes={leftVotes}
+                rightVotes={rightVotes}
+                total={total}
+                equalContent={{
+                    title: 'Distribution of Equal Support',
+                    description: equalPreferences
+                }}
+            />
+            <ResultsKey items={[
+                [CHART_COLORS[0], t(`results_ext.head_to_head_key.${methodValueToTextKey[race.voting_method]}.higher`, {name: left.name, other_name: right.name})],
+                ['var(--brand-gray-1)', t(`results_ext.head_to_head_key.${methodValueToTextKey[race.voting_method]}.equal`)],
+                [CHART_COLORS[1], t(`results_ext.head_to_head_key.${methodValueToTextKey[race.voting_method]}.higher`, {name: right.name, other_name: left.name})],
+            ]} />
+        </>}
+        </>}
         <Divider variant='middle' sx={{width: '100%', m:1}}/>
         <Typography variant='h6'>{t(`results_ext.voter_profile_average_${ranked? 'ranks' : 'scores'}`, {name: refCandidate.name})}</Typography>
         {totalTopScored == 0 ? 'n/a' : <>

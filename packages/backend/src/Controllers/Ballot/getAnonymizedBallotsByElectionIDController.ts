@@ -1,7 +1,7 @@
 import ServiceLocator from "../../ServiceLocator";
 import Logger from "../../Services/Logging/Logger";
 import { Unauthorized } from "@curveball/http-errors";
-import { expectPermission } from "../controllerUtils";
+import { expectPermission, secureShuffle } from "../controllerUtils";
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
@@ -33,9 +33,12 @@ export const getAnonymizedBallotsByElectionID = async (req: IElectionRequest, re
                 precinct: ballot.precinct,
                 votes: ballot.votes
             }
-      
+
     });
-    Logger.debug(req, "ballots = ", anonymizedBallots);
-    res.json({ ballots: anonymizedBallots })
+    // Shuffle so the response order doesn't reveal ballot submission order —
+    // see getBallotsByElectionIDController for the threat model.
+    const shuffledBallots = secureShuffle(anonymizedBallots);
+    Logger.debug(req, "ballots = ", shuffledBallots);
+    res.json({ ballots: shuffledBallots })
 }
 

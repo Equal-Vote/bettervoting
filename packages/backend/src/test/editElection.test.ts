@@ -113,4 +113,42 @@ describe("Edit Election", () => {
             // TODO
         })
     })
+
+    describe("Optimistic concurrency (expected_update_date)", () => {
+        test("accepts edit when expected_update_date matches", async () => {
+            const electionId = await setupInitialElection();
+            const current = await fetchElectionById(electionId);
+            const election1Copy = { ...testInputs.Election1, election_id: electionId };
+
+            const response = await th.postRequest(
+                `/API/Election/${electionId}/edit`,
+                { Election: election1Copy, expected_update_date: current.update_date },
+                testInputs.user1token,
+            );
+            expect(response.statusCode).toBe(200);
+            th.testComplete();
+        })
+
+        test("rejects edit with 409 when expected_update_date is stale", async () => {
+            const electionId = await setupInitialElection();
+            const election1Copy = { ...testInputs.Election1, election_id: electionId };
+
+            const response = await th.postRequest(
+                `/API/Election/${electionId}/edit`,
+                { Election: election1Copy, expected_update_date: 'definitely-not-the-current-date' },
+                testInputs.user1token,
+            );
+            expect(response.statusCode).toBe(409);
+            th.testComplete();
+        })
+
+        test("accepts edit when expected_update_date is omitted (backwards compatible)", async () => {
+            const electionId = await setupInitialElection();
+            const election1Copy = { ...testInputs.Election1, election_id: electionId };
+
+            const response = await th.editElection(election1Copy, testInputs.user1token);
+            expect(response.statusCode).toBe(200);
+            th.testComplete();
+        })
+    })
 })
