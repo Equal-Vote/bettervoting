@@ -10,6 +10,7 @@ import { useGetRolls, useSendEmails } from "../../../hooks/useAPI";
 import useElection from "../../ElectionContextProvider";
 import useFeatureFlags from "../../FeatureFlagContextProvider";
 import { ElectionRollResponse } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll";
+import { setVoterAuthenticationMode } from "@equal-vote/star-vote-shared/domain_model/VoterAuthenticationMode";
 import SendEmailDialog from "./SendEmailDialog";
 import { PrimaryButton, SecondaryButton } from "~/components/styles";
 import ElectionAuthForm from "~/components/ElectionForm/Details/ElectionAuthForm";
@@ -35,10 +36,13 @@ const ViewElectionRolls = () => {
     const [voterAccess, setVoterAccess] = useSyncedState(
         election.settings.voter_access,
         async (newAccess) => !! await updateElection(e => {
-            e.settings.voter_access = newAccess;
-            // voter id should be set regardless, it's relevant for email list, id list, and device
-            // the only time voter_id shouldn't be set is if "no" was selected for public access, and then it was changed in ElectionAuthForm afterwards
-            e.settings.voter_authentication = {voter_id: true};
+            // Land in a canonical mode immediately. Closed → admin-managed by default
+            // (the usesEmail toggle below can flip it to bv-managed). Open → cookie auth;
+            // ElectionAuthForm can then switch among the four open modes.
+            e.settings = setVoterAuthenticationMode(
+                e.settings,
+                newAccess === 'closed' ? 'closed_admin_managed_ids' : 'open_unique_cookie',
+            );
         })
     )
 

@@ -1,5 +1,6 @@
 import { timeZones, TimeZone } from "./Util";
 import { ElectionState } from "./ElectionStates"
+import { getVoterAuthenticationMode } from "./VoterAuthenticationMode";
 
 export interface registration_field {
   field_name: string;
@@ -41,32 +42,6 @@ export interface ElectionSettings {
     exhaust_on_N_repeated_skipped_marks?: number; // number of skipped ranks before exhausting
     draggable_ballot?: boolean; // Use draggable interface for IRV ballots
 }
-function authenticationValidation(obj:authentication): string | null {
-  if (!obj){
-    return "Authentication is null";
-  }
-  if (obj.voter_id !== undefined && typeof obj.voter_id !== 'boolean'){
-    return "Invalid Voter ID";
-  }
-  if (obj.email !== undefined && typeof obj.email !== 'boolean'){
-    return "Invalid Email";
-  }
-  if (obj.ip_address !== undefined && typeof obj.ip_address !== 'boolean'){
-    return "Invalid IP Address";
-  }
-  // phone, address, registration_data, registration_api_endpoint are latent fields
-  // not exposed by any UI; reject them to keep elections in one of the 6 canonical shapes.
-  if (obj.phone !== undefined || obj.address !== undefined ||
-      obj.registration_data !== undefined || obj.registration_api_endpoint !== undefined){
-    return "Unsupported voter_authentication field (phone/address/registration_data/registration_api_endpoint)";
-  }
-  const trueCount = [obj.voter_id, obj.email, obj.ip_address].filter(v => v === true).length;
-  if (trueCount > 1){
-    return "Only one of voter_id, email, or ip_address may be enabled";
-  }
-  return null;
-}
-
 function settingsCompatiblityValidation(settings: ElectionSettings, electionState?: ElectionState): string {
     let errorMsg = ''
     if (settings.ballot_updates) {
@@ -87,36 +62,12 @@ export function electionSettingsValidation(obj:ElectionSettings, electionState?:
   if (!obj){
     return "ElectionSettings is null";
   }
-  // voter_access is required and restricted to the two canonical values.
-  // 'registration' remains a latent value in VoterAcessArray (registerVoterController
-  // still handles it for any historical rows) but the create/edit path no longer accepts it.
-  if (obj.voter_access !== 'open' && obj.voter_access !== 'closed'){
-    return "Invalid Voter Access: must be 'open' or 'closed'";
-  }
-  if (!obj.voter_authentication){
-    return "Invalid Voter Authentication";
-  }
-  const authError = authenticationValidation(obj.voter_authentication);
-  if (authError){
-    return authError;
-  }
-  // invitation is only 'email', and only on closed elections.
-  if (obj.invitation !== undefined){
-    if (obj.invitation !== 'email'){
-      return "Invalid Invitation: only 'email' is supported";
-    }
-    if (obj.voter_access !== 'closed'){
-      return "invitation='email' requires voter_access='closed'";
-    }
-  }
-  // Closed elections must authenticate voters by voter_id.
-  if (obj.voter_access === 'closed'){
-    if (obj.voter_authentication.voter_id !== true){
-      return "Closed elections require voter_authentication.voter_id=true";
-    }
-    if (obj.voter_authentication.email === true || obj.voter_authentication.ip_address === true){
-      return "Closed elections must use voter_id authentication only";
-    }
+  // VoterAuthenticationMode is the single source of truth for the
+  // {voter_access, voter_authentication, invitation} triple.
+  try {
+    getVoterAuthenticationMode(obj);
+  } catch (e) {
+    return e instanceof Error ? e.message : String(e);
   }
   if (obj.reminders && typeof obj.reminders !== 'boolean'){
     return "Invalid Reminders";

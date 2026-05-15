@@ -953,6 +953,40 @@
         ],
         "type": "string"
       },
+      "MethodTextKey": {
+        "enum": [
+          "approval",
+          "choose_one",
+          "ranked_robin",
+          "rcv",
+          "star",
+          "star_pr",
+          "stv"
+        ],
+        "type": "string"
+      },
+      "ModeShape": {
+        "properties": {
+          "invitation": {
+            "enum": [
+              "address",
+              "email"
+            ],
+            "type": "string"
+          },
+          "voter_access": {
+            "$ref": "#/components/schemas/VoterAccess"
+          },
+          "voter_authentication": {
+            "$ref": "#/components/schemas/authentication"
+          }
+        },
+        "required": [
+          "voter_access",
+          "voter_authentication"
+        ],
+        "type": "object"
+      },
       "NewBallot": {
         "properties": {
           "ballot_id": {
@@ -1657,6 +1691,17 @@
           "roles"
         ],
         "type": "object"
+      },
+      "VoterAuthenticationMode": {
+        "enum": [
+          "closed_admin_managed_ids",
+          "closed_bv_managed_ids",
+          "open_open",
+          "open_unique_cookie",
+          "open_unique_ip_address",
+          "open_unique_keycloak"
+        ],
+        "type": "string"
       },
       "VotingMethod": {
         "enum": [
@@ -4118,11 +4163,83 @@
                   "properties": {
                     "elections": {
                       "type": "number",
-                      "description": "Number of elections"
+                      "description": "Total elections (legacy_elections + sum of per-method elections)"
                     },
                     "votes": {
                       "type": "number",
-                      "description": "Number of votes"
+                      "description": "Total votes cast (legacy_votes + sum of per-method votes)"
+                    },
+                    "legacy_elections": {
+                      "type": "number",
+                      "description": "Elections imported from classic star.vote"
+                    },
+                    "legacy_votes": {
+                      "type": "number",
+                      "description": "Votes imported from classic star.vote"
+                    },
+                    "star_elections": {
+                      "type": "number",
+                      "description": "Elections using STAR voting"
+                    },
+                    "star_votes": {
+                      "type": "number",
+                      "description": "Votes cast in STAR elections"
+                    },
+                    "rcv_elections": {
+                      "type": "number",
+                      "description": "Elections using Ranked Choice Voting (IRV)"
+                    },
+                    "rcv_votes": {
+                      "type": "number",
+                      "description": "Votes cast in RCV elections"
+                    },
+                    "approval_elections": {
+                      "type": "number",
+                      "description": "Elections using Approval voting"
+                    },
+                    "approval_votes": {
+                      "type": "number",
+                      "description": "Votes cast in Approval elections"
+                    },
+                    "ranked_robin_elections": {
+                      "type": "number",
+                      "description": "Elections using Ranked Robin voting"
+                    },
+                    "ranked_robin_votes": {
+                      "type": "number",
+                      "description": "Votes cast in Ranked Robin elections"
+                    },
+                    "star_pr_elections": {
+                      "type": "number",
+                      "description": "Elections using STAR Proportional Representation"
+                    },
+                    "star_pr_votes": {
+                      "type": "number",
+                      "description": "Votes cast in STAR PR elections"
+                    },
+                    "choose_one_elections": {
+                      "type": "number",
+                      "description": "Elections using Plurality voting"
+                    },
+                    "choose_one_votes": {
+                      "type": "number",
+                      "description": "Votes cast in Plurality elections"
+                    },
+                    "stv_elections": {
+                      "type": "number",
+                      "description": "Elections using Single Transferable Vote"
+                    },
+                    "stv_votes": {
+                      "type": "number",
+                      "description": "Votes cast in STV elections"
+                    },
+                    "multi_method_elections": {
+                      "type": "number",
+                      "description": "Elections with races using multiple different voting methods"
+                    },
+                    "multi_method_votes": {
+                      "type": "number",
+                      "description": "Votes cast in multi-method elections"
                     }
                   }
                 }
