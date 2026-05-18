@@ -27,6 +27,8 @@ const setOpenState = async (req: IElectionRequest, res: Response, next: NextFunc
         msg = "Cannot open an election that is already open";
     } else if (!open && election.state === 'closed') {
         msg = "Cannot close an election that is already closed";
+    } else if (open && election.settings.strict_ballot_privacy) {
+        msg = "Cannot reopen an election when strict ballot privacy is enabled";
     } else if (election.start_time || election.end_time) {
         msg = "Cannot open or close an election with scheduled start and end times";
     }

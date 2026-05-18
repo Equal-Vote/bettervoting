@@ -40,6 +40,7 @@ export interface ElectionSettings {
     contact_email?: string; // Public contact email for voters to reach out to
     exhaust_on_N_repeated_skipped_marks?: number; // number of skipped ranks before exhausting
     draggable_ballot?: boolean; // Use draggable interface for IRV ballots
+    strict_ballot_privacy?: boolean; // Hide results while open and make closing final
 }
 function authenticationValidation(obj:authentication): string | null {
   if (!obj){
@@ -72,6 +73,9 @@ function authenticationValidation(obj:authentication): string | null {
 
 function settingsCompatiblityValidation(settings: ElectionSettings, electionState?: ElectionState): string {
     let errorMsg = ''
+    if (settings.strict_ballot_privacy && settings.public_results && !['closed', 'archived'].includes(electionState ?? '')) {
+        errorMsg += 'Preliminary results are not permitted when strict ballot privacy is enabled.  ';
+    }
     if (settings.ballot_updates) {
         if (settings.public_results && !['closed', 'archived'].includes(electionState ?? '')) {
             errorMsg += 'Preliminary results are not permitted when ballot updating is enabled.  ';
@@ -135,6 +139,9 @@ export function electionSettingsValidation(obj:ElectionSettings, electionState?:
   }
   if (obj.draggable_ballot && typeof obj.draggable_ballot !== 'boolean'){
     return "Invalid Draggable Ballot";
+  }
+  if (obj.strict_ballot_privacy && typeof obj.strict_ballot_privacy !== 'boolean'){
+    return "Invalid Strict Ballot Privacy";
   }
 
   const compatibilityError = settingsCompatiblityValidation(obj, electionState);

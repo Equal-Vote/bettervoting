@@ -114,6 +114,32 @@ export class TestHelper {
         return this.electionResponse(res);
     }
 
+    async setOpenState(
+        election_id: Uid,
+        open: boolean,
+        userToken: string | null
+    ): Promise<ElectionResponse> {
+        const res = await this.postRequest(
+            `/API/Election/${election_id}/setOpenState`,
+            { open },
+            userToken
+        );
+        return this.electionResponse(res);
+    }
+
+    async setPublicResults(
+        election_id: Uid,
+        public_results: boolean,
+        userToken: string | null
+    ): Promise<ElectionResponse> {
+        const res = await this.postRequest(
+            `/API/Election/${election_id}/setPublicResults`,
+            { public_results },
+            userToken
+        );
+        return this.electionResponse(res);
+    }
+
     private electionResponse(res: any): ElectionResponse {
         if (res.statusCode != 200) {
             return {

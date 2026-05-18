@@ -19,6 +19,9 @@ const setPublicResults = async (req: IElectionRequest, res: Response, next: Next
     if (typeof public_results !== 'boolean') {
         throw new BadRequest('public_results setting not provided or incorrect type')
     }
+    if (public_results && election.settings.strict_ballot_privacy && !['closed', 'archived'].includes(election.state)) {
+        throw new BadRequest('Preliminary results are not permitted when strict ballot privacy is enabled')
+    }
     election.settings.public_results = public_results
 
     const expected_update_date = req.body.expected_update_date;

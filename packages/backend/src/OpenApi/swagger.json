@@ -709,6 +709,9 @@
           "require_instruction_confirmation": {
             "type": "boolean"
           },
+          "strict_ballot_privacy": {
+            "type": "boolean"
+          },
           "term_type": {
             "enum": [
               "election",
@@ -3818,6 +3821,33 @@
           },
           "404": {
             "description": "Election not found"
+          }
+        }
+      }
+    },
+    "/Election/{id}/history": {
+      "get": {
+        "summary": "Public audit log of an election since finalization",
+        "tags": [
+          "Elections"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "The election ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sequence of events that have occurred at or after the moment the\nelection was finalized. Includes state transitions, per-ballot\nedits, and cumulative-count milestones for ballots cast and roll\nadditions. Designed so that close/reopen patterns by admins are\npublicly visible. No voter IDs, ballot IDs, or vote contents are\nreturned.\n"
+          },
+          "404": {
+            "description": "Election has not been finalized"
           }
         }
       }

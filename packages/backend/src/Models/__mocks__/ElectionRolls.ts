@@ -67,7 +67,7 @@ export default class ElectionRollDB implements IElectionRollStore{
         return Promise.resolve(res)
     }
 
-    update(voter_roll: ElectionRoll, ctx:ILoggingContext,reason:string): Promise<ElectionRoll | null> {
+    update(voter_roll: ElectionRoll, ctx:ILoggingContext,reason:string): Promise<ElectionRoll> {
         Logger.debug(ctx, `MockElectionRolls update ${JSON.stringify(voter_roll)}`);
         const index = this._electionRolls.findIndex(electionRoll => {
             var electionMatch = electionRoll.election_id===voter_roll.election_id;
@@ -75,7 +75,7 @@ export default class ElectionRollDB implements IElectionRollStore{
             return electionMatch && voterMatch
         });
         if (index < 0){
-            return Promise.resolve(null)
+            return Promise.reject(new Error(`MockElectionRolls.update: no matching row for ${voter_roll.election_id}/${voter_roll.voter_id}`))
         }
         var copy = JSON.parse(JSON.stringify(voter_roll));
         this._electionRolls[index] = copy;

@@ -14,6 +14,7 @@ election_home:
   view_results: View Results
   drafted: This election is still being drafted
   archived: This election has been archived
+  strict_ballot_privacy: Results are hidden while voting is open, and closing the election is final.
 
 # Ballot (ex. https://bettervoting.com/j87vqp/vote)
 ballot:
@@ -688,6 +689,7 @@ disabled_msgs:
     ballot_updates_with_prelim: Not supported when the election starts off with public results. This can be adjusted under the preview results tab.
     ballot_updates_when_open: Only supported when election uses email list
     public_results: Not supported with vote editing. This can be adjusted under the setting tab.
+    strict_ballot_privacy_public_results: Not supported when strict ballot privacy is enabled.
 
 #######################################
 #### PRIORITY 4 : Info Bubbles ####
@@ -741,6 +743,10 @@ tips:
       Allows voters to see the results of the {{election}}.
       If enabled while voting is open then voters will be shown to the preliminary results after completing their ballot.
       High profile {{elections}} will usually keep the results hidden, and then reveal them after the {{election}} is closed.
+
+  strict_ballot_privacy:
+    title: Strict Ballot Privacy
+    description: Hides results while voting is open and prevents reopening the election after it has been closed. This protects voters from being linked to ballots by comparing result snapshots before and after a vote.
 
   voter_groups:
     title: Enable Voter Groups
@@ -1098,6 +1104,7 @@ admin_home:
   close_snack: 'Election successfully closed!'
   open_snack: 'Election successfully opened!'
   election_is_open: 'Open for {{votes}}'
+  strict_privacy_closed: This election uses strict ballot privacy, so it cannot be reopened after closing.
 
   share:
     description: Share {{capital_election}}
@@ -1164,6 +1171,8 @@ election_settings:
   random_candidate_order: Randomize Candidate Order !tip(random_candidate_order)
 
   ballot_updates: Allow Voters To Edit Vote !tip(ballot_updates)
+
+  strict_ballot_privacy: Strict Ballot Privacy !tip(strict_ballot_privacy)
 
   preliminary_results: Show Preliminary Results !tip(public_results)
 

@@ -1,6 +1,6 @@
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import { Paper } from "@mui/material";
+import { Alert, Paper } from "@mui/material";
 import ShareButton from "./ShareButton";
 import VoterAuth from "./VoterAuth";
 import { useSubstitutedTranslation } from '../util';
@@ -55,6 +55,12 @@ const ElectionHome = () => {
               align='center'
             />
           </Box>
+
+          {election.settings.strict_ballot_privacy &&
+            <Alert severity="info" variant="outlined" sx={{ my: 2 }}>
+              {t('election_home.strict_ballot_privacy')}
+            </Alert>
+          }
 
           <VoterAuth />
 
