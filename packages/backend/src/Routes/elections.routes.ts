@@ -1,7 +1,7 @@
 import { Router } from 'express';
 const electionsRouter = Router();
 
-import {    
+import {
     returnElection,
     getElectionByID,
     electionSpecificAuth,
@@ -13,6 +13,7 @@ import {
     editElection,
     editElectionRoles,
     finalizeElection,
+    getElectionHistory,
     getElectionResults,
     getElections,
     getGlobalElectionStats,
@@ -55,6 +56,33 @@ import asyncHandler from 'express-async-handler';
 */
 
 electionsRouter.get('/Election/:id', asyncHandler(returnElection));
+
+/**
+ * @swagger
+ * /Election/{id}/history:
+ *   get:
+ *     summary: Public audit log of an election since finalization
+ *     tags: [Elections]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The election ID
+ *     responses:
+ *       200:
+ *         description: |
+ *           Sequence of events that have occurred at or after the moment the
+ *           election was finalized. Includes state transitions, per-ballot
+ *           edits, and cumulative-count milestones for ballots cast and roll
+ *           additions. Designed so that close/reopen patterns by admins are
+ *           publicly visible. No voter IDs, ballot IDs, or vote contents are
+ *           returned.
+ *       404:
+ *         description: Election has not been finalized
+ */
+electionsRouter.get('/Election/:id/history', asyncHandler(getElectionHistory));
 
 /** 
  * @swagger

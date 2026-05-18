@@ -104,6 +104,7 @@ export default () => {
     
     const hasScheduledTimes = !!(election.start_time || election.end_time);
     const canEditState = permissions?.includes('canEditElectionState') ?? false;
+    const closingIsFinal = election.state === 'closed' && !!election.settings.strict_ballot_privacy;
 
     return <>
         {(election.state === 'finalized' || election.state === 'open' || election.state === 'closed') && (
@@ -112,8 +113,14 @@ export default () => {
                     label={t('admin_home.election_is_open')}
                     toggled={isOpen}
                     onToggle={setIsOpen}
-                    disabled={hasScheduledTimes || !canEditState}
-                    disabledMessage={hasScheduledTimes ? "Open/close is managed automatically based on start and end time" : undefined}
+                    disabled={hasScheduledTimes || !canEditState || closingIsFinal}
+                    disabledMessage={
+                        closingIsFinal
+                            ? t('admin_home.strict_privacy_closed')
+                            : hasScheduledTimes
+                                ? "Open/close is managed automatically based on start and end time"
+                                : undefined
+                    }
                 />
                 {election.state === 'closed' && election.end_time && (
                     <Typography variant="body2">{t('admin_home.header_ended_time', {datetime: election.end_time})}</Typography>

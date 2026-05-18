@@ -149,12 +149,14 @@ export default class ElectionRollDB implements IElectionRollStore {
             }))
     }
 
-    update(election_roll: ElectionRoll, ctx: ILoggingContext, reason: string): Promise<ElectionRoll | null> {
+    update(election_roll: ElectionRoll, ctx: ILoggingContext, reason: string): Promise<ElectionRoll> {
         Logger.debug(ctx, `${tableName}.updateRoll`);
         Logger.debug(ctx, "", election_roll)
         election_roll.update_date = Date.now().toString()
         election_roll.head = true
-        // Transaction to insert updated roll and set old version's head to false
+        // Transaction to insert updated roll and set old version's head to false.
+        // Errors (including OCC Conflict once wired) propagate so the
+        // errorCatchMiddleware can map them to the right HTTP status.
         return this._postgresClient.transaction().execute(async (trx) => {
             await trx.updateTable(tableName)
                 .where('election_id', '=', election_roll.election_id)
@@ -167,9 +169,6 @@ export default class ElectionRollDB implements IElectionRollStore {
                 .values(election_roll)
                 .returningAll()
                 .executeTakeFirstOrThrow()
-        }).catch((reason: any) => {
-            Logger.debug(ctx, ".get null");
-            return null;
         })
     }
 

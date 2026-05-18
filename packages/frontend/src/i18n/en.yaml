@@ -14,6 +14,39 @@ election_home:
   view_results: View Results
   drafted: This election is still being drafted
   archived: This election has been archived
+  strict_ballot_privacy: Results are hidden while voting is open, and closing the election is final.
+
+election_history:
+  title: Election History
+  subtitle: Snapshot at the moment of finalization, followed by a public record of activity since.
+  ladder_note: 'Note: ballot and roll counts are reported only at specific milestones (1, 5, 10, 25, 50, 100, 250, ...) to protect voter privacy. Ballot edit milestones use a finer ladder (1, 2, 5, 10, 25, ...). Most events are reported to day-level precision for the same reason.'
+  link: View public history
+  loading: Loading history…
+  empty: No events recorded yet.
+  not_finalized: This election has not been finalized yet, so no public history is available.
+  col:
+    event: Event
+    description: Description
+    when: When
+  chip:
+    finalized: Finalized
+    state_change: State
+    preliminary_results: Preliminary Results
+    ballots: Ballots
+    rolls: Roll
+    edits: Ballot Edits
+    reveal: Voter ID Revealed
+  desc:
+    finalization_summary: 'Election finalized with {{rolls}} voter(s) on the roll'
+    finalization_summary_with_reveals: 'Election finalized with {{rolls}} voter(s) on the roll and {{reveals}} voter ID(s) previously revealed via break-glass'
+    state_initial: 'Election entered "{{to}}" state'
+    state_change: 'State changed from "{{from}}" to "{{to}}"'
+    preliminary_on: Preliminary results enabled
+    preliminary_off: Preliminary results disabled
+    ballots_milestone: 'Ballots cast reached {{count}}'
+    rolls_milestone: 'Voter roll reached {{count}}'
+    edits_milestone: 'Ballot edits reached {{count}}'
+    voter_revealed: An admin used the break-glass tool to reveal a voter ID
 
 # Ballot (ex. https://bettervoting.com/j87vqp/vote)
 ballot:
@@ -688,6 +721,7 @@ disabled_msgs:
     ballot_updates_with_prelim: Not supported when the election starts off with public results. This can be adjusted under the preview results tab.
     ballot_updates_when_open: Only supported when election uses email list
     public_results: Not supported with vote editing. This can be adjusted under the setting tab.
+    strict_ballot_privacy_public_results: Not supported when strict ballot privacy is enabled.
 
 #######################################
 #### PRIORITY 4 : Info Bubbles ####
@@ -741,6 +775,10 @@ tips:
       Allows voters to see the results of the {{election}}.
       If enabled while voting is open then voters will be shown to the preliminary results after completing their ballot.
       High profile {{elections}} will usually keep the results hidden, and then reveal them after the {{election}} is closed.
+
+  strict_ballot_privacy:
+    title: Strict Ballot Privacy
+    description: Hides results while voting is open and prevents reopening the election after it has been closed. This protects voters from being linked to ballots by comparing result snapshots before and after a vote.
 
   voter_groups:
     title: Enable Voter Groups
@@ -1098,6 +1136,7 @@ admin_home:
   close_snack: 'Election successfully closed!'
   open_snack: 'Election successfully opened!'
   election_is_open: 'Open for {{votes}}'
+  strict_privacy_closed: This election uses strict ballot privacy, so it cannot be reopened after closing.
 
   share:
     description: Share {{capital_election}}
@@ -1164,6 +1203,8 @@ election_settings:
   random_candidate_order: Randomize Candidate Order !tip(random_candidate_order)
 
   ballot_updates: Allow Voters To Edit Vote !tip(ballot_updates)
+
+  strict_ballot_privacy: Strict Ballot Privacy !tip(strict_ballot_privacy)
 
   preliminary_results: Show Preliminary Results !tip(public_results)
 

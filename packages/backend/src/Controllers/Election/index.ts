@@ -5,6 +5,7 @@ export * from './editElectionController';
 export * from './editElectionRolesController';
 export * from './elections.controllers';
 export * from './finalizeElectionController';
+export * from './getElectionHistoryController';
 export * from './getElectionResultsController';
 export * from './getElectionsController';
 export * from './sandboxController';

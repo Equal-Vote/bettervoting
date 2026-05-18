@@ -27,7 +27,7 @@ export interface IElectionRollStore {
         election_roll: ElectionRoll,
         ctx: ILoggingContext,
         reason: string
-    ) => Promise<ElectionRoll | null>;
+    ) => Promise<ElectionRoll>;
     delete: (
         election_roll: ElectionRoll,
         ctx: ILoggingContext,
