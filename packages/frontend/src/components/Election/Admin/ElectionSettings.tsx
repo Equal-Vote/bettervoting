@@ -1,17 +1,15 @@
 import Grid from "@mui/material/Grid";
 import FormControlLabel from "@mui/material/FormControlLabel";
-import FormLabel from "@mui/material/FormLabel";
 import FormControl from "@mui/material/FormControl";
-import { FormGroup, Radio, RadioGroup, Box, TextField, capitalize, Typography } from "@mui/material";
-import structuredClone from '@ungap/structured-clone';
+import { FormGroup, Radio, RadioGroup, Box, capitalize, Typography } from "@mui/material";
 import { ElectionSettings as IElectionSettings, TermType } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
 import { Tip } from '~/components/styles';
-import { useSubstitutedTranslation, SwitchSetting, SwitchSettingProps } from '~/components/util';
+import { useSubstitutedTranslation, SwitchSetting } from '~/components/util';
 import useElection from '~/components/ElectionContextProvider';
-import useSyncedState from "~/hooks/useSyncedState";
+import useOptimisticToggle from "~/hooks/useOptimisticToggle";
 import { AdminPageNavigation } from '../Sidebar';
-import ShareButton from '../ShareButton';
-import { useSetOpenState, useSetPublicResults } from '~/hooks/useAPI';
+import { useSetPublicResults } from '~/hooks/useAPI';
+import DialogTextField from '~/components/DialogTextField';
 
 type ElectionSwitchSettingProps = {
     settingKey: keyof IElectionSettings;
@@ -22,73 +20,59 @@ type ElectionSwitchSettingProps = {
     availableDuringElection?: boolean;
 }
 
+// Defined at module scope (not inside ElectionSettings) so its identity stays
+// stable across parent re-renders. If it were inline, every parent render
+// would create a new function reference and React would unmount/remount the
+// MUI Switch, eating its slide animation.
+function ElectionSwitchSetting({ settingKey, disabled, disabledMessage, onToggle: onToggleOverride, label, availableDuringElection=false}: ElectionSwitchSettingProps) {
+    const { election, updateElection } = useElection();
+    const {t} = useSubstitutedTranslation(election.settings.term_type);
+    const defaultOnToggle = async (v: boolean) => !! await updateElection(e => { (e.settings as unknown as Record<string, unknown>)[settingKey] = v; });
+    const isDisabled = disabled ?? (election.state !== 'draft' && !availableDuringElection);
+
+    const [localToggled, setLocalToggled] = useOptimisticToggle(!!election.settings[settingKey], onToggleOverride ?? defaultOnToggle);
+
+    return <SwitchSetting
+        label={label ?? t(`election_settings.${settingKey}`)}
+        toggled={localToggled}
+        onToggle={setLocalToggled}
+        disabled={isDisabled}
+        disabledMessage={disabledMessage}
+    />;
+}
+
 export default function ElectionSettings() {
-    const { election, updateElection, permissions, refreshElection: fetchElection } = useElection()
+    const { election, updateElection, enqueueWrite } = useElection()
     const min_rankings = 3;
     const max_rankings = Number(process.env.REACT_APP_MAX_BALLOT_RANKS) ? Number(process.env.REACT_APP_MAX_BALLOT_RANKS) : 8;
     const default_rankings = Number(process.env.REACT_APP_DEFAULT_BALLOT_RANKS) ? Number(process.env.REACT_APP_DEFAULT_BALLOT_RANKS) : 6;
 
     const {t} = useSubstitutedTranslation(election.settings.term_type, {min_rankings, max_rankings});
 
-    function ElectionSwitchSetting({ settingKey, disabled, disabledMessage, onToggle: onToggleOverride, label, availableDuringElection=false}: ElectionSwitchSettingProps) {
-        const defaultOnToggle = async (v: boolean) => !! await updateElection(e => { (e.settings as unknown as Record<string, unknown>)[settingKey] = v; });
-        const isDisabled = disabled ?? (election.state !== 'draft' && !availableDuringElection);
-
-        const [localToggled, setLocalToggled] = useSyncedState(!!election.settings[settingKey], onToggleOverride ?? defaultOnToggle);
-
-        return <SwitchSetting
-            label={label ?? t(`election_settings.${settingKey}`)}
-            toggled={localToggled}
-            onToggle={setLocalToggled}
-            disabled={isDisabled}
-            disabledMessage={disabledMessage}
-        />;
-    }
-
-    const [contactEmail, setContactEmail] = useSyncedState(
-        election.settings.contact_email ?? '',
-        async (v) => !! await updateElection(e => e.settings.contact_email = v)
-    );
-
-    const [term, setTerm] = useSyncedState(
-        election.settings.term_type,
-        async (v) => !! await updateElection(e => e.settings.term_type = v )
-    );
-
-    const [currentMaxRankings, setCurrentMaxRankings] = useSyncedState(
-        election.settings.max_rankings ? election.settings.max_rankings : default_rankings,
-        async (v) => !! await updateElection(e => e.settings.max_rankings = v)
-    );
-
     const { makeRequest: makePublicResultsRequest } = useSetPublicResults(election.election_id)
 
-    const [publicResults, setPublicResults] = useSyncedState(
+    const [publicResults, setPublicResults] = useOptimisticToggle(
         election.settings.public_results ?? false,
         async (v) => {
-            const res = await makePublicResultsRequest({ public_results: v, expected_update_date: election.update_date as string });
+            const res = await enqueueWrite(expected_update_date =>
+                makePublicResultsRequest({ public_results: v, expected_update_date })
+            );
             return !!res && res.election?.settings?.public_results === v;
         }
     );
 
+    const rankLimitInRange = (n: number) => n >= min_rankings && n <= max_rankings;
+
     return <>
         <Grid item xs={12} sx={{ m: 0, my: 0, p: 1 }}>
-            <FormControl disabled={election.state !== 'draft'} component="fieldset" variant="standard">
+            <FormControl disabled={election.state !== 'draft'} component="fieldset" variant="standard" sx={{width: '100%'}}>
                 <FormGroup>
-                    <FormControlLabel control={
-                        <TextField
-                            id="contact_email"
-                            value={contactEmail}
-                            onChange={(e) => setContactEmail(e.target.value)}
-                            variant='standard'
-                            fullWidth
-                            sx={{ mt: -1, display: 'block'}}
-                        />}
+                    <DialogTextField
                         label={t('election_settings.contact_email')}
-                        labelPlacement='top'
-                        sx={{
-                            alignItems: 'start',
-                            mb: 3
-                        }}
+                        value={election.settings.contact_email ?? ''}
+                        disabled={election.state !== 'draft'}
+                        onCommit={async (v) => updateElection(e => e.settings.contact_email = v)}
+                        ariaLabel='Contact Email'
                     />
 
                     <Box sx={{mt: 0, mb: 2}}>
@@ -101,8 +85,8 @@ export default function ElectionSettings() {
                                 <FormControlLabel
                                     key={i}
                                     control={<Radio
-                                        onChange={() => setTerm(type as TermType)}
-                                        checked={term === type}
+                                        onChange={() => updateElection(e => e.settings.term_type = type as TermType)}
+                                        checked={election.settings.term_type === type}
                                         value={t(`keyword.${type}.election`)}
                                     />}
                                     label={capitalize(t(`keyword.${type}.election`))}
@@ -120,16 +104,25 @@ export default function ElectionSettings() {
                         onToggle={async (v) => !! await updateElection(e => e.settings.max_rankings = v ? default_rankings : undefined)}
                     />
 
-                    <TextField
-                        id="rank-limit"
-                        type="number"
-                        value={currentMaxRankings}
-                        onChange={(e) => setCurrentMaxRankings(Number(e.target.value))}
-                        variant='standard'
-                        InputProps={{ inputProps: { min: min_rankings, max: max_rankings, "aria-label": "Rank Limit" } }}
-                        sx={{ pl: 4, mt: -1, display: 'block'}}
-                        disabled={election.state !== 'draft' || !election.settings.max_rankings}
-                    />
+                    {election.settings.max_rankings !== undefined && (
+                        <Box sx={{ pl: 4 }}>
+                            <DialogTextField
+                                label='Rank Limit'
+                                value={String(election.settings.max_rankings)}
+                                disabled={election.state !== 'draft'}
+                                type='number'
+                                ariaLabel='Rank Limit'
+                                validate={(s) => {
+                                    const n = Number(s);
+                                    if (!Number.isInteger(n)) return 'Must be a whole number';
+                                    if (!rankLimitInRange(n)) return `Must be between ${min_rankings} and ${max_rankings}`;
+                                    return null;
+                                }}
+                                inputProps={{ min: min_rankings, max: max_rankings }}
+                                onCommit={async (v) => updateElection(e => e.settings.max_rankings = Number(v))}
+                            />
+                        </Box>
+                    )}
                     {/* Note: this can't use ElectionSwitchSetting because we need to use the results from makePublicResultsRequest as the source of truth */}
                     <SwitchSetting
                         label={election.state === 'closed' || election.state === 'archived' ? t('election_settings.public_results') : t('election_settings.preliminary_results')}
@@ -139,8 +132,8 @@ export default function ElectionSettings() {
                 </FormGroup>
             </FormControl>
         </Grid>
-        
-        
+
+
 
         <AdminPageNavigation />
     </>

@@ -10,7 +10,7 @@ import useElection from "../../ElectionContextProvider";
 
 
 const EditRoles = () => {
-    const { election, refreshElection, permissions } = useElection()
+    const { election, refreshElection, permissions, enqueueWrite } = useElection()
 
     const [adminList, setAdminList] = useState(() => {
         if (election.admin_ids === null) return ''
@@ -36,7 +36,9 @@ const EditRoles = () => {
             const audit_ids = auditorList == '' ? null : auditorList.split('\n')
             const credential_ids = credentialList == '' ? null : credentialList.split('\n')
 
-            const newRoles = await putRoles.makeRequest({ admin_ids, audit_ids, credential_ids, expected_update_date: election.update_date as string })
+            const newRoles = await enqueueWrite(expected_update_date =>
+                putRoles.makeRequest({ admin_ids, audit_ids, credential_ids, expected_update_date })
+            )
             if (newRoles) {
                 refreshElection()
             }

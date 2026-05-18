@@ -52,7 +52,13 @@ test('Full Runthrough', async ({ page }) => {
 	await page
 		.getByRole('checkbox', { name: 'Set Number of Rankings' })
 		.check();
-	await page.getByRole('spinbutton', { name: 'Rank Limit' }).fill('8');
+	// Rank limit is a click-to-edit dialog field (admin form disables during
+	// in-flight writes, so the prior toggle must settle before this opens).
+	await page.getByRole('button', { name: 'Edit Rank Limit' }).click();
+	const rankLimitDialog = page.getByRole('dialog', { name: 'Rank Limit' });
+	await rankLimitDialog.getByRole('spinbutton', { name: 'Rank Limit' }).fill('8');
+	await rankLimitDialog.getByRole('button', { name: 'Save' }).click();
+	await expect(rankLimitDialog).toBeHidden();
 
 	// Adding Race 1
 	await page.getByRole('link', { name: 'Build Ballot' }).click();

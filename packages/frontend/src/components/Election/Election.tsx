@@ -13,6 +13,7 @@ import { ElectionContextProvider } from "../ElectionContextProvider";
 import { useElectionExists } from "../../hooks/useAPI";
 import { sharedConfig } from "@equal-vote/star-vote-shared/config";
 import { AnonymizedBallotsContextProvider } from "../AnonymizedBallotsContextProvider";
+import ElectionInFlightGate from "./ElectionInFlightGate";
 
 const Election = () => {
   const { id } = useParams();
@@ -28,22 +29,24 @@ const Election = () => {
   return (
     <ElectionContextProvider id={id} >
       <AnonymizedBallotsContextProvider id={id}>
-        <Box display='flex' sx={{flexDirection: {xs: 'column', md: 'row'}, mt: {xs: 0, sm: 5}, mb: {xs: 0, sm: 5}}}>
-          <Box sx={{maxWidth: {xs: '100%', md: '16%'}}}>
-            <Sidebar />
+        <ElectionInFlightGate>
+          <Box display='flex' sx={{flexDirection: {xs: 'column', md: 'row'}, mt: {xs: 0, sm: 5}, mb: {xs: 0, sm: 5}}}>
+            <Box sx={{maxWidth: {xs: '100%', md: '16%'}}}>
+              <Sidebar />
+            </Box>
+            <Box sx={{mt: '0', width: '100%'}}>
+              <Routes>
+                <Route path='/' element={<ElectionHome />} />
+                <Route path='/vote' element={<VotePage />} />
+                <Route path='/thanks' element={<Thanks />} />
+                <Route path='/results' element={<ViewElectionResults />} />
+                <Route path='/admin/*' element={<Admin />} />
+                <Route path='/ballot/:ballot_id' element={<VerifyBallot />} />
+                <Route path='/id/:voter_id' element={<ElectionHome />} />
+              </Routes>
+            </Box>
           </Box>
-          <Box sx={{mt: '0', width: '100%'}}>
-            <Routes>
-              <Route path='/' element={<ElectionHome />} />
-              <Route path='/vote' element={<VotePage />} />
-              <Route path='/thanks' element={<Thanks />} />
-              <Route path='/results' element={<ViewElectionResults />} />
-              <Route path='/admin/*' element={<Admin />} />
-              <Route path='/ballot/:ballot_id' element={<VerifyBallot />} />
-              <Route path='/id/:voter_id' element={<ElectionHome />} />
-            </Routes>
-          </Box>
-        </Box>
+        </ElectionInFlightGate>
       </AnonymizedBallotsContextProvider>
     </ElectionContextProvider>
   )

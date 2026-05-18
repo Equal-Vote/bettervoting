@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { useLocation, useNavigate } from "react-router";
 import React from 'react'
 import EditElectionRoll from "./EditElectionRoll";
@@ -14,11 +14,10 @@ import SendEmailDialog from "./SendEmailDialog";
 import { PrimaryButton, SecondaryButton } from "~/components/styles";
 import ElectionAuthForm from "~/components/ElectionForm/Details/ElectionAuthForm";
 import useConfirm from "~/components/ConfirmationDialogProvider";
-import useSyncedState from "~/hooks/useSyncedState";
 import { AdminPageNavigation } from '../Sidebar';
 
 const ViewElectionRolls = () => {
-    const { election, permissions, t, updateElection, refreshElection } = useElection()
+    const { election, permissions, t, updateElection } = useElection()
     const { data, isPending, makeRequest: fetchRolls } = useGetRolls(election.election_id)
     const sendEmails = useSendEmails(election.election_id)
     useEffect(() => {
@@ -31,22 +30,19 @@ const ViewElectionRolls = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [dialogOpen, setDialogOpen] = useState(false);
-    
-    const [voterAccess, setVoterAccess] = useSyncedState(
-        election.settings.voter_access,
-        async (newAccess) => !! await updateElection(e => {
-            e.settings.voter_access = newAccess;
-            // voter id should be set regardless, it's relevant for email list, id list, and device
-            // the only time voter_id shouldn't be set is if "no" was selected for public access, and then it was changed in ElectionAuthForm afterwards
-            e.settings.voter_authentication = {voter_id: true};
-        })
-    )
 
-    // NOTE: usesEmail can be true, false, or undefined. undefined means the user has not made a selection yet
-    const [usesEmail, setUsesEmail] = useSyncedState<boolean | undefined>( 
-        election.settings.invitation == 'email',
-        async (useEmail) => !! await updateElection(e => e.settings.invitation = useEmail ? 'email' : undefined )
-    )
+    // voter_access reflects the server state; the gate prevents races so the
+    // server round-trip is the source of truth.
+    const voterAccess = election.settings.voter_access;
+
+    // usesEmail needs a local third state ("user hasn't picked yet") that the
+    // `invitation` field alone can't represent — InvitationType is 'email' |
+    // 'address' and we use undefined for both "id list" and "unset". On direct
+    // navigation we seed from invitation (so id list shows preselected when
+    // appropriate); the unset state is only entered when voter_access changes.
+    const [usesEmail, setUsesEmailLocal] = useState<boolean | undefined>(
+        election.settings.invitation === 'email'
+    );
 
     const confirm = useConfirm();
 
@@ -117,8 +113,14 @@ const ViewElectionRolls = () => {
                             onClick={async () => {
                                 if(election.state !== 'draft' || electionRollData.length > 0) return; // not sure why disabled still allows me to do onclick
 
-                                setVoterAccess(restricted ? 'closed' : 'open');
-                                setUsesEmail(undefined);
+                                // Batched into one updateElection so the gate's
+                                // single-write-in-flight invariant holds.
+                                setUsesEmailLocal(undefined);
+                                await updateElection(e => {
+                                    e.settings.voter_access = restricted ? 'closed' : 'open';
+                                    e.settings.voter_authentication = {voter_id: true};
+                                    e.settings.invitation = undefined;
+                                });
                             }}
                             checked={voterAccess === (restricted ? 'closed' : 'open')}
                         />
@@ -141,7 +143,8 @@ const ViewElectionRolls = () => {
                             onClick={async () => {
                                 if(election.state !== 'draft' || electionRollData.length > 0) return; // not sure why disabled still allows me to do onclick
 
-                                setUsesEmail(email);
+                                setUsesEmailLocal(email);
+                                await updateElection(e => { e.settings.invitation = email ? 'email' : undefined; });
                             }}
                             checked={usesEmail === email}
                         />
