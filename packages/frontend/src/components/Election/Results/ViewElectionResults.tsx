@@ -117,6 +117,13 @@ const ViewElectionResults = () => {
             <a href="https://www.equal.vote/donate">
               {t("ballot_submitted.donate")}
             </a>
+            {election.state !== 'draft' && (
+              <Typography variant="caption" sx={{ display: 'block', mt: 2, color: 'text.secondary' }}>
+                <a href={`/${election.election_id}/history`} style={{ color: 'inherit' }}>
+                  {t('election_history.link')}
+                </a>
+              </Typography>
+            )}
           </Box>
         </Box>
         <SupportBlurb />

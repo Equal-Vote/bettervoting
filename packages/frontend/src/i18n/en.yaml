@@ -16,6 +16,38 @@ election_home:
   archived: This election has been archived
   strict_ballot_privacy: Results are hidden while voting is open, and closing the election is final.
 
+election_history:
+  title: Election History
+  subtitle: Snapshot at the moment of finalization, followed by a public record of activity since.
+  ladder_note: 'Note: ballot and roll counts are reported only at specific milestones (1, 5, 10, 25, 50, 100, 250, ...) to protect voter privacy. Ballot edit milestones use a finer ladder (1, 2, 5, 10, 25, ...). Most events are reported to day-level precision for the same reason.'
+  link: View public history
+  loading: Loading history…
+  empty: No events recorded yet.
+  not_finalized: This election has not been finalized yet, so no public history is available.
+  col:
+    event: Event
+    description: Description
+    when: When
+  chip:
+    finalized: Finalized
+    state_change: State
+    preliminary_results: Preliminary Results
+    ballots: Ballots
+    rolls: Roll
+    edits: Ballot Edits
+    reveal: Voter ID Revealed
+  desc:
+    finalization_summary: 'Election finalized with {{rolls}} voter(s) on the roll'
+    finalization_summary_with_reveals: 'Election finalized with {{rolls}} voter(s) on the roll and {{reveals}} voter ID(s) previously revealed via break-glass'
+    state_initial: 'Election entered "{{to}}" state'
+    state_change: 'State changed from "{{from}}" to "{{to}}"'
+    preliminary_on: Preliminary results enabled
+    preliminary_off: Preliminary results disabled
+    ballots_milestone: 'Ballots cast reached {{count}}'
+    rolls_milestone: 'Voter roll reached {{count}}'
+    edits_milestone: 'Ballot edits reached {{count}}'
+    voter_revealed: An admin used the break-glass tool to reveal a voter ID
+
 # Ballot (ex. https://bettervoting.com/j87vqp/vote)
 ballot:
   this_election_uses: This {{election}} will use {{voting_method}} to elect {{spelled_count}} $t(winner.winner).

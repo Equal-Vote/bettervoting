@@ -35,6 +35,7 @@ const REVEAL_ACTION_TYPE = '🚨 VOTER_ID_REVEALED';
 type MilestoneType = 'ballots_milestone' | 'rolls_milestone' | 'ballots_edited_milestone';
 
 type HistoryEvent =
+    | { type: 'finalization_summary'; timestamp: string; rolls_at_finalization: number; voter_ids_revealed_at_finalization: number }
     | { type: 'state_change'; timestamp: string; from: string | null; to: string }
     | { type: 'preliminary_results_change'; timestamp: string; to: boolean }
     | { type: MilestoneType; timestamp: string; count: number }
@@ -171,15 +172,45 @@ const getElectionHistory = async (req: IElectionRequest, res: Response, next: Ne
         }
     }
 
-    const visible = pairs
-        .filter(p => p.rawMs >= finalizedAtMs)
+    // Compute the at-finalization snapshot from pre-finalize activity:
+    // how many voters were already on the roll and how many break-glass
+    // voter ID reveals had already happened. These collapse into a single
+    // summary "event" pinned to the finalize moment.
+    const rollsAtFinalization = rollHeadRows.filter(roll => {
+        const createdMs = new Date(roll.create_date as string | Date).getTime();
+        return createdMs <= finalizedAtMs;
+    }).length;
+
+    let revealsBeforeFinalization = 0;
+    for (const roll of rollHeadRows) {
+        const history = (roll.history ?? []) as ElectionRollAction[];
+        for (const action of history) {
+            if (action?.action_type === REVEAL_ACTION_TYPE
+                && typeof action.timestamp === 'number'
+                && action.timestamp <= finalizedAtMs) {
+                revealsBeforeFinalization++;
+            }
+        }
+    }
+
+    const summary: HistoryEvent = {
+        type: 'finalization_summary',
+        timestamp: msToIso(finalizedAtMs),
+        rolls_at_finalization: rollsAtFinalization,
+        voter_ids_revealed_at_finalization: revealsBeforeFinalization,
+    };
+
+    // Events strictly after finalize, sorted chronologically. Pre-finalize
+    // activity is captured by the summary above.
+    const postFinalize = pairs
+        .filter(p => p.rawMs > finalizedAtMs)
         .sort((a, b) => a.rawMs - b.rawMs)
         .map(p => p.event);
 
     res.json({
         election_id: electionId,
         finalized_at: msToIso(finalizedAtMs),
-        events: visible,
+        events: [summary, ...postFinalize],
     });
 };
 

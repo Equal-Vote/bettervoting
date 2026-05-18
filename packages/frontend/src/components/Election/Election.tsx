@@ -4,6 +4,7 @@ import ElectionHome from "./ElectionHome";
 import VotePage from './Voting/VotePage'
 import Admin from './Admin/Admin'
 import ViewElectionResults from './Results/ViewElectionResults'
+import ElectionHistoryView from './ElectionHistoryView'
 import { Routes, Route } from 'react-router-dom'
 import Sidebar from "./Sidebar";
 import { Box } from "@mui/material";
@@ -38,6 +39,7 @@ const Election = () => {
               <Route path='/vote' element={<VotePage />} />
               <Route path='/thanks' element={<Thanks />} />
               <Route path='/results' element={<ViewElectionResults />} />
+              <Route path='/history' element={<ElectionHistoryView />} />
               <Route path='/admin/*' element={<Admin />} />
               <Route path='/ballot/:ballot_id' element={<VerifyBallot />} />
               <Route path='/id/:voter_id' element={<ElectionHome />} />
