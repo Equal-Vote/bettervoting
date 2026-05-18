@@ -206,7 +206,7 @@ test.describe('Add Voters', () => {
         await page.getByLabel(('I have read the instructions')).click();
         let votes = makeVotes(6, 0);
         for (const vote of votes) {
-            await page.getByRole('button', { name: `Score ${vote.candidateName} ${vote.value}` }).click();
+            await page.getByRole('radio', { name: `Score ${vote.candidateName} ${vote.value}` }).click();
         }
         await page.getByRole('button', { name: 'Next' }).click();
         await page.getByLabel(('I have read the instructions')).click();
@@ -234,7 +234,7 @@ test.describe('Add Voters', () => {
         await page.getByLabel(('I have read the instructions')).click();
         votes = makeVotes(6, 0);
         for (const vote of votes) {
-            await page.getByRole('button', { name: `Score ${vote.candidateName} ${vote.value}` }).click();
+            await page.getByRole('radio', { name: `Score ${vote.candidateName} ${vote.value}` }).click();
         }
         await page.getByRole('button', { name: 'Next' }).click();
         await page.getByLabel(('I have read the instructions')).click();
