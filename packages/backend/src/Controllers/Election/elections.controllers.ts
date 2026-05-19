@@ -160,7 +160,15 @@ const returnElection = async (req: any, res: any, next: any) => {
         roll = await getOrCreateElectionRoll(req, election, req);
     }
     const voterAuthorization = getVoterAuthorization(roll,missingAuthData)
-    removeHiddenFields(election)
+    // auth_key is a PEM public key, harmless to leak, but we still hide it from
+    // non-owners to avoid fingerprinting integrations across elections. Owners
+    // and admins need it returned so they can do read-modify-write edits and
+    // verify the stored key.
+    const requesterRoles: string[] = req.user_auth?.roles ?? [];
+    const isOwnerOrAdmin = requesterRoles.includes(roles.owner) || requesterRoles.includes(roles.admin);
+    if (!isOwnerOrAdmin) {
+        removeHiddenFields(election)
+    }
     res.json({
         election: election,
         precinctFilteredElection: getPrecinctFilteredElection(election, roll),

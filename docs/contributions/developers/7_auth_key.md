@@ -3,6 +3,7 @@ layout: default
 title: 🔑 Per-Election auth_key (External Integrations)
 nav_order: 7
 parent: 💻 Developers
+grand_parent: Contribution Guide
 ---
 
 # Per-Election `auth_key` (External Integrations)
@@ -250,8 +251,13 @@ If you are writing or reviewing an external integration that uses
 - Field on `Election`: `packages/shared/src/domain_model/Election.ts`
 - Write-time validation (RS256 PEM-public-key requirement):
   `electionValidation` in the same file.
-- Read-side stripping (so `auth_key` is not returned on non-create reads):
-  `removeHiddenFields` in the same file.
+- Read-side stripping: `removeHiddenFields` in the same file. Called from
+  `returnElection` (`Controllers/Election/elections.controllers.ts`) **only
+  when the requester is not an owner or admin** of the election. Owner-
+  authenticated reads retain `auth_key` so integrations can do read-modify-
+  write edits and verify the stored key. Listing endpoints
+  (`getElectionsController.ts`) always strip — fetch the individual election
+  if you need the key.
 - Verifier: `AccountServiceUtils.extractUserFromRequest` in
   `packages/backend/src/Services/Account/AccountServiceUtils.ts` —
   RS256-locked, PEM-public-key-only.
@@ -272,8 +278,3 @@ this surface grows:
 - **Per-election binding in JWT claims.** Requiring `aud` to match the
   election ID would close the replay-across-elections gap noted above
   without forcing per-election keypairs.
-- **A canonical "external-integration mode" alongside the six voter
-  authentication modes.** Today `auth_key` is orthogonal to the canonical
-  modes; it neither participates in nor conflicts with them. If
-  integration use becomes common, formalizing it as a mode (with the public
-  key moved onto `ElectionSettings`) would be worth considering.

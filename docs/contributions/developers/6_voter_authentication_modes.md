@@ -3,6 +3,7 @@ layout: default
 title: 🔐 Voter Authentication Modes
 nav_order: 6
 parent: 💻 Developers
+grand_parent: Contribution Guide
 ---
 
 # Voter Authentication Modes
