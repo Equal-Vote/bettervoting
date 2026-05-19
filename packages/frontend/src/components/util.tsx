@@ -22,7 +22,7 @@ export const useLocalState = <T,>(value: T, onFlush: (v: T) => void): [T, (v: T)
     return [local, setLocal, flush];
 };
 
-const rLink = /\[(.*?)\]\((.*?)\)/;
+const rLink = /\[([^\]]*?)\]\(([^)]*?)\)/;
 const rBold = /\*\*(.*?)\*\*/;
 const rTip = / !tip\((.*)\)/;
 
