@@ -109,7 +109,7 @@ const ViewElectionRolls = () => {
                             onClick={async () => {
                                 if(election.state !== 'draft' || electionRollData.length > 0) return; // not sure why disabled still allows me to do onclick
 
-                                writeMode(restricted ? 'closed_admin_managed_ids' : 'open_unique_cookie');
+                                writeMode(restricted ? 'closed_bv_managed_ids' : 'open_unique_cookie');
                             }}
                             checked={voterAccess === (restricted ? 'closed' : 'open')}
                         />
