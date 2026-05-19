@@ -241,7 +241,9 @@ If you are writing or reviewing an external integration that uses
 4. **Document the key-rotation procedure.** If your private key is
    compromised, you must be able to re-issue and push a new `auth_key` to
    every election you've created that still matters. Plan this before you
-   need it.
+   need it.  Note that as soon as you push a new public auth_key to an election, 
+   all future edits to the election will need a JWT signed by the new corresponding
+   new private key.  
 5. **Don't expose `auth_key` to end users.** It is an integration-internal
    concept. End users of your integration should never see the value, and
    should not be able to set it.
