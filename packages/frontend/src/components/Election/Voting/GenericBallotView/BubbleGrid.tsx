@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Typography } from '@mui/material';
+import { VotingMethod } from '@equal-vote/star-vote-shared/domain_model/Race';
 import { BallotCandidate, IBallotContext } from '../VotePage';
 
 
@@ -13,9 +14,20 @@ interface BubbleGridProps {
   fontSX: object;
 }
 
-type BubbleSemantic = 'radio-per-row' | 'radio-grid' | 'checkbox' | 'pressed';
+type BubbleSemantic = 'radio-per-row' | 'radio-grid' | 'checkbox';
 
-const RADIO_PER_ROW_METHODS = new Set(['STAR', 'STAR_PR', 'IRV', 'STV', 'RankedRobin']);
+// The Record<VotingMethod, ...> annotation forces this map to stay exhaustive: adding a new
+// voting method to the shared union without classifying it here is a TS error.
+const SEMANTIC_BY_METHOD: Record<VotingMethod, BubbleSemantic> = {
+  STAR: 'radio-per-row',
+  STAR_PR: 'radio-per-row',
+  IRV: 'radio-per-row',
+  STV: 'radio-per-row',
+  RankedRobin: 'radio-per-row',
+  Plurality: 'radio-grid',
+  Approval: 'checkbox',
+};
+
 // Methods where moving keyboard focus between options should also commit the selection.
 // STAR has no side effects from changing a score; IRV/STV/RankedRobin/Plurality would create
 // transient duplicate ranks or move the lone vote, so for those we move focus only and require
@@ -47,9 +59,8 @@ function arrowKeyTarget(key: string, currentIndex: number, length: number): numb
 
 interface BubbleButtonProps {
   ariaLabel: string;
-  role: 'radio' | 'checkbox' | 'button';
+  role: 'radio' | 'checkbox';
   ariaChecked?: boolean;
-  ariaPressed?: boolean;
   tabIndex?: number;
   className: string;
   gridArea: string;
@@ -61,28 +72,21 @@ interface BubbleButtonProps {
 }
 
 const BubbleButton = React.forwardRef<HTMLButtonElement, BubbleButtonProps>(function BubbleButton(
-  { ariaLabel, role, ariaChecked, ariaPressed, tabIndex, className, gridArea, onClick, onKeyDown, label, fontSX },
+  { ariaLabel, role, ariaChecked, tabIndex, className, gridArea, onClick, onKeyDown, label, fontSX },
   ref,
 ) {
-  const ariaProps: Record<string, boolean | string> = {};
-  if (role === 'radio' || role === 'checkbox') {
-    ariaProps['aria-checked'] = !!ariaChecked;
-  } else if (ariaPressed !== undefined) {
-    ariaProps['aria-pressed'] = ariaPressed;
-  }
-
   return (
     <button
       ref={ref}
       type="button"
-      role={role === 'button' ? undefined : role}
+      role={role}
       aria-label={ariaLabel}
+      aria-checked={!!ariaChecked}
       tabIndex={tabIndex}
       className={className}
       style={{ gridArea }}
       onClick={onClick}
       onKeyDown={onKeyDown}
-      {...ariaProps}
     >
       <Typography variant="body1" sx={{ ...fontSX }}>
         {label}
@@ -256,13 +260,7 @@ const BubbleGrid: React.FC<BubbleGridProps> = ({ ballotContext, columnValues, co
       ? 'Score'
       : 'Rank';
 
-  const semantic: BubbleSemantic = RADIO_PER_ROW_METHODS.has(votingMethod)
-    ? 'radio-per-row'
-    : votingMethod === 'Plurality'
-    ? 'radio-grid'
-    : votingMethod === 'Approval'
-    ? 'checkbox'
-    : 'pressed';
+  const semantic: BubbleSemantic = SEMANTIC_BY_METHOD[votingMethod];
 
   const classNameFor = useCallback((candidateIndex: number, columnValue: number) => {
     let cls = 'circle';
@@ -317,8 +315,8 @@ const BubbleGrid: React.FC<BubbleGridProps> = ({ ballotContext, columnValues, co
     );
   }
 
-  // checkbox (Approval) and pressed fallback — each bubble is independent, tab order moves
-  // between candidates naturally, no roving tabindex needed.
+  // checkbox (Approval) — each bubble is independent, tab order moves between candidates
+  // naturally, no roving tabindex needed.
   return (
     <>
       {candidates.map((candidate, candidateIndex) =>
@@ -327,9 +325,8 @@ const BubbleGrid: React.FC<BubbleGridProps> = ({ ballotContext, columnValues, co
           return (
             <BubbleButton
               key={`${candidateIndex}-${columnIndex}`}
-              role={semantic === 'checkbox' ? 'checkbox' : 'button'}
-              ariaChecked={semantic === 'checkbox' ? isSelected : undefined}
-              ariaPressed={semantic === 'pressed' ? isSelected : undefined}
+              role="checkbox"
+              ariaChecked={isSelected}
               ariaLabel={`${rankScoreVote} ${candidate.candidate_name} ${rankScoreVote !== 'Vote' ? columnValue : ''}`}
               className={classNameFor(candidateIndex, columnValue)}
               gridArea={gridAreaFor(makeArea, numHeaderRows, candidateIndex, columnIndex)}
