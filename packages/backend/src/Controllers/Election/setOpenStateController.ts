@@ -32,11 +32,6 @@ const setOpenState = async (req: IElectionRequest, res: Response, next: NextFunc
     }
     election.state = open ? "open" : "closed";
 
-    // re-opening an election should maintain mutual exclusion of ballot_updates and preliminary results
-    if (election.settings.ballot_updates && election.state === "open" && election.settings.public_results) {
-        election.settings.public_results = false;
-    }
-
     if (msg) {
         Logger.info(req, msg);
         throw new BadRequest(msg);
