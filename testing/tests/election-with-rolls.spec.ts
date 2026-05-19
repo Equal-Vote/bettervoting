@@ -214,7 +214,7 @@ test.describe('Add Voters', () => {
         await expect(submitButton).toBeEnabled();
         votes = makeVotes(6, 1);
         for (const vote of votes) {
-            await page.getByRole('button', { name: `Rank ${vote.candidateName} ${vote.value}` }).click();
+            await page.getByRole('radio', { name: `Rank ${vote.candidateName} ${vote.value}` }).click();
         }
         await submitButton.click();
         let reponsePromise = page.waitForResponse((response) => response.url().includes(`${electionId}/vote`) && response.status() === 200);
@@ -240,7 +240,7 @@ test.describe('Add Voters', () => {
         await page.getByLabel(('I have read the instructions')).click();
         votes = makeVotes(6, 1);
         for (const vote of votes) {
-            await page.getByRole('button', { name: `Rank ${vote.candidateName} ${vote.value}` }).click();
+            await page.getByRole('radio', { name: `Rank ${vote.candidateName} ${vote.value}` }).click();
         }
         await submitButton.click();
         //waiting for response from server before checking ballots so we don't navigate to that page too soon
