@@ -17,7 +17,7 @@ export default function CandidateLabel({ candidate, gridArea }: CandidateLabelPr
         },
       }}>
       <CandidatePhoto candidate={candidate} size={'150px'} sx={{ml: {xs: 'auto', md: 0}, mr: {xs: 'auto', md: 2}}}/>
-      <Typography className="rowHeading" align='left' variant="h6" component="h6" sx={{
+      <Typography id={`ballot-candidate-name-${candidate.candidate_id}`} className="rowHeading" align='left' variant="h6" component="h6" sx={{
         wordBreak: "break-word",
         px: {
           xs: 0,
