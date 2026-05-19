@@ -1174,6 +1174,83 @@
         ],
         "type": "object"
       },
+      "NewElectionRoll": {
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "ballot_id": {
+            "type": "string"
+          },
+          "create_date": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "election_id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "email_data": {
+            "properties": {
+              "inviteResponse": {},
+              "reminderResponse": {}
+            },
+            "type": "object"
+          },
+          "head": {
+            "type": "boolean"
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/ElectionRollAction"
+            },
+            "type": "array"
+          },
+          "ip_hash": {
+            "type": "string"
+          },
+          "precinct": {
+            "type": "string"
+          },
+          "registration": {},
+          "state": {
+            "$ref": "#/components/schemas/ElectionRollState"
+          },
+          "submitted": {
+            "type": "boolean"
+          },
+          "update_date": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "voter_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "election_id",
+          "state",
+          "submitted",
+          "voter_id"
+        ],
+        "type": "object"
+      },
       "NewPassword": {
         "properties": {
           "newPassword": {

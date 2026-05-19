@@ -1,15 +1,15 @@
-import { ElectionRoll } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll";
+import { ElectionRoll, NewElectionRoll } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll";
 import { ILoggingContext } from "../Services/Logging/ILogger";
 import { Kysely, Transaction } from 'kysely';
 import { Database } from './Database';
 
 export interface IElectionRollStore {
     submitElectionRoll: (
-        electionRolls: ElectionRoll[],
+        electionRolls: NewElectionRoll[],
         ctx: ILoggingContext,
         reason: string,
         db?: Kysely<Database> | Transaction<Database>
-    ) => Promise<boolean>;
+    ) => Promise<ElectionRoll[]>;
     getRollsByElectionID: (
         election_id: string,
         ctx: ILoggingContext,
@@ -30,7 +30,7 @@ export interface IElectionRollStore {
         db?: Kysely<Database> | Transaction<Database>
     ) => Promise<ElectionRoll[] | null>;
     update: (
-        election_roll: ElectionRoll,
+        election_roll: NewElectionRoll,
         ctx: ILoggingContext,
         reason: string,
         db?: Kysely<Database> | Transaction<Database>

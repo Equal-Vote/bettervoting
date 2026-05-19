@@ -1,4 +1,4 @@
-import { ElectionRoll, ElectionRollAction, ElectionRollState } from '@equal-vote/star-vote-shared/domain_model/ElectionRoll';
+import { ElectionRoll, ElectionRollAction, ElectionRollState, NewElectionRoll } from '@equal-vote/star-vote-shared/domain_model/ElectionRoll';
 import { ILoggingContext } from '../../Services/Logging/ILogger';
 import Logger from '../../Services/Logging/Logger';
 import { IElectionRollStore } from '../IElectionRollStore';
@@ -12,18 +12,25 @@ export default class ElectionRollDB implements IElectionRollStore{
         this._electionRolls = [];
     }
 
-    submitElectionRoll(electionRolls: ElectionRoll[], ctx:ILoggingContext,reason:string): Promise<boolean>{
+    submitElectionRoll(electionRolls: NewElectionRoll[], ctx:ILoggingContext, reason:string, db?: any): Promise<ElectionRoll[]> {
         const self = this;
+        const inserted: ElectionRoll[] = [];
         electionRolls.forEach(function(roll){
             Logger.debug(ctx, `Mock Election Roll Store:  submit:  ${JSON.stringify(roll)}`);
             var existing = self._electionRolls.find(x => x.election_id==roll.election_id && x.voter_id==roll.voter_id)
             if (existing){
                 Logger.error(ctx, `Already have conflicting voter roll entry!  ${JSON.stringify(existing)}`);
             }
-            var copy:ElectionRoll = JSON.parse(JSON.stringify(roll));
-            self._electionRolls.push(copy);
+            const sanitized: ElectionRoll = {
+                ...JSON.parse(JSON.stringify(roll)),
+                update_date: Date.now().toString(),
+                head: true,
+                create_date: new Date().toISOString(),
+            };
+            self._electionRolls.push(sanitized);
+            inserted.push(JSON.parse(JSON.stringify(sanitized)));
         });
-        return Promise.resolve(true)
+        return Promise.resolve(inserted);
     }
 
     getRollsByElectionID(election_id: string, ctx:ILoggingContext): Promise<ElectionRoll[] | null> {
@@ -67,7 +74,7 @@ export default class ElectionRollDB implements IElectionRollStore{
         return Promise.resolve(res)
     }
 
-    update(voter_roll: ElectionRoll, ctx: ILoggingContext, reason: string, db?: any): Promise<ElectionRoll | null> {
+    update(voter_roll: NewElectionRoll, ctx: ILoggingContext, reason: string, db?: any): Promise<ElectionRoll | null> {
         Logger.debug(ctx, `MockElectionRolls update ${JSON.stringify(voter_roll)}`);
         const index = this._electionRolls.findIndex(electionRoll => {
             var electionMatch = electionRoll.election_id===voter_roll.election_id;
@@ -77,10 +84,14 @@ export default class ElectionRollDB implements IElectionRollStore{
         if (index < 0){
             return Promise.resolve(null)
         }
-        var copy = JSON.parse(JSON.stringify(voter_roll));
-        this._electionRolls[index] = copy;
-        var res = JSON.parse(JSON.stringify(copy));
-        return Promise.resolve(res);
+        const sanitized: ElectionRoll = {
+            ...JSON.parse(JSON.stringify(voter_roll)),
+            update_date: Date.now().toString(),
+            head: true,
+            create_date: new Date().toISOString(),
+        };
+        this._electionRolls[index] = sanitized;
+        return Promise.resolve(JSON.parse(JSON.stringify(sanitized)));
     }
 
     delete(voter_roll: ElectionRoll, ctx:ILoggingContext,reason:string): Promise<boolean> {

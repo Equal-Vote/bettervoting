@@ -4,7 +4,7 @@ import { logSafeHash } from '../Services/Logging/logSafeHash';
 import { IElectionRollStore } from './IElectionRollStore';
 import { Expression, Kysely, Transaction } from 'kysely'
 import { Database } from './Database';
-import { ElectionRoll } from '@equal-vote/star-vote-shared/domain_model/ElectionRoll';
+import { ElectionRoll, NewElectionRoll } from '@equal-vote/star-vote-shared/domain_model/ElectionRoll';
 const tableName = 'electionRollDB';
 
 export default class ElectionRollDB implements IElectionRollStore {
@@ -28,11 +28,12 @@ export default class ElectionRollDB implements IElectionRollStore {
         return this._postgresClient.schema.dropTable(tableName).execute()
     }
 
-    submitElectionRoll(electionRolls: ElectionRoll[], ctx: ILoggingContext, reason: string): Promise<boolean> {
+    async submitElectionRoll(electionRolls: NewElectionRoll[], ctx: ILoggingContext, reason: string, db?: Kysely<Database> | Transaction<Database>): Promise<ElectionRoll[]> {
         Logger.debug(ctx, `${tableName}.submit`);
-        // Strip legacy fields (see ElectionRoll.ts) so callers can't write them.
+        // Strip legacy fields (see ElectionRoll.ts) so callers can't write them, and generate
+        // create_date / update_date / head here — this is the only place they're set on insert.
         const sanitized = electionRolls.map(roll => {
-            const { address: _address, registration: _registration, ...rest } = roll;
+            const { address: _address, registration: _registration, create_date: _cd, update_date: _ud, head: _h, ...rest } = roll;
             return {
                 ...rest,
                 update_date: Date.now().toString(),
@@ -41,10 +42,12 @@ export default class ElectionRollDB implements IElectionRollStore {
             };
         });
 
-        return this._postgresClient
+        const client = db || this._postgresClient;
+        return await client
             .insertInto(tableName)
             .values(sanitized)
-            .execute().then((res) => { return true })
+            .returningAll()
+            .execute();
     }
 
     getRollsByElectionID(election_id: string, ctx: ILoggingContext): Promise<ElectionRoll[] | null> {
@@ -154,14 +157,9 @@ export default class ElectionRollDB implements IElectionRollStore {
             }))
     }
 
-    async update(election_roll: ElectionRoll, ctx: ILoggingContext, reason: string, db?: Kysely<Database> | Transaction<Database>): Promise<ElectionRoll | null> {
+    async update(election_roll: NewElectionRoll, ctx: ILoggingContext, reason: string, db?: Kysely<Database> | Transaction<Database>): Promise<ElectionRoll | null> {
         Logger.debug(ctx, `${tableName}.updateRoll`);
         Logger.debug(ctx, "", election_roll)
-        election_roll.update_date = Date.now().toString()
-        election_roll.head = true
-
-        // Strip legacy fields (see ElectionRoll.ts) so callers can't write them.
-        const { address: _address, registration: _registration, ...sanitizedRoll } = election_roll;
 
         const executeWork = async (activeDb: Kysely<Database> | Transaction<Database>) => {
             await activeDb.updateTable(tableName)
@@ -170,6 +168,16 @@ export default class ElectionRollDB implements IElectionRollStore {
                 .where('head', '=', true)
                 .set('head', false)
                 .execute()
+
+            // Strip legacy fields and any caller-supplied create_date/update_date/head — the
+            // model generates them here so the returned row is the single source of truth.
+            const { address: _address, registration: _registration, create_date: _cd, update_date: _ud, head: _h, ...rest } = election_roll;
+            const sanitizedRoll = {
+                ...rest,
+                update_date: Date.now().toString(),
+                head: true,
+                create_date: new Date().toISOString(),
+            };
 
             return await activeDb.insertInto(tableName)
                 .values(sanitizedRoll)
