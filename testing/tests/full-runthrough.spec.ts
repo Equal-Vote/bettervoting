@@ -131,12 +131,12 @@ test('Full Runthrough', async ({ page }) => {
 		await page.waitForURL(`**/${electionId}/vote`)
 
 		await page.getByLabel('I have read the instructions').click();
-		await page.getByRole('button', { name: 'Score Candidate 1 5' }).click();
-		await page.getByRole('button', { name: 'Score Candidate 2 4' }).click();
-		await page.getByRole('button', { name: 'Score Candidate 3 3' }).click();
-		await page.getByRole('button', { name: 'Score Candidate 4 2' }).click();
-		await page.getByRole('button', { name: 'Score Candidate 5 1' }).click();
-		await page.getByRole('button', { name: 'Score Candidate 6 0' }).click();
+		await page.getByRole('radio', { name: 'Score Candidate 1 5' }).click();
+		await page.getByRole('radio', { name: 'Score Candidate 2 4' }).click();
+		await page.getByRole('radio', { name: 'Score Candidate 3 3' }).click();
+		await page.getByRole('radio', { name: 'Score Candidate 4 2' }).click();
+		await page.getByRole('radio', { name: 'Score Candidate 5 1' }).click();
+		await page.getByRole('radio', { name: 'Score Candidate 6 0' }).click();
 
 		await page.getByRole('button', { name: 'Next' }).click();
 		await page.getByLabel('I have read the instructions').click();
@@ -147,14 +147,14 @@ test('Full Runthrough', async ({ page }) => {
 		);
 		expect(columnHeadingElements.length).toBe(8);
 
-		await page.getByRole('button', { name: 'Rank Candidate 1 8' }).click();
-		await page.getByRole('button', { name: 'Rank Candidate 2 7' }).click();
-		await page.getByRole('button', { name: 'Rank Candidate 3 6' }).click();
-		await page.getByRole('button', { name: 'Rank Candidate 4 5' }).click();
-		await page.getByRole('button', { name: 'Rank Candidate 5 4' }).click();
-		await page.getByRole('button', { name: 'Rank Candidate 10 3' }).click();
-		await page.getByRole('button', { name: 'Rank Candidate 6 2' }).click();
-		await page.getByRole('button', { name: 'Rank Candidate 7 1' }).click();
+		await page.getByRole('radio', { name: 'Rank Candidate 1 8' }).click();
+		await page.getByRole('radio', { name: 'Rank Candidate 2 7' }).click();
+		await page.getByRole('radio', { name: 'Rank Candidate 3 6' }).click();
+		await page.getByRole('radio', { name: 'Rank Candidate 4 5' }).click();
+		await page.getByRole('radio', { name: 'Rank Candidate 5 4' }).click();
+		await page.getByRole('radio', { name: 'Rank Candidate 10 3' }).click();
+		await page.getByRole('radio', { name: 'Rank Candidate 6 2' }).click();
+		await page.getByRole('radio', { name: 'Rank Candidate 7 1' }).click();
 		await page.getByRole('button', { name: 'Submit' }).click();
 		await page.getByRole('button', { name: 'Submit' }).click();
 	};
