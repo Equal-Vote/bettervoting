@@ -128,7 +128,10 @@ export function electionValidation(obj:Election): string | null {
       return settingsError;
     }
   }
-  if (obj.auth_key !== undefined) {
+  // Legacy rows store NULL for auth_key, and the API round-trips it as null
+  // back to clients — so null/empty must read as "no auth_key set", not as an
+  // invalid value, or state transitions on those rows would fail validation.
+  if (obj.auth_key !== undefined && obj.auth_key !== null && obj.auth_key !== '') {
     if (typeof obj.auth_key !== 'string') {
       return "Invalid Auth Key";
     }
