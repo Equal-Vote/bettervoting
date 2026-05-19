@@ -128,10 +128,17 @@ export function electionValidation(obj:Election): string | null {
       return settingsError;
     }
   }
-  // auth_key (per-election custom JWT signing key) is unimplemented. Writes are
-  // rejected at the HTTP boundary by the create/edit controllers, not here, so
-  // that internal state transitions on legacy rows aren't broken if any row in
-  // the DB still has the field set. See also removeHiddenFields for read-side.
+  if (obj.auth_key !== undefined) {
+    if (typeof obj.auth_key !== 'string') {
+      return "Invalid Auth Key";
+    }
+    // RS256-only: auth_key must be a PEM-encoded RSA public key. Reject HS256
+    // shared-secret values so the platform never holds material that can
+    // authenticate as the election owner.
+    if (!obj.auth_key.includes('-----BEGIN PUBLIC KEY-----')) {
+      return "auth_key must be a PEM-encoded RS256 public key";
+    }
+  }
   if (obj.claim_key_hash && typeof obj.claim_key_hash !== 'string'){
     return "Invalid Claim Key Hash";
   }

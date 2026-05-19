@@ -19,11 +19,7 @@ afterEach(() => {
   th.afterEach();
 });
 
-// Skipped: per-election custom auth_key writes are rejected at the controller
-// boundary (see expectValidElectionFromRequest and editElectionController), and
-// electionSpecificAuth is a no-op. Preserved for if/when the feature is wired
-// up with a proper admin UI and validation; un-skip by removing the `.skip`.
-describe.skip("Election with custom auth key", () => {
+describe("Election with custom auth key", () => {
 
     const customKey = crypto.generateKeyPairSync('rsa', {
         modulusLength: 2048,
