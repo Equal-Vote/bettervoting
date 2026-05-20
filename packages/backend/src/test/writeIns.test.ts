@@ -265,6 +265,11 @@ describe("Write-In Candidates", () => {
         expect(candidateNames).toContain('Charlie');
         // Unapproved write-in 'Dana' should NOT appear
         expect(candidateNames).not.toContain('Dana');
+        expect(raceResult.perm).toEqual(
+            [...raceResult.summaryData.candidates]
+                .sort((a: any, b: any) => a.tieBreakOrder - b.tieBreakOrder)
+                .map((c: any) => c.id)
+        );
 
         // writeInDiagnostics should be present
         expect(raceResult.writeInDiagnostics).toBeTruthy();
