@@ -69,7 +69,7 @@ const ViewBallots = () => {
                                         {flags.isSet('VOTER_FLAGGING') &&
                                             <TableCell >{ballot.precinct || ''}</TableCell>
                                         }
-                                        <TableCell >{ballot.status.toString()}</TableCell>
+                                        <TableCell >{ballot.status?.toString() || 'submitted'}</TableCell>
                                         {election.races.map((race) => {
                                             const vote = ballot.votes.find(v => v.race_id === race.race_id);
                                             return (<React.Fragment key={`${ballot.ballot_id}-${race.race_id}`}>

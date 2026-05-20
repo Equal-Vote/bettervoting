@@ -14,11 +14,24 @@ export default class CastVoteStore {
         this._rollStore = rollStore;
     }
 
-    async submitBallot(ballot: Ballot, roll:ElectionRoll, ctx:ILoggingContext, reason:string): Promise<Ballot> {
+    async submitBallotEvent(event: any, ctx: ILoggingContext): Promise<void> {
+        if (event.roll) {
+            const currentRoll = await this._rollStore.getByVoterID(event.roll.election_id, event.roll.voter_id, ctx);
+            if (currentRoll && currentRoll.submitted && !event.isBallotUpdate) {
+                throw new Error("ALREADY_VOTED");
+            }
+        }
 
-        const savedBallot = await this._ballotStore.submitBallot(ballot, ctx, reason);
-        await this._rollStore.update(roll, ctx, reason);
-        return savedBallot;
+        if (event.isBallotUpdate) {
+            await this._ballotStore.updateBallot(event.inputBallot, ctx, `User updates a ballot`);
+        } else {
+            await this._ballotStore.submitBallot(event.inputBallot, ctx, `User submits a ballot`);
+        }
+
+        if (event.roll) {
+            event.roll.submitted = true;
+            await this._rollStore.update(event.roll, ctx, `User submits a ballot`);
+        }
     }
 
 }

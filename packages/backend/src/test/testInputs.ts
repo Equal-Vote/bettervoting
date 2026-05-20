@@ -97,41 +97,6 @@ export default {
         } as ElectionSettings
     } as Election,
 
-    RegistrationElection : {
-        election_id: "0",
-        title: 'Election 1',
-        state: 'open',
-        frontend_url: '',
-        owner_id: 'Alice1234',
-        credential_ids: ['Alice@email.com'],
-        races: [
-            {
-                race_id: '0',
-                title:'Race 0',
-                num_winners: 1,
-                voting_method:'STAR',
-                candidates:[
-                    {
-                        candidate_id:'0',
-                        candidate_name: 'A',
-                    },
-                    {
-                        candidate_id:'1',
-                        candidate_name: 'B',
-                    },
-                    {
-                        candidate_id:'2',
-                        candidate_name: 'C',
-                    }
-                ]
-            }
-        ] as Race[],
-        settings: {
-            voter_access: 'registration',
-            voter_authentication: {email: true},
-        } as ElectionSettings
-    } as Election,
-
     EmailRoll:[
         { 
             email:'Alice@email.com',
