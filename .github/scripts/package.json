@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@octokit/rest": "^20.0.2",
-    "@types/node": "^20.10.0",
+    "@types/node": "^24.0.0",
     "dotenv": "^16.4.5"
   },
   "devDependencies": {

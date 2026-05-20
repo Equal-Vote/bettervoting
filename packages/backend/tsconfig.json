@@ -14,9 +14,8 @@
       "node"
     ],
     "lib": [
-      "ES6",
+      "ES2022",
       "DOM",
-      "ES2021.String", // Added for replaceAll
     ],
     "resolveJsonModule": true,
   },
