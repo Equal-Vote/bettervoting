@@ -1856,6 +1856,12 @@
             },
             "type": "array"
           },
+          "perm": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "roundResults": {
             "items": {
               "$ref": "#/components/schemas/roundResults<allocatedScoreCandidate>"
@@ -2053,6 +2059,12 @@
             },
             "type": "array"
           },
+          "perm": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "roundResults": {
             "items": {
               "$ref": "#/components/schemas/roundResults<approvalCandidate>"
@@ -2247,6 +2259,12 @@
             },
             "type": "array"
           },
+          "perm": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "roundResults": {
             "items": {
               "$ref": "#/components/schemas/roundResults<CandidateType>_1"
@@ -2387,6 +2405,12 @@
           "other": {
             "items": {
               "$ref": "#/components/schemas/candidate"
+            },
+            "type": "array"
+          },
+          "perm": {
+            "items": {
+              "type": "string"
             },
             "type": "array"
           },
@@ -2587,6 +2611,12 @@
             },
             "type": "array"
           },
+          "perm": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "roundResults": {
             "items": {
               "$ref": "#/components/schemas/roundResults<pluralityCandidate>"
@@ -2753,6 +2783,12 @@
           "other": {
             "items": {
               "$ref": "#/components/schemas/candidate"
+            },
+            "type": "array"
+          },
+          "perm": {
+            "items": {
+              "type": "string"
             },
             "type": "array"
           },
@@ -3247,6 +3283,12 @@
           "other": {
             "items": {
               "$ref": "#/components/schemas/candidate"
+            },
+            "type": "array"
+          },
+          "perm": {
+            "items": {
+              "type": "string"
             },
             "type": "array"
           },
