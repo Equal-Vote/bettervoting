@@ -4,10 +4,12 @@ import { Election } from "@equal-vote/star-vote-shared/domain_model/Election";
 import { NewBallot } from "@equal-vote/star-vote-shared/domain_model/Ballot";
 import { Race } from "@equal-vote/star-vote-shared/domain_model/Race";
 import { ElectionSettings } from "@equal-vote/star-vote-shared/domain_model/ElectionSettings";
+import { candidate } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
 import testInputs from "./testInputs";
 import { TestHelper } from "./TestHelper";
 
 const th = new TestHelper();
+type TiebreakCandidate = candidate & { tieBreakOrder: number };
 
 // The mock event queue processes ballots asynchronously with a 1s delay.
 // We must wait for it to flush before reading ballots back.
@@ -266,9 +268,9 @@ describe("Write-In Candidates", () => {
         // Unapproved write-in 'Dana' should NOT appear
         expect(candidateNames).not.toContain('Dana');
         expect(raceResult.perm).toEqual(
-            [...raceResult.summaryData.candidates]
-                .sort((a: any, b: any) => a.tieBreakOrder - b.tieBreakOrder)
-                .map((c: any) => c.id)
+            [...(raceResult.summaryData.candidates as TiebreakCandidate[])]
+                .sort((a, b) => a.tieBreakOrder - b.tieBreakOrder)
+                .map(c => c.id)
         );
 
         // writeInDiagnostics should be present
