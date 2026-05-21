@@ -107,14 +107,14 @@ const VoterIntentWidget = () => {
     })
 
     const Definition = ({i}: {i: number}) => <Box key={i} sx={{width: '100%', mb: 2}}>
-        <Box display='flex' flexDirection='row' alignContent='stretch' sx={{justifyContent: 'flex-start'}} >
+        <Box sx={{ alignContent: 'stretch', justifyContent: 'flex-start', display: "flex", flexDirection: "row" }}>
             <Box sx={{
                 mr: 1,
                 width: '15px',
                 my: 0,
                 backgroundColor: data[i].color
             }}/>
-            <Box display='flex' justifyContent='space-between' gap={1} flexDirection='column'>
+            <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1, flexDirection: "column" }}>
                 <Typography sx={{textAlign: 'left'}}>{data[i].name}</Typography>
             </Box>
         </Box>
@@ -126,7 +126,7 @@ const VoterIntentWidget = () => {
             happen for {Math.round(100*(data[2].votes+data[3].votes)/numBallots)}% of the voters. {Math.round(100*numIgnored / numPref)}%
             of voter&apos;s rankings were uncounted in this election.
         </Typography>
-        <Box width={'250px'}> {/*Limiting the width so that the hover experience is less awkward*/}
+        <Box sx={{ width: '250px' }}> {/*Limiting the width so that the hover experience is less awkward*/}
             <ResultsPieChart data={[0, 1, 3, 2].map(i => data[i])} noLegend />
         </Box>
         <Box sx={{maxWidth: '650px', mx: 'auto'}}>

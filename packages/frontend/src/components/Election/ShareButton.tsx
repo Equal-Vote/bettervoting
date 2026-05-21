@@ -1,4 +1,4 @@
-import ListItem from "@mui/material/ListItem"
+import ListItemButton from "@mui/material/ListItemButton"
 import ListItemIcon from "@mui/material/ListItemIcon"
 import ListItemText from "@mui/material/ListItemText"
 import Fade from "@mui/material/Fade"
@@ -115,8 +115,7 @@ export default function ShareButton({ url, textKey='share.button' }: { url: stri
                         }}
                         open={Boolean(anchorElNav)}
                         onClose={handleCloseNavMenu}>
-                        <ListItem
-                            button
+                        <ListItemButton
                             id="facebook"
                             onClick={handleShare}
                         >
@@ -124,9 +123,8 @@ export default function ShareButton({ url, textKey='share.button' }: { url: stri
                                 <FacebookIcon />
                             </ListItemIcon>
                             <ListItemText primary={t('share.facebook')}/>
-                        </ListItem>
-                        <ListItem
-                            button
+                        </ListItemButton>
+                        <ListItemButton
                             id="X"
                             onClick={handleShare}
                         >
@@ -134,9 +132,8 @@ export default function ShareButton({ url, textKey='share.button' }: { url: stri
                                 <X />
                             </ListItemIcon>
                             <ListItemText primary={t('share.X')}/>
-                        </ListItem>
-                        <ListItem
-                            button
+                        </ListItemButton>
+                        <ListItemButton
                             id="reddit"
                             onClick={handleShare}
                         >
@@ -144,9 +141,8 @@ export default function ShareButton({ url, textKey='share.button' }: { url: stri
                                 <RedditIcon />
                             </ListItemIcon>
                             <ListItemText primary={t('share.reddit')}/>
-                        </ListItem>
-                        <ListItem
-                            button
+                        </ListItemButton>
+                        <ListItemButton
                             id="copy"
                             onClick={handleShare}
                         >
@@ -154,7 +150,7 @@ export default function ShareButton({ url, textKey='share.button' }: { url: stri
                                 <LinkIcon />
                             </ListItemIcon>
                             <ListItemText primary={t('share.copy_link')}/>
-                        </ListItem>
+                        </ListItemButton>
                     </Menu>
                 </Paper>
             </Fade>

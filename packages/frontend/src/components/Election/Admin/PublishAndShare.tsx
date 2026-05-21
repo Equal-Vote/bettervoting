@@ -33,7 +33,7 @@ export default () => {
         return (permissions && permissions.includes(requiredPermission))
     }
 
-    if (!hasPermission('canEditElectionState')) return <Box width='100%'>
+    if (!hasPermission('canEditElectionState')) return <Box sx={{ width: "100%" }}>
         <Typography align='center' variant="h5" sx={{ color: 'error.main', pl: 2 }}>
             {t('admin_home.admin_access_denied')}
         </Typography>
@@ -63,7 +63,7 @@ export default () => {
     }
 
     const FinalizeSection = () => <Box sx={{maxWidth: 800}}>
-        <Grid item xs={12} sx={{ p: 1, pt: 3, pb: 0 }}>
+        <Grid size={12} sx={{ p: 1, pt: 3, pb: 0 }}>
             <Typography align='center' variant="body1" sx={{ pl: 2 }}>
                 {t('admin_home.finalize_description')}
             </Typography>
@@ -73,20 +73,20 @@ export default () => {
                 </Typography>
             }
         </Grid>
-        <Grid item xs={12} sx={{ p: 1, pt: 0, display: 'flex', alignItems: 'center' }}>
+        <Grid size={12} sx={{ p: 1, pt: 0, display: 'flex', alignItems: 'center' }}>
             <PrimaryButton
                 disabled={election.title.length === 0 || election.races.length === 0 || !hasPermission('canEditElectionState') || !authSession.isLoggedIn()}
                 fullWidth
                 onClick={() => finalizeElection()}
                 sx={{mt: 2}}
             >
-                <Typography align='center' variant="h4" fontWeight={'bold'}>
+                <Typography align='center' variant="h4" sx={{ fontWeight: 'bold' }}>
                    {t('admin_home.finalize_button')}
                 </Typography>
             </PrimaryButton>
         </Grid>
         {!authSession.isLoggedIn() && 
-        <Grid xs={12} sx={{ p: 1, pt: 0, display: 'flex', alignItems: 'center' }}>
+        <Grid size={12} sx={{ p: 1, pt: 0, display: 'flex', alignItems: 'center' }}>
             <Typography align='center' variant="body1" sx={{ pl: 2, m:'auto' }}>
                 {/* I'm setting an href here and an onClick, so that the url styling will work like other a-href components*/}
                 <a href='#free-account-text' id='free-account-text' onClick={() => {

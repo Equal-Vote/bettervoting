@@ -41,5 +41,9 @@
     "@rspack/binding-linux-x64-musl": "latest",
     "@rspack/binding-darwin-arm64": "latest",
     "@rspack/binding-darwin-x64": "latest"
+  },
+  "overrides": {
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0"
   }
 }
