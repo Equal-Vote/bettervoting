@@ -5,7 +5,9 @@ module.exports = {
     transform: {
       '^.+\\.ts?$': [
         'ts-jest',
-        {}
+        {
+          isolatedModules: true,
+        }
       ],
     },
     testPathIgnorePatterns : [
