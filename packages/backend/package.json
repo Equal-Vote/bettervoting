@@ -29,7 +29,6 @@
     "@types/luxon": "^3.3.0",
     "@types/node": "^24.0.0",
     "@types/pg": "^8.10.2",
-    "@types/socket.io": "^3.0.2",
     "axios": "^1.15.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",

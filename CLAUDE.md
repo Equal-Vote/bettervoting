@@ -6,6 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Always use the full remote URL (not a remote name) when running git push (e.g. `git push https://github.com/ArendPeter/bettervoting.git <branch>`).
 - Never push to any URL matching `github.com/Equal-Vote/*` without explicit confirmation.
 
+## Notes on dependencies
+- The root `package.json` `overrides` for `qs` exists because Netlify's npm mirror lagged behind npmjs.org for a freshly published patch (`qs@6.15.2`, May 2026) and `npm ci` failed with `ETARGET`. Safe to remove once you can confirm Netlify deploys without it.
+
 ## Commands
 
 ### Development
