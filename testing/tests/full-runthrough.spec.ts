@@ -50,7 +50,7 @@ test('Full Runthrough', async ({ page }) => {
 	// Election Settings
 	await page.getByRole('link', { name: 'Settings' }).click();
 	await page
-		.getByRole('checkbox', { name: 'Set Number of Rankings' })
+		.getByRole('switch', { name: /Set Number Of Rankings/ })
 		.check();
 	await page.getByRole('spinbutton', { name: 'Rank Limit' }).fill('8');
 

@@ -17,13 +17,13 @@ import { PrimaryButton } from './styles';
 import { useLocation } from 'react-router-dom'
 
 export const createWizardNav = (heading: string, isLandingPage: boolean) => {
-    return isLandingPage ? 
+    return isLandingPage ?
         {
             text: heading,
             onClick: () => scrollToElement(document.querySelector(`.wizard`)),
         } : {
             text: heading,
-            href: '/#wizard',
+            href: '/new_election',
             target: '_self',
         }
 };
@@ -208,7 +208,7 @@ const Header = () => {
                             </MenuItem>
                             }
                             {!isLandingPage && 
-                            <MenuItem component={Link} href="/#wizard">
+                            <MenuItem component={Link} href="/new_election">
                                 {t('nav.new_election')}
                             </MenuItem>
                             }
