@@ -7,7 +7,7 @@ import { useLocalState } from '../../util';
 import useFeatureFlags from '../../FeatureFlagContextProvider';
 import { SortableList } from '~/components/DragAndDrop';
 import { makeDefaultRace, RaceErrors, useEditRace } from './useEditRace';
-import { makeUniqueIDSync, ID_PREFIXES, ID_LENGTHS, NOTA_ID } from '@equal-vote/star-vote-shared/utils/makeID';
+import { makeUniqueIDSync, ID_PREFIXES, ID_LENGTHS, NOTA_ID, makeWriteInCandidateId, isWriteInCandidate } from '@equal-vote/star-vote-shared/utils/makeID';
 import VotingMethodSelector from './VotingMethodSelector';
 import useElection from '~/components/ElectionContextProvider';
 import { SecondaryButton, PrimaryButton, FileDropBox, LinkButton, Tip, UtilityButton } from '~/components/styles';
@@ -83,13 +83,11 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
 
         return [
             ...editedRace.candidates.filter(c => c.candidate_id !== NOTA_ID),
-            {
-                candidate_id: newId,
-                candidate_name: ''
-            },
+            { candidate_id: newId, candidate_name: '' },
+            ...(editedRace.enable_write_in ? [{ candidate_id: makeWriteInCandidateId('Write-in'), candidate_name: 'Write-in' }] : []),
             ...editedRace.candidates.filter(c => c.candidate_id === NOTA_ID),
         ];
-    }, [editedRace.candidates]);
+    }, [editedRace.candidates, editedRace.enable_write_in]);
 
     const onEditCandidate = useCallback((candidate, uiIndex) => {
         applyRaceUpdate(race => {
@@ -107,14 +105,20 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleChangeCandidates = useCallback((newCandidateList: any[]) => {
         // removing the newCandidateIndex will update the ephemeral order to match the actual one
-        newCandidateList.splice(newCandidateIndex, 1)
+        newCandidateList.splice(newCandidateIndex, 1);
+        // write-in is ephemeral (not in race.candidates), so strip it out too
+        const writeInIdx = newCandidateList.findIndex(c => isWriteInCandidate(c.candidate_id));
+        if(writeInIdx >= 0) newCandidateList.splice(writeInIdx, 1);
         applyRaceUpdate(race => {
             race.candidates = newCandidateList;
-        }
-        );
+        });
     }, [applyRaceUpdate]);
 
     const onDeleteCandidate = useCallback((uiIndex) => {
+        if(isWriteInCandidate(ephemeralCandidates[uiIndex]?.candidate_id ?? '')) {
+            applyRaceUpdate(race => { race.enable_write_in = false; });
+            return;
+        }
         const index = uiIndexToActualIndex(uiIndex);
         if (editedRace.candidates.length < 2) {
             setErrors(prev => ({ ...prev, candidates: 'At least 2 candidates are required' }));
@@ -124,7 +128,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
         applyRaceUpdate(race => {
             race.candidates.splice(index, 1);
         });
-    }, [editedRace.candidates.length, applyRaceUpdate, setErrors]);
+    }, [editedRace.candidates.length, applyRaceUpdate, setErrors, ephemeralCandidates]);
 
     // Handle tab and shift+tab to move focus between candidates
     const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLInputElement>, index: number) => {
@@ -175,16 +179,17 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
 
     const candidateItems = election.state === 'draft' ? ephemeralCandidates : editedRace.candidates;
 
-    // NOTA is listed below the new candidate in the ephemeral list
-    const numSpecialCandidates = editedRace.candidates.filter(c => c.candidate_id === NOTA_ID).length;
+    // Write-in and NOTA are listed below the new candidate in the ephemeral list (write-in first)
+    const numSpecialCandidates = editedRace.candidates.filter(c => c.candidate_id === NOTA_ID).length + (editedRace.enable_write_in ? 1 : 0);
     const newCandidateIndex = election.state === 'draft' ? ephemeralCandidates.length - 1 - numSpecialCandidates : undefined;
 
     const uiIndexToActualIndex = (uiIndex) => {
         // we only use the ephemeral list when we're in draft, otherwise the ui will match editedRace.candidates
         if(election.state != 'draft') return uiIndex;
         if(uiIndex === newCandidateIndex) throw "There is no mapping for the new candidate, this function shouldn't be used for that case"
-        // the ephemeral list has a temp candidate inserted at the end before nota, so we need to offset accordingly
-        if(uiIndex > newCandidateIndex) return uiIndex-1;
+        if(editedRace.enable_write_in && uiIndex === newCandidateIndex + 1) throw "There is no mapping for the write-in candidate, this function shouldn't be used for that case"
+        // the ephemeral list has the new candidate slot plus an optional write-in slot before special candidates
+        if(uiIndex > newCandidateIndex) return uiIndex - 1 - (editedRace.enable_write_in ? 1 : 0);
         return uiIndex;
     }
 
@@ -263,24 +268,23 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
                     </SortableList.Item>
                 )}
             />
+            {election.state == 'draft' && !editedRace.enable_write_in && <Box>
+                <UtilityButton
+                    onClick={() => applyRaceUpdate((race) => { race.enable_write_in = true; })}
+                    sx={{ml: 1}}
+                >
+                    + Add Write-in
+                </UtilityButton>
+            </Box>}
             {flags.isSet('NOTA') && election.state == 'draft' && !editedRace.candidates.some((c) => c.candidate_id === NOTA_ID) && <Box>
                 <UtilityButton onClick={()=>{onEditCandidate({
                     candidate_id: NOTA_ID,
                     candidate_name: 'None of the Above',
-                }, candidateItems.length-1)}} sx={{ml: 1}}>
+                }, newCandidateIndex)}} sx={{ml: 1}}>
                     + Add "None of the Above"
                 </UtilityButton>
                 <Tip name='nota'/>
             </Box>}
-            <Box>
-                <UtilityButton
-                    disabled={isDisabled}
-                    onClick={() => applyRaceUpdate((race) => { race.enable_write_in = !race.enable_write_in; })}
-                    sx={{ml: 1}}
-                >
-                    {editedRace.enable_write_in ? '-' : '+'} Allow write-ins
-                </UtilityButton>
-            </Box>
         </Stack>
     </FileDropBox>;
 

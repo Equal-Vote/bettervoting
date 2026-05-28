@@ -12,6 +12,7 @@ import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import { CandidatePhoto, FileDropBox, PrimaryButton, SecondaryButton } from '../../styles';
 import { DragHandle } from '~/components/DragAndDrop';
 import LinkIcon from '@mui/icons-material/Link';
+import { isWriteInCandidate } from '@equal-vote/star-vote-shared/utils/makeID';
 
 interface CandidatePhotoDialogProps {
     onEditCandidate: (newCandidate: Candidate) => void,
@@ -214,7 +215,7 @@ export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled
                 <Box sx={{ overflow: 'hidden', textOverflow: 'ellipsis', width: '100%' }}>
                     <TextField
                         id={`candidate-name-${index + 1}`}
-                        inputProps={{ "aria-label": `Candidate ${index + 1} Name` }}
+                        inputProps={{ "aria-label": `Candidate ${index + 1} Name`, style: isWriteInCandidate(candidate.candidate_id) ? { fontFamily: 'cursive' } : undefined }}
                         // data-testid={`candidate-name-${index + 1}`}
                         disabled={disabled || special}
                         type="text"
