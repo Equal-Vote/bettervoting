@@ -23,7 +23,7 @@ interface RaceFormProps {
     dialogOpen?: boolean,
 }
 
-export const RACE_FORM_GAP = 2;
+export const RACE_FORM_GAP = 0;
 
 export default function RaceForm({
     raceIndex=undefined,
@@ -234,14 +234,14 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
 
 
     const candidatesSection = <FileDropBox onlyShowOnDrag helperText={'Add from photo(s)'} onDrop={handlePhotoDrop}>
-        <Typography sx={{mr: "auto", color: 'black', fontSize: '1.125rem', opacity: 0.86, fontWeight: 500, pl: 1, pb: 0.5}}>
+        <Typography variant='h6'>
             {t('race_form.candidates_title')}
         </Typography>
         <FormHelperText error sx={{ pl: 1, pt: 0 }}>
             {errors.candidates}
         </FormHelperText>
 
-        <Stack spacing={2}>
+        <Stack>
             <SortableList
                 items={candidateItems}
                 identifierKey="candidate_id"
@@ -263,7 +263,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
                     </SortableList.Item>
                 )}
             />
-            {election.state == 'draft' && !editedRace.candidates.some((c) => c.candidate_id === NOTA_ID) && flags.isSet('NOTA') && <Box>
+            {flags.isSet('NOTA') && election.state == 'draft' && !editedRace.candidates.some((c) => c.candidate_id === NOTA_ID) && <Box>
                 <UtilityButton onClick={()=>{onEditCandidate({
                     candidate_id: NOTA_ID,
                     candidate_name: 'None of the Above',
@@ -311,6 +311,7 @@ const TitleAndDescription = ({setErrors, errors, editedRace, applyRaceUpdate, op
     }, [open])
 
     return <>
+        <Typography variant='h6'>{t('wizard.title_label')}</Typography>
         <Box>
             <TextField
                 id={`race-title`}

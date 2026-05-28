@@ -1,8 +1,8 @@
 import { Edit, ExpandLess, ExpandMore } from "@mui/icons-material";
 import { Box, Button, FormControlLabel, FormHelperText, IconButton, Radio, RadioGroup, TextField, Typography } from "@mui/material"
 import { useEffect, useState } from "react";
-import { PrimaryButton, SecondaryButton } from "~/components/styles";
-import { AddIcon, TransitionBox, useSubstitutedTranslation } from "~/components/util"
+import { PrimaryButton, SecondaryButton, UtilityButton } from "~/components/styles";
+import { TransitionBox, useSubstitutedTranslation } from "~/components/util"
 import EditIcon from '@mui/icons-material/Edit';
 import { methodValueToTextKey } from "@equal-vote/star-vote-shared/domain_model/Race";
 
@@ -224,21 +224,18 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
     const pad = 0; // 30 // may add this back later
 
     return <Box>
-        <Button
-            sx={{mr: "auto", textDecoration: 'none', textTransform: 'none', color: 'black', fontSize: '1.125rem', opacity: 0.86, textAlign: 'left', fontWeight: 500}}
-            disabled={methodStep != 'unset' && methodStep != 'done'}
-            onClick={() => setMethodStep('family')}
-        >
-            {methodStep == 'done' && <EditIcon sx={{scale: 1, mr: 1}}/>}
-            {methodStep != 'done' ? <>
-                <AddIcon prefix/> Voting Method
+        <Typography variant='h6'>Voting method</Typography>
+        {(methodStep === 'unset' || methodStep === 'done') && <UtilityButton onClick={() => setMethodStep('family')}>
+            {methodStep == 'unset' ? <>
+                <EditIcon sx={{scale: 1, mr: 1}}/> Select the voting method
             </> : <>
+                <EditIcon sx={{scale: 1, mr: 1}}/>
                 {editedRace.voting_method == undefined ? '___' : t(`methods.${methodValueToTextKey[editedRace.voting_method]}.full_name`)} with&nbsp;
                 {editedRace.num_winners == undefined ? '___' : editedRace.num_winners}&nbsp;
                 {methodFamily == undefined || methodFamily == 'single_winner' ? '' : <>{t(`edit_race.${methodFamily}_adj`)}&nbsp;</>}
                 {methodFamily == 'single_winner'? 'winner' : 'winners'}
             </>}
-        </Button>
+        </UtilityButton>}
         <FormHelperText error sx={{ pl: 1}}>
             {errors.votingMethod}
         </FormHelperText>
