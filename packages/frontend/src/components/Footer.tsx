@@ -37,7 +37,7 @@ export default function Footer() {
 							variant="body2"
 							sx={{ textAlign: 'left' }}
 						>
-							{t('footer.project_description')}
+							{t('footer.project_description', {newWindow: true})}
 						</Typography>
 						<br/>
 						<Link
