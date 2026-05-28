@@ -3,7 +3,7 @@ import CandidateForm from "../Candidates/CandidateForm";
 import TextField from "@mui/material/TextField";
 import Typography from '@mui/material/Typography';
 import { Box, FormHelperText, Stack } from "@mui/material";
-import { AddIcon, MinusIcon, useLocalState } from '../../util';
+import { useLocalState } from '../../util';
 import useFeatureFlags from '../../FeatureFlagContextProvider';
 import { SortableList } from '~/components/DragAndDrop';
 import { makeDefaultRace, RaceErrors, useEditRace } from './useEditRace';
@@ -268,17 +268,19 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
                     candidate_id: NOTA_ID,
                     candidate_name: 'None of the Above',
                 }, candidateItems.length-1)}} sx={{ml: 1}}>
-                    <AddIcon prefix/>Add "None of the Above"
+                    + Add "None of the Above"
                 </UtilityButton>
                 <Tip name='nota'/>
             </Box>}
-            <UtilityButton
-                disabled={isDisabled}
-                onClick={() => applyRaceUpdate(race => { race.enable_write_in = !race.enable_write_in; })}
-                sx={{ml: 1}}
-            >
-                {editedRace.enable_write_in ? <MinusIcon prefix/> : <AddIcon prefix/>} Allow write-ins
-            </UtilityButton>
+            <Box>
+                <UtilityButton
+                    disabled={isDisabled}
+                    onClick={() => applyRaceUpdate((race) => { race.enable_write_in = !race.enable_write_in; })}
+                    sx={{ml: 1}}
+                >
+                    {editedRace.enable_write_in ? '-' : '+'} Allow write-ins
+                </UtilityButton>
+            </Box>
         </Stack>
     </FileDropBox>;
 
@@ -336,7 +338,7 @@ const TitleAndDescription = ({setErrors, errors, editedRace, applyRaceUpdate, op
 
         <Box>
             <UtilityButton onClick={() => setShowDescription(d => !d)}>
-                {showDescription? <MinusIcon prefix/> : <AddIcon prefix/>} Description (Optional)
+                {showDescription? '-' : '+'} Description (Optional)
             </UtilityButton>
             {showDescription && <>
                 <TextField
