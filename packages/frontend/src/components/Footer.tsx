@@ -39,20 +39,7 @@ export default function Footer() {
 						>
 							{t('footer.project_description')}
 						</Typography>
-						<Typography
-							variant="body2"
-							sx={{ textAlign: 'left', mt: 1 }}
-						>
-							BetterVoting.com is the successor to the star.vote app. The classic experience is still available at{' '}
-							<Link
-								href="https://classic.star.vote"
-								target="_blank"
-								sx={{ color: 'var(--brand-pop)', textDecoration: 'underline' }}
-							>
-								classic.star.vote
-							</Link>
-						</Typography>
-            <br/>
+						<br/>
 						<Link
 							href="https://www.starvoting.org/"
 							target = "_blank"
