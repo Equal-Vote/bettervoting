@@ -225,8 +225,7 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
 
     return <Box>
         <Button
-            // it's hacky, but opacity 0.8 does helps take the edge off the bold a bit
-            sx={{mr: "auto", textDecoration: 'none', textTransform: 'none', color: 'black', fontSize: '1.125rem', opacity: 0.86, textAlign: 'left'}}
+            sx={{mr: "auto", textDecoration: 'none', textTransform: 'none', color: 'black', fontSize: '1.125rem', opacity: 0.86, textAlign: 'left', fontWeight: 500}}
             disabled={methodStep != 'unset' && methodStep != 'done'}
             onClick={() => setMethodStep('family')}
         >

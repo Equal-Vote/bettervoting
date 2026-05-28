@@ -2,16 +2,15 @@ import React, { MouseEventHandler, useCallback, useEffect, useMemo, useRef, useS
 import CandidateForm from "../Candidates/CandidateForm";
 import TextField from "@mui/material/TextField";
 import Typography from '@mui/material/Typography';
-import { Box, Button, Checkbox, FormControlLabel, FormHelperText, Link, Stack } from "@mui/material";
-import { AddIcon, MinusIcon, TransitionBox, useLocalState, useSubstitutedTranslation } from '../../util';
-import useConfirm from '../../ConfirmationDialogProvider';
+import { Box, FormHelperText, Stack } from "@mui/material";
+import { AddIcon, MinusIcon, useLocalState } from '../../util';
 import useFeatureFlags from '../../FeatureFlagContextProvider';
 import { SortableList } from '~/components/DragAndDrop';
 import { makeDefaultRace, RaceErrors, useEditRace } from './useEditRace';
 import { makeUniqueIDSync, ID_PREFIXES, ID_LENGTHS, NOTA_ID } from '@equal-vote/star-vote-shared/utils/makeID';
 import VotingMethodSelector from './VotingMethodSelector';
 import useElection from '~/components/ElectionContextProvider';
-import { SecondaryButton, PrimaryButton, FileDropBox, LinkButton, Tip } from '~/components/styles';
+import { SecondaryButton, PrimaryButton, FileDropBox, LinkButton, Tip, UtilityButton } from '~/components/styles';
 import RaceDialog from './RaceDialog';
 import { Candidate } from '@equal-vote/star-vote-shared/domain_model/Candidate';
 import { getImage, postImage } from '../Candidates/PhotoUtil';
@@ -68,12 +67,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
     const flags = useFeatureFlags();
     const { election, t } = useElection()
     const isDisabled = election.state !== 'draft';
-    const [] = useState(false);
 
-    // Dialog should default to candidates being expanded, Wizard should not
-    const [candidatesExpaneded, setCandidatesExpanded] = useState(editedRace.candidates.length > 0);
-
-    const confirm = useConfirm();
     const inputRefs = useRef([]);
     const ephemeralCandidates = useMemo(() => {
         // Get all existing candidate IDs
@@ -110,10 +104,6 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
         setErrors((prev: RaceErrors) => ({ ...prev, candidates: ''}));
     }, [applyRaceUpdate, setErrors]);
 
-    useEffect(() => {
-        setCandidatesExpanded(editedRace.candidates.length > 1)
-    }, [open])
-    
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleChangeCandidates = useCallback((newCandidateList: any[]) => {
         // removing the newCandidateIndex will update the ephemeral order to match the actual one
@@ -124,20 +114,17 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
         );
     }, [applyRaceUpdate]);
 
-    const onDeleteCandidate = useCallback(async (uiIndex) => {
-        let index = uiIndexToActualIndex(uiIndex);
+    const onDeleteCandidate = useCallback((uiIndex) => {
+        const index = uiIndexToActualIndex(uiIndex);
         if (editedRace.candidates.length < 2) {
             setErrors(prev => ({ ...prev, candidates: 'At least 2 candidates are required' }));
             return;
         }
 
-        const confirmed = await confirm({ title: 'Confirm Delete Candidate', message: 'Are you sure?' });
-        if (confirmed) {
-            applyRaceUpdate(race => {
-                race.candidates.splice(index, 1);
-            });
-        }
-    }, [confirm, editedRace.candidates.length, applyRaceUpdate, setErrors]);
+        applyRaceUpdate(race => {
+            race.candidates.splice(index, 1);
+        });
+    }, [editedRace.candidates.length, applyRaceUpdate, setErrors]);
 
     // Handle tab and shift+tab to move focus between candidates
     const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLInputElement>, index: number) => {
@@ -189,7 +176,6 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
     const candidateItems = election.state === 'draft' ? ephemeralCandidates : editedRace.candidates;
 
     // NOTA is listed below the new candidate in the ephemeral list
-    const maxSpecialCandidates = 1;
     const numSpecialCandidates = editedRace.candidates.filter(c => c.candidate_id === NOTA_ID).length;
     const newCandidateIndex = election.state === 'draft' ? ephemeralCandidates.length - 1 - numSpecialCandidates : undefined;
 
@@ -204,14 +190,14 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
 
     const handlePhotoDrop = async (e) =>  {
         // load file data
-        let names = []
-        let promises = []
+        const names = []
+        const promises = []
         // forEach doesn't exist on fileList type
         // I'm keeping the loops separate since all the files need to be retrieved from dataTransfer before any await functions are called
         for(let i = 0; i < e.dataTransfer.files.length; i++){ 
-            let f = e.dataTransfer.files[i];
+            const f = e.dataTransfer.files[i];
 
-            let parts = f.name.split('\.');
+            const parts = f.name.split('\.');
             parts.pop(); // drop extension
             names.push(parts.join('.'))
 
@@ -219,11 +205,11 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
         }
 
         // get photos
-        let photos = (await Promise.all(promises)).map(res => res.photo_filename);
+        const photos = (await Promise.all(promises)).map(res => res.photo_filename);
 
         // create candidates
         const existingIds = new Set(editedRace.candidates.map(c => c.candidate_id));
-        let newCandidates = names.map((n, i) => {
+        const newCandidates = names.map((n, i) => {
             const hasCollision = (id: string) => existingIds.has(id);
 
             const newId = makeUniqueIDSync(
@@ -247,88 +233,65 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
     }
 
 
+    const candidatesSection = <FileDropBox onlyShowOnDrag helperText={'Add from photo(s)'} onDrop={handlePhotoDrop}>
+        <Typography sx={{mr: "auto", color: 'black', fontSize: '1.125rem', opacity: 0.86, fontWeight: 500, pl: 1, pb: 0.5}}>
+            {t('race_form.candidates_title')}
+        </Typography>
+        <FormHelperText error sx={{ pl: 1, pt: 0 }}>
+            {errors.candidates}
+        </FormHelperText>
+
+        <Stack spacing={2}>
+            <SortableList
+                items={candidateItems}
+                identifierKey="candidate_id"
+                indexIsValid={index => index < newCandidateIndex}
+                onChange={handleChangeCandidates}
+                renderItem={(candidate, index) => (
+                    <SortableList.Item id={candidate.candidate_id}>
+                        <CandidateForm
+                            key={candidate.candidate_id}
+                            onEditCandidate={(newCandidate) => onEditCandidate(newCandidate, index)}
+                            candidate={candidate}
+                            index={index}
+                            onDeleteCandidate={() => onDeleteCandidate(index)}
+                            disabled={election.state !== 'draft'}
+                            special={index > newCandidateIndex}
+                            inputRef={(el: React.MutableRefObject<HTMLInputElement[]>) => inputRefs.current[index] = el}
+                            onKeyDown={(event: React.KeyboardEvent<HTMLInputElement>) => handleKeyDown(event, index)}
+                            electionState={election.state} />
+                    </SortableList.Item>
+                )}
+            />
+            {election.state == 'draft' && !editedRace.candidates.some((c) => c.candidate_id === NOTA_ID) && flags.isSet('NOTA') && <Box>
+                <UtilityButton onClick={()=>{onEditCandidate({
+                    candidate_id: NOTA_ID,
+                    candidate_name: 'None of the Above',
+                }, candidateItems.length-1)}} sx={{ml: 1}}>
+                    <AddIcon prefix/>Add "None of the Above"
+                </UtilityButton>
+                <Tip name='nota'/>
+            </Box>}
+            <UtilityButton
+                disabled={isDisabled}
+                onClick={() => applyRaceUpdate(race => { race.enable_write_in = !race.enable_write_in; })}
+                sx={{ml: 1}}
+            >
+                {editedRace.enable_write_in ? <MinusIcon prefix/> : <AddIcon prefix/>} Allow write-ins
+            </UtilityButton>
+        </Stack>
+    </FileDropBox>;
+
     return <Box display='flex' flexDirection='column' alignItems='stretch' gap={RACE_FORM_GAP} sx={{textAlign: 'left'}}>
         <TitleAndDescription setErrors={setErrors} errors={errors} editedRace={editedRace} applyRaceUpdate={applyRaceUpdate} open={open}/>
 
+        {candidatesSection}
         <VotingMethodSelector election={election} editedRace={editedRace} isDisabled={isDisabled} setErrors={setErrors} errors={errors} applyRaceUpdate={applyRaceUpdate} open={open}/>
-
-        <FileDropBox onlyShowOnDrag helperText={'Add from photo(s)'} onDrop={handlePhotoDrop}>
-            <Button
-                // it's hacky, but opacity 0.8 does helps take the edge off the bold a bit
-                sx={{mr: "auto", textDecoration: 'none', textTransform: 'none', color: 'black', fontSize: '1.125rem', opacity: 0.86}}
-                onClick={() => setCandidatesExpanded((e) => !e)}
-            >
-                {candidatesExpaneded? <MinusIcon prefix/> :<AddIcon prefix/>} {t('race_form.candidates_title')}
-            </Button>
-            <FormHelperText error sx={{ pl: 1, pt: 0 }}>
-                {errors.candidates}
-            </FormHelperText>
-
-            <Box sx={{
-                position: 'relative',
-                height: candidatesExpaneded? `${
-                    candidateItems.length*66 - 11 +
-                    40*(maxSpecialCandidates-numSpecialCandidates) +
-                    58 // hard coded value for write-ins checkbox
-                }px` : 0,
-                transition: 'height 0.5s',
-            }}>
-                <TransitionBox absolute enabled={candidatesExpaneded}>
-                    <Stack spacing={2}>
-                        <SortableList
-                            items={candidateItems}
-                            identifierKey="candidate_id"
-                            indexIsValid={index => index < newCandidateIndex}
-                            onChange={handleChangeCandidates}
-                            renderItem={(candidate, index) => (
-                                <SortableList.Item id={candidate.candidate_id}>
-                                    <CandidateForm
-                                        key={candidate.candidate_id}
-                                        onEditCandidate={(newCandidate) => onEditCandidate(newCandidate, index)}
-                                        candidate={candidate}
-                                        index={index}
-                                        onDeleteCandidate={() => onDeleteCandidate(index)}
-                                        disabled={election.state !== 'draft'}
-                                        special={index > newCandidateIndex}
-                                        inputRef={(el: React.MutableRefObject<HTMLInputElement[]>) => inputRefs.current[index] = el}
-                                        onKeyDown={(event: React.KeyboardEvent<HTMLInputElement>) => handleKeyDown(event, index)}
-                                        electionState={election.state} />
-                                </SortableList.Item>
-                            )}
-                        />
-                        {election.state == 'draft' && !editedRace.candidates.some((c) => c.candidate_id === NOTA_ID) && <Box>
-                            <LinkButton onClick={()=>{onEditCandidate({
-                                candidate_id: NOTA_ID,
-                                candidate_name: 'None of the Above',
-                            }, candidateItems.length-1)}} sx={{
-                                ml: 1,
-                            }}>Add "None of the Above"</LinkButton>
-                            <Tip name='nota'/>
-                        </Box>}
-                        <FormControlLabel
-                            disabled={isDisabled}
-                            control={
-                                <Checkbox
-                                    id="enable-write-in"
-                                    checked={!!editedRace.enable_write_in}
-                                    onChange={(e) => applyRaceUpdate(race => { race.enable_write_in = e.target.checked; })}
-                                />
-                            }
-                            label="Allow write-ins"
-                            sx={{ pl: 1  }}
-                        />
-                    </Stack>
-                </TransitionBox>
-                
-            </Box>
-
-            
-        </FileDropBox>
     </Box>
 }
 
 const TitleAndDescription = ({setErrors, errors, editedRace, applyRaceUpdate, open}) => {
-    const [showDescription, setShowDescription] = useState(editedRace.description != '');
+    const [showDescription, setShowDescription] = useState(!!editedRace.description);
     const { election, t } = useElection()
     const isDisabled = election.state !== 'draft';
 
@@ -342,7 +305,7 @@ const TitleAndDescription = ({setErrors, errors, editedRace, applyRaceUpdate, op
     );
 
     useEffect(() => {
-        setShowDescription(editedRace.description != '')
+        setShowDescription(!!editedRace.description)
     }, [open])
 
     return <>
@@ -372,12 +335,9 @@ const TitleAndDescription = ({setErrors, errors, editedRace, applyRaceUpdate, op
         </Box>
 
         <Box>
-            <Button
-                sx={{textDecoration: 'none', textTransform: 'none', color: 'black', fontSize: '1.125rem', opacity: 0.86}}
-                onClick={() => setShowDescription(d => !d)}
-            >
+            <UtilityButton onClick={() => setShowDescription(d => !d)}>
                 {showDescription? <MinusIcon prefix/> : <AddIcon prefix/>} Description (Optional)
-            </Button>
+            </UtilityButton>
             {showDescription && <>
                 <TextField
                     id={`race-description`}
