@@ -812,7 +812,7 @@ tips:
     title: One for per User
     description: >
       Only allow votes from people who have created a BetterVoting account and verified their email address. 
-      Great for maximizing security for anonymous public {{capital_elections}}. 
+      Great for maximizing security for anonymous public {{elections}}. 
 
   election_title:
     title: Title
@@ -829,11 +829,11 @@ tips:
   
   star:
     title: $t(methods.star.full_name)
-    description: Voters score {{capital_candidates}} from 5 stars (best) to 0 stars (worst). The two top-scored {{candidates}} are finalists, finalist with the most votes wins.
+    description: Voters score {{candidates}} from 5 stars (best) to 0 stars (worst). The two top-scored {{candidates}} are finalists, finalist with the most votes wins.
 
   approval:
     title: $t(methods.approval.full_name)
-    description: Voters approve as many {{capital_candidates}} as they like, and then the {{candidate}} with the most approvals wins.
+    description: Voters approve as many {{candidates}} as they like, and then the {{candidate}} with the most approvals wins.
 
   ranked_robin:
     title: $t(methods.ranked_robin.full_name)
