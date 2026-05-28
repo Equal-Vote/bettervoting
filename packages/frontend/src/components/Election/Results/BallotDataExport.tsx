@@ -1,6 +1,7 @@
 import { CSVLink } from 'react-csv';
 import { useState } from 'react';
 import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
+import { ElectionResults } from '@equal-vote/star-vote-shared/domain_model/ITabulators';
 import MenuItem from "@mui/material/MenuItem";
 import BorderAll from '@mui/icons-material/BorderAll';
 import DataObject from '@mui/icons-material/DataObject';
@@ -10,9 +11,10 @@ import { Box } from '@mui/material';
 
 interface Props {
     election: Election;
+    results?: ElectionResults[];
 }
 
-export const BallotDataExport = ({ election }: Props) => {
+export const BallotDataExport = ({ election, results }: Props) => {
     const [csvData, setCsvData] = useState<Record<string, string | number | boolean>[]>([]);
     const [csvHeaders, setCsvHeaders] = useState<({
         label: string;
@@ -64,7 +66,17 @@ export const BallotDataExport = ({ election }: Props) => {
         return string.substring(0, limit);
     };
     const downloadJson = async () => {
-        const ballotObject = { Election: election, Ballots: ballots };
+        const tieBreakOrder = results ? Object.fromEntries(
+            election.races.map((race, i) => [
+                race.race_id,
+                results[i]?.summaryData?.candidates?.map(c => ({
+                    candidate_id: c.id,
+                    candidate_name: c.name,
+                    tieBreakOrder: c.tieBreakOrder,
+                })) ?? []
+            ])
+        ) : undefined;
+        const ballotObject = { Election: election, Ballots: ballots, ...(tieBreakOrder && { TieBreakOrder: tieBreakOrder }) };
         const ballotJson = JSON.stringify(ballotObject, null, 2);
         const blob = new Blob([ballotJson], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
