@@ -837,7 +837,7 @@ tips:
 
   ranked_robin:
     title: $t(methods.ranked_robin.full_name)
-    description: The candidate preferred over all others wins. (Also known as Condorcet.)
+    description: The {{candidate}} preferred over all others wins. (Also known as Condorcet.)
 
 #######################################
 #### PRIORITY 99 : Everything Else ####
