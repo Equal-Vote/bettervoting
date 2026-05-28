@@ -4,6 +4,7 @@ import useAuthSession from '../AuthSessionContextProvider';
 import { useClaimElection, useGetElections } from '../../hooks/useAPI';
 import { useNavigate } from 'react-router';
 import EnhancedTable from '../EnhancedTable';
+import { PrimaryButton } from '../styles';
 import useSnackbar from '../SnackbarContext';
 import { useSessionStorage } from '~/hooks/useSessionStorage';
 import { useCookie } from '~/hooks/useCookie';
@@ -81,7 +82,7 @@ const ElectionsYouManage = () => {
         data={managedElectionsData}
         handleOnClick={(row) => navigate(`/${String(row.raw.election_id)}`)}
         defaultSortBy='update_date'
-        emptyContent={<>You don&apos;t have any elections yet<button>Create Election</button></>}
+        emptyContent={<>You don&apos;t have any elections yet&nbsp;&nbsp;<PrimaryButton onClick={() => navigate('/new_election')}>Create Election</PrimaryButton></>}
     />
 }
 
