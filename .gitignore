@@ -12,3 +12,4 @@
 .idea
 .gitattributes
 .claude/**
+.playwright-mcp/**

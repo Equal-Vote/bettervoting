@@ -63,12 +63,12 @@ const Header = () => {
                     target: '_self',
                 },
                 {
-                    text: 'Approval',
+                    text: 'Approval Voting',
                     href: 'https://www.equal.vote/approval',
                     target: '_self',
                 },
                 {
-                    text: 'STAR PR',
+                    text: 'Proportional STAR Voting',
                     href: 'https://www.equal.vote/pr',
                     target: '_self',
                 },
