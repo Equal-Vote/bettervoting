@@ -82,7 +82,7 @@ const ElectionsYouManage = () => {
         data={managedElectionsData}
         handleOnClick={(row) => navigate(`/${String(row.raw.election_id)}`)}
         defaultSortBy='update_date'
-        emptyContent={<>You don&apos;t have any elections yet&nbsp;&nbsp;<PrimaryButton onClick={() => navigate('/new_election')}>Create Election</PrimaryButton></>}
+        emptyContent={<>You don&apos;t have any elections yet<br/><PrimaryButton onClick={() => navigate('/new_election')}>Create Election</PrimaryButton></>}
     />
 }
 
