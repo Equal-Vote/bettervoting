@@ -1,7 +1,7 @@
 import Grid from "@mui/material/Grid";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormControl from "@mui/material/FormControl";
-import { FormGroup, Radio, RadioGroup, Box, capitalize, Typography } from "@mui/material";
+import { FormGroup, Radio, RadioGroup, Box, capitalize, Typography, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { ElectionSettings as IElectionSettings, TermType } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
 import { Tip } from '~/components/styles';
 import { useSubstitutedTranslation, SwitchSetting } from '~/components/util';
@@ -61,7 +61,8 @@ export default function ElectionSettings() {
         }
     );
 
-    const rankLimitInRange = (n: number) => n >= min_rankings && n <= max_rankings;
+    // Inclusive [min_rankings, max_rankings] — drives the rank-limit selector below.
+    const rankOptions = Array.from({ length: max_rankings - min_rankings + 1 }, (_, i) => min_rankings + i);
 
     return <>
         <Grid item xs={12} sx={{ m: 0, my: 0, p: 1 }}>
@@ -71,11 +72,14 @@ export default function ElectionSettings() {
                         label={t('election_settings.contact_email')}
                         value={election.settings.contact_email ?? ''}
                         disabled={election.state !== 'draft'}
+                        type='text'
+                        placeholder='support@example.com'
+                        emptyDisplay='Click to add a support email for voters'
                         onCommit={async (v) => updateElection(e => e.settings.contact_email = v)}
                         ariaLabel='Contact Email'
                     />
 
-                    <Box sx={{mt: 0, mb: 2}}>
+                    <Box sx={{mt: 2, mb: 2}}>
                         <Typography component='span'>
                             {t('wizard.term_question')}
                             <Tip name='polls_vs_elections'/>
@@ -105,22 +109,52 @@ export default function ElectionSettings() {
                     />
 
                     {election.settings.max_rankings !== undefined && (
-                        <Box sx={{ pl: 4 }}>
-                            <DialogTextField
-                                label='Rank Limit'
-                                value={String(election.settings.max_rankings)}
+                        <Box sx={{ pl: { xs: 0, sm: 4 }, py: 1 }}>
+                            <Typography component='div' sx={{ fontWeight: 500, mb: 1 }}>Rank Limit</Typography>
+                            <ToggleButtonGroup
+                                value={election.settings.max_rankings}
+                                exclusive
                                 disabled={election.state !== 'draft'}
-                                type='number'
-                                ariaLabel='Rank Limit'
-                                validate={(s) => {
-                                    const n = Number(s);
-                                    if (!Number.isInteger(n)) return 'Must be a whole number';
-                                    if (!rankLimitInRange(n)) return `Must be between ${min_rankings} and ${max_rankings}`;
-                                    return null;
+                                aria-label='Rank Limit'
+                                // Ignore null: clicking the active button would otherwise
+                                // deselect and leave the limit unset (the parent switch owns on/off).
+                                onChange={(_, v: number | null) => {
+                                    if (v !== null) updateElection(e => e.settings.max_rankings = v);
                                 }}
-                                inputProps={{ min: min_rankings, max: max_rankings }}
-                                onCommit={async (v) => updateElection(e => e.settings.max_rankings = Number(v))}
-                            />
+                                sx={{
+                                    flexWrap: 'wrap',
+                                    gap: 1,
+                                    // Detach the grouped border-radius/border-collapse so buttons
+                                    // render as standalone chips that wrap cleanly on mobile.
+                                    '& .MuiToggleButtonGroup-grouped': {
+                                        m: 0,
+                                        border: '1px solid',
+                                        borderColor: 'primary.main',
+                                        borderRadius: 1,
+                                        // Default ToggleButton text is text.secondary (gray) and
+                                        // reads as disabled; use the accent color so it looks active.
+                                        color: 'primary.main',
+                                        fontWeight: 600,
+                                        '&.Mui-selected': {
+                                            backgroundColor: 'primary.main',
+                                            color: 'primary.contrastText',
+                                            '&:hover': { backgroundColor: 'primary.dark' },
+                                        },
+                                    },
+                                }}
+                            >
+                                {rankOptions.map((n) => (
+                                    <ToggleButton
+                                        key={n}
+                                        value={n}
+                                        aria-label={`${n} ranks`}
+                                        // Snug single-digit chip; 44px tall keeps a mobile touch target.
+                                        sx={{ minWidth: 40, minHeight: 44, px: 0, py: 0.5 }}
+                                    >
+                                        {n}
+                                    </ToggleButton>
+                                ))}
+                            </ToggleButtonGroup>
                         </Box>
                     )}
                     {/* Note: this can't use ElectionSwitchSetting because we need to use the results from makePublicResultsRequest as the source of truth */}

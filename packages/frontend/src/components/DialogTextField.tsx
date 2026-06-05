@@ -20,6 +20,7 @@ export interface DialogTextFieldProps {
     placeholder?: string;
     inputProps?: Record<string, unknown>;
     validate?: (value: string) => string | null;
+    /** Shown (as an actionable cue) when the value is empty. */
     emptyDisplay?: string;
     ariaLabel?: string;
 }
@@ -33,7 +34,7 @@ export default function DialogTextField({
     placeholder,
     inputProps,
     validate,
-    emptyDisplay = '—',
+    emptyDisplay = 'Click to add',
     ariaLabel,
 }: DialogTextFieldProps) {
     const [open, setOpen] = useState(false);
@@ -75,32 +76,67 @@ export default function DialogTextField({
         }
     };
 
-    const display = value === '' || value === undefined || value === null ? emptyDisplay : String(value);
+    // Open the editor when the whole row is activated via keyboard (Enter/Space).
+    const handleRowKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+        if (disabled) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleOpen();
+        }
+    };
+
+    const isEmpty = value === '' || value === undefined || value === null;
+    const display = isEmpty ? emptyDisplay : String(value);
 
     return <>
         <Box
+            onClick={handleOpen}
+            onKeyDown={handleRowKeyDown}
+            role={disabled ? undefined : 'button'}
+            tabIndex={disabled ? undefined : 0}
+            aria-label={disabled ? undefined : `Edit ${label}`}
             sx={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 gap: 1,
                 py: 1,
+                px: 1,
+                mx: -1,
+                borderRadius: 1,
+                cursor: disabled ? 'default' : 'pointer',
+                opacity: disabled ? 0.6 : 1,
+                transition: 'background-color 0.15s',
+                '&:hover': disabled ? undefined : { backgroundColor: 'action.hover' },
+                '&:focus-visible': disabled
+                    ? undefined
+                    : { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: '2px' },
             }}
         >
             <Box sx={{ minWidth: 0 }}>
-                <Typography component='div' variant='body2' color='text.secondary'>{label}</Typography>
-                <Typography component='div' sx={{ wordBreak: 'break-word' }}>{display}</Typography>
+                <Typography component='div' sx={{ fontWeight: 500 }}>{label}</Typography>
+                <Typography
+                    component='div'
+                    sx={{
+                        wordBreak: 'break-word',
+                        ...(isEmpty ? { color: 'primary.main', fontStyle: 'italic' } : {}),
+                    }}
+                >
+                    {display}
+                </Typography>
             </Box>
-            <IconButton
-                onClick={handleOpen}
-                disabled={disabled}
-                aria-label={`Edit ${label}`}
-                size='small'
-            >
-                <EditIcon fontSize='small' />
-            </IconButton>
+            {!disabled && (
+                <IconButton
+                    onClick={(e) => { e.stopPropagation(); handleOpen(); }}
+                    aria-label={`Edit ${label}`}
+                    size='small'
+                    color='primary'
+                >
+                    <EditIcon fontSize='small' />
+                </IconButton>
+            )}
         </Box>
-        <Dialog open={open} onClose={handleClose} fullWidth maxWidth='xs' aria-label={label}>
+        <Dialog open={open} onClose={handleClose} fullWidth maxWidth='sm' aria-label={label}>
             <DialogTitle>{label}</DialogTitle>
             <DialogContent>
                 <TextField
