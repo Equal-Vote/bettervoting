@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import { Accordion, AccordionDetails, AccordionSummary, Box, IconButton, Link, MenuItem } from '@mui/material';
@@ -10,7 +10,7 @@ import useFeatureFlags from './FeatureFlagContextProvider';
 import { openFeedback, scrollToElement, useSubstitutedTranslation } from './util';
 import { makeID, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
 
-import { ReturnToClassicContext } from './ReturnToClassicDialog';
+
 import { useCookie } from '~/hooks/useCookie';
 import NavMenu from './NavMenu';
 import { PrimaryButton } from './styles';
@@ -63,12 +63,12 @@ const Header = () => {
                     target: '_self',
                 },
                 {
-                    text: 'Approval',
+                    text: 'Approval Voting',
                     href: 'https://www.equal.vote/approval',
                     target: '_self',
                 },
                 {
-                    text: 'STAR PR',
+                    text: 'Proportional STAR Voting',
                     href: 'https://www.equal.vote/pr',
                     target: '_self',
                 },
@@ -113,8 +113,6 @@ const Header = () => {
         createWizardNav('Create Election', isLandingPage),
     ] as any[];
 
-    const returnToClassicContext = useContext(ReturnToClassicContext);
-
     return (
         <AppBar className="navbar" position="sticky" sx={{ backgroundColor: /*"darkShade.main"*/"black", '@media print': {display: 'none', boxShadow: 'none'}}}>
             <Toolbar>
@@ -154,9 +152,7 @@ const Header = () => {
                         <MenuItem onClick={openFeedback}>
                             {t('nav.feedback')}
                         </MenuItem>
-                        <MenuItem onClick={returnToClassicContext.openDialog}>
-                            {t('return_to_classic.button')}
-                        </MenuItem>
+
                     </NavMenu>
                 </Box>
 

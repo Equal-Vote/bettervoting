@@ -22,7 +22,7 @@ const HeadToHeadChart = (
                 const n = Math.round(20*e.count/midVotes)
                 const p = [...new Array(n)].map(() => '█').join('')+' '+Math.round(100*e.count/midVotes)+'%';
                 if(race.voting_method == 'STAR' || race.voting_method == 'STAR_PR')
-                    return `${e.name}⭐: ${p}`
+                    return `${e.name} ⭐: ${p}`
                 if(race.voting_method == 'Approval')
                     return <>
                         {(e.name == '1') ? [...new Array(4)].map(() => <>&nbsp;</>) : ''}
