@@ -7,7 +7,7 @@ import { RACE_FORM_GAP } from "../Races/RaceForm";
 
 export default ({multiRace, setMultiRace}) => {
     const {election, updateElection, t} = useElection();
-    return <Box sx={{ m: 0, p: 1, mb: RACE_FORM_GAP, display: "flex", flexDirection: "column", justifyContent: "flexStart", alignItems: "left", gap: RACE_FORM_GAP }}>
+    return <Box sx={{ m: 0, p: 1, mb: RACE_FORM_GAP, display: "flex", flexDirection: "column", justifyContent: "flex-start", alignItems: "stretch", gap: RACE_FORM_GAP }}>
         <Box>
             <Typography sx={{textAlign: 'left'}}>
                 {t('wizard.term_question')}

@@ -39,7 +39,7 @@ const App = () => {
       ]}>
         <CssBaseline />
         {/* Disabling drag over globally so that dragging/dropping images doesn't accidentally open a new tab*/}
-        <Box display='flex' flexDirection='column' minHeight={'100vh'} sx={{backgroundColor:'white'}} onDragOver={(e) => e.preventDefault()} onDrop={(e) => e.preventDefault()} >
+        <Box sx={{backgroundColor:'white', display: 'flex', flexDirection: 'column', minHeight: '100vh'}} onDragOver={(e) => e.preventDefault()} onDrop={(e) => e.preventDefault()} >
           <Header />
           <Box
             sx={{
