@@ -403,6 +403,7 @@ footer:
     for polling, surveys, and real elections at any scale and for any scenario.
 
 
+    BetterVoting.com is the successor to the star.vote app. The classic experience is still available at [classic.star.vote](https://classic.star.vote).
 
   # TODO: I'll add this section to project description once we have those features in place
   # All of our voting methods can be used for single winner, multi-winner, or 
@@ -812,7 +813,7 @@ tips:
     title: One for per User
     description: >
       Only allow votes from people who have created a BetterVoting account and verified their email address. 
-      Great for maximizing security for anonymous public {{capital_elections}}. 
+      Great for maximizing security for anonymous public {{elections}}. 
 
   election_title:
     title: Title
@@ -829,15 +830,15 @@ tips:
   
   star:
     title: $t(methods.star.full_name)
-    description: Voters score {{capital_candidates}} from 5 stars (best) to 0 stars (worst). The two top-scored {{candidates}} are finalists, finalist with the most votes wins.
+    description: Voters score {{candidates}} from 5 stars (best) to 0 stars (worst). The two top-scored {{candidates}} are finalists, finalist with the most votes wins.
 
   approval:
     title: $t(methods.approval.full_name)
-    description: Voters approve as many {{capital_candidates}} as they like, and then the {{candidate}} with the most approvals wins.
+    description: Voters approve as many {{candidates}} as they like, and then the {{candidate}} with the most approvals wins.
 
   ranked_robin:
     title: $t(methods.ranked_robin.full_name)
-    description: The candidate preferred over all others wins. (Also known as Condorcet.)
+    description: The {{candidate}} preferred over all others wins. (Also known as Condorcet.)
 
 #######################################
 #### PRIORITY 99 : Everything Else ####

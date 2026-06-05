@@ -58,7 +58,7 @@ const ResultsPieChart = ({ data, colorOffset = 0, star = false, runoff = false, 
   // Truncate names
   data = rawData.map((d, i) => ({
     ...d,
-    name: (star && i == 0 ? "⭐" : "") + truncName(d["name"], 20),
+    name: (star && i == 0 ? "⭐ " : "") + truncName(d["name"], 20),
   }));
 
   return (

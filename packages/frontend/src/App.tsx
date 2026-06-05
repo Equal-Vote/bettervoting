@@ -1,4 +1,4 @@
-import { useContext, useEffect } from 'react'
+import { useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
 import { ThemeContextProvider } from './theme'
 import Header from './components/Header'
@@ -18,33 +18,15 @@ import OpenElections from './components/Elections/OpenElections'
 import { FeatureFlagContextProvider } from './components/FeatureFlagContextProvider'
 import ComposeContextProviders from './components/ComposeContextProviders'
 import './i18n/i18n'
-import ReturnToClassicDialog, { ReturnToClassicContext, ReturnToClassicContextProvider } from './components/ReturnToClassicDialog'
-import { useSubstitutedTranslation } from './components/util'
 import UploadElections from './components/UploadElections'
 import Redirect from './components/Redirect'
 import PublicArchive from './components/Elections/PublicArchive'
 import NameMatchingTester from './components/NameMatchingTester'
 import StyleGuide from './components/StyleGuide'
-import { PrimaryButton } from './components/styles'
 import ScrollToTop from './hooks/scrollToTop'
 import QueryTool from './components/Elections/QueryTool'
 
 const App = () => {
-  const {t} = useSubstitutedTranslation();
-
-  const ReturnToClassicLayer = () => {
-    const returnToClassicContext = useContext(ReturnToClassicContext);
-    return <>
-      <Box sx={{ position: 'fixed', pointerEvents: 'none', display: {xs: 'none', md: 'flex'}, flexDirection: 'column-reverse', alignItems: 'flex-end', width: '100%', height: '100%', paddingBottom: '90px', paddingRight: '30px'}}>
-          {/*Color is copied from the feedback button*/}
-          <PrimaryButton sx={{pointerEvents: 'auto', width: '170px', fontSize: 10}}  onClick={returnToClassicContext.openDialog} aria-label="Return to Classic" >
-              {t('return_to_classic.button')}
-          </PrimaryButton >
-      </Box>
-      <ReturnToClassicDialog/>
-    </>
-  }
-
   return (
     <Router>
       <ScrollToTop/>
@@ -54,12 +36,10 @@ const App = () => {
         AuthSessionContextProvider,
         ConfirmDialogProvider,
         SnackbarContextProvider,
-        ReturnToClassicContextProvider,
       ]}>
         <CssBaseline />
         {/* Disabling drag over globally so that dragging/dropping images doesn't accidentally open a new tab*/}
         <Box display='flex' flexDirection='column' minHeight={'100vh'} sx={{backgroundColor:'white'}} onDragOver={(e) => e.preventDefault()} onDrop={(e) => e.preventDefault()} >
-          <ReturnToClassicLayer/>
           <Header />
           <Box
             sx={{
