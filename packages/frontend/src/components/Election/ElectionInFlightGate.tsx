@@ -20,35 +20,32 @@ export default function ElectionInFlightGate({ children }: { children: ReactNode
 
     useEffect(() => {
         const el = ref.current;
-        if (!el) return;
+        // setAttribute is the only way to apply `inert` in React 17 —
+        // it's not in the prop type and would be stripped from JSX.
         if (inFlight) {
-            // setAttribute is the only way to apply `inert` in React 17 —
-            // it's not in the prop type and would be stripped from JSX.
-            el.setAttribute('inert', '');
-            el.setAttribute('aria-busy', 'true');
+            el?.setAttribute('inert', '');
+            el?.setAttribute('aria-busy', 'true');
         } else {
-            el.removeAttribute('inert');
-            el.removeAttribute('aria-busy');
-        }
-    }, [inFlight]);
-
-    useEffect(() => {
-        if (!inFlight) {
+            el?.removeAttribute('inert');
+            el?.removeAttribute('aria-busy');
             setShowOverlay(false);
             return;
         }
-        const timer = setTimeout(() => setShowOverlay(true), GRACE_MS);
-        return () => clearTimeout(timer);
-    }, [inFlight]);
 
-    useEffect(() => {
-        if (!inFlight) return;
+        // Delay the dimming overlay so fast writes don't flicker.
+        const timer = setTimeout(() => setShowOverlay(true), GRACE_MS);
+
+        // Guard tab close / reload while a write is outstanding.
         const handler = (e: BeforeUnloadEvent) => {
             e.preventDefault();
             e.returnValue = '';
         };
         window.addEventListener('beforeunload', handler);
-        return () => window.removeEventListener('beforeunload', handler);
+
+        return () => {
+            clearTimeout(timer);
+            window.removeEventListener('beforeunload', handler);
+        };
     }, [inFlight]);
 
     return (
