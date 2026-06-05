@@ -105,6 +105,10 @@ export default function ElectionSettings() {
                     <ElectionSwitchSetting settingKey="draggable_ballot" />
                     <ElectionSwitchSetting
                         settingKey="max_rankings"
+                        // Pass min/max as call-time values so the !tip(max_rankings) tooltip can
+                        // substitute {{min_rankings}}/{{max_rankings}} in its description. applyTips
+                        // forwards only the call argument (not the hook's values) into the <Tip>.
+                        label={t('election_settings.max_rankings', { min_rankings, max_rankings })}
                         onToggle={async (v) => !! await updateElection(e => e.settings.max_rankings = v ? default_rankings : undefined)}
                     />
 
