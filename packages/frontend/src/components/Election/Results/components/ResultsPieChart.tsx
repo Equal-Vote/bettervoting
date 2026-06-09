@@ -22,7 +22,7 @@ const ResultsPieChart = ({ data, colorOffset = 0, star = false, runoff = false, 
     outerRadius,
     percent,
     index,
-  }) => {
+  }: any) => {
     const RADIAN = Math.PI / 180;
     const radius = innerRadius*.3 + outerRadius*.7; // bias toward the outside to give more space for the text
     const x = cx + radius * Math.cos(-midAngle * RADIAN);

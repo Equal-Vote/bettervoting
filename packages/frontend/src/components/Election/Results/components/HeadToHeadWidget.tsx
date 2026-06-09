@@ -56,7 +56,7 @@ const HeadToHeadWidget = () => {
         </Select>
         <Divider variant='middle' sx={{width: '100%', m: 3}}/>
         <Typography variant='h6'>{refCandidate.name} won {wins} matchups, and lost {losses}.</Typography>
-        <Box display='flex' flexDirection='column' gap={4} sx={{my: 3, width: '100%', overflowY: {xs: 'unset', md: 'scroll'}, maxHeight: {xs: 'unset', md: '750px'}}}>
+        <Box sx={{ my: 3, width: '100%', overflowY: {xs: 'unset', md: 'scroll'}, maxHeight: {xs: 'unset', md: '750px'}, display: "flex", flexDirection: "column", gap: 4 }}>
             {candidates.filter(c => c.id != refCandidateId).map((c,i) => {
                 const m = matchups[c.id];
                 return <HeadToHeadChart

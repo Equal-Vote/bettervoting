@@ -1,6 +1,5 @@
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
 import { Box, MenuItem, Select, Typography } from "@mui/material";
-import _uniqueId from "lodash/uniqueId";
 import React, { ReactNode, useRef, useState } from "react";
 import useAnonymizedBallots from "~/components/AnonymizedBallotsContextProvider";
 import { scrollToElement } from "~/components/util";
@@ -24,7 +23,7 @@ interface DetailExpanderProps {
 
 const DetailExpander = ({ children, level = 0 }: DetailExpanderProps) => {
   const [viewDetails, setViewDetails] = useState(false);
-  const expanderId = useRef(_uniqueId("detailExpander")).current;
+  const boxRef = useRef<HTMLDivElement>(null);
   const {ballots, fetchBallots} = useAnonymizedBallots();
   const [selector, setSelector] = useState(0);
   const selectorTitleKeys = new Map();
@@ -48,7 +47,8 @@ const DetailExpander = ({ children, level = 0 }: DetailExpanderProps) => {
   return (
     <>
       <Box
-        className={`detailExpander ${expanderId}`}
+        ref={boxRef}
+        className="detailExpander"
         sx={{
           display: "flex",
           flexDirection: "row",
@@ -59,7 +59,7 @@ const DetailExpander = ({ children, level = 0 }: DetailExpanderProps) => {
         }}
         onClick={() => {
           if (!viewDetails)
-            scrollToElement(document.querySelector(`.${expanderId}`));
+            scrollToElement(boxRef.current);
           fetchBallots();
           setViewDetails(!viewDetails);
         }}

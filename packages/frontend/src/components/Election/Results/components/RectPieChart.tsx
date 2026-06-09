@@ -14,10 +14,10 @@ const RectPieChart = (
     const total = data.map(d => d.value).reduce((sum, v) => sum + v);
 
     return <Box sx={{mx: 8}}>
-        <Box height='38px' display='flex' flexDirection='row'>
+        <Box sx={{ height: "38px", display: "flex", flexDirection: "row" }}>
             {data.filter((d) => (d.value / total) > .001).map((d, i) => {
                 const percent = `${Math.round((d.value / total)*100)}%`
-                return <Box key={i} width={percent} sx={{backgroundColor:CHART_COLORS[i % CHART_COLORS.length], textAlign: 'left', pt: 1, pl: 1, fontSize: '1rem', overflow: 'visible', zIndex: 1}}>
+                return <Box key={i} sx={{ backgroundColor:CHART_COLORS[i % CHART_COLORS.length], textAlign: 'left', pt: 1, pl: 1, fontSize: '1rem', overflow: 'visible', zIndex: 1, width: percent }}>
                     {percent}
                 </Box>
             })}

@@ -160,7 +160,7 @@ const Wizard = () => {
                     <Box sx={{position: 'relative'}}>
                         <TransitionBox absolute enabled={multiRace === true} sx={{textAlign: 'left', pl: 1}}>
                             {t('wizard.add_races_later')}
-                            <Box display='flex' flexDirection='row' justifyContent='flex-end' gap={1} sx={{mt: 3}}>
+                            <Box sx={{ mt: 3, display: "flex", flexDirection: "row", justifyContent: "flex-end", gap: 1 }}>
                                 <PrimaryButton onClick={() => setPage(1)}>Next</PrimaryButton>
                             </Box>
                         </TransitionBox>

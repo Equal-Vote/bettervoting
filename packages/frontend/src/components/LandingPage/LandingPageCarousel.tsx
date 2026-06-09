@@ -120,18 +120,13 @@ const LandingPageCarousel = () => {
         }
     };
 
-    return <Box width='90%' display='flex' flexDirection='row' justifyContent='space-between' sx={{alignItems: 'center' }}>
+    return <Box sx={{ alignItems: 'center', width: "90%", display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
         <ArrowBack sx={{...arrowSX, opacity: (methodIndex == 0? 0 : 1)}} onClick={() => nextMethod(-1)}/>
-        <Box className={`${transitionStep == 0 ? 'heroFadeOut' : 'heroFadeIn'}`} 
-            display='flex' gap='50px'
-            sx={{
-                alignItems: 'center',
+        <Box className={`${transitionStep == 0 ? 'heroFadeOut' : 'heroFadeIn'}`} sx={{ alignItems: 'center',
                 margin: 'auto',
                 flexDirection: {xs: 'column', md: 'row'},
                 // height must be hard coded so that there isn't resizing when cycling between slides
-                height: {xs: '500px', md: '300px'}
-            }}
-        >
+                height: {xs: '500px', md: '300px'}, display: "flex", gap: "50px" }}>
             <Box sx={{textAlign: {xs: 'center', md: 'left'}}}>
                 <Typography variant="h3" color={'lightShade.contrastText'}>
                     {t(`landing_page.hero.methods.${methodKeys[animIndex]}.title`)} 
