@@ -262,7 +262,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
                             onDeleteCandidate={() => onDeleteCandidate(index)}
                             disabled={election.state !== 'draft'}
                             special={index > newCandidateIndex}
-                            inputRef={(el: React.MutableRefObject<HTMLInputElement[]>) => inputRefs.current[index] = el}
+                            inputRef={(el: HTMLInputElement | null) => { inputRefs.current[index] = el; }}
                             onKeyDown={(event: React.KeyboardEvent<HTMLInputElement>) => handleKeyDown(event, index)}
                             electionState={election.state} />
                     </SortableList.Item>
