@@ -55,7 +55,7 @@ const CandidatePhotoDialog = ({ onEditCandidate, candidate, open, handleClose }:
                         helperText='Replace Photo'
                         insideDialog
                     >
-                        <Box display={'flex'} flexDirection={'column'} justifyContent={'center'} alignItems={'center'} height='100%'>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: "100%" }}>
                             <CandidatePhoto candidate={candidate} size={'100%'}/>
                             {!candidate.photo_filename && <>
                                 <Typography id='candidate-photo-caption' variant="h6" component="h6" style={{ marginTop: 0 }}>Candidate Photo</Typography>
@@ -66,7 +66,7 @@ const CandidatePhotoDialog = ({ onEditCandidate, candidate, open, handleClose }:
                         </Box>
                     </FileDropBox>
 
-                {candidate.photo_filename && <Box display='flex' flexDirection='column' alignItems='center' gap={1} sx={{mt: 1}}>
+                {candidate.photo_filename && <Box sx={{ mt: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
                     <SecondaryButton onClick={() => inputRef.current.click()} sx={{ p: 1, margin: '0 auto', width: '150px' }}>Select File</SecondaryButton>
                 </Box>}
             </Box>
@@ -180,7 +180,7 @@ interface CandidateFormProps {
     onDeleteCandidate: () => void,
     disabled: boolean,
     special: boolean, // special candidates include none of the above and write in, and they can be deleted, but not edited
-    inputRef: (el: React.MutableRefObject<HTMLInputElement[]>) => React.MutableRefObject<HTMLInputElement[]>,
+    inputRef: React.Ref<HTMLInputElement>,
     onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void,
     electionState: string
 }
@@ -206,10 +206,7 @@ export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
         >
-            <Box
-                sx={{ display: 'flex', justifyContent: 'space-between', bgcolor: 'background.paper', borderRadius: 10 }}
-                alignItems={'center'}
-            >
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', bgcolor: 'background.paper', borderRadius: 10, alignItems: 'center' }}>
                <DragHandle className="candidate-actions" sx={{ opacity: 0, transition: 'opacity 150ms ease' }} disabled={disabled || special || isEmpty} ariaLabel={`Drag Candidate Number ${index + 1}`}/>
 
                 <Box sx={{ overflow: 'hidden', textOverflow: 'ellipsis', width: '100%' }}>
@@ -236,8 +233,11 @@ export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled
                         onKeyDown={onKeyDown}
                         onFocus={() => setFocused(true)}
                         onBlur={() => { setFocused(false); flushName(); }}
-                        // show underline when hovered OR focused OR when the candidate name is empty; always hide if it's a special candidate
-                        InputProps={{ disableUnderline: special || !(hovered || focused || isEmpty)}}
+                        slotProps={{
+                            htmlInput: { "aria-label": `Candidate ${index + 1} Name` },
+                            // show underline when hovered OR focused OR when the candidate name is empty; always hide if it's a special candidate
+                            input: { disableUnderline: special || !(hovered || focused || isEmpty) },
+                        }}
                         multiline
                     />
                 </Box>                    

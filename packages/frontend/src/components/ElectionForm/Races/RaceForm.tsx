@@ -55,7 +55,7 @@ export default function RaceForm({
             }
             {styling == 'Wizard' && <>
                 <InnerRaceForm {...editRace}/>
-                <Box display='flex' flexDirection='row' justifyContent='flex-end' gap={1} sx={{mt: 3}}>
+                <Box sx={{ mt: 3, display: "flex", flexDirection: "row", justifyContent: "flex-end", gap: 1 }}>
                     <PrimaryButton onClick={() => editRace.validateRace() && onConfirm(editRace.editedRace)}>Next</PrimaryButton>
                 </Box>
             </>}
@@ -288,7 +288,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
         </Stack>
     </FileDropBox>;
 
-    return <Box display='flex' flexDirection='column' alignItems='stretch' gap={RACE_FORM_GAP} sx={{textAlign: 'left'}}>
+    return <Box sx={{ textAlign: 'left', display: "flex", flexDirection: "column", alignItems: "stretch", gap: RACE_FORM_GAP }}>
         <TitleAndDescription setErrors={setErrors} errors={errors} editedRace={editedRace} applyRaceUpdate={applyRaceUpdate} open={open}/>
 
         {candidatesSection}

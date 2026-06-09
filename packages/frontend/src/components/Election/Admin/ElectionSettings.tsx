@@ -71,7 +71,7 @@ export default function ElectionSettings() {
     );
 
     return <>
-        <Grid item xs={12} sx={{ m: 0, my: 0, p: 1 }}>
+        <Grid size={12} sx={{ m: 0, my: 0, p: 1 }}>
             <FormControl disabled={election.state !== 'draft'} component="fieldset" variant="standard">
                 <FormGroup>
                     <FormControlLabel control={
@@ -120,16 +120,7 @@ export default function ElectionSettings() {
                         onToggle={async (v) => !! await updateElection(e => e.settings.max_rankings = v ? default_rankings : undefined)}
                     />
 
-                    <TextField
-                        id="rank-limit"
-                        type="number"
-                        value={currentMaxRankings}
-                        onChange={(e) => setCurrentMaxRankings(Number(e.target.value))}
-                        variant='standard'
-                        InputProps={{ inputProps: { min: min_rankings, max: max_rankings, "aria-label": "Rank Limit" } }}
-                        sx={{ pl: 4, mt: -1, display: 'block'}}
-                        disabled={election.state !== 'draft' || !election.settings.max_rankings}
-                    />
+                    <TextField id="rank-limit" type="number" value={currentMaxRankings} onChange={(e) => setCurrentMaxRankings(Number(e.target.value))} variant='standard' sx={{ pl: 4, mt: -1, display: 'block'}} disabled={election.state !== 'draft' || !election.settings.max_rankings} slotProps={{ input: { inputProps: { min: min_rankings, max: max_rankings, "aria-label": "Rank Limit" } } }}/>
                     {/* Note: this can't use ElectionSwitchSetting because we need to use the results from makePublicResultsRequest as the source of truth */}
                     <SwitchSetting
                         label={election.state === 'closed' || election.state === 'archived' ? t('election_settings.public_results') : t('election_settings.preliminary_results')}

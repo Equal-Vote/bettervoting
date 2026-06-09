@@ -571,12 +571,7 @@ export default function EnhancedTable(props: EnhancedTableProps) {
 
   return (
     <Container>
-      <Box
-        display='flex'
-        justifyContent="center"
-        alignItems="center"
-        flexDirection="column"
-        sx={{ pt: 2, width: '100%' }}>
+      <Box sx={{ pt: 2, width: '100%', display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column" }}>
         {props.isPending && <Typography align='center' variant="h3" component="h2"> {props.pendingMessage} </Typography>}
         {!props.isPending && <Paper elevation={8} sx={{ width: '100%', mb: 2 }}>
           <EnhancedTableToolbar numSelected={selected.length} tableTitle={props.title} />

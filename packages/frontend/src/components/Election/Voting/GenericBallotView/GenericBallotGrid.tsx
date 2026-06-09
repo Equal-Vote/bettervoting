@@ -133,10 +133,10 @@ export default function GenericBallotGrid({
             {leftTitle != '' && <>
                 {/* 1 px / 100 px is a hack to make sure the titles don't affect the other boxes in the column */}
                 <Box sx={{ width: '1px', margin: 'auto', gridArea: makeArea(1, 2) }}>
-                    <Typography width='100px' align='center' className="columnDescriptor" sx={{ transform: 'translate(-50%)' }}>{leftTitle}</Typography>
+                    <Typography align='center' className="columnDescriptor" sx={{ width: '100px', transform: 'translate(-50%)' }}>{leftTitle}</Typography>
                 </Box>
                 <Box sx={{ width: '1px', margin: 'auto', gridArea: makeArea(1, 1 + columns.length) }}>
-                    <Typography width='100px' align='center' className="columnDescriptor" sx={{ transform: 'translate(-50%)' }}>{rightTitle}</Typography>
+                    <Typography align='center' className="columnDescriptor" sx={{ width: '100px', transform: 'translate(-50%)' }}>{rightTitle}</Typography>
                 </Box>
             </>}
 

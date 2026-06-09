@@ -1,7 +1,7 @@
 import { Box, Button, ClickAwayListener, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Link, Paper, TextFieldProps, Tooltip, Typography } from "@mui/material"
 import { TextField } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import { ReactNode, useState, isValidElement } from "react";
+import React, { ReactNode, useState, isValidElement } from "react";
 import en from './en.yaml';
 import { useSubstitutedTranslation } from "./util";
 import useRace from "./RaceContextProvider";
@@ -13,7 +13,7 @@ import { ButtonProps } from "@mui/material";
 type TipName = keyof typeof en.tips;
 
 
-export const Tip = (props: {name?: TipName, children?: ReactNode, content?: {title:string, description:string | JSX.Element}, values? : object}) => {
+export const Tip = (props: {name?: TipName, children?: ReactNode, content?: {title:string, description:string | React.JSX.Element}, values? : object}) => {
     // TODO: maybe I can insert useElection and useRace within useSubstitutedTranslation?
     const {t: ts, i18n} = useSubstitutedTranslation('election');
     const {t: te} = useElection();
@@ -26,18 +26,12 @@ export const Tip = (props: {name?: TipName, children?: ReactNode, content?: {tit
     const [hovered, setHovered] = useState(false);
     const learnLinkKey = props.name ? `tips.${props.name as string}.learn_link` : 'asdfasdf';
     return <ClickAwayListener onClickAway={() => setClicked(false)}>
-        <Tooltip
-            title={<>
+        <Tooltip title={<>
                 <strong>{props.name ? t(`tips.${props.name as string}.title`, props.values ?? {}) : props.content.title}</strong>
                 <br/>
                 {props.name ? t(`tips.${props.name as string}.description`, props.values ?? {}) : props.content.description}
                 {i18n.exists(learnLinkKey) && <a href={t(learnLinkKey)} target='_blank' rel="noreferrer">Learn More</a>}
-            </>}
-            onOpen={() => setHovered(true)}
-            onClose={() => setHovered(false)}
-            open={clicked || hovered}
-            placement='top'
-            componentsProps={{
+            </>} onOpen={() => setHovered(true)} onClose={() => setHovered(false)} open={clicked || hovered} placement='top' slotProps={{
                 tooltip: {
                     sx: {
                         background: '#2B344AFF', 
@@ -45,8 +39,7 @@ export const Tip = (props: {name?: TipName, children?: ReactNode, content?: {tit
                         //boxShadow: '0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12)',
                     }
                 }
-            }}
-        >
+            }}>
             {props.children && isValidElement(props.children) ?
                 props.children
             : 
@@ -79,7 +72,7 @@ export const CandidatePhoto = (props) => {
         }}
     />
 
-    return <Box {...boxProps} width={props.size} height={props.size}>
+    return <Box {...boxProps} sx={{ width: props.size, height: props.size }}>
         <Photo size={size} clickable/>
         <Dialog open={open} maxWidth='xl'>
             <DialogTitle>{candidate.candidate_name}</DialogTitle>
@@ -135,32 +128,28 @@ export const FileDropBox = (props) => {
             ...props.sx,
         }}
     >
-        {onlyShowOnDrag && dragged && <Box
-            position='absolute'
-            display='flex'
-            flexDirection='column-reverse'
-            textAlign='center'
-            width={'100%'}
-            height={'100%'}
-            sx={{
+        {onlyShowOnDrag && dragged && <Box sx={{
                 pointerEvents: 'none',
                 backgroundColor: dragged ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0)',
-                zIndex: 1, // setting z-index so order is displayed correctly for the RaceForm case
-            }}
-        >
-            <Typography component='p' color='var(--brand-pop)' sx={{mb: 1}}><b>{helperText}</b></Typography>
+                zIndex: 1,
+                position: 'absolute',
+                display: 'flex',
+                flexDirection: 'column-reverse',
+                textAlign: 'center',
+                width: '100%',
+                height: '100%',
+            }}>
+            <Typography component='p' sx={{mb: 1, color: 'var(--brand-pop)'}}><b>{helperText}</b></Typography>
         </Box>}
         {/* Adding this as a separate outline so that outline overlays on the box in stead of offseting elements */}
-        <Box
-            position='absolute'
-            border={`4px dashed ${dragged ? 'var(--brand-pop)': (onlyShowOnDrag ? 'rgba(0, 0, 0, 0)' : 'rgb(112,112,112)')}`} 
-            width={'100%'}
-            height={'100%'}
-            sx={{
+        <Box sx={{
                 pointerEvents: 'none',
-                zIndex: 2, // setting z-index so order is displayed correctly for the RaceForm case
-            }}
-        />
+                zIndex: 2,
+                position: 'absolute',
+                border: `4px dashed ${dragged ? 'var(--brand-pop)': (onlyShowOnDrag ? 'rgba(0, 0, 0, 0)' : 'rgb(112,112,112)')}`,
+                width: '100%',
+                height: '100%',
+            }}/>
         {props.children}
     </Box>
 }

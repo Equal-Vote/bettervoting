@@ -94,22 +94,11 @@ export default ({onBack, multiRace, onAddElection}) => {
                 <StepLabel>{t('wizard.title_title')} <strong>{election.title && election.title}</strong></StepLabel>
                 <StepContent>
                     <Typography>{t('wizard.title_question')}</Typography>
-                    <TextField
-                        inputProps={{ "aria-label": "Title" }}
-                        error={false}
-                        required
-                        id="election-title"
-                        label={t('election_details.title')}
-                        type="text"
-                        value={election.title}
-                        sx={{
+                    <TextField error={false} required id="election-title" label={t('election_details.title')} type="text" value={election.title} sx={{
                             m: 0,
                             p: 0,
                             boxShadow: 2,
-                        }}
-                        fullWidth
-                        onChange={(e) => updateElection((election) => election.title = e.target.value)}
-                    />
+                        }} fullWidth onChange={(e) => updateElection((election) => election.title = e.target.value)} slotProps={{ htmlInput: { "aria-label": "Title" } }}/>
                     <FormHelperText error sx={{ pl: 1, pt: 0 }}>
                         {/* TODO: Add errors */}
                     </FormHelperText>
