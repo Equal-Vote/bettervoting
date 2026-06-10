@@ -320,7 +320,7 @@ function STARPRResultsViewer() {
         {flags.isSet('PR_CONTROLS') && <>
           <Typography sx={{mt: 2}}>Round Selector</Typography>
           <Pagination count={results.summaryData.weightedScoresByRound.length} page={page} onChange={handleChange} />
-          <Box display='flex' flexDirection='row' sx={{mb: 7, gap: 2}} >
+          <Box sx={{ mb: 7, gap: 2, display: "flex", flexDirection: "row" }}>
               <Button variant='outlined' onClick={() => setSortRound(page)}>Sort Candidates</Button>
               <Button variant='outlined' onClick={() => setMaxCandidates(c => c == 10 ? 1000 : 10)}>Toggle Candidate Limit</Button>
           </Box>
@@ -474,7 +474,7 @@ export default function Results({ race, results }: {race: Race, results: Electio
       <div className="flexContainer" style={{textAlign: 'center'}}>
         <Box sx={{pageBreakAfter:'avoid', pageBreakInside:'avoid', mx: 10}}>
         {results.summaryData.candidates.length === 1 && <>
-          <Typography variant='h5'>⭐{results.summaryData.candidates[0].name} wins uncontested⭐</Typography>
+          <Typography variant='h5'>⭐ {results.summaryData.candidates[0].name} wins uncontested ⭐</Typography>
           {results.writeInDiagnostics?.numScoresDisregarded > 0 &&
             <Typography component="p" sx={{color: '#808080', fontSize: '0.9rem', mt: 1}}>
               {results.writeInDiagnostics.numScoresDisregarded} write-in score{results.writeInDiagnostics.numScoresDisregarded === 1 ? '' : 's'} not counted.{' '}
@@ -495,7 +495,7 @@ export default function Results({ race, results }: {race: Race, results: Electio
           :
             <Typography variant='h5'>
             {(winnersLength < 80) ? 
-              <>⭐{winnersText}{t('results.win_title_postfix', {count: results.elected.length})} ⭐</>
+              <>⭐ {winnersText}{t('results.win_title_postfix', {count: results.elected.length})} ⭐</>
             :
               [t('results.win_long_title_prefix'), ...results.elected.map(elected => ([<br key={elected.index}/>, `${elected.name}`])).flat()]
             }

@@ -105,9 +105,9 @@ export default function DraggableIRVBallotView() {
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <Box border={2} sx={{ mt: 0, ml: 0, mr: 0, width: '100%' }} className="ballot">
+      <Box className="ballot" sx={{ mt: 0, ml: 0, mr: 0, width: '100%', border: 2 }}>
       <Box sx={{ p: 3 }}>
-        <Typography align="center" variant="h5" component="h4" fontWeight="bold" sx={{ mb: 2 }}>
+        <Typography align="center" variant="h5" component="h4" sx={{ mb: 2, fontWeight: "bold" }}>
           {ballotContext.race.title}
         </Typography>
 

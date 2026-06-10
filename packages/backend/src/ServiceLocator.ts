@@ -136,7 +136,7 @@ function emailEventsDb(): EmailEventsDB {
 
 function castVoteStore(): CastVoteStore {
     if (_castVoteStore == null) {
-        _castVoteStore = new CastVoteStore(postgres());
+        _castVoteStore = new CastVoteStore(database());
     }
     return _castVoteStore;
 }

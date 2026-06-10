@@ -28,7 +28,7 @@ const Election = () => {
   return (
     <ElectionContextProvider id={id} >
       <AnonymizedBallotsContextProvider id={id}>
-        <Box display='flex' sx={{flexDirection: {xs: 'column', md: 'row'}, mt: {xs: 0, sm: 5}, mb: {xs: 0, sm: 5}}}>
+        <Box sx={{ flexDirection: {xs: 'column', md: 'row'}, mt: {xs: 0, sm: 5}, mb: {xs: 0, sm: 5}, display: "flex" }}>
           <Box sx={{maxWidth: {xs: '100%', md: '16%'}}}>
             <Sidebar />
           </Box>

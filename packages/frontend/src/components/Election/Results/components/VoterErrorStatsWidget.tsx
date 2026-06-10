@@ -78,7 +78,7 @@ const VoterErrorStatsWidget = () => {
     ];
 
     return <Widget title={t('results_ext.voter_error_title')} wide>
-        <Box width='100%' display='flex' flexDirection='column' gap={4}>
+        <Box sx={{ width: "100%", display: "flex", flexDirection: "column", gap: 4 }}>
             <Box>
                 <Typography><b>{formatPercent(results.summaryData.nAbstentions / totalVotes)}</b> of voters abstained from this race</Typography>
                 <ResultsBarChart data={abstentionData} xKey='votes' percentage/>

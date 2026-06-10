@@ -6,12 +6,7 @@ import ResultsBarChart from './Election/Results/components/ResultsBarChart';
 
 const StyleGuide = () => {
     return (<>
-        <Box
-            display='flex'
-            justifyContent="center"
-            alignItems="center"
-            sx={{ width: '100%', textAlign: 'center'}}
-        >
+        <Box sx={{ width: '100%', textAlign: 'center', display: "flex", justifyContent: "center", alignItems: "center" }}>
             <Box sx={{width: '100%', maxWidth: '1200px', m: {xs: 0, m: 2}, p: {xs: 1, m: 2}, backgroundColor:'brand.white', marginBottom: 2, '@media print': { boxShadow: 'none'}}}>
                 <Typography variant="h3" component="h3" sx={{marginBottom: 4}}>
                     Style Guide Reference (h3)

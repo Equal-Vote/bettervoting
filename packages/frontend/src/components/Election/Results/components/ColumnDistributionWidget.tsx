@@ -34,7 +34,7 @@ const ColumnDistributionWidget = () => {
         incIndex(numColumns, definedScores.length);
     })
 
-    whichColumns = whichColumns.map(c => ({...c, name: c.name == 'blank'? 'blank' : `${c.name}⭐`}))
+    whichColumns = whichColumns.map(c => ({...c, name: c.name == 'blank'? 'blank' : `${c.name} ⭐`}))
 
     return <Widget title={t(`results_ext.column_distribution_title`)} wide>
         <Typography variant='h6'>{t(`results_ext.column_distribution_num_avg`, {count: Math.round(100*totalColumns / b.length)/100})}</Typography>

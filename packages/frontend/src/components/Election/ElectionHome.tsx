@@ -44,7 +44,7 @@ const ElectionHome = () => {
             </Box>
           }
           <Box sx={{ flexGrow: 0 }}>
-            <Typography align='center' gutterBottom variant="h3" component="h3" fontWeight={'bold'}>
+            <Typography align='center' gutterBottom variant="h3" component="h3" sx={{ fontWeight: 'bold' }}>
               {election.title}
             </Typography>
           </Box>
@@ -76,9 +76,9 @@ const ElectionHome = () => {
             {
               (voterAuth.has_voted == false || canUpdateBallot) && voterAuth.authorized_voter && !voterAuth.required &&
 
-              <Box display='flex' flexDirection='column' alignItems='center' gap={5} sx={{ p: 1}}>
+              <Box sx={{ p: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 5 }}>
                 <PrimaryButton fullWidth href={`/${String(election?.election_id)}/vote`} name='vote' >
-                  <Typography align='center' variant="h3" component="h3" fontWeight='bold' sx={{ p: 2 }}>
+                  <Typography align='center' variant="h3" component="h3" sx={{ p: 2, fontWeight: "bold" }}>
                     {/*display edit ballot or vote text conditionally*/}
                     {voterAuth.has_voted ? t('editable_ballots.edit_vote') : t('election_home.vote')}
                   </Typography>
@@ -92,9 +92,9 @@ const ElectionHome = () => {
               }
             </>}
           {election.state === 'draft' && <>
-            <Box display='flex' flexDirection='column' alignItems='center' gap={3} sx={{ p: 1}}>
+            <Box sx={{ p: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
               <PrimaryButton fullWidth href={`/${String(election?.election_id)}/vote`} name='vote' >
-                <Typography align='center' variant="h3" component="h3" fontWeight='bold' sx={{ p: 2 }}>
+                <Typography align='center' variant="h3" component="h3" sx={{ p: 2, fontWeight: "bold" }}>
                   {t('election_home.vote')}
                 </Typography>
               </PrimaryButton >
@@ -116,7 +116,7 @@ const ElectionHome = () => {
             </Box>
           }
           {voterAuth.has_voted == true && !canUpdateBallot &&
-            <Box display='flex' flexDirection='column' alignItems='center' gap={5} sx={{ p: 1}}>
+            <Box sx={{ p: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 5 }}>
               <Typography align='center' variant="h6" component="h6">
                 {t('election_home.ballot_submitted')}
               </Typography>

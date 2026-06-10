@@ -38,7 +38,7 @@ const electionExistsByID = async (req: any, res: any, next: any) => {
     res.json({ exists: await ElectionsModel.electionExistsByID(req.params._id, req) })
 }
 
-const electionSpecificAuth = async (req: IRequest, res: any, next: any) => {
+const electionSpecificAuth = async (req: IElectionRequest, res: any, next: any) => {
     if (!req.election){
         return next();
     }

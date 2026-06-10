@@ -99,19 +99,12 @@ export default function Sidebar() {
     return (
         <>
             {voterAuth?.roles?.length > 0 &&
-                <Box
-                    display='flex'
-                    flexDirection='column'
-                    justifyContent="center"
-                    alignItems="center"
-                    sx={{
-                        position: 'sticky',
+                <Box sx={{ position: 'sticky',
                         top: '120px', // there's probably a more elegant solution than setting top manually
                         alignSelf: 'flex-start',
                         "@media print": {
                             display: 'none',
-                        }
-                    }}>
+                        }, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
                     <Paper elevation={3}>
                         {pages.map(p => (
                             <ListItem

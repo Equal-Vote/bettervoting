@@ -2,69 +2,96 @@ import { Ballot } from "@equal-vote/star-vote-shared/domain_model/Ballot";
 import { ElectionRoll } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll";
 import { ILoggingContext } from "../Services/Logging/ILogger";
 import Logger from "../Services/Logging/Logger";
-var pgFormat = require("pg-format");
+import { Kysely } from "kysely";
+import { Database } from "./Database";
+import { Uid } from "@equal-vote/star-vote-shared/domain_model/Uid";
+
+export type CastVoteEvent = {
+    requestId: Uid,
+    inputBallot: Ballot,
+    roll?: ElectionRoll,
+    userEmail?: string,
+    isBallotUpdate: boolean,
+}
 
 export default class CastVoteStore {
-    _postgresClient;
-    _ballotTableName: string;
-    _rollTableName: string;
+    _db: Kysely<Database>;
 
-    constructor(postgresClient: any) {
-        this._postgresClient = postgresClient;
-        this._ballotTableName = "ballotDB";
-        this._rollTableName = "electionRollDB";
+    constructor(db: Kysely<Database>) {
+        this._db = db;
     }
 
-    submitBallot(
-        ballot: Ballot,
-        roll: ElectionRoll,
-        ctx: ILoggingContext,
-        reason: String
-    ): Promise<Ballot> {
-        var ballotValues = [
-            ballot.ballot_id,
-            ballot.election_id,
-            ballot.user_id,
-            ballot.status,
-            ballot.date_submitted,
-            JSON.stringify(ballot.votes),
-            JSON.stringify(ballot.history),
-            ballot.precinct,
-        ];
+    async submitBallotEvent(event: CastVoteEvent, ctx: ILoggingContext): Promise<void> {
+        return this._db.transaction().execute(async (trx) => {
+                // Strip legacy fields (see Ballot.ts) so a crafted request body can't populate them.
+                const { user_id: _user_id, ip_hash: _ip_hash, ...ballotToInsert } = event.inputBallot;
+                ballotToInsert.update_date = Date.now().toString();
+                ballotToInsert.head = true;
+                ballotToInsert.create_date = new Date().toISOString();
 
-        const ballotSQL = pgFormat(
-            `INSERT INTO ${this._ballotTableName} (ballot_id,election_id,user_id,status,date_submitted,ip_hash,votes,history,precinct)
-        VALUES (%L);`,
-            ballotValues
-        );
+                if (event.isBallotUpdate) {
+                    const updateBallotResult = await trx.updateTable('ballotDB')
+                        .where('ballot_id', '=', ballotToInsert.ballot_id)
+                        .where('election_id', '=', ballotToInsert.election_id)
+                        .where('head', '=', true)
+                        .set('head', false)
+                        .execute();
+                    
+                    if (Number(updateBallotResult[0].numUpdatedRows) === 0) {
+                        throw new Error("CONCURRENT_BALLOT_UPDATE_DETECTED"); 
+                    }
+                    
+                    Logger.debug(ctx, `User updates a ballot`);
+                } else {
+                    Logger.debug(ctx, `User submits a ballot`);
+                }
 
-        var rollSql = pgFormat(
-            `UPDATE ${this._rollTableName} SET ballot_id=%L, submitted=%L, state=%L, history=%L, registration=%L WHERE election_id=%L AND voter_id=%L;`,
-            roll.ballot_id,
-            roll.submitted,
-            roll.state,
-            JSON.stringify(roll.history),
-            JSON.stringify(roll.registration),
-            roll.election_id,
-            roll.voter_id,
-        );
-        Logger.debug(ctx, rollSql);
+                await trx.insertInto('ballotDB')
+                    .values(ballotToInsert)
+                    .execute();
 
-        const transactionSql = `BEGIN; ${ballotSQL} ${rollSql} COMMIT;`;
-        Logger.debug(ctx, transactionSql);
+                if (event.roll != null) {
+                    const originalUpdateDate = event.roll.update_date;
+                    event.roll.submitted = true;
+                    event.roll.update_date = Date.now().toString();
+                    event.roll.head = true;
 
-        var p = this._postgresClient.query({
-            rowMode: "array",
-            text: transactionSql,
-        });
+                    const updateResult = await trx.updateTable('electionRollDB')
+                        .where('election_id', '=', event.roll.election_id)
+                        .where('voter_id', '=', event.roll.voter_id)
+                        .where('head', '=', true)
+                        .where('update_date', '=', originalUpdateDate.toString()) // Optimistic Concurrency Control check
+                        .set('head', false)
+                        .execute();
+                    
+                    if (Number(updateResult[0].numUpdatedRows) === 0) {
+                        // OCC missed: someone updated this roll since we read it.
+                        // Distinguish "they already voted" (submitted=true on the winning
+                        // head row) from a true concurrent edit (admin state change,
+                        // sendInvites email_data update, etc.).
+                        const winningHead = await trx.selectFrom('electionRollDB')
+                            .where('election_id', '=', event.roll.election_id)
+                            .where('voter_id', '=', event.roll.voter_id)
+                            .where('head', '=', true)
+                            .select(['submitted'])
+                            .executeTakeFirst();
 
-        return p.then((res: any) => {
-            Logger.state(ctx, `Ballot submitted`, {
-                ballot: ballot,
-                roll: roll,
-                reason: reason,
-            });
-            return ballot;
+                        if (winningHead?.submitted) {
+                            throw new Error("ALREADY_VOTED");
+                        }
+                        if (winningHead) {
+                            throw new Error("CONCURRENT_ROLL_EDIT_DETECTED");
+                        }
+                    }
+
+                    // Strip legacy fields (see ElectionRoll.ts) so callers can't write them.
+                    const { address: _address, registration: _registration, ...rollToInsert } = event.roll;
+                    await trx.insertInto('electionRollDB')
+                        .values(rollToInsert)
+                        .execute();
+                        
+                    Logger.debug(ctx, `User submits a ballot`);
+                }
         });
     }
 }
