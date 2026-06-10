@@ -6,6 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Always use the full remote URL (not a remote name) when running git push (e.g. `git push https://github.com/ArendPeter/bettervoting.git <branch>`).
 - Never push to any URL matching `github.com/Equal-Vote/*` without explicit confirmation.
 
+## Notes on dependencies
+- The root `package.json` `overrides` for `qs` exists because Netlify's npm mirror lagged behind npmjs.org for a freshly published patch (`qs@6.15.2`, May 2026) and `npm ci` failed with `ETARGET`. Safe to remove once you can confirm Netlify deploys without it.
+
 ## Commands
 
 ### Development
@@ -106,11 +109,11 @@ Playwright E2E tests. `playwright.config.ts` reads `FRONTEND_URL` from `testing/
 - Toggle settings (public results, rankings, etc.) → Settings (`/admin/settings`)
 - Share button → Publish & Share (`/admin/publish`)
 
-**MUI Switch targeting** — `getByRole('switch')` never matches (MUI renders `role="checkbox"`). `SwitchSetting` uses `FormControlLabel` with `labelPlacement="start"`, which creates a proper HTML label association, so switches can be targeted by label name:
+**MUI Switch targeting** — In MUI 9, Switch correctly uses `role="switch"`. `SwitchSetting` uses `FormControlLabel` with `labelPlacement="start"`, which creates a proper HTML label association, so switches can be targeted by label name:
 ```ts
-await page.getByRole('checkbox', { name: 'Random Candidate Order' }).click();
+await page.getByRole('switch', { name: 'Random Candidate Order' }).click();
 ```
-For i18n labels with `!tip()` syntax, match a substring: `{ name: /Set Number of Rankings/, exact: false }`.
+For i18n labels with `!tip()` syntax, match a substring: `{ name: /Set Number Of Rankings/, exact: false }`.
 
 **React Router trailing slash** — `waitForURL(**/${id}/)` always times out because React Router `<Link>` navigates to `/${id}` (no trailing slash). Remove these waits and rely on the next action's built-in wait instead.
 

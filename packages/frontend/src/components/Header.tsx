@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import { Accordion, AccordionDetails, AccordionSummary, Box, IconButton, Link, MenuItem } from '@mui/material';
@@ -10,20 +10,20 @@ import useFeatureFlags from './FeatureFlagContextProvider';
 import { openFeedback, scrollToElement, useSubstitutedTranslation } from './util';
 import { makeID, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
 
-import { ReturnToClassicContext } from './ReturnToClassicDialog';
+
 import { useCookie } from '~/hooks/useCookie';
 import NavMenu from './NavMenu';
 import { PrimaryButton } from './styles';
 import { useLocation } from 'react-router-dom'
 
 export const createWizardNav = (heading: string, isLandingPage: boolean) => {
-    return isLandingPage ? 
+    return isLandingPage ?
         {
             text: heading,
             onClick: () => scrollToElement(document.querySelector(`.wizard`)),
         } : {
             text: heading,
-            href: '/#wizard',
+            href: '/new_election',
             target: '_self',
         }
 };
@@ -63,12 +63,12 @@ const Header = () => {
                     target: '_self',
                 },
                 {
-                    text: 'Approval',
+                    text: 'Approval Voting',
                     href: 'https://www.equal.vote/approval',
                     target: '_self',
                 },
                 {
-                    text: 'STAR PR',
+                    text: 'Proportional STAR Voting',
                     href: 'https://www.equal.vote/pr',
                     target: '_self',
                 },
@@ -113,8 +113,6 @@ const Header = () => {
         createWizardNav('Create Election', isLandingPage),
     ] as any[];
 
-    const returnToClassicContext = useContext(ReturnToClassicContext);
-
     return (
         <AppBar className="navbar" position="sticky" sx={{ backgroundColor: /*"darkShade.main"*/"black", '@media print': {display: 'none', boxShadow: 'none'}}}>
             <Toolbar>
@@ -154,9 +152,7 @@ const Header = () => {
                         <MenuItem onClick={openFeedback}>
                             {t('nav.feedback')}
                         </MenuItem>
-                        <MenuItem onClick={returnToClassicContext.openDialog}>
-                            {t('return_to_classic.button')}
-                        </MenuItem>
+
                     </NavMenu>
                 </Box>
 
@@ -208,7 +204,7 @@ const Header = () => {
                             </MenuItem>
                             }
                             {!isLandingPage && 
-                            <MenuItem component={Link} href="/#wizard">
+                            <MenuItem component={Link} href="/new_election">
                                 {t('nav.new_election')}
                             </MenuItem>
                             }

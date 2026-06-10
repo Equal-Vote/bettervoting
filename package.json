@@ -28,12 +28,12 @@
   },
   "homepage": "https://github.com/Equal-Vote/bettervoting#readme",
   "devDependencies": {
-    "@playwright/test": "^1.51.1",
+    "@playwright/test": "^1.60.0",
     "rimraf": "^5.0.5"
   },
   "dependencies": {
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.0"
   },
   "optionalDependencies": {
     "@rspack/binding-linux-x64-gnu": "latest",
@@ -41,5 +41,10 @@
     "@rspack/binding-linux-x64-musl": "latest",
     "@rspack/binding-darwin-arm64": "latest",
     "@rspack/binding-darwin-x64": "latest"
+  },
+  "overrides": {
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "qs": "^6.15.0"
   }
 }

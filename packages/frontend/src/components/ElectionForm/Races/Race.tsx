@@ -67,10 +67,7 @@ export default function Race({ race, race_index }: RaceProps) {
 
     return (
         <Paper elevation={4} sx={{ width: '100%'}}>
-            <Box
-                sx={{ display: 'flex', bgcolor: 'background.paper', borderRadius: 10 }}
-                alignItems={'center'}
-            >
+            <Box sx={{ display: 'flex', bgcolor: 'background.paper', borderRadius: 10, alignItems: 'center' }}>
                 <Box sx={{ width: '100%', pl: 2 }}>
                     <Typography variant="h5" component="h5">{`${capitalize(t('race'))} #${race_index+1}: ${race.title}`} </Typography>
                 </Box>

@@ -19,7 +19,7 @@ const STAREqualPreferencesWidget = ({frontRunners}: {frontRunners: candidate[]})
     })
 
     return <Widget title={t('results.star.equal_preferences_title')} wide>
-        <ResultsBarChart data={equalPreferences.map((count, i) => ({name: `${i}⭐`, count})).reverse()} xKey='count' percentage={true}/>
+        <ResultsBarChart data={equalPreferences.map((count, i) => ({name: `${i} ⭐`, count})).reverse()} xKey='count' percentage={true}/>
     </Widget>
 }
 
