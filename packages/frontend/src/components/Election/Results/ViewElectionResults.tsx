@@ -87,7 +87,7 @@ const ViewElectionResults = () => {
                     }}
                   >
 
-                    <BallotDataExport election={election as Election}/>
+                    <BallotDataExport election={election as Election} results={data?.results}/>
                   </Box>
                 )}
 
