@@ -103,9 +103,16 @@ export default function ElectionSettings() {
                     <ElectionSwitchSetting settingKey="ballot_updates" />
                     <ElectionSwitchSetting settingKey="require_instruction_confirmation" />
                     <ElectionSwitchSetting settingKey="draggable_ballot" />
+                    {/* Note: this can't use ElectionSwitchSetting because we need to use the results from makePublicResultsRequest as the source of truth */}
+                    <SwitchSetting
+                        label={election.state === 'closed' || election.state === 'archived' ? t('election_settings.public_results') : t('election_settings.preliminary_results')}
+                        toggled={publicResults}
+                        onToggle={setPublicResults}
+                    />
                     {/* max_rankings is set for every election (defaulting to default_rankings),
-                        so this is always shown rather than gated behind a toggle. */}
-                    <Box sx={{ pl: { xs: 0, sm: 4 }, py: 1 }}>
+                        so this is always shown rather than gated behind a toggle. Kept last so the
+                        settings read as radios, then toggles, then the rank-limit selector. */}
+                    <Box sx={{ py: 1 }}>
                         <Typography component='div' sx={{ fontWeight: 500, mb: 1 }}>
                             {t('tips.max_rankings.title')}
                             <Tip name='max_rankings' values={{ min_rankings, max_rankings }} />
@@ -121,6 +128,9 @@ export default function ElectionSettings() {
                                 if (v !== null) updateElection(e => e.settings.max_rankings = v);
                             }}
                             sx={{
+                                // Indent only the buttons (not the label above) so they read
+                                // as nested under the heading.
+                                ml: { xs: 0, sm: 4 },
                                 flexWrap: 'wrap',
                                 gap: 1,
                                 // Detach the grouped border-radius/border-collapse so buttons
@@ -155,12 +165,6 @@ export default function ElectionSettings() {
                             ))}
                         </ToggleButtonGroup>
                     </Box>
-                    {/* Note: this can't use ElectionSwitchSetting because we need to use the results from makePublicResultsRequest as the source of truth */}
-                    <SwitchSetting
-                        label={election.state === 'closed' || election.state === 'archived' ? t('election_settings.public_results') : t('election_settings.preliminary_results')}
-                        toggled={publicResults}
-                        onToggle={setPublicResults}
-                    />
                 </FormGroup>
             </FormControl>
         </Grid>
