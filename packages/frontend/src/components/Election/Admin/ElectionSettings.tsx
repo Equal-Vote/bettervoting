@@ -103,64 +103,58 @@ export default function ElectionSettings() {
                     <ElectionSwitchSetting settingKey="ballot_updates" />
                     <ElectionSwitchSetting settingKey="require_instruction_confirmation" />
                     <ElectionSwitchSetting settingKey="draggable_ballot" />
-                    <ElectionSwitchSetting
-                        settingKey="max_rankings"
-                        // Pass min/max as call-time values so the !tip(max_rankings) tooltip can
-                        // substitute {{min_rankings}}/{{max_rankings}} in its description. applyTips
-                        // forwards only the call argument (not the hook's values) into the <Tip>.
-                        label={t('election_settings.max_rankings', { min_rankings, max_rankings })}
-                        onToggle={async (v) => !! await updateElection(e => e.settings.max_rankings = v ? default_rankings : undefined)}
-                    />
-
-                    {election.settings.max_rankings !== undefined && (
-                        <Box sx={{ pl: { xs: 0, sm: 4 }, py: 1 }}>
-                            <Typography component='div' sx={{ fontWeight: 500, mb: 1 }}>Rank Limit</Typography>
-                            <ToggleButtonGroup
-                                value={election.settings.max_rankings}
-                                exclusive
-                                disabled={election.state !== 'draft'}
-                                aria-label='Rank Limit'
-                                // Ignore null: clicking the active button would otherwise
-                                // deselect and leave the limit unset (the parent switch owns on/off).
-                                onChange={(_, v: number | null) => {
-                                    if (v !== null) updateElection(e => e.settings.max_rankings = v);
-                                }}
-                                sx={{
-                                    flexWrap: 'wrap',
-                                    gap: 1,
-                                    // Detach the grouped border-radius/border-collapse so buttons
-                                    // render as standalone chips that wrap cleanly on mobile.
-                                    '& .MuiToggleButtonGroup-grouped': {
-                                        m: 0,
-                                        border: '1px solid',
-                                        borderColor: 'primary.main',
-                                        borderRadius: 1,
-                                        // Default ToggleButton text is text.secondary (gray) and
-                                        // reads as disabled; use the accent color so it looks active.
-                                        color: 'primary.main',
-                                        fontWeight: 600,
-                                        '&.Mui-selected': {
-                                            backgroundColor: 'primary.main',
-                                            color: 'primary.contrastText',
-                                            '&:hover': { backgroundColor: 'primary.dark' },
-                                        },
+                    {/* max_rankings is set for every election (defaulting to default_rankings),
+                        so this is always shown rather than gated behind a toggle. */}
+                    <Box sx={{ pl: { xs: 0, sm: 4 }, py: 1 }}>
+                        <Typography component='div' sx={{ fontWeight: 500, mb: 1 }}>
+                            {t('tips.max_rankings.title')}
+                            <Tip name='max_rankings' values={{ min_rankings, max_rankings }} />
+                        </Typography>
+                        <ToggleButtonGroup
+                            value={election.settings.max_rankings ?? default_rankings}
+                            exclusive
+                            disabled={election.state !== 'draft'}
+                            aria-label='Rank Limit'
+                            // Ignore null: clicking the active button would otherwise deselect
+                            // it. max_rankings must stay set, so we never let it become undefined.
+                            onChange={(_, v: number | null) => {
+                                if (v !== null) updateElection(e => e.settings.max_rankings = v);
+                            }}
+                            sx={{
+                                flexWrap: 'wrap',
+                                gap: 1,
+                                // Detach the grouped border-radius/border-collapse so buttons
+                                // render as standalone chips that wrap cleanly on mobile.
+                                '& .MuiToggleButtonGroup-grouped': {
+                                    m: 0,
+                                    border: '1px solid',
+                                    borderColor: 'primary.main',
+                                    borderRadius: 1,
+                                    // Default ToggleButton text is text.secondary (gray) and
+                                    // reads as disabled; use the accent color so it looks active.
+                                    color: 'primary.main',
+                                    fontWeight: 600,
+                                    '&.Mui-selected': {
+                                        backgroundColor: 'primary.main',
+                                        color: 'primary.contrastText',
+                                        '&:hover': { backgroundColor: 'primary.dark' },
                                     },
-                                }}
-                            >
-                                {rankOptions.map((n) => (
-                                    <ToggleButton
-                                        key={n}
-                                        value={n}
-                                        aria-label={`${n} ranks`}
-                                        // Snug single-digit chip; 44px tall keeps a mobile touch target.
-                                        sx={{ minWidth: 40, minHeight: 44, px: 0, py: 0.5 }}
-                                    >
-                                        {n}
-                                    </ToggleButton>
-                                ))}
-                            </ToggleButtonGroup>
-                        </Box>
-                    )}
+                                },
+                            }}
+                        >
+                            {rankOptions.map((n) => (
+                                <ToggleButton
+                                    key={n}
+                                    value={n}
+                                    aria-label={`${n} ranks`}
+                                    // Snug single-digit chip; 44px tall keeps a mobile touch target.
+                                    sx={{ minWidth: 40, minHeight: 44, px: 0, py: 0.5 }}
+                                >
+                                    {n}
+                                </ToggleButton>
+                            ))}
+                        </ToggleButtonGroup>
+                    </Box>
                     {/* Note: this can't use ElectionSwitchSetting because we need to use the results from makePublicResultsRequest as the source of truth */}
                     <SwitchSetting
                         label={election.state === 'closed' || election.state === 'archived' ? t('election_settings.public_results') : t('election_settings.preliminary_results')}
