@@ -50,66 +50,29 @@ const EditRoles = () => {
     return (
         <form onSubmit={onSubmit}>
             <Container maxWidth='sm'>
-                <Grid container direction="column" >
-                    <Grid item sx={{ p: 2 }}>
-                        <TextField
-                            id="admin-list"
-                            label="Admin List"
-                            InputLabelProps={{
+                <Grid container sx={{ flexDirection: 'column' }} >
+                    <Grid sx={{ p: 2 }}>
+                        <TextField id="admin-list" label="Admin List" multiline minRows={3} fullWidth type="text" value={adminList} onChange={(e) => setAdminList(e.target.value)} helperText="Emails of election admins, one email per line" placeholder={"admin1@email.com\nadmin2@email.com\nadmin3@email.com"} slotProps={{ inputLabel: {
                                 shrink: true
-                            }}
-                            multiline
-                            minRows={3}
-                            fullWidth
-                            type="text"
-                            value={adminList}
-                            onChange={(e) => setAdminList(e.target.value)}
-                            helperText="Emails of election admins, one email per line"
-                            placeholder={"admin1@email.com\nadmin2@email.com\nadmin3@email.com"}
-                        />
+                            } }}/>
                     </Grid>
-                    <Grid item sx={{ p: 2 }}>
-                        <TextField
-                            id="auditor-list"
-                            label="Auditor List"
-                            InputLabelProps={{
+                    <Grid sx={{ p: 2 }}>
+                        <TextField id="auditor-list" label="Auditor List" multiline minRows={3} fullWidth type="text" value={auditorList} onChange={(e) => setAuditorList(e.target.value)} helperText="Emails of election auditors, one email per line" placeholder={"auditor1@email.com\nauditor2@email.com\nauditor3@email.com"} slotProps={{ inputLabel: {
                                 shrink: true
-                            }}
-                            multiline
-                            minRows={3}
-                            fullWidth
-                            type="text"
-                            value={auditorList}
-                            onChange={(e) => setAuditorList(e.target.value)}
-                            helperText="Emails of election auditors, one email per line"
-                            placeholder={"auditor1@email.com\nauditor2@email.com\nauditor3@email.com"}
-                        />
+                            } }}/>
                     </Grid>
-                    <Grid item sx={{ p: 2 }}>
-                        <TextField
-                            id="credentialer-list"
-                            name="credentialer-list"
-                            label="Credentialer List"
-                            InputLabelProps={{
+                    <Grid sx={{ p: 2 }}>
+                        <TextField id="credentialer-list" name="credentialer-list" label="Credentialer List" multiline minRows={3} fullWidth type="text" value={credentialList} onChange={(e) => setCredentialList(e.target.value)} helperText="Emails of election credentialers, one email per line" placeholder={"credentialer1@email.com\ncredentialer2@email.com\ncredentialer3@email.com"} slotProps={{ inputLabel: {
                                 shrink: true
-                            }}
-                            multiline
-                            minRows={3}
-                            fullWidth
-                            type="text"
-                            value={credentialList}
-                            onChange={(e) => setCredentialList(e.target.value)}
-                            helperText="Emails of election credentialers, one email per line"
-                            placeholder={"credentialer1@email.com\ncredentialer2@email.com\ncredentialer3@email.com"}
-                        />
+                            } }}/>
                     </Grid>
 
-                    <Grid item sx={{ p: 2 }}>
+                    <Grid sx={{ p: 2 }}>
                         <PermissionHandler permissions={permissions} requiredPermission={'canEditElectionRoles'}>
                             <PrimaryButton
                                 type='submit'
                                 disabled={putRoles.isPending}>
-                                <Typography align='center' variant="body2" fontWeight={'bold'}>
+                                <Typography align='center' variant="body2" sx={{ fontWeight: 'bold' }}>
                                     Submit
                                 </Typography>
                             </PrimaryButton>

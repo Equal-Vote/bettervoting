@@ -35,13 +35,13 @@ const HeadToHeadChart = (
     }
 
     return <Box sx={{mx:4, width: '100%', maxWidth: '540px', margin: 'auto'}}>
-        <Box display='flex' flexDirection='row' justifyContent='space-between' sx={{mb: 1}} gap={2}>
+        <Box sx={{ mb: 1, display: "flex", flexDirection: "row", justifyContent: "space-between", gap: 2 }}>
             <Typography sx={{textAlign: 'left', fontWeight: 'bold'}}>{leftName}</Typography>
             <Typography sx={{textAlign: 'right', fontWeight: 'bold'}}>{rightName}</Typography>
         </Box>
-        <Box height='38px' display='flex' flexDirection='row'>
+        <Box sx={{ height: "38px", display: "flex", flexDirection: "row" }}>
             {leftValue > 0 &&
-                <Box width={leftPercent} sx={{backgroundColor:CHART_COLORS[0], textAlign: 'left', pt: 1, pl: 1, fontSize: '1rem', overflow: 'visible', zIndex: 1}}>
+                <Box sx={{ backgroundColor:CHART_COLORS[0], textAlign: 'left', pt: 1, pl: 1, fontSize: '1rem', overflow: 'visible', zIndex: 1, width: leftPercent }}>
                     {(leftValue > rightValue)? '⭐ ': ''}{leftPercent}
                 </Box>
             }
@@ -51,19 +51,19 @@ const HeadToHeadChart = (
                         title: equalContent.title,
                         description: Array.isArray(equalContent.description) ? formatEqualPreference(equalContent.description) : equalContent.description
                     }}>
-                        <Box width={midPercent} sx={{backgroundColor:'var(--brand-gray-1)', pt: 1}}>
+                        <Box sx={{ backgroundColor:'var(--brand-gray-1)', pt: 1, width: midPercent }}>
                             {(midValue < .1 || midValue+leftValue < .2 || midValue+rightValue < .2)? '' : midPercent}
                         </Box>
                     </Tip>
                 }
                 {!equalContent &&
-                    <Box width={midPercent} sx={{backgroundColor:'var(--brand-gray-1)', pt: 1}}>
+                    <Box sx={{ backgroundColor:'var(--brand-gray-1)', pt: 1, width: midPercent }}>
                         {(midValue < .1 || midValue+leftValue < .2 || midValue+rightValue < .2)? '' : midPercent}
                     </Box>
                 }
             </>}
             {rightValue > 0 &&
-                <Box width={rightPercent} sx={{backgroundColor:CHART_COLORS[1], textAlign: 'right', pt: 1, pr: 1, fontSize: '1rem'}}>
+                <Box sx={{ backgroundColor:CHART_COLORS[1], textAlign: 'right', pt: 1, pr: 1, fontSize: '1rem', width: rightPercent }}>
                     {(rightValue > leftValue)? '⭐ ': ''}{rightPercent}
                 </Box>
             }

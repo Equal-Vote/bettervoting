@@ -320,7 +320,7 @@ function STARPRResultsViewer() {
         {flags.isSet('PR_CONTROLS') && <>
           <Typography sx={{mt: 2}}>Round Selector</Typography>
           <Pagination count={results.summaryData.weightedScoresByRound.length} page={page} onChange={handleChange} />
-          <Box display='flex' flexDirection='row' sx={{mb: 7, gap: 2}} >
+          <Box sx={{ mb: 7, gap: 2, display: "flex", flexDirection: "row" }}>
               <Button variant='outlined' onClick={() => setSortRound(page)}>Sort Candidates</Button>
               <Button variant='outlined' onClick={() => setMaxCandidates(c => c == 10 ? 1000 : 10)}>Toggle Candidate Limit</Button>
           </Box>

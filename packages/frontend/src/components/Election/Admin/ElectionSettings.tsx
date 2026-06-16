@@ -65,7 +65,7 @@ export default function ElectionSettings() {
     const rankOptions = Array.from({ length: max_rankings - min_rankings + 1 }, (_, i) => min_rankings + i);
 
     return <>
-        <Grid item xs={12} sx={{ m: 0, my: 0, p: 1 }}>
+        <Grid size={12} sx={{ m: 0, my: 0, p: 1 }}>
             <FormControl disabled={election.state !== 'draft'} component="fieldset" variant="standard" sx={{width: '100%'}}>
                 <FormGroup>
                     <DialogTextField

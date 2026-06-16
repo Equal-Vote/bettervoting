@@ -62,7 +62,7 @@ export default function({name, onClick=undefined, desktopText=undefined, mobileI
                 '&:hover': {textDecoration: 'underline'}
             }} 
         >
-            <Typography component="p" sx={navTextSx} color={headerTextColor} textTransform='none'>
+            <Typography component="p" color={headerTextColor} sx={{ ...(navTextSx), textTransform: "none" }}>
                 {desktopText} 
             </Typography>
         </Button>}
@@ -74,11 +74,11 @@ export default function({name, onClick=undefined, desktopText=undefined, mobileI
                 horizontal: 'left',
             }}
             keepMounted
-            MenuListProps={{
+            slotProps={{ list: {
                 onMouseEnter: handleHover,
                 onMouseLeave: handleCloseHover,
                 style: { pointerEvents: "auto" }
-            }}
+            } }}
             transformOrigin={{
                 vertical: 'top',
                 horizontal: 'left',

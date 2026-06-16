@@ -48,14 +48,12 @@ const LandingPage = () => {
             gap: '2rem',
             margin: 'auto',
         }}> 
-            <Box display='flex' flexDirection='column' sx={{
-                margin: 'auto',
+            <Box sx={{ margin: 'auto',
                 width: '100%',
                 maxWidth: '1200px',
                 p: { xs: 2, md: 2 },
                 alignItems: 'center',
-                textAlign: 'center',
-            }}>
+                textAlign: 'center', display: "flex", flexDirection: "column" }}>
                 <Typography sx={{textAlign:'center', padding: 2, opacity: 0.5}}>
                     {t('nav.beta_warning')}
                 </Typography>

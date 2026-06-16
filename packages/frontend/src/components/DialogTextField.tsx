@@ -149,7 +149,7 @@ export default function DialogTextField({
                     onKeyDown={handleKeyDown}
                     error={!!error}
                     helperText={error ?? ' '}
-                    inputProps={{ 'aria-label': ariaLabel ?? label, ...inputProps }}
+                    slotProps={{ htmlInput: { 'aria-label': ariaLabel ?? label, ...inputProps } }}
                     variant='standard'
                     sx={{ mt: 1 }}
                 />

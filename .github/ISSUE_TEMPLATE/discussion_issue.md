@@ -5,7 +5,7 @@
 name: Discussion Issue
 about: When you discover something without clear action items that needs discussion for next steps
 title: 'Discussion: <insert title>'
-labels: 'Complexity: Missing, Role: Missing'
+labels: 'Role: Missing'
 assignees: '' 
 ---
 

@@ -50,7 +50,7 @@ test('Full Runthrough', async ({ page }) => {
 	// Election Settings
 	await page.getByRole('link', { name: 'Settings' }).click();
 	await page
-		.getByRole('checkbox', { name: 'Set Number of Rankings' })
+		.getByRole('switch', { name: /Set Number Of Rankings/ })
 		.check();
 	// Rank limit is an inline segmented control (one toggle button per value);
 	// pick "8". Each button is labelled "<n> ranks". Asserting aria-pressed
