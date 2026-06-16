@@ -10,7 +10,7 @@ import { useGetRolls, useSendEmails } from "../../../hooks/useAPI";
 import useElection from "../../ElectionContextProvider";
 import useFeatureFlags from "../../FeatureFlagContextProvider";
 import { ElectionRollResponse } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll";
-import { getVoterAuthenticationMode, setVoterAuthenticationMode } from "@equal-vote/star-vote-shared/domain_model/VoterAuthenticationMode";
+import { getVoterAuthenticationMode, setVoterAuthenticationMode, VoterAuthenticationMode } from "@equal-vote/star-vote-shared/domain_model/VoterAuthenticationMode";
 import SendEmailDialog from "./SendEmailDialog";
 import { PrimaryButton, SecondaryButton } from "~/components/styles";
 import ElectionAuthForm from "~/components/ElectionForm/Details/ElectionAuthForm";
@@ -34,8 +34,11 @@ const ViewElectionRolls = () => {
     
     // Radios are pure projections of the canonical mode. Each click computes the
     // next mode and fires one updateElection — no racing useSyncedState debounces.
-    const mode = getVoterAuthenticationMode(election.settings);
-    const voterAccess: 'open' | 'closed' = mode.startsWith('closed') ? 'closed' : 'open';
+    // Legacy non-canonical rows throw; treat them as "open" so the page still
+    // renders (ElectionAuthForm degrades to all-unchecked) instead of crashing.
+    let mode: VoterAuthenticationMode | null;
+    try { mode = getVoterAuthenticationMode(election.settings); } catch { mode = null; }
+    const voterAccess: 'open' | 'closed' = mode?.startsWith('closed') ? 'closed' : 'open';
     const usesEmail = mode === 'closed_bv_managed_ids';
     const writeMode = (m: Parameters<typeof setVoterAuthenticationMode>[1]) =>
         updateElection(e => { e.settings = setVoterAuthenticationMode(e.settings, m); });

@@ -169,12 +169,15 @@ const returnElection = async (req: any, res: any, next: any) => {
     }
     const voterAuthorization = getVoterAuthorization(roll,missingAuthData)
     // auth_key is a PEM public key, harmless to leak, but we still hide it from
-    // non-owners to avoid fingerprinting integrations across elections. Owners
-    // and admins need it returned so they can do read-modify-write edits and
-    // verify the stored key.
+    // non-editors to avoid fingerprinting integrations across elections. Anyone
+    // with canEditElection does read-modify-write edits, so they must get it back
+    // or their PUT would persist undefined and wipe it (updateElection inserts the
+    // row verbatim). Keep this list in sync with permissions.canEditElection.
     const requesterRoles: string[] = req.user_auth?.roles ?? [];
-    const isOwnerOrAdmin = requesterRoles.includes(roles.owner) || requesterRoles.includes(roles.admin);
-    if (!isOwnerOrAdmin) {
+    const canEdit = requesterRoles.includes(roles.owner)
+        || requesterRoles.includes(roles.admin)
+        || requesterRoles.includes(roles.system_admin);
+    if (!canEdit) {
         removeHiddenFields(election)
     }
     res.json({
