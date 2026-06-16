@@ -1,4 +1,4 @@
-import { useState, KeyboardEvent } from 'react';
+import { useState, useRef, KeyboardEvent } from 'react';
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, TextField, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 
@@ -38,6 +38,7 @@ export default function DialogTextField({
     ariaLabel,
 }: DialogTextFieldProps) {
     const [open, setOpen] = useState(false);
+    const inputRef = useRef<HTMLInputElement>(null);
     const [draft, setDraft] = useState(value);
     const [error, setError] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
@@ -136,7 +137,18 @@ export default function DialogTextField({
                 </IconButton>
             )}
         </Box>
-        <Dialog open={open} onClose={handleClose} fullWidth maxWidth='sm' aria-label={label}>
+        <Dialog
+            open={open}
+            onClose={handleClose}
+            fullWidth
+            maxWidth='sm'
+            aria-label={label}
+            // autoFocus alone races the Dialog's open transition + focus trap, which can
+            // leave focus on the dialog instead of the input (needing a second click).
+            // Focus the field once the enter transition finishes, and select existing
+            // text so the value is ready to overwrite.
+            slotProps={{ transition: { onEntered: () => inputRef.current?.select() } }}
+        >
             <DialogTitle>{label}</DialogTitle>
             <DialogContent>
                 <TextField
@@ -149,6 +161,7 @@ export default function DialogTextField({
                     onKeyDown={handleKeyDown}
                     error={!!error}
                     helperText={error ?? ' '}
+                    inputRef={inputRef}
                     slotProps={{ htmlInput: { 'aria-label': ariaLabel ?? label, ...inputProps } }}
                     variant='standard'
                     sx={{ mt: 1 }}
