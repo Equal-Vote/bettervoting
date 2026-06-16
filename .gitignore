@@ -12,6 +12,7 @@
 .idea
 .gitattributes
 .claude/**
+.playwright-mcp/**
 
 # Generated build artifacts
 packages/backend/src/OpenApi/swagger.json

@@ -14,14 +14,7 @@ const Thanks = () => {
     return <>
         <DraftWarning/>
         {election &&
-            <Box
-                display="flex"
-                flexDirection='column'
-                justifyContent="center"
-                alignItems="center"
-                maxWidth={600}
-                mx='auto'
-                mb='100px'>
+            <Box sx={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", maxWidth: 600, mx: "auto", mb: "100px" }}>
                 <Typography align='center' variant="h3" component="h3">
                     {t('ballot_submitted.title')}
                 </Typography>

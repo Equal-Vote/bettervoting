@@ -22,12 +22,7 @@ const ViewElectionResults = () => {
     return (
       <>
         <DraftWarning />
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          sx={{ width: "100%", textAlign: "center" }}
-        >
+        <Box sx={{ width: "100%", textAlign: "center", display: "flex", justifyContent: "center", alignItems: "center" }}>
           <Box
             sx={{
               width: "100%",
@@ -92,7 +87,7 @@ const ViewElectionResults = () => {
                     }}
                   >
 
-                    <BallotDataExport election={election as Election}/>
+                    <BallotDataExport election={election as Election} results={data?.results}/>
                   </Box>
                 )}
 

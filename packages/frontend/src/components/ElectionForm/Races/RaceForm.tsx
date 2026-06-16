@@ -56,7 +56,7 @@ export default function RaceForm({
             }
             {styling == 'Wizard' && <>
                 <InnerRaceForm {...editRace}/>
-                <Box display='flex' flexDirection='row' justifyContent='flex-end' gap={1} sx={{mt: 3}}>
+                <Box sx={{ mt: 3, display: "flex", flexDirection: "row", justifyContent: "flex-end", gap: 1 }}>
                     <PrimaryButton onClick={() => editRace.validateRace() && onConfirm(editRace.editedRace)}>Next</PrimaryButton>
                 </Box>
             </>}
@@ -247,7 +247,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
     }
 
 
-    return <Box display='flex' flexDirection='column' alignItems='stretch' gap={RACE_FORM_GAP} sx={{textAlign: 'left'}}>
+    return <Box sx={{ textAlign: 'left', display: "flex", flexDirection: "column", alignItems: "stretch", gap: RACE_FORM_GAP }}>
         <TitleAndDescription setErrors={setErrors} errors={errors} editedRace={editedRace} applyRaceUpdate={applyRaceUpdate} open={open}/>
 
         <VotingMethodSelector election={election} editedRace={editedRace} isDisabled={isDisabled} setErrors={setErrors} errors={errors} applyRaceUpdate={applyRaceUpdate} open={open}/>
@@ -290,7 +290,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
                                         onDeleteCandidate={() => onDeleteCandidate(index)}
                                         disabled={election.state !== 'draft'}
                                         special={index > newCandidateIndex}
-                                        inputRef={(el: React.MutableRefObject<HTMLInputElement[]>) => inputRefs.current[index] = el}
+                                        inputRef={(el: HTMLInputElement | null) => { inputRefs.current[index] = el; }}
                                         onKeyDown={(event: React.KeyboardEvent<HTMLInputElement>) => handleKeyDown(event, index)}
                                         electionState={election.state} />
                                 </SortableList.Item>

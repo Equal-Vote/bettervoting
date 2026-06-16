@@ -33,7 +33,7 @@ export default function ElectionAuthForm() {
                     p: 0,
                 }}
             >
-                <Grid item xs={12} sx={{marginBottom: 1}}>
+                <Grid size={12} sx={{marginBottom: 1}}>
                     <Typography gutterBottom variant="h4" component="h4">
                         {t('admin_home.voter_authentication.form_label')}
                     </Typography>

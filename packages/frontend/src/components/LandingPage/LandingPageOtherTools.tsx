@@ -40,7 +40,7 @@ export default function(){
                     }}>
                         <CardActionArea sx={{p: { xs: 2, md: 2 }, backgroundColor: 'lightShade.main'}}>
                             <CardContent>
-                                <Box display='flex' flexDirection='row' gap={1} sx={{pb: 1}}>
+                                <Box sx={{ pb: 1, display: "flex", flexDirection: "row", gap: 1 }}>
                                     <Box
                                         component="img"
                                         sx={{height: '50px',}}

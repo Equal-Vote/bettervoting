@@ -31,7 +31,7 @@ export const ElectionTitleField = ({termType, value, onUpdateValue, errors, setE
     const {t} = useSubstitutedTranslation(termType);
     return <>
         <TextField
-            inputProps={{ "aria-label": "Title" }}
+            slotProps={{ htmlInput: { "aria-label": "Title" } }}
             error={errors.title !== ''}
             required
             id="election-title"
@@ -79,7 +79,7 @@ export default function ElectionDetailsForm({editedElection, applyUpdate, errors
 
     return (
         <Grid container sx={{p: 4}}>
-            <Grid item xs={12} sx={{ m: 0, p: 1 }}>
+            <Grid size={12} sx={{ m: 0, p: 1 }}>
                 <ElectionTitleField
                     termType={editedElection.settings.term_type}
                     value={editedElection.title}
@@ -90,30 +90,18 @@ export default function ElectionDetailsForm({editedElection, applyUpdate, errors
                     setErrors={setErrors}
                 />
             </Grid>
-            <Grid item xs={12} sx={{ m: 0, p: 1 }}>
-                <TextField
-                    id="election-description"
-                    inputProps={{ "aria-label": "Election Description" }}
-                    label={t('election_details.description')}
-                    multiline
-                    fullWidth
-                    type="text"
-                    error={errors.description !== ''}
-                    value={editedElection.description}
-                    helperText={errors.description || "Supports **bold** and [link text](url) formatting"}
-                    sx={{
+            <Grid size={12} sx={{ m: 0, p: 1 }}>
+                <TextField id="election-description" label={t('election_details.description')} multiline fullWidth type="text" error={errors.description !== ''} value={editedElection.description} helperText={errors.description || "Supports **bold** and [link text](url) formatting"} sx={{
                         mx: { xs: 0, },
                         my: { xs: 0 },
                         boxShadow: 2,
-                    }}
-                    onChange={(e) => {
+                    }} onChange={(e) => {
                         setErrors({ ...errors, description: '' })
                         applyUpdate(election => { election.description = e.target.value })
-                    }}
-                />
+                    }} slotProps={{ htmlInput: { "aria-label": "Election Description" } }}/>
             </Grid>
 
-            <Grid item xs={12} sx={{ m: 0, p: 1 }}>
+            <Grid size={12} sx={{ m: 0, p: 1 }}>
                 <FormGroup>
                     <FormControlLabel
                         control={
@@ -143,7 +131,7 @@ export default function ElectionDetailsForm({editedElection, applyUpdate, errors
 
             {enableStartEndTime &&
                 <>
-                    <Grid item xs={4} sx={{ m: 0, p: 1 }} justifyContent='center'>
+                    <Grid size={4} sx={{ m: 0, p: 1, justifyContent: 'center' }}>
                         <FormControl fullWidth>
                             <InputLabel id="time-zone-label">{t('election_details.time_zone')}</InputLabel>
                             <Select
@@ -163,14 +151,14 @@ export default function ElectionDetailsForm({editedElection, applyUpdate, errors
                             </Select>
                         </FormControl>
                     </Grid>
-                    <Grid item xs={8}></Grid>
-                    <Grid item xs={6} sx={{ m: 0, p: 1 }} justifyContent='center' >
+                    <Grid size={8}></Grid>
+                    <Grid size={6} sx={{ m: 0, p: 1, justifyContent: 'center' }} >
                         <FormControl fullWidth>
                             <InputLabel shrink>{t('election_details.start_date')}</InputLabel>
                             {/* datetime-local is formatted according to the OS locale, I don't think there's a way to override it*/}
                             <Input
                                 type='datetime-local'
-                                inputProps={{ "aria-label": "Start Time" }}
+                                slotProps={{ input: { "aria-label": "Start Time" } }}
                                 error={errors.startTime !== ''}
                                 value={dateToLocalLuxonDate(editedElection.start_time, timeZone)}
                                 onChange={(e) => {
@@ -191,13 +179,13 @@ export default function ElectionDetailsForm({editedElection, applyUpdate, errors
                             </FormHelperText>
                         </FormControl>
                     </Grid>
-                    <Grid item xs={6} sx={{ m: 0, p: 1 }} justifyContent='center'>
+                    <Grid size={6} sx={{ m: 0, p: 1, justifyContent: 'center' }}>
                         <FormControl fullWidth>
                             <InputLabel shrink>{t('election_details.end_date')}</InputLabel>
                             {/* datetime-local is formatted according to the OS locale, I don't think there's a way to override it*/}
                             <Input
                                 type='datetime-local'
-                                inputProps={{ "aria-label": "End Time" }}
+                                slotProps={{ input: { "aria-label": "End Time" } }}
                                 error={errors.endTime !== ''}
                                 value={dateToLocalLuxonDate(editedElection.end_time, timeZone)}
                                 onChange={(e) => {
