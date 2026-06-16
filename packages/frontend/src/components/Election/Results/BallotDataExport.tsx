@@ -66,17 +66,7 @@ export const BallotDataExport = ({ election, results }: Props) => {
         return string.substring(0, limit);
     };
     const downloadJson = async () => {
-        const tieBreakOrder = results ? Object.fromEntries(
-            election.races.map((race, i) => [
-                race.race_id,
-                results[i]?.summaryData?.candidates?.map(c => ({
-                    candidate_id: c.id,
-                    candidate_name: c.name,
-                    tieBreakOrder: c.tieBreakOrder,
-                })) ?? []
-            ])
-        ) : undefined;
-        const ballotObject = { Election: election, Ballots: ballots, ...(tieBreakOrder && { TieBreakOrder: tieBreakOrder }) };
+        const ballotObject = { Election: election, Ballots: ballots, ...(results && { Results: results }) };
         const ballotJson = JSON.stringify(ballotObject, null, 2);
         const blob = new Blob([ballotJson], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
