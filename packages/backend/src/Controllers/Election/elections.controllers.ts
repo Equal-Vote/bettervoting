@@ -47,6 +47,14 @@ const electionSpecificAuth = async (req: IElectionRequest, res: any, next: any) 
     if (electionKey == null || electionKey == ""){
         return next();
     }
+    // RS256-only. Reject any auth_key that isn't a PEM-encoded RSA public key —
+    // including legacy HS256 secrets that may exist in old DB rows. Treat such
+    // a row as if the election had no auth_key (fall through unauthenticated)
+    // rather than throwing, so admin GETs on legacy rows don't 500.
+    if (!electionKey.includes('-----BEGIN PUBLIC KEY')) {
+        Logger.warn(req, `${className}.electionSpecificAuth: ignoring non-PEM auth_key`);
+        return next();
+    }
     var user = accountService.extractUserFromRequest(req, electionKey);
     req.user = user;
     return next();
@@ -173,7 +181,18 @@ const returnElection = async (req: any, res: any, next: any) => {
         roll = await getOrCreateElectionRoll(req, election, req);
     }
     const voterAuthorization = getVoterAuthorization(roll,missingAuthData)
-    removeHiddenFields(election)
+    // auth_key is a PEM public key, harmless to leak, but we still hide it from
+    // non-editors to avoid fingerprinting integrations across elections. Anyone
+    // with canEditElection does read-modify-write edits, so they must get it back
+    // or their PUT would persist undefined and wipe it (updateElection inserts the
+    // row verbatim). Keep this list in sync with permissions.canEditElection.
+    const requesterRoles: string[] = req.user_auth?.roles ?? [];
+    const canEdit = requesterRoles.includes(roles.owner)
+        || requesterRoles.includes(roles.admin)
+        || requesterRoles.includes(roles.system_admin);
+    if (!canEdit) {
+        removeHiddenFields(election)
+    }
     res.json({
         election: election,
         precinctFilteredElection: getPrecinctFilteredElection(election, roll),

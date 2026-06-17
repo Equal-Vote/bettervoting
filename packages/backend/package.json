@@ -4,8 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "pretest": "npm run generate:openapi",
     "test": "jest --forceExit --detectOpenHandles",
     "start": "npm run build && node ./build/src/index.js",
+    "predev": "npm run generate:openapi",
     "dev": "node verifyShared.js && tsx watch ./src",
     "build": "npm run generate:openapi && tsc --project ./",
     "clean": "npx rimraf build node_modules ../node_modules",

@@ -5,6 +5,7 @@ import { Box, Breakpoint, Paper, Typography, useMediaQuery } from '@mui/material
 import { usePostElection } from '~/hooks/useAPI';
 import { setCookie, useCookie } from '~/hooks/useCookie';
 import { NewElection } from '@equal-vote/star-vote-shared/domain_model/Election';
+import { setVoterAuthenticationMode } from '@equal-vote/star-vote-shared/domain_model/VoterAuthenticationMode';
 import { makeUniqueIDSync, makeID, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
 
 import { hashString, scrollToElement, StringObject, TransitionBox, useSubstitutedTranslation } from '../../util.js';
@@ -113,7 +114,7 @@ const Wizard = () => {
         }
         const confirmed = await confirm(t('wizard.publish_confirm'));
         if (confirmed) {
-            onAddElection({...updatedElection, state: 'finalized', settings: {...updatedElection.settings, voter_access: 'open'}}, '/')
+            onAddElection({...updatedElection, state: 'finalized', settings: setVoterAuthenticationMode(updatedElection.settings, 'open_unique_cookie')}, '/')
         }else{
             scrollToElement(document.querySelector('.wizard'));
             setElection(updatedElection)
