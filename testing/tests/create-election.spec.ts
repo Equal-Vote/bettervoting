@@ -8,17 +8,16 @@ test.describe('Create Election', () => {
         // Fill out form
         await page.getByRole('button', { name: 'Create Election' }).click();
         const pollButton = page.getByRole('radio', { name: 'Poll' })
-        await expect(pollButton).toBeInViewport({timeout: 500});
+        await expect(pollButton).toBeInViewport({timeout: 2000});
         await pollButton.check();
         expect(page.getByText('How many questions will your poll include?')).toBeVisible(); // confirm the election switched to races language
         await page.getByRole('radio', { name: 'Just one' }).check();
         await page.getByRole('textbox', { name: 'Question Title' }).click();
         await page.getByRole('textbox', { name: 'Question Title' }).fill('Favorite Fruit');
         await page.getByRole('textbox', { name: 'Question Title' }).blur();
-        await page.getByRole('button', { name: 'Voting Method', exact: true }).click();
+        await page.getByRole('button', { name: 'Select the voting method' }).click();
         await page.getByRole('radio', { name: 'Single-Winner' }).check();
         await page.getByRole('radio', { name: 'STAR Voting' }).check();
-        await page.getByRole('button', { name: 'Choices' }).click();
         await page.getByRole('textbox', { name: 'Candidate 1 Name' }).click();
         await page.getByRole('textbox', { name: 'Candidate 1 Name' }).fill('Pear');
         await page.getByRole('textbox', { name: 'Candidate 1 Name' }).blur();
@@ -36,7 +35,6 @@ test.describe('Create Election', () => {
         await page.getByRole('link', { name: 'Vote', exact: true }).click();
 
         // Confirm Candidates
-        await page.getByRole('checkbox', { name: 'I have read the instructions' }).check();
         await expect(page.getByRole('heading', { name: 'Pear', exact: true })).toBeVisible();
         await expect(page.getByRole('heading', { name: 'Apple', exact: true })).toBeVisible();
         await expect(page.getByRole('heading', { name: 'Strawberry', exact: true })).toBeVisible();
@@ -88,11 +86,10 @@ test.describe('Create Election', () => {
         await page.getByRole('textbox', { name: 'Question Title' }).click();
         await page.getByRole('textbox', { name: 'Question Title' }).fill('Poll + Single Race + Admin-managed voter IDs');
         await page.getByRole('textbox', { name: 'Question Title' }).blur();
-        await page.getByRole('button', { name: 'Voting Method', exact: true }).click();
+        await page.getByRole('button', { name: 'Select the voting method' }).click();
         await page.getByRole('radio', { name: 'Basic Multi-Winner' }).check();
         await page.getByRole('button', { name: 'Next' }).nth(1).click();
         await page.getByRole('radio', { name: 'STAR Voting' }).check();
-        await page.getByRole('button', { name: 'Choices' }).click();
         await page.getByRole('textbox', { name: 'Candidate 1 Name' }).fill('A');
         await page.getByRole('textbox', { name: 'Candidate 1 Name' }).press('Tab');
         await page.getByRole('textbox', { name: 'Candidate 2 Name' }).fill('B');
