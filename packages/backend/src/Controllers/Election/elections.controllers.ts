@@ -9,6 +9,7 @@ import { getOrCreateElectionRoll, checkForMissingAuthenticationData, getVoterAut
 import { ElectionRoll } from '@equal-vote/star-vote-shared/domain_model/ElectionRoll';
 import { sharedConfig } from '@equal-vote/star-vote-shared/config';
 import { hashString } from '../controllerUtils';
+import { Conflict } from '@curveball/http-errors';
 
 var ElectionsModel =  ServiceLocator.electionsDb();
 var accountService = ServiceLocator.accountService();
@@ -44,6 +45,14 @@ const electionSpecificAuth = async (req: IElectionRequest, res: any, next: any) 
     }
     const electionKey = req.election.auth_key;
     if (electionKey == null || electionKey == ""){
+        return next();
+    }
+    // RS256-only. Reject any auth_key that isn't a PEM-encoded RSA public key —
+    // including legacy HS256 secrets that may exist in old DB rows. Treat such
+    // a row as if the election had no auth_key (fall through unauthenticated)
+    // rather than throwing, so admin GETs on legacy rows don't 500.
+    if (!electionKey.includes('-----BEGIN PUBLIC KEY')) {
+        Logger.warn(req, `${className}.electionSpecificAuth: ignoring non-PEM auth_key`);
         return next();
     }
     var user = accountService.extractUserFromRequest(req, electionKey);
@@ -144,8 +153,20 @@ async function updateElectionStateIfNeeded(req:IRequest, election:Election):Prom
         }
     }
     if (stateChange) {
-        election = await ElectionsModel.updateElection(election, req, stateChangeMsg);
-        Logger.info(req, stateChangeMsg);
+        const expected_update_date = election.update_date as string;
+        try {
+            election = await ElectionsModel.updateElection(election, req, stateChangeMsg, expected_update_date);
+            Logger.info(req, stateChangeMsg);
+        } catch (err: any) {
+            // Concurrent GETs can both decide to transition state. Whichever loses
+            // the OCC race re-reads to get the version that the winner installed.
+            if (err instanceof Conflict) {
+                Logger.info(req, `Lost state-transition race for ${election.election_id}, refetching`);
+                const refreshed = await ElectionsModel.getElectionByID(election.election_id, req);
+                if (refreshed) return refreshed;
+            }
+            throw err;
+        }
     }
     return election;
 }
@@ -160,7 +181,18 @@ const returnElection = async (req: any, res: any, next: any) => {
         roll = await getOrCreateElectionRoll(req, election, req);
     }
     const voterAuthorization = getVoterAuthorization(roll,missingAuthData)
-    removeHiddenFields(election)
+    // auth_key is a PEM public key, harmless to leak, but we still hide it from
+    // non-editors to avoid fingerprinting integrations across elections. Anyone
+    // with canEditElection does read-modify-write edits, so they must get it back
+    // or their PUT would persist undefined and wipe it (updateElection inserts the
+    // row verbatim). Keep this list in sync with permissions.canEditElection.
+    const requesterRoles: string[] = req.user_auth?.roles ?? [];
+    const canEdit = requesterRoles.includes(roles.owner)
+        || requesterRoles.includes(roles.admin)
+        || requesterRoles.includes(roles.system_admin);
+    if (!canEdit) {
+        removeHiddenFields(election)
+    }
     res.json({
         election: election,
         precinctFilteredElection: getPrecinctFilteredElection(election, roll),

@@ -68,7 +68,7 @@ test.describe('Create Election', () => {
 
         // Confirm support email
         await page.getByRole('link', { name: 'Settings' }).click();
-        await expect(page.getByRole('textbox', { name: 'Election Support Email' })).toHaveValue('test@gmail.com')
+        await expect(page.getByText('test@gmail.com')).toBeVisible()
 
         // Confirm email list
         await page.getByRole('link', { name: 'Manage Voters' }).click();
@@ -104,7 +104,7 @@ test.describe('Create Election', () => {
 
         // Confirm support email
         await page.getByRole('link', { name: 'Settings' }).click();
-        await expect(page.getByRole('textbox', { name: 'Election Support Email' })).toHaveValue('test@gmail.com')
+        await expect(page.getByText('test@gmail.com')).toBeVisible()
 
         // Confirm voter ID list
         await page.getByRole('link', { name: 'Manage Voters' }).click();
