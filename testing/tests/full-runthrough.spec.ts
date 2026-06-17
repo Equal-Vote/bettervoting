@@ -49,10 +49,12 @@ test('Full Runthrough', async ({ page }) => {
 
 	// Election Settings
 	await page.getByRole('link', { name: 'Settings' }).click();
-	await page
-		.getByRole('switch', { name: /Set Number Of Rankings/ })
-		.check();
-	await page.getByRole('spinbutton', { name: 'Rank Limit' }).fill('8');
+	// Rank limit is always shown as an inline segmented control (one toggle button
+	// per value); pick "8". Each button is labelled "<n> ranks". Asserting
+	// aria-pressed gives the optimistic write a settle point before we navigate away.
+	const rankEight = page.getByRole('button', { name: '8 ranks' });
+	await rankEight.click();
+	await expect(rankEight).toHaveAttribute('aria-pressed', 'true');
 
 	// Adding Race 1
 	await page.getByRole('link', { name: 'Build Ballot' }).click();

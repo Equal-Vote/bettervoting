@@ -49,7 +49,7 @@ export const useGetGlobalElectionStats = () => {
 }
 
 export const useEditElection = (election_id: string | undefined) => {
-    return useFetch<{ Election: Election }, { election: Election }>(`/API/Election/${election_id}/edit`, 'post')
+    return useFetch<{ Election: Election, expected_update_date: string }, { election: Election }>(`/API/Election/${election_id}/edit`, 'post')
 }
 
 export const useSendInvites = (electionID: string | undefined) => {
@@ -89,8 +89,8 @@ export const useGetRoll = (electionId: string, voterId) => {
 }
 
 export const usePutElectionRoles = (election_id: string) => {
-    return useFetch<{ admin_ids: string[], audit_ids: string[], credential_ids: string[] }, object>(
-        `/API/Election/${election_id}/roles/`, 
+    return useFetch<{ admin_ids: string[], audit_ids: string[], credential_ids: string[], expected_update_date: string }, object>(
+        `/API/Election/${election_id}/roles/`,
         'put',
         'Election Roles Saved!',)
 }
@@ -100,7 +100,7 @@ export const usePostRolls = (election_id: string) => {
 }
 
 export const useSetPublicResults = (election_id: string) => {
-    return useFetch<{ public_results: boolean }, { election: Election }>(`/API/Election/${election_id}/setPublicResults`, 'post')
+    return useFetch<{ public_results: boolean, expected_update_date: string }, { election: Election }>(`/API/Election/${election_id}/setPublicResults`, 'post')
 }
 
 export const useDeleteAllBallots = (election_id: string) => {
@@ -108,7 +108,7 @@ export const useDeleteAllBallots = (election_id: string) => {
 }
 
 export const useFinalizeElection = (election_id: string) => {
-    return useFetch<undefined, { election: Election }>(`/API/Election/${election_id}/finalize`, 'post')
+    return useFetch<{ expected_update_date: string }, { election: Election }>(`/API/Election/${election_id}/finalize`, 'post')
 }
 
 export const useClaimElection = (election_id: string) => {
@@ -116,11 +116,11 @@ export const useClaimElection = (election_id: string) => {
 }
 
 export const useArchiveEleciton = (election_id: string) => {
-    return useFetch<undefined, { election: Election }>(`/API/Election/${election_id}/archive`, 'post')
+    return useFetch<{ expected_update_date: string }, { election: Election }>(`/API/Election/${election_id}/archive`, 'post')
 }
 
 export const useSetOpenState = (election_id: string) => {
-    return useFetch<{ open: boolean }, { election: Election }>(`/API/Election/${election_id}/setOpenState`, 'post')
+    return useFetch<{ open: boolean, expected_update_date: string }, { election: Election }>(`/API/Election/${election_id}/setOpenState`, 'post')
 }
 
 export const useApproveRoll = (election_id: string) => {

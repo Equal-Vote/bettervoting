@@ -24,45 +24,50 @@ interface RaceProps {
 }
 
 export default function Race({ race, race_index }: RaceProps) {
-    const { election, updateElection, refreshElection, t } = useElection()
+    const { election, updateElection, refreshElection, enqueueWrite, t } = useElection()
     const { makeRequest: deleteAllBallots } = useDeleteAllBallots(election.election_id);
     const confirm = useConfirm();
     const navigate = useNavigate();
     const [open, setOpen] = useState(false);
 
     const onSave = async (editedRace) => {
-        const success = await updateElection(election => {
+        const updated = await updateElection(election => {
             election.races[race_index] = editedRace
-        }) && await deleteAllBallots()
-        if (!success) return false
-        await refreshElection()
-        return true
+        });
+        if (!updated) return false;
+        const cleared = await enqueueWrite(() => deleteAllBallots());
+        if (!cleared) return false;
+        await refreshElection();
+        return true;
     }
 
     const onDuplicate = async () => {
         const race = election.races[race_index];
-        const success = await updateElection(election => {
+        const updated = await updateElection(election => {
             election.races.push({
                 ...race,
                 title: 'Copy Of ' + race.title,
                 race_id: makeID(ID_PREFIXES.RACE, ID_LENGTHS.RACE)
             })
-        }) && deleteAllBallots()
-        if (!success) return false
-        await refreshElection()
-        return true
+        });
+        if (!updated) return false;
+        const cleared = await enqueueWrite(() => deleteAllBallots());
+        if (!cleared) return false;
+        await refreshElection();
+        return true;
     }
 
     const onDelete = async () => {
         const confirmed = await confirm({ title: 'Confirm', message: 'Are you sure?' })
-        if (!confirmed) return false
-        let success = await updateElection(election => {
+        if (!confirmed) return false;
+        const updated = await updateElection(election => {
             election.races.splice(race_index, 1)
-        })
-        success = success && await deleteAllBallots()
-        if (!success) return false
-        await refreshElection()
-        return true
+        });
+        if (!updated) return false;
+        const cleared = await enqueueWrite(() => deleteAllBallots());
+        if (!cleared) return false;
+        await refreshElection();
+        return true;
     }
 
     return (

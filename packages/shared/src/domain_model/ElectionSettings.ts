@@ -92,8 +92,8 @@ export function electionSettingsValidation(obj:ElectionSettings, electionState?:
   if (obj.term_type && !TermTypes.includes(obj.term_type)){
     return "Invalid Term Type";
   }
-  // NOTE: temporarily disabling because this broke the ability to set the max rankings from the frontend
-  if (obj.max_rankings && (typeof obj.max_rankings !== 'number' || obj.max_rankings < 0)){
+  // max_rankings is optional, but when set it must be a positive integer.
+  if (obj.max_rankings !== undefined && (typeof obj.max_rankings !== 'number' || !Number.isInteger(obj.max_rankings) || obj.max_rankings < 1)){
    return "Invalid Max Rankings";
   }
   if (obj.draggable_ballot && typeof obj.draggable_ballot !== 'boolean'){

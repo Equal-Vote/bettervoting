@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { useLocation, useNavigate } from "react-router";
 import React from 'react'
 import EditElectionRoll from "./EditElectionRoll";
@@ -18,7 +18,7 @@ import useConfirm from "~/components/ConfirmationDialogProvider";
 import { AdminPageNavigation } from '../Sidebar';
 
 const ViewElectionRolls = () => {
-    const { election, permissions, t, updateElection, refreshElection } = useElection()
+    const { election, permissions, t, updateElection } = useElection()
     const { data, isPending, makeRequest: fetchRolls } = useGetRolls(election.election_id)
     const sendEmails = useSendEmails(election.election_id)
     useEffect(() => {
@@ -31,7 +31,7 @@ const ViewElectionRolls = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [dialogOpen, setDialogOpen] = useState(false);
-    
+
     // Radios are pure projections of the canonical mode. Each click computes the
     // next mode and fires one updateElection — no racing useSyncedState debounces.
     // Legacy non-canonical rows throw; treat them as "open" so the page still

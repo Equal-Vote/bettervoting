@@ -14,12 +14,12 @@ import useElection from '../../ElectionContextProvider';
 import useAuthSession from '../../AuthSessionContextProvider';
 import { AdminPageNavigation } from '../Sidebar';
 import { TimeZone, timeZones } from '@equal-vote/star-vote-shared/domain_model/Util';
-import useSyncedState from '~/hooks/useSyncedState';
+import useOptimisticToggle from '~/hooks/useOptimisticToggle';
 
 export default () => {
     const authSession = useAuthSession()
-    const { t, election, refreshElection: fetchElection, permissions } = useElection()
-    
+    const { t, election, refreshElection: fetchElection, permissions, enqueueWrite } = useElection()
+
     const { makeRequest: finalize } = useFinalizeElection(election.election_id)
 
     const { makeRequest: setOpenState } = useSetOpenState(election.election_id)
@@ -43,7 +43,7 @@ export default () => {
         const confirmed = await confirm(t('admin_home.finalize_confirm'));
         if (!confirmed) return;
         try {
-            await finalize();
+            await enqueueWrite(expected_update_date => finalize({ expected_update_date }));
             await fetchElection();
         } catch (err) {
             console.error(err);
@@ -100,7 +100,9 @@ export default () => {
         </Grid>}
     </Box>
 
-    const [isOpen, setIsOpen] = useSyncedState(election.state === 'open', async (toggled) => !!await setOpenState({open: toggled}));
+    const [isOpen, setIsOpen] = useOptimisticToggle(election.state === 'open', async (toggled) =>
+        !! await enqueueWrite(expected_update_date => setOpenState({ open: toggled, expected_update_date }))
+    );
     
     const hasScheduledTimes = !!(election.start_time || election.end_time);
     const canEditState = permissions?.includes('canEditElectionState') ?? false;

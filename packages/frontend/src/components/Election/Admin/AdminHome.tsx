@@ -23,7 +23,7 @@ type SectionProps = {
 
 const AdminHome = () => {
     const authSession = useAuthSession()
-    const { election, permissions, refreshElection: fetchElection } = useElection()
+    const { election, permissions, refreshElection: fetchElection, enqueueWrite } = useElection()
     const {t} = useSubstitutedTranslation(election.settings.term_type, {time_zone: election.settings.time_zone});
 
     const { makeRequest: archive } = useArchiveEleciton(election.election_id)
@@ -67,7 +67,7 @@ const AdminHome = () => {
         const confirmed = await confirm(t('admin_home.archive_confirm'))
         if (!confirmed) return
         try {
-            await archive();
+            await enqueueWrite(expected_update_date => archive({ expected_update_date }));
             await fetchElection()
         } catch (err) {
             console.error(err)
