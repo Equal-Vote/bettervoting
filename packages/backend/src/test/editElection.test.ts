@@ -140,12 +140,16 @@ describe("Edit Election", () => {
             th.testComplete();
         })
 
-        test("accepts edit when expected_update_date is omitted (backwards compatible)", async () => {
+        test("rejects edit with 400 when expected_update_date is omitted", async () => {
             const electionId = await setupInitialElection();
             const election1Copy = { ...testInputs.Election1, election_id: electionId };
 
-            const response = await th.editElection(election1Copy, testInputs.user1token);
-            expect(response.statusCode).toBe(200);
+            const response = await th.postRequest(
+                `/API/Election/${electionId}/edit`,
+                { Election: election1Copy },
+                testInputs.user1token,
+            );
+            expect(response.statusCode).toBe(400);
             th.testComplete();
         })
     })
