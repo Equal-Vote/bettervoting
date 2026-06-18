@@ -28,6 +28,7 @@
   },
   "homepage": "https://github.com/Equal-Vote/bettervoting#readme",
   "devDependencies": {
+    "@ai-hero/sandcastle": "^0.8.0",
     "@playwright/test": "^1.60.0",
     "rimraf": "^5.0.5"
   },
@@ -36,11 +37,11 @@
     "typescript": "^5.9.0"
   },
   "optionalDependencies": {
-    "@rspack/binding-linux-x64-gnu": "latest",
-    "@rspack/binding-linux-arm64-gnu": "latest",
-    "@rspack/binding-linux-x64-musl": "latest",
     "@rspack/binding-darwin-arm64": "latest",
-    "@rspack/binding-darwin-x64": "latest"
+    "@rspack/binding-darwin-x64": "latest",
+    "@rspack/binding-linux-arm64-gnu": "latest",
+    "@rspack/binding-linux-x64-gnu": "latest",
+    "@rspack/binding-linux-x64-musl": "latest"
   },
   "overrides": {
     "@types/react": "^19.2.0",
