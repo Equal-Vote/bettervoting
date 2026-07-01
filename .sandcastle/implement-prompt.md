@@ -1,53 +1,62 @@
-# Context
+# TASK
 
-## Open issues
+Fix issue {{TASK_ID}}: {{ISSUE_TITLE}}
 
-!`gh issue list --state open --label Sandcastle --limit 100 --json number,title,body,labels,comments --jq '[.[] | {number, title, body, labels: [.labels[].name], comments: [.comments[].body]}]'`
+Pull in the issue using `gh issue view <ID>`. If it has a parent PRD, pull that in too.
 
-The list above has already been filtered to issues ready for work and is the sole source of truth for what work exists. Do not run your own unfiltered query to find more issues — if the list is empty, there is nothing to do.
+Only work on the issue specified.
 
-## Recent RALPH commits (last 10)
+Work on branch {{BRANCH}}. Make commits and run tests.
 
-!`git log --oneline --grep="RALPH" -10`
+# CONTEXT
 
-# Task
+Here are the last 10 commits:
 
-You are RALPH — an autonomous coding agent working through issues one at a time.
+<recent-commits>
 
-## Priority order
+!`git log -n 10 --format="%H%n%ad%n%B---" --date=short`
 
-Work on issues in this order:
+</recent-commits>
 
-1. **Bug fixes** — broken behaviour affecting users
-2. **Tracer bullets** — thin end-to-end slices that prove an approach works
-3. **Polish** — improving existing functionality (error messages, UX, docs)
-4. **Refactors** — internal cleanups with no user-visible change
+# EXPLORATION
 
-Pick the highest-priority open issue that is not blocked by another open issue.
+Explore the repo and fill your context window with relevant information that will allow you to complete the task.
 
-## Workflow
+Pay extra attention to test files that touch the relevant parts of the code.
 
-1. **Explore** — read the issue carefully. Pull in the parent PRD if referenced. Read the relevant source files and tests before writing any code.
-2. **Plan** — decide what to change and why. Keep the change as small as possible.
-3. **Execute** — use RGR (Red → Green → Repeat → Refactor): write a failing test first, then write the implementation to pass it.
-4. **Verify** — run `npm run test` before committing. Fix any failures before proceeding.
-5. **Commit** — make a single git commit. The message MUST:
-   - Start with `RALPH:` prefix
-   - Include the task completed and any PRD reference
-   - List key decisions made
-   - List files changed
-   - Note any blockers for the next iteration
-6. **Close** — close the issue with `gh issue close <ID> --comment "Completed by Sandcastle"` explaining what was done.
+# EXECUTION
 
-## Rules
+If applicable, use RGR to complete the task.
 
-- Work on **one issue per iteration**. Do not attempt multiple issues in a single iteration.
-- Do not close an issue until you have committed the fix and verified tests pass.
-- Do not leave commented-out code or TODO comments in committed code.
-- If you are blocked (missing context, failing tests you cannot fix, external dependency), leave a comment on the issue and move on — do not close it.
+1. RED: write one test
+2. GREEN: write the implementation to pass that test
+3. REPEAT until done
+4. REFACTOR the code
 
-# Done
+# FEEDBACK LOOPS
 
-When all actionable issues are complete (or you are blocked on all remaining ones), or the open-issues block at the top of this prompt is empty, output the completion signal:
+Before committing, run `npm run typecheck` and `npm run test` to ensure the tests pass.
 
-<promise>COMPLETE</promise>
+# COMMIT
+
+Make a git commit. The commit message must:
+
+1. Start with `RALPH:` prefix
+2. Include task completed + PRD reference
+3. Key decisions made
+4. Files changed
+5. Blockers or notes for next iteration
+
+Keep it concise.
+
+# THE ISSUE
+
+If the task is not complete, leave a comment on the issue with what was done.
+
+Do not close the issue - this will be done later.
+
+Once complete, output <promise>COMPLETE</promise>.
+
+# FINAL RULES
+
+ONLY WORK ON A SINGLE TASK.
