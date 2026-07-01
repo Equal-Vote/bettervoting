@@ -35,9 +35,16 @@ const planSchema = z.object({
   ),
 });
 
+const qaIssueSchema = z.object({
+  id: z.string(),
+  url: z.string(),
+});
+
 // ---------------------------------------------------------------------------
 // Configuration
 // ---------------------------------------------------------------------------
+
+const noqa = process.argv.includes("--noqa");
 
 // Maximum number of plan→execute→merge cycles before stopping.
 // Raise this if your backlog is large; lower it for a quick smoke-test run.
@@ -57,6 +64,8 @@ const copyToWorktree = ["node_modules"];
 // ---------------------------------------------------------------------------
 // Main loop
 // ---------------------------------------------------------------------------
+
+let anyIssuesSelected = false;
 
 for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
   console.log(`\n=== Iteration ${iteration}/${MAX_ITERATIONS} ===\n`);
@@ -92,6 +101,8 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
     console.log("No unblocked issues to work on. Exiting.");
     break;
   }
+
+  anyIssuesSelected = true;
 
   console.log(
     `Planning complete. ${issues.length} issue(s) to work in parallel:`,
@@ -222,4 +233,31 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
   console.log("\nBranches merged.");
 }
 
-console.log("\nAll done.");
+// ---------------------------------------------------------------------------
+// Phase 4: QA Issue
+//
+// After all merge cycles complete, one agent inspects the local commits
+// (everything ahead of origin/main) and creates a GitHub issue summarising
+// what was built along with manual QA steps for the human reviewer to follow
+// before pushing.
+// ---------------------------------------------------------------------------
+if (!anyIssuesSelected) {
+  console.log("\nNo issues were selected. Skipping QA issue.");
+} else if (noqa) {
+  console.log("\nSkipping QA issue (--noqa). All done.");
+} else {
+  console.log("\n=== Creating QA issue ===\n");
+
+  const qaIssue = await sandcastle.run({
+    hooks,
+    sandbox: docker(),
+    name: "qa-issue",
+    maxIterations: 1,
+    agent: sandcastle.claudeCode("claude-sonnet-4-6"),
+    promptFile: "./.sandcastle/qa-issue-prompt.md",
+    output: sandcastle.Output.object({ tag: "qa-issue", schema: qaIssueSchema }),
+  });
+
+  console.log(`\nAll done. Review the QA issue, then push when ready:`);
+  console.log(`  ${qaIssue.output.url}`);
+}
