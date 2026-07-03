@@ -59,7 +59,8 @@ const hooks = {
 // Copy node_modules from the host into the worktree before each sandbox
 // starts. Avoids a full npm install from scratch; the hook above handles
 // platform-specific binaries and any packages added since the last copy.
-const copyToWorktree = ["node_modules"];
+// NOTE: the bettervoting node_modules folder times out, possibly due to size, or due to complexity with npm workspaces, instead we just do a fresh install in the git worktree
+const copyToWorktree: string[] = [];// ["node_modules"];
 
 // ---------------------------------------------------------------------------
 // Main loop
@@ -203,7 +204,8 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
   if (completedBranches.length === 0) {
     // All agents ran but none made commits — nothing to merge this cycle.
     console.log("No commits produced. Nothing to merge.");
-    continue;
+    //continue;
+    break; // for now we'll break since this usually means we're done
   }
 
   // -------------------------------------------------------------------------

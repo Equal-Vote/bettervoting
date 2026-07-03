@@ -29,7 +29,7 @@
   },
   "homepage": "https://github.com/Equal-Vote/bettervoting#readme",
   "devDependencies": {
-    "@ai-hero/sandcastle": "^0.8.0",
+    "@ai-hero/sandcastle": "^0.12.0",
     "@playwright/test": "^1.60.0",
     "rimraf": "^5.0.5"
   },
