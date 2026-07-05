@@ -104,6 +104,50 @@ describe('buildElectionExport (v2 export format)', () => {
         expect(cand.candidate_name).toBeDefined();
     });
 
+    test('preserves a null score (abstention) distinct from an explicit 0', () => {
+        // null = "did not score this candidate"; must NOT be dropped or turned into 0.
+        const election2: any = {
+            election_id: 'e2',
+            title: 'null score test',
+            head: true,
+            races: [
+                {
+                    race_id: 'r1',
+                    title: 'R',
+                    voting_method: 'STAR',
+                    num_winners: 1,
+                    candidates: [
+                        { candidate_id: 'a', candidate_name: 'Amy' },
+                        { candidate_id: 'b', candidate_name: 'Bo' },
+                    ],
+                },
+            ],
+            settings: {},
+        };
+        const ballots2: any = [
+            {
+                ballot_id: 'x',
+                election_id: 'e2',
+                votes: [
+                    {
+                        race_id: 'r1',
+                        scores: [
+                            { candidate_id: 'a', score: 0 }, // flat zero
+                            { candidate_id: 'b', score: null }, // abstained on Bo
+                        ],
+                    },
+                ],
+            },
+        ];
+        const o: any = buildElectionExport(election2, ballots2, undefined);
+        const scores = o.ballots[0].votes[0].scores;
+        const a = scores.find((s: any) => s.candidate_id === 'a');
+        const b = scores.find((s: any) => s.candidate_id === 'b');
+        expect(a.score).toBe(0);
+        expect(b).toHaveProperty('score'); // key kept
+        expect(b.score).toBeNull(); // and it stays null, not dropped, not 0
+    });
+
     test('normalizes timestamps to ISO-8601 and omits null fields', () => {
         expect(out.election.update_date).toBe(new Date(1783258899541).toISOString());
         expect(out.election.create_date).toBe('2026-07-05T13:41:39.541Z');

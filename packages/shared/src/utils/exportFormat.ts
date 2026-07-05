@@ -77,22 +77,29 @@ const cleanElection = (e: Election): any => {
 // ballot row — that re-bloats large elections (e.g. 51 candidates x 100 ballots).
 // Names are always resolvable from election.races[].candidates (and, when present,
 // results[].candidates), so no information is lost.
+//
+// IMPORTANT: a score of `null` is MEANINGFUL — it means the voter did not score
+// that candidate (an abstention on that candidate), which is distinct from an
+// explicit `0` and from scoring the "None of the Above" (c-nota) candidate. So
+// scores are preserved verbatim (including null); we do NOT run the null-omitting
+// pass over ballot rows. Only genuinely-absent optional metadata is dropped.
 const cleanBallots = (ballots: AnonymizedBallot[]): any[] =>
-    (ballots ?? []).map((b: any) =>
-        omitEmpty({
-            ballot_id: b.ballot_id,
-            precinct: b.precinct,
-            votes: (b.votes ?? []).map((v: any) => ({
-                race_id: v.race_id,
-                overvote_rank: v.overvote_rank,
-                has_duplicate_rank: v.has_duplicate_rank,
-                scores: (v.scores ?? []).map((s: any) => ({
-                    candidate_id: s.candidate_id,
-                    score: s.score,
-                })),
-            })),
-        }),
-    );
+    (ballots ?? []).map((b: any) => {
+        const out: any = { ballot_id: b.ballot_id };
+        if (b.precinct != null) out.precinct = b.precinct;
+        out.votes = (b.votes ?? []).map((v: any) => {
+            const vote: any = { race_id: v.race_id };
+            if (v.overvote_rank != null) vote.overvote_rank = v.overvote_rank;
+            if (v.has_duplicate_rank != null) vote.has_duplicate_rank = v.has_duplicate_rank;
+            // Preserve every score exactly, including explicit `null` (= not scored).
+            vote.scores = (v.scores ?? []).map((s: any) => ({
+                candidate_id: s.candidate_id,
+                score: s.score === undefined ? null : s.score,
+            }));
+            return vote;
+        });
+        return out;
+    });
 
 // Turn one race's tabulator result into the clean v2 shape.
 const cleanResult = (r: any): any => {
