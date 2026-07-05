@@ -7,6 +7,7 @@ import BorderAll from '@mui/icons-material/BorderAll';
 import DataObject from '@mui/icons-material/DataObject';
 import { MenuButton } from '~/components/MenuButton';
 import useAnonymizedBallots from '~/components/AnonymizedBallotsContextProvider';
+import { buildElectionExport } from '@equal-vote/star-vote-shared/utils/exportFormat';
 import { Box } from '@mui/material';
 
 interface Props {
@@ -66,7 +67,7 @@ export const BallotDataExport = ({ election, results }: Props) => {
         return string.substring(0, limit);
     };
     const downloadJson = async () => {
-        const ballotObject = { Election: election, Ballots: ballots, ...(results && { Results: results }) };
+        const ballotObject = buildElectionExport(election, ballots, results);
         const ballotJson = JSON.stringify(ballotObject, null, 2);
         const blob = new Blob([ballotJson], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
