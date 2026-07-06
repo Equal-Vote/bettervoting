@@ -25,7 +25,12 @@ export const BallotDataExport = ({ election, results }: Props) => {
         key: string;
     })[]>([]);
     const { ballots, fetchBallots } = useAnonymizedBallots();
-    const downloadCSV = async () => {
+    // 'raw'      => keep a blank (null / not scored) as an empty cell — preserves the audit
+    //               trail (an empty cell is distinct from an explicit 0). Ref issue #1160 Option B.
+    // 'official' => fill blanks with 0 so 3rd-party counting tools (Excel/Python) don't choke.
+    //               Ref issue #1160 Option A.
+    const [csvMode, setCsvMode] = useState<'raw' | 'official'>('raw');
+    const downloadCSV = async (mode: 'raw' | 'official' = 'raw') => {
         if (!ballots) return
         let header = [
             { label: 'ballot_id', key: 'ballot_id' },
@@ -46,7 +51,10 @@ export const BallotDataExport = ({ election, results }: Props) => {
             const row = { ballot_id: ballot.ballot_id, precinct: ballot.precinct };
             ballot.votes.forEach((vote) => {
                 vote.scores.forEach((score) => {
-                    row[`${vote.race_id}-${score.candidate_id}`] = score.score;
+                    // null / undefined = the voter didn't score this candidate.
+                    // Raw keeps it blank (distinct from an explicit 0); Official fills 0.
+                    row[`${vote.race_id}-${score.candidate_id}`] =
+                        score.score ?? (mode === 'official' ? 0 : '');
                 })
                 const race = election.races.find(r => r.race_id == vote.race_id);
                 if(race.voting_method == 'IRV' || race.voting_method == 'STV'){
@@ -56,6 +64,7 @@ export const BallotDataExport = ({ election, results }: Props) => {
             });
             return row;
         });
+        setCsvMode(mode);
         setCsvData(tempCsvData);
         setCsvHeaders(header);
         document.getElementById('csv-download-link')?.click();
@@ -83,9 +92,13 @@ export const BallotDataExport = ({ election, results }: Props) => {
                     {ballots && 
                         <Box sx={{m:1, maxWidth: '400px'}}>
                             <MenuButton label={"Download"} >
-                                <MenuItem key="csv"  id={"download-csv"} onClick={downloadCSV}>
+                                <MenuItem key="csv-official" id={"download-csv"} onClick={() => downloadCSV('official')}>
                                     <BorderAll sx={{ marginRight: 1 }} />
-                                    Download CSV
+                                    Download CSV (Official Count)
+                                </MenuItem>
+                                <MenuItem key="csv-raw" onClick={() => downloadCSV('raw')}>
+                                    <BorderAll sx={{ marginRight: 1 }} />
+                                    Download CSV (Raw / Audit)
                                 </MenuItem>
                                 <MenuItem key="json" onClick={downloadJson}>
                                     <DataObject sx={{ marginRight: 1 }} />
@@ -114,7 +127,7 @@ export const BallotDataExport = ({ election, results }: Props) => {
                     headers={csvHeaders}
                     
                     target="_blank"
-                    filename={`Ballot Data - ${limit(election.title, 50)}-${election.election_id}.csv`}
+                    filename={`Ballot Data - ${limit(election.title, 50)}-${election.election_id}-${csvMode}.csv`}
                     enclosingCharacter={``}
                     style={{ display: 'none' }}
                 />
