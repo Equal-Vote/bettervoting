@@ -4,6 +4,7 @@ import {electionsRouter, ballotRouter, rollRouter} from './Routes';
  
 // var debugRouter = require('./Routes/debug.routes')
 import cors from 'cors';
+import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import Logger from './Services/Logging/Logger';
 import {IRequest, iRequestMiddleware, reqIdSuffix} from './IRequest';
@@ -30,6 +31,10 @@ export default function makeApp() {
         origin: prodEndpoints,
         credentials: true, // allow the backend to receive cookies from the frontend
     }))
+
+    // Compress responses (brotli when the client supports it, otherwise gzip).
+    // Large-election JSON endpoints like anonymizedBallots were previously sent uncompressed.
+    app.use(compression())
 
     // Set to trust proxy so we can resolve client IP address
     // We trust internal network IPs (like the internal Azure infrastructure) as proxies.
