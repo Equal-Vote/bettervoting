@@ -34,7 +34,8 @@ export default function makeApp() {
 
     // Compress responses (brotli when the client supports it, otherwise gzip).
     // Large-election JSON endpoints like anonymizedBallots were previously sent uncompressed.
-    app.use(compression())
+    // Only responses of at least 1MB are compressed; smaller ones aren't worth the CPU cost.
+    app.use(compression({ threshold: '1mb' }))
 
     // Set to trust proxy so we can resolve client IP address
     // We trust internal network IPs (like the internal Azure infrastructure) as proxies.
