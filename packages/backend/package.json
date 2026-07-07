@@ -44,6 +44,7 @@
     "multer": "^2.1.1",
     "pg": "^8.7.3",
     "pg-boss": "^8.0.0",
+    "pg-cursor": "^2.21.0",
     "qs": "^6.14.2",
     "sanitize-html": "^2.13.1",
     "socket.io": "^4.7.5",
@@ -51,6 +52,7 @@
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
+    "@types/pg-cursor": "^2.7.2",
     "@types/sanitize-html": "^2.13.0",
     "@types/supertest": "^2.0.12",
     "@types/swagger-jsdoc": "^6.0.4",
