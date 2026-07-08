@@ -321,9 +321,21 @@ export const openFeedback = () => {
   (button as HTMLButtonElement).click();
 };
 
-export function scrollToElement(e, opts: { behavior?: ScrollBehavior; delay?: number } = {}) {
-  const { behavior = "smooth", delay = 250 } = opts;
-  setTimeout(() => {
+export function scrollToElement(e, opts: { behavior?: ScrollBehavior; delay?: number; cancelOnUserInput?: boolean } = {}) {
+  const { behavior = "smooth", delay = 250, cancelOnUserInput = false } = opts;
+
+  // cancelOnUserInput drops a still-pending scroll if the user interacts
+  // during the delay, so a delayed scroll never yanks the page out from
+  // under a click that happened after the triggering one
+  const userEvents: (keyof WindowEventMap)[] = ["wheel", "pointerdown", "keydown"];
+  const removeListeners = () => userEvents.forEach((ev) => window.removeEventListener(ev, cancel));
+  function cancel() {
+    clearTimeout(timer);
+    removeListeners();
+  }
+
+  const timer = setTimeout(() => {
+    removeListeners();
     // TODO: I feel like there's got to be an easier way to do this
     let openedSection = typeof e === "function" ? e() : e;
 
@@ -355,6 +367,8 @@ export function scrollToElement(e, opts: { behavior?: ScrollBehavior; delay?: nu
       });
     }
   }, delay);
+
+  if (cancelOnUserInput) userEvents.forEach((ev) => window.addEventListener(ev, cancel, { passive: true }));
 }
 
 export const epochToDateString = (e) => {
