@@ -321,7 +321,8 @@ export const openFeedback = () => {
   (button as HTMLButtonElement).click();
 };
 
-export function scrollToElement(e) {
+export function scrollToElement(e, opts: { behavior?: ScrollBehavior; delay?: number } = {}) {
+  const { behavior = "smooth", delay = 250 } = opts;
   setTimeout(() => {
     // TODO: I feel like there's got to be an easier way to do this
     let openedSection = typeof e === "function" ? e() : e;
@@ -350,10 +351,10 @@ export function scrollToElement(e) {
     if (elemTop < windowTop || elemBottom > windowBottom) {
       window.scrollTo({
         top: elemTop - navHeight,
-        behavior: "smooth",
+        behavior,
       });
     }
-  }, 250);
+  }, delay);
 }
 
 export const epochToDateString = (e) => {
