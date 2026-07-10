@@ -197,6 +197,28 @@ export const SecondaryButton = (props: CustomButtonProps) => (
     </Button>
 )
 
+export const UtilityButton = (props: CustomButtonProps) => (
+    <Button
+        {...props}
+        sx={{
+            textDecoration: 'none',
+            textTransform: 'none',
+            color: 'text.secondary',
+            fontSize: '0.9rem',
+            fontWeight: 500,
+            px: 1,
+            py: 0.5,
+            '&:hover': {
+                backgroundColor: 'transparent',
+                color: 'text.primary',
+            },
+            ...props.sx,
+        }}
+    >
+        {props.children}
+    </Button>
+)
+
 export const LinkButton = (props) => (
     <Link
         {...props}
