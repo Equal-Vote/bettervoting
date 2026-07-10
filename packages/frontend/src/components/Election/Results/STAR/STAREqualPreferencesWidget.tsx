@@ -14,7 +14,8 @@ const STAREqualPreferencesWidget = ({frontRunners}: {frontRunners: candidate[]})
     
     const b = ballotsForRace()
     b.forEach(scores => {
-        const topScores = ([0, 1]).map(i => getEntry(scores, frontRunners[i].id, 'candidate_id').score);
+        // treat skipped candidates (null score) as 0, matching the tabulator
+        const topScores = ([0, 1]).map(i => getEntry(scores, frontRunners[i].id, 'candidate_id').score ?? 0);
         if(topScores[0] == topScores[1]) equalPreferences[topScores[0]]++;
     })
 
