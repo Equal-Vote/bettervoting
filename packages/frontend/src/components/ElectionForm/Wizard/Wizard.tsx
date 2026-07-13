@@ -53,7 +53,7 @@ export const makeDefaultElection = () => {
             ballot_updates: false,
             public_results: true,
             random_candidate_order: true,
-            require_instruction_confirmation: true,
+            require_instruction_confirmation: false,
             draggable_ballot: false,
             term_type: undefined,
         }
@@ -111,6 +111,7 @@ const Wizard = () => {
             ...election,
             races: [editedRace],
             title: editedRace.title,
+            description: editedRace.description,
         }
         const confirmed = await confirm(t('wizard.publish_confirm'));
         if (confirmed) {
