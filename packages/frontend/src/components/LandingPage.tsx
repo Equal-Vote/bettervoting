@@ -24,10 +24,30 @@ const LandingPage = () => {
             openFeedback();
         }
 
-        if(checkUrl.pathname === "/new_election")
-        {
-            scrollToElement(document.querySelector(`.wizard`))
-        }
+        if(checkUrl.pathname !== "/new_election") return;
+
+        // Jump straight to the wizard, then keep re-aligning while the content
+        // above it (carousel, images) loads and pushes it down. A one-shot
+        // delayed smooth scroll can land short of the wizard (especially on
+        // Firefox) when the page reflows after the scroll starts.
+        const align = () => scrollToElement(document.querySelector(`.wizard`), { behavior: 'auto', delay: 0 });
+        align();
+
+        const observer = new ResizeObserver(align);
+        observer.observe(document.body);
+        const stop = () => observer.disconnect();
+
+        // stop re-aligning once layout has settled, or as soon as the user
+        // scrolls on their own
+        const settleTimeout = setTimeout(stop, 2000);
+        const userEvents: (keyof WindowEventMap)[] = ['wheel', 'pointerdown', 'keydown'];
+        userEvents.forEach((e) => window.addEventListener(e, stop, { passive: true }));
+
+        return () => {
+            clearTimeout(settleTimeout);
+            stop();
+            userEvents.forEach((e) => window.removeEventListener(e, stop));
+        };
     }, [checkUrl]);
 
     
