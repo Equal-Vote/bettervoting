@@ -4,22 +4,24 @@
 //   Phase 1 (Plan):             A sonnet agent analyzes open issues, builds a
 //                               dependency graph, and outputs a <plan> JSON
 //                               listing unblocked issues with branch names.
-//   Phase 2 (Execute + Review + QA): For each issue, a sandbox is created via
+//   Phase 2 (Execute + Review): For each issue, a sandbox is created via
 //                               createSandbox(). The implementer runs first
 //                               (100 iterations). If it produces commits, a
 //                               reviewer runs in the same sandbox on the same
-//                               branch (1 iteration), followed by a QA agent
-//                               that posts manual QA steps as a comment on
-//                               the issue. All issue pipelines run
-//                               concurrently via Promise.allSettled().
-//   Phase 3 (Merge):            A single agent merges all completed branches
-//                               into the current branch.
+//                               branch (1 iteration), which also posts a QA
+//                               comment (summary + manual QA steps) on the
+//                               issue once its review is done. All issue
+//                               pipelines run concurrently via
+//                               Promise.allSettled().
+//   Phase 3 (Merge):            Opt-in via --merge. A single agent merges all
+//                               completed branches into the current branch.
 //
 // The outer loop repeats up to MAX_ITERATIONS times so that newly unblocked
 // issues are picked up after each round of merges.
 //
 // Usage:
-//   npx tsx .sandcastle/main.mts
+//   npx tsx .sandcastle/main.mts           # plan/execute/review only
+//   npx tsx .sandcastle/main.mts --merge   # also merge completed branches
 // Or add to package.json:
 //   "scripts": { "sandcastle": "npx tsx .sandcastle/main.mts" }
 
@@ -40,6 +42,10 @@ const planSchema = z.object({
 // ---------------------------------------------------------------------------
 // Configuration
 // ---------------------------------------------------------------------------
+
+// Merging is opt-in: by default branches are left unmerged so the QA
+// comments can be reviewed before anything touches the current branch.
+const shouldMerge = process.argv.includes("--merge");
 
 // Maximum number of plan→execute→merge cycles before stopping.
 // Raise this if your backlog is large; lower it for a quick smoke-test run.
@@ -104,13 +110,13 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
   }
 
   // -------------------------------------------------------------------------
-  // Phase 2: Execute + Review + QA
+  // Phase 2: Execute + Review
   //
-  // For each issue, create a sandbox via createSandbox() so the implementer,
-  // reviewer, and QA agent share the same sandbox instance per branch. The
-  // implementer runs first; if it produces commits, the reviewer runs in the
-  // same sandbox, followed by the QA agent, which posts manual QA steps as a
-  // comment on the issue for the human reviewer to follow before merging.
+  // For each issue, create a sandbox via createSandbox() so the implementer
+  // and reviewer share the same sandbox instance per branch. The implementer
+  // runs first; if it produces commits, the reviewer runs in the same
+  // sandbox and, once done, posts a QA comment (summary + manual QA steps)
+  // on the issue for the human reviewer to follow before merging.
   //
   // Promise.allSettled means one failing pipeline doesn't cancel the others.
   // -------------------------------------------------------------------------
@@ -138,7 +144,8 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
           },
         });
 
-        // Only review if the implementer produced commits
+        // Only review if the implementer produced commits. The reviewer also
+        // posts a QA comment on the issue once its review is done.
         if (implement.commits.length > 0) {
           const review = await sandbox.run({
             name: "reviewer",
@@ -147,26 +154,15 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
             promptFile: "./.sandcastle/review-prompt.md",
             promptArgs: {
               BRANCH: issue.branch,
-            },
-          });
-
-          // QA agent inspects the reviewed branch and posts manual QA steps
-          // as a comment on the issue being worked on.
-          const qa = await sandbox.run({
-            name: "qa",
-            maxIterations: 1,
-            agent: sandcastle.claudeCode("claude-sonnet-4-6"),
-            promptFile: "./.sandcastle/qa-prompt.md",
-            promptArgs: {
               TASK_ID: issue.id,
             },
           });
 
-          // Merge commits from all runs so the merge phase sees all of them.
+          // Merge commits from both runs so the merge phase sees all of them.
           // Each sandbox.run() only returns commits from its own run.
           return {
-            ...qa,
-            commits: [...implement.commits, ...review.commits, ...qa.commits],
+            ...review,
+            commits: [...implement.commits, ...review.commits],
           };
         }
 
@@ -213,6 +209,11 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
     break; // for now we'll break since this usually means we're done
   }
 
+  if (!shouldMerge) {
+    console.log("\nSkipping merge (pass --merge to merge completed branches into main).");
+    break;
+  }
+
   // -------------------------------------------------------------------------
   // Phase 3: Merge
   //
@@ -240,4 +241,8 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
   console.log("\nBranches merged.");
 }
 
-console.log("\nAll done. Review the QA comments on each issue, then push when ready.");
+console.log(
+  shouldMerge
+    ? "\nAll done. Review the QA comments on each issue, then push when ready."
+    : "\nAll done. Review the QA comments on each issue, then re-run with --merge to merge the completed branches.",
+);
