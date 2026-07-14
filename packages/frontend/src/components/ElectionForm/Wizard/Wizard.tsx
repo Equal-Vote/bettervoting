@@ -8,7 +8,7 @@ import { NewElection } from '@equal-vote/star-vote-shared/domain_model/Election'
 import { setVoterAuthenticationMode } from '@equal-vote/star-vote-shared/domain_model/VoterAuthenticationMode';
 import { makeUniqueIDSync, makeID, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
 
-import { hashString, useSubstitutedTranslation } from '../../util.js';
+import { hashString, TransitionBox, useSubstitutedTranslation } from '../../util.js';
 import useAuthSession from '../../AuthSessionContextProvider.js';
 import RaceForm from '../Races/RaceForm.js';
 import useConfirm from '../../ConfirmationDialogProvider.js';
@@ -191,16 +191,18 @@ const Wizard = () => {
             <Box sx={pageSX}>
                 <Typography variant='h5' color={'lightShade.contrastText'}>{t('wizard.title')}</Typography>
                 <WizardBasics multiRace={multiRace} setMultiRace={setMultiRace}/>
-                {multiRace === true && (
-                    <MultiRaceTitleSection onCustomize={onCustomize} />
-                )}
-                {multiRace === false && (
-                    <RaceForm
-                        raceIndex={0}
-                        onConfirm={onNext}
-                        styling='Wizard'
-                    />
-                )}
+                <Box sx={{ position: 'relative' }}>
+                    <TransitionBox absolute enabled={multiRace === true}>
+                        <MultiRaceTitleSection onCustomize={onCustomize} />
+                    </TransitionBox>
+                    <TransitionBox enabled={multiRace === false}>
+                        <RaceForm
+                            raceIndex={0}
+                            onConfirm={onNext}
+                            styling='Wizard'
+                        />
+                    </TransitionBox>
+                </Box>
             </Box>
         </Paper>
     </ElectionContextProvider>
