@@ -40,114 +40,99 @@ test.describe('Create Election', () => {
         await expect(page.getByRole('heading', { name: 'Strawberry', exact: true })).toBeVisible();
     });
 
-    test('From About Us, Election, More than one race, BetterVoting-managed voter IDs', async ({ page }) => {
+    test('Election, More than one race, Customize in editor', async ({ page }) => {
         await page.goto('/');
-        
+
         // Start from About Page (to test nav)
         await page.getByRole('link', { name: 'About Us' }).click();
         await page.getByRole('link', { name: 'Create Election' }).click();
         const electionButton = page.getByRole('radio', { name: 'Election' })
-        await expect(electionButton).toBeInViewport({timeout: 10000}); // larger timeout since this requires a full page load, which can take a couple seconds on Firefox in dev mode
+        await expect(electionButton).toBeInViewport({timeout: 10000});
         await electionButton.check();
 
-        // Fill out form
-        expect(page.getByText('How many races will your election include?')).toBeVisible(); // confirm the election switched to races language
+        // Fill out form - title is now on page 1
+        expect(page.getByText('How many races will your election include?')).toBeVisible();
         await page.getByRole('radio', { name: 'More than one' }).check();
-        await page.getByRole('button', { name: 'Next' }).first().click();
-        await page.getByRole('textbox', { name: 'Title', exact: true }).click();
         await page.getByRole('textbox', { name: 'Title', exact: true }).fill('Multiple Races');
-        await page.getByRole('button', { name: 'Continue' }).click();
-        await page.getByRole('radio', { name: 'Yes' }).check();
-        await page.getByRole('textbox', { name: 'Election Support Email' }).click();
-        await page.getByRole('textbox', { name: 'Election Support Email' }).fill('test@gmail.com');
-        await page.getByRole('button', { name: 'Continue' }).click();
-        await page.getByRole('button', { name: 'BetterVoting-managed voter IDs' }).click();
+        await page.getByRole('button', { name: 'Next' }).click();
 
-        // Confirm title
-        await expect(page.getByText('Multiple Racesdraft')).toBeVisible({timeout: 2000});
-
-        // Confirm support email
-        await page.getByRole('link', { name: 'Settings' }).click();
-        await expect(page.getByText('test@gmail.com')).toBeVisible()
-
-        // Confirm email list
-        await page.getByRole('link', { name: 'Manage Voters' }).click();
-        await page.getByRole('button', { name: 'Add Voters' }).click();
-        await expect(page.getByText('Voter ID', { exact: true })).toBeHidden();
+        // Should land on build_ballot admin page
+        await expect(page).toHaveURL(/\/admin\/build_ballot/, { timeout: 5000 });
+        await expect(page.getByText('Multiple Races')).toBeVisible();
     });
 
-    test('Poll, Single Race, Admin-managed voter IDs', async ({ page }) => {
+    test('Poll, Single Race, Customize in editor', async ({ page }) => {
         await page.goto('/');
 
         // Fill out form
         await page.getByRole('button', { name: 'Create Election' }).click();
         await page.getByRole('radio', { name: 'Poll' }).check();
         await page.getByRole('radio', { name: 'Just one' }).check();
-        await page.getByRole('textbox', { name: 'Question Title' }).click();
-        await page.getByRole('textbox', { name: 'Question Title' }).fill('Poll + Single Race + Admin-managed voter IDs');
+        await page.getByRole('textbox', { name: 'Question Title' }).fill('My Poll');
         await page.getByRole('textbox', { name: 'Question Title' }).blur();
         await page.getByRole('button', { name: 'Select the voting method' }).click();
-        await page.getByRole('radio', { name: 'Basic Multi-Winner' }).check();
-        await page.getByRole('button', { name: 'Next' }).nth(1).click();
+        await page.getByRole('radio', { name: 'Single-Winner' }).check();
         await page.getByRole('radio', { name: 'STAR Voting' }).check();
         await page.getByRole('textbox', { name: 'Candidate 1 Name' }).fill('A');
-        await page.getByRole('textbox', { name: 'Candidate 1 Name' }).press('Tab');
+        await page.getByRole('textbox', { name: 'Candidate 1 Name' }).blur();
         await page.getByRole('textbox', { name: 'Candidate 2 Name' }).fill('B');
         await page.getByRole('textbox', { name: 'Candidate 2 Name' }).blur();
         await page.getByRole('button', { name: 'Next' }).nth(2).click();
-        await page.getByRole('button', { name: 'See more options' }).click();
-        await page.getByRole('radio', { name: 'Yes' }).check();
-        await page.getByRole('textbox', { name: 'Election Support Email' }).click();
-        await page.getByRole('textbox', { name: 'Election Support Email' }).fill('test@gmail.com');
-        await page.getByRole('button', { name: 'Continue' }).click();
-        await page.getByRole('button', { name: 'Admin-managed voter IDs' }).click();
+        await page.getByRole('button', { name: 'Customize in editor' }).click();
 
-        // Confirm support email
-        await page.getByRole('link', { name: 'Settings' }).click();
-        await expect(page.getByText('test@gmail.com')).toBeVisible()
+        // Should land on build_ballot admin page
+        await expect(page).toHaveURL(/\/admin\/build_ballot/, { timeout: 5000 });
+    });
 
-        // Confirm voter ID list
-        await page.getByRole('link', { name: 'Manage Voters' }).click();
-        await page.getByRole('button', { name: 'Add Voters' }).click();
-        await page.getByRole('button', { name: 'Submit' }).click(); // confirm adding first voters dialog
-        await expect(page.getByText('Voter ID', { exact: true })).toBeVisible();
-    })
-    test('Poll, Multi Race, One vote per Device', async ({ page }) => {
+    test('Poll, Multi Race, default voter auth is device ID', async ({ page }) => {
         await page.goto('/');
 
         // Fill out form
         await page.getByRole('button', { name: 'Create Election' }).click();
         await page.getByRole('radio', { name: 'Poll' }).check();
         await page.getByRole('radio', { name: 'More than one' }).check();
-        await page.getByRole('button', { name: 'Next' }).first().click();
-        await page.getByRole('textbox', { name: 'Title', exact: true }).fill('Poll + Multi Race + One Vote Per Person');
-        await page.getByRole('button', { name: 'Continue' }).click();
-        await page.getByRole('radio', { name: 'No' }).check();
-        await page.getByRole('button', { name: 'Continue' }).click();
-        await page.getByRole('button', { name: 'one person, one vote' }).click();
+        await page.getByRole('textbox', { name: 'Title', exact: true }).fill('Multi Race Default Auth');
+        await page.getByRole('button', { name: 'Next' }).click();
 
-        // Confirm One Person One Vote (device auth is on Manage Voters page)
+        // Should land on build_ballot admin page
+        await expect(page).toHaveURL(/\/admin\/build_ballot/, { timeout: 5000 });
+
+        // Confirm device-ID radio is checked by default
         await page.getByRole('link', { name: 'Manage Voters' }).click();
-        await expect(page.getByRole('radio', { name: 'device' })).toBeChecked({timeout: 10000});
-    })
-    test('Election, Multi Race, Multiple per Device', async ({ page }) => {
+        await expect(page.getByRole('radio', { name: 'device' })).toBeChecked({ timeout: 10000 });
+    });
+
+    test('Poll, Single Race, dismiss dialog returns to page 1', async ({ page }) => {
         await page.goto('/');
 
         // Fill out form
         await page.getByRole('button', { name: 'Create Election' }).click();
         await page.getByRole('radio', { name: 'Poll' }).check();
-        await page.getByRole('radio', { name: 'More than one' }).check();
-        await page.getByRole('button', { name: 'Next' }).first().click();
-        await page.getByRole('textbox', { name: 'Title', exact: true }).fill('Poll + Multi Race + Multiple per Device');
-        await page.getByRole('button', { name: 'Continue' }).click();
-        await page.getByRole('radio', { name: 'No' }).check();
-        await page.getByRole('button', { name: 'Continue' }).click();
-        await page.getByRole('button', { name: 'Allows multiple votes per device' }).click();
+        await page.getByRole('radio', { name: 'Just one' }).check();
+        await page.getByRole('textbox', { name: 'Question Title' }).fill('My Dismissable Poll');
+        await page.getByRole('textbox', { name: 'Question Title' }).blur();
+        await page.getByRole('button', { name: 'Select the voting method' }).click();
+        await page.getByRole('radio', { name: 'Single-Winner' }).check();
+        await page.getByRole('radio', { name: 'STAR Voting' }).check();
+        await page.getByRole('textbox', { name: 'Candidate 1 Name' }).fill('A');
+        await page.getByRole('textbox', { name: 'Candidate 1 Name' }).blur();
+        await page.getByRole('textbox', { name: 'Candidate 2 Name' }).fill('B');
+        await page.getByRole('textbox', { name: 'Candidate 2 Name' }).blur();
+        await page.getByRole('button', { name: 'Next' }).nth(2).click();
 
-        // Confirm no limit auth (on Manage Voters page)
-        await page.getByRole('link', { name: 'Manage Voters' }).click();
-        await expect(page.getByRole('radio', { name: 'no limit' })).toBeChecked({timeout: 10000});
-    })
+        // Dialog should be open
+        await expect(page.getByRole('dialog')).toBeVisible();
+
+        // Click the X button to dismiss
+        await page.getByRole('button', { name: 'Close' }).click();
+
+        // Dialog should be closed
+        await expect(page.getByRole('dialog')).not.toBeVisible();
+
+        // Wizard should still be visible with race form values intact
+        await expect(page.locator('.wizard')).toBeVisible();
+        await expect(page.getByRole('textbox', { name: 'Question Title' })).toHaveValue('My Dismissable Poll');
+    });
 
     test.afterEach(async ({ request }) => {
         //delete election when finished
