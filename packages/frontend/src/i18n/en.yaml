@@ -914,7 +914,7 @@ wizard:
   publish_confirm:
       title: Publish?
       message: Would you like to publish your simple poll now or continue to customize further? !tip(full_editor)
-      cancel: 'See more options'
+      cancel: 'Customize in editor'
       submit: 'Publish Now'
 
 # Landing Page -> Return to Classic Dialog
