@@ -78,4 +78,10 @@ Checkbox list steps a human can follow to verify the changes work correctly in t
 
 Any caveats, known issues, or things the reviewer should be aware of.
 
-Once the comment has been posted, output <promise>COMPLETE</promise>.
+Then remove the `Sandcastle` label from the issue so it isn't picked up again by future planning runs:
+
+```
+gh issue edit {{TASK_ID}} --remove-label Sandcastle
+```
+
+Once the comment has been posted and the label removed, output <promise>COMPLETE</promise>.
