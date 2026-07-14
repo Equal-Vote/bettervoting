@@ -134,6 +134,28 @@ test.describe('Create Election', () => {
         await expect(page.getByRole('textbox', { name: 'Question Title' })).toHaveValue('My Dismissable Poll');
     });
 
+    test('Wizard height is consistent — starts tall, does not snap when race type is chosen', async ({ page }) => {
+        await page.goto('/');
+
+        // Scroll to wizard to ensure it's in viewport
+        await page.getByRole('button', { name: 'Create Election' }).click();
+        const wizard = page.locator('.wizard');
+        await expect(wizard).toBeVisible();
+
+        // Select term type — at this point no race type is chosen yet
+        await page.getByRole('radio', { name: 'Poll' }).check();
+
+        const heightBeforeRaceChoice = (await wizard.boundingBox()).height;
+
+        // Now select single race, which shows the full RaceForm
+        await page.getByRole('radio', { name: 'Just one' }).check();
+        const heightAfterSingleRace = (await wizard.boundingBox()).height;
+
+        // The wizard should not snap to a significantly taller height — it should
+        // have been close to its maximum height already (within 20%)
+        expect(heightBeforeRaceChoice).toBeGreaterThan(heightAfterSingleRace * 0.8);
+    });
+
     test.afterEach(async ({ request }) => {
         //delete election when finished
         if (electionId) {
