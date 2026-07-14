@@ -1,14 +1,16 @@
-// Parallel Planner with Review — four-phase orchestration loop
+// Parallel Planner with Review — three-phase orchestration loop
 //
 // This template drives a multi-phase workflow:
 //   Phase 1 (Plan):             A sonnet agent analyzes open issues, builds a
 //                               dependency graph, and outputs a <plan> JSON
 //                               listing unblocked issues with branch names.
-//   Phase 2 (Execute + Review): For each issue, a sandbox is created via
+//   Phase 2 (Execute + Review + QA): For each issue, a sandbox is created via
 //                               createSandbox(). The implementer runs first
 //                               (100 iterations). If it produces commits, a
 //                               reviewer runs in the same sandbox on the same
-//                               branch (1 iteration). All issue pipelines run
+//                               branch (1 iteration), followed by a QA agent
+//                               that posts manual QA steps as a comment on
+//                               the issue. All issue pipelines run
 //                               concurrently via Promise.allSettled().
 //   Phase 3 (Merge):            A single agent merges all completed branches
 //                               into the current branch.
@@ -35,16 +37,9 @@ const planSchema = z.object({
   ),
 });
 
-const qaIssueSchema = z.object({
-  id: z.string(),
-  url: z.string(),
-});
-
 // ---------------------------------------------------------------------------
 // Configuration
 // ---------------------------------------------------------------------------
-
-const noqa = process.argv.includes("--noqa");
 
 // Maximum number of plan→execute→merge cycles before stopping.
 // Raise this if your backlog is large; lower it for a quick smoke-test run.
@@ -65,8 +60,6 @@ const copyToWorktree: string[] = [];// ["node_modules"];
 // ---------------------------------------------------------------------------
 // Main loop
 // ---------------------------------------------------------------------------
-
-let anyIssuesSelected = false;
 
 for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
   console.log(`\n=== Iteration ${iteration}/${MAX_ITERATIONS} ===\n`);
@@ -103,8 +96,6 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
     break;
   }
 
-  anyIssuesSelected = true;
-
   console.log(
     `Planning complete. ${issues.length} issue(s) to work in parallel:`,
   );
@@ -113,11 +104,13 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
   }
 
   // -------------------------------------------------------------------------
-  // Phase 2: Execute + Review
+  // Phase 2: Execute + Review + QA
   //
-  // For each issue, create a sandbox via createSandbox() so the implementer
-  // and reviewer share the same sandbox instance per branch. The implementer
-  // runs first; if it produces commits, the reviewer runs in the same sandbox.
+  // For each issue, create a sandbox via createSandbox() so the implementer,
+  // reviewer, and QA agent share the same sandbox instance per branch. The
+  // implementer runs first; if it produces commits, the reviewer runs in the
+  // same sandbox, followed by the QA agent, which posts manual QA steps as a
+  // comment on the issue for the human reviewer to follow before merging.
   //
   // Promise.allSettled means one failing pipeline doesn't cancel the others.
   // -------------------------------------------------------------------------
@@ -157,11 +150,23 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
             },
           });
 
-          // Merge commits from both runs so the merge phase sees all of them.
+          // QA agent inspects the reviewed branch and posts manual QA steps
+          // as a comment on the issue being worked on.
+          const qa = await sandbox.run({
+            name: "qa",
+            maxIterations: 1,
+            agent: sandcastle.claudeCode("claude-sonnet-4-6"),
+            promptFile: "./.sandcastle/qa-prompt.md",
+            promptArgs: {
+              TASK_ID: issue.id,
+            },
+          });
+
+          // Merge commits from all runs so the merge phase sees all of them.
           // Each sandbox.run() only returns commits from its own run.
           return {
-            ...review,
-            commits: [...implement.commits, ...review.commits],
+            ...qa,
+            commits: [...implement.commits, ...review.commits, ...qa.commits],
           };
         }
 
@@ -235,31 +240,4 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
   console.log("\nBranches merged.");
 }
 
-// ---------------------------------------------------------------------------
-// Phase 4: QA Issue
-//
-// After all merge cycles complete, one agent inspects the local commits
-// (everything ahead of origin/main) and creates a GitHub issue summarising
-// what was built along with manual QA steps for the human reviewer to follow
-// before pushing.
-// ---------------------------------------------------------------------------
-if (!anyIssuesSelected) {
-  console.log("\nNo issues were selected. Skipping QA issue.");
-} else if (noqa) {
-  console.log("\nSkipping QA issue (--noqa). All done.");
-} else {
-  console.log("\n=== Creating QA issue ===\n");
-
-  const qaIssue = await sandcastle.run({
-    hooks,
-    sandbox: docker(),
-    name: "qa-issue",
-    maxIterations: 1,
-    agent: sandcastle.claudeCode("claude-sonnet-4-6"),
-    promptFile: "./.sandcastle/qa-issue-prompt.md",
-    output: sandcastle.Output.object({ tag: "qa-issue", schema: qaIssueSchema }),
-  });
-
-  console.log(`\nAll done. Review the QA issue, then push when ready:`);
-  console.log(`  ${qaIssue.output.url}`);
-}
+console.log("\nAll done. Review the QA comments on each issue, then push when ready.");
