@@ -12,9 +12,8 @@ import { hashString, useSubstitutedTranslation } from '../../util.js';
 import useAuthSession from '../../AuthSessionContextProvider.js';
 import RaceForm from '../Races/RaceForm.js';
 import useConfirm from '../../ConfirmationDialogProvider.js';
-import { ElectionContextProvider } from '../../ElectionContextProvider.js';
+import useElection, { ElectionContextProvider } from '../../ElectionContextProvider.js';
 import WizardBasics from './WizardBasics.js';
-import useElection from '../../ElectionContextProvider.js';
 
 export const makeDefaultElection = () => {
     const ids = [];
@@ -91,7 +90,7 @@ const MultiRaceTitleSection = ({ onCustomize }: { onCustomize: (election: NewEle
             <Typography sx={{ mt: 1 }}>{t('wizard.add_races_later')}</Typography>
             <Box sx={{ mt: 3, display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', gap: 1 }}>
                 <PrimaryButton
-                    disabled={!election.title || election.title.length < 1}
+                    disabled={!election.title}
                     onClick={() => onCustomize(election)}
                 >
                     Next
