@@ -137,22 +137,20 @@ test.describe('Create Election', () => {
     test('Wizard height is consistent — starts tall, does not snap when race type is chosen', async ({ page }) => {
         await page.goto('/');
 
-        // Scroll to wizard to ensure it's in viewport
         await page.getByRole('button', { name: 'Create Election' }).click();
         const wizard = page.locator('.wizard');
         await expect(wizard).toBeVisible();
 
-        // Select term type — at this point no race type is chosen yet
+        // Measure height after picking term type but before picking race type —
+        // this is the point where the wizard used to be short and then snap taller.
         await page.getByRole('radio', { name: 'Poll' }).check();
-
         const heightBeforeRaceChoice = (await wizard.boundingBox()).height;
 
-        // Now select single race, which shows the full RaceForm
+        // Selecting single race reveals the full RaceForm — the tallest state.
         await page.getByRole('radio', { name: 'Just one' }).check();
         const heightAfterSingleRace = (await wizard.boundingBox()).height;
 
-        // The wizard should not snap to a significantly taller height — it should
-        // have been close to its maximum height already (within 20%)
+        // Guard against a >20% jump upward, which is what "snapping" looked like.
         expect(heightBeforeRaceChoice).toBeGreaterThan(heightAfterSingleRace * 0.8);
     });
 
