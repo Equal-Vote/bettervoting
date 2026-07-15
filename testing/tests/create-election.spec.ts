@@ -54,7 +54,7 @@ test.describe('Create Election', () => {
         expect(page.getByText('How many races will your election include?')).toBeVisible();
         await page.getByRole('radio', { name: 'More than one' }).check();
         await page.getByRole('textbox', { name: 'Title', exact: true }).fill('Multiple Races');
-        await page.getByRole('button', { name: 'Next' }).click();
+        await page.getByRole('button', { name: 'Next' }).first().click();
 
         // Should land on build_ballot admin page
         await expect(page).toHaveURL(/\/admin\/build_ballot/, { timeout: 5000 });
@@ -92,7 +92,7 @@ test.describe('Create Election', () => {
         await page.getByRole('radio', { name: 'Poll' }).check();
         await page.getByRole('radio', { name: 'More than one' }).check();
         await page.getByRole('textbox', { name: 'Title', exact: true }).fill('Multi Race Default Auth');
-        await page.getByRole('button', { name: 'Next' }).click();
+        await page.getByRole('button', { name: 'Next' }).first().click();
 
         // Should land on build_ballot admin page
         await expect(page).toHaveURL(/\/admin\/build_ballot/, { timeout: 5000 });
