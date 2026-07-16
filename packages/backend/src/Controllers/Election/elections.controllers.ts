@@ -93,9 +93,10 @@ const electionPostAuthMiddleware = async (req: IElectionRequest, res: any, next:
 
         // we demand typ isn't TEMP_ID to prevent people from spoofing owner_id equality with unverified temp_id cookies
         if (req.user && req.election){
-          if((req.election.owner_id == req.user.sub && req.user.typ !== 'TEMP_ID') || tempUserAuth){
-            req.user_auth.roles.push(roles.owner)
-          }
+            //  Removing this for now to allow for ownerless publishing
+            //   if((req.election.owner_id == req.user.sub && req.user.typ !== 'TEMP_ID') || tempUserAuth){
+            //     req.user_auth.roles.push(roles.owner)
+            //   }
           if (req.election.admin_ids && req.election.admin_ids.includes(req.user.email)){
             req.user_auth.roles.push(roles.admin)
           }
