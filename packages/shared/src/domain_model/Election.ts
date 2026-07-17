@@ -71,9 +71,7 @@ export function electionValidation(obj:Election): string | null {
       return "Invalid End Time Date Format";
     }
   }
-
-  // Undefined check will allow null
-  if (obj.owner_id === undefined || typeof obj.owner_id !== 'string'){
+  if (!(obj.owner_id === null || typeof obj.owner_id === 'string')){
     return "Invalid Owner ID";
   }
   if (obj.audit_ids) {
