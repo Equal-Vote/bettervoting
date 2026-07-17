@@ -28,9 +28,9 @@ describe("computeByYear", () => {
     });
 
     test("buckets a single qualifying election into its year", () => {
-        const races = [electionData('e1', 'user1', ['STAR'], '2024-03-15T00:00:00Z')];
+        const elections = [electionData('e1', 'user1', ['STAR'], '2024-03-15T00:00:00Z')];
         const votes = [{ election_id: 'e1', v: 5 }];
-        const result = computeByYear(races, votes, [], CURRENT_YEAR);
+        const result = computeByYear(elections, votes, [], CURRENT_YEAR);
 
         expect(result['2024']).toBeDefined();
         expect(result['2024'].elections).toBe(1);
@@ -40,9 +40,9 @@ describe("computeByYear", () => {
     });
 
     test("produces a contiguous year range including current year", () => {
-        const races = [electionData('e1', 'user1', ['STAR'], '2023-06-01T00:00:00Z')];
+        const elections = [electionData('e1', 'user1', ['STAR'], '2023-06-01T00:00:00Z')];
         const votes = [{ election_id: 'e1', v: 3 }];
-        const result = computeByYear(races, votes, [], CURRENT_YEAR);
+        const result = computeByYear(elections, votes, [], CURRENT_YEAR);
 
         const years = Object.keys(result).sort();
         expect(years[0]).toBe('2023');
@@ -53,7 +53,7 @@ describe("computeByYear", () => {
     });
 
     test("zero-fills years with no qualifying elections in the contiguous range", () => {
-        const races = [
+        const elections = [
             electionData('e1', 'user1', ['STAR'], '2023-01-01T00:00:00Z'),
             electionData('e2', 'user1', ['Approval'], '2025-01-01T00:00:00Z'),
         ];
@@ -61,7 +61,7 @@ describe("computeByYear", () => {
             { election_id: 'e1', v: 3 },
             { election_id: 'e2', v: 4 },
         ];
-        const result = computeByYear(races, votes, [], CURRENT_YEAR);
+        const result = computeByYear(elections, votes, [], CURRENT_YEAR);
 
         // 2024 is a gap year — still present, but zero-filled
         expect(result['2024']).toBeDefined();
@@ -71,25 +71,25 @@ describe("computeByYear", () => {
     });
 
     test("excludes elections with fewer than 2 votes", () => {
-        const races = [electionData('e1', 'user1', ['STAR'], '2024-01-01T00:00:00Z')];
+        const elections = [electionData('e1', 'user1', ['STAR'], '2024-01-01T00:00:00Z')];
         const votes = [{ election_id: 'e1', v: 1 }];
-        const result = computeByYear(races, votes, [], CURRENT_YEAR);
+        const result = computeByYear(elections, votes, [], CURRENT_YEAR);
 
         expect(result).toEqual({});
     });
 
     test("excludes prior_election sourced elections", () => {
-        const races = [electionData('e1', 'user1', ['STAR'], '2024-01-01T00:00:00Z')];
+        const elections = [electionData('e1', 'user1', ['STAR'], '2024-01-01T00:00:00Z')];
         const votes = [{ election_id: 'e1', v: 5 }];
-        const result = computeByYear(races, votes, ['e1'], CURRENT_YEAR);
+        const result = computeByYear(elections, votes, ['e1'], CURRENT_YEAR);
 
         expect(result).toEqual({});
     });
 
     test("buckets multi-method election as multi_method", () => {
-        const races = [electionData('e1', 'user1', ['STAR', 'Approval'], '2024-06-01T00:00:00Z')];
+        const elections = [electionData('e1', 'user1', ['STAR', 'Approval'], '2024-06-01T00:00:00Z')];
         const votes = [{ election_id: 'e1', v: 10 }];
-        const result = computeByYear(races, votes, [], CURRENT_YEAR);
+        const result = computeByYear(elections, votes, [], CURRENT_YEAR);
 
         expect(result['2024'].multi_method_elections).toBe(1);
         expect(result['2024'].multi_method_votes).toBe(10);
@@ -97,9 +97,9 @@ describe("computeByYear", () => {
     });
 
     test("current year is always included even with no elections in it", () => {
-        const races = [electionData('e1', 'user1', ['STAR'], '2024-01-01T00:00:00Z')];
+        const elections = [electionData('e1', 'user1', ['STAR'], '2024-01-01T00:00:00Z')];
         const votes = [{ election_id: 'e1', v: 3 }];
-        const result = computeByYear(races, votes, [], CURRENT_YEAR);
+        const result = computeByYear(elections, votes, [], CURRENT_YEAR);
 
         expect(result[String(CURRENT_YEAR)]).toBeDefined();
         expect(result[String(CURRENT_YEAR)].elections).toBe(0);
@@ -111,18 +111,18 @@ describe("computeByYear", () => {
     });
 
     test("elections with no races are excluded", () => {
-        const races = [electionData('e1', 'user1', [], '2024-01-01T00:00:00Z')];
+        const elections = [electionData('e1', 'user1', [], '2024-01-01T00:00:00Z')];
         const votes = [{ election_id: 'e1', v: 5 }];
-        const result = computeByYear(races, votes, [], CURRENT_YEAR);
+        const result = computeByYear(elections, votes, [], CURRENT_YEAR);
 
         expect(result).toEqual({});
     });
 
     test("uses UTC year for elections near year boundary", () => {
         // 2023-12-31T23:30:00Z is still 2023 in UTC
-        const races = [electionData('e1', 'user1', ['STAR'], '2023-12-31T23:30:00Z')];
+        const elections = [electionData('e1', 'user1', ['STAR'], '2023-12-31T23:30:00Z')];
         const votes = [{ election_id: 'e1', v: 5 }];
-        const result = computeByYear(races, votes, [], CURRENT_YEAR);
+        const result = computeByYear(elections, votes, [], CURRENT_YEAR);
 
         expect(result['2023']).toBeDefined();
         expect(result['2023'].star_elections).toBe(1);

@@ -16,7 +16,7 @@ export interface Ballot {
     status: string; //Status of string (saved, submitted)
     date_submitted: number; //time ballot was submitted, represented as unix timestamp (Date.now())
     ip_hash?: string; // LEGACY: never written by current code, never read. IP-based dedup uses electionRollDB.ip_hash.
-    votes: Vote[];         // One per poll
+    votes: Vote[];         // One per Race
     history?: BallotAction[];
     precinct?: string; // Precint of voter
     create_date:    Date | string; // Date this object was created
@@ -38,7 +38,7 @@ export interface OrderedNewBallot extends PartialBy<NewBallot,'votes'> {
 export interface AnonymizedBallot {
     ballot_id:  Uid;    //ID of ballot
     election_id: Uid;   //ID of election ballot is cast in
-    votes: Vote[];      // One per poll
+    votes: Vote[];      // One per Race
     precinct: string | null;  // Precint of voter (null when the ballot has none)
 }
 

@@ -101,7 +101,7 @@ type GlobalElectionStats =
     Record<`${ElectionMethodKey}_votes`, number> &
     Record<`${ElectionMethodKey}_elections`, number>;
 
-type ElectionRaceData = Pick<Election, 'election_id' | 'owner_id' | 'races' | 'create_date'>;
+type ElectionWithRaces = Pick<Election, 'election_id' | 'owner_id' | 'races' | 'create_date'>;
 type VoteCountData = { election_id: string; v: number };
 
 type ElectionMetadata = {
@@ -120,12 +120,12 @@ const emptyYearStats = (): YearStats => ({
 // derivation of method-key and creation year. Elections owned by dev users are
 // tracked so their votes can be filtered out; elections with no races or an
 // unknown voting method are simply omitted from methodByElection.
-const buildElectionMetadata = (electionRaces: ElectionRaceData[] | null): ElectionMetadata => {
+const buildElectionMetadata = (elections: ElectionWithRaces[] | null): ElectionMetadata => {
     const methodByElection: Record<string, ElectionMethodKey> = {};
     const yearByElection: Record<string, number> = {};
     const devElectionIds = new Set<string>();
 
-    (electionRaces ?? []).forEach(e => {
+    (elections ?? []).forEach(e => {
         if (sharedConfig.DEV_USERS.includes(e.owner_id) && !sharedConfig.REAL_ELECTIONS_FROM_DEVS.includes(e.election_id)) {
             devElectionIds.add(e.election_id);
             return;
@@ -170,12 +170,12 @@ const filterQualifyingVotes = (
  * returns the by_year object without touching the database.
  */
 const computeByYear = (
-    electionRaces: ElectionRaceData[] | null,
+    elections: ElectionWithRaces[] | null,
     electionVotes: VoteCountData[] | null,
     priorElectionIds: string[],
     currentYear: number
 ): Record<string, YearStats> => {
-    const meta = buildElectionMetadata(electionRaces);
+    const meta = buildElectionMetadata(elections);
     const qualifying = filterQualifyingVotes(electionVotes, meta, new Set(priorElectionIds));
 
     const years = qualifying
@@ -207,14 +207,14 @@ const computeByYear = (
 const innerGetGlobalElectionStats = async (req: IRequest): Promise<GlobalElectionStats> => {
     Logger.info(req, `getGlobalElectionStats `);
 
-    const [electionVotes, electionRaces, sourcedFromPrior] = await Promise.all([
+    const [electionVotes, elections, sourcedFromPrior] = await Promise.all([
         ElectionsModel.getBallotCountsForAllElections(req),
-        ElectionsModel.getElectionRacesForAllElections(req),
+        ElectionsModel.getElectionsWithRacesForAllElections(req),
         ElectionsModel.getElectionsSourcedFromPrior(req),
     ]);
 
     const priorElections = sourcedFromPrior?.map(e => e.election_id) ?? [];
-    const meta = buildElectionMetadata(electionRaces);
+    const meta = buildElectionMetadata(elections);
 
     const legacyVotes = Number(process.env.CLASSIC_VOTE_COUNT ?? 0);
     const legacyElections = Number(process.env.CLASSIC_ELECTION_COUNT ?? 0);
@@ -241,7 +241,7 @@ const innerGetGlobalElectionStats = async (req: IRequest): Promise<GlobalElectio
             stats[`${methodKey}_votes`] += votes;
         });
 
-    stats.by_year = computeByYear(electionRaces, electionVotes, priorElections, new Date().getUTCFullYear());
+    stats.by_year = computeByYear(elections, electionVotes, priorElections, new Date().getUTCFullYear());
 
     return stats;
 }

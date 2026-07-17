@@ -87,7 +87,7 @@ export default class ElectionsDB implements IElectionStore {
         return Promise.resolve(true)
     }
 
-    getElectionRacesForAllElections(ctx: ILoggingContext): Promise<Pick<Election, 'election_id' | 'owner_id' | 'races' | 'create_date'>[] | null> {
+    getElectionsWithRacesForAllElections(ctx: ILoggingContext): Promise<Pick<Election, 'election_id' | 'owner_id' | 'races' | 'create_date'>[] | null> {
         return Promise.resolve(
             this.elections.map(e => ({
                 election_id: e.election_id,
