@@ -5,8 +5,6 @@ import { Race } from "./Race";
 import { Uid } from "./Uid";
 import { raceValidation } from "./Race";
 import { checkForDuplicates, emailRegex } from "./Util";
-import { isConstructorDeclaration } from "typescript";
-import debug from 'debug';
 
 export { ElectionState }
 
