@@ -32,7 +32,7 @@ function ballotsDb():IBallotStore {
 
 function electionsDb():ElectionsDB {
     if (_electionsDb == null){
-        _electionsDb = new ElectionsDB();
+        _electionsDb = new ElectionsDB(ballotsDb() as BallotsDB);
     }
     return _electionsDb;
 }

@@ -342,6 +342,53 @@ electionsRouter.delete('/Election/:id', asyncHandler(deleteElection))
  *                 multi_method_votes:
  *                   type: number
  *                   description: Votes cast in multi-method elections
+ *                 by_year:
+ *                   type: object
+ *                   description: >
+ *                     Per-calendar-year breakdown. Keys are year strings (e.g. "2024"). The range
+ *                     is contiguous from the earliest qualifying election through the current year;
+ *                     years with no qualifying activity are zero-filled. Legacy/classic counts are
+ *                     not included here. Each value has the same elections/votes and per-method
+ *                     fields as the top level (excluding legacy_elections/legacy_votes).
+ *                   additionalProperties:
+ *                     type: object
+ *                     properties:
+ *                       elections:
+ *                         type: number
+ *                       votes:
+ *                         type: number
+ *                       star_elections:
+ *                         type: number
+ *                       star_votes:
+ *                         type: number
+ *                       rcv_elections:
+ *                         type: number
+ *                       rcv_votes:
+ *                         type: number
+ *                       approval_elections:
+ *                         type: number
+ *                       approval_votes:
+ *                         type: number
+ *                       ranked_robin_elections:
+ *                         type: number
+ *                       ranked_robin_votes:
+ *                         type: number
+ *                       star_pr_elections:
+ *                         type: number
+ *                       star_pr_votes:
+ *                         type: number
+ *                       choose_one_elections:
+ *                         type: number
+ *                       choose_one_votes:
+ *                         type: number
+ *                       stv_elections:
+ *                         type: number
+ *                       stv_votes:
+ *                         type: number
+ *                       multi_method_elections:
+ *                         type: number
+ *                       multi_method_votes:
+ *                         type: number
  *  */
  electionsRouter.get('/GlobalElectionStats', asyncHandler(getGlobalElectionStats))
 /** 
