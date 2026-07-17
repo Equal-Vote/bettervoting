@@ -1,5 +1,6 @@
 import BallotsDB from "../Models/__mocks__/Ballots";
 import ElectionsDB from "../Models/__mocks__/Elections";
+// ElectionsDB needs access to BallotsDB to implement getBallotCountsForAllElections
 import ElectionRollDB from "../Models/__mocks__/ElectionRolls";
 import EmailEventsDB from "../Models/__mocks__/EmailEvents";
 import EmailService from "../Services/Email/__mocks__/EmailService";
@@ -32,7 +33,7 @@ function ballotsDb():IBallotStore {
 
 function electionsDb():ElectionsDB {
     if (_electionsDb == null){
-        _electionsDb = new ElectionsDB();
+        _electionsDb = new ElectionsDB(ballotsDb() as BallotsDB);
     }
     return _electionsDb;
 }

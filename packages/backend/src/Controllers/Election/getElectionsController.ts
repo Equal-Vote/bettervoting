@@ -22,7 +22,7 @@ const getElections = async (req: IElectionRequest, res: Response, next: NextFunc
 
     /////////// ELECTIONS WE OWN ////////////////
     var elections_as_official = null;
-    if((email !== '' || id !== '') && req.user.typ != 'TEMP_ID'){ 
+    if((email !== '' || id !== '') && req.user.typ != 'TEMP_ID'){
         elections_as_official = await ElectionsModel.getElections(id, email, req);
         if (!elections_as_official) {
             var msg = "Election does not exist";
@@ -91,10 +91,107 @@ const ALL_METHOD_KEYS: ElectionMethodKey[] = [
     'multi_method',
 ];
 
-type GlobalElectionStats =
-    { elections: number; votes: number; legacy_elections: number; legacy_votes: number } &
+type YearStats =
+    { elections: number; votes: number } &
     Record<`${ElectionMethodKey}_votes`, number> &
     Record<`${ElectionMethodKey}_elections`, number>;
+
+type GlobalElectionStats =
+    { elections: number; votes: number; legacy_elections: number; legacy_votes: number; by_year: Record<string, YearStats> } &
+    Record<`${ElectionMethodKey}_votes`, number> &
+    Record<`${ElectionMethodKey}_elections`, number>;
+
+type ElectionRaceData = Pick<Election, 'election_id' | 'owner_id' | 'races' | 'create_date'>;
+type VoteCountData = { election_id: string; v: number };
+
+const emptyYearStats = (): YearStats => ({
+    elections: 0,
+    votes: 0,
+    ...Object.fromEntries(ALL_METHOD_KEYS.flatMap(k => [[`${k}_votes`, 0], [`${k}_elections`, 0]])),
+} as YearStats);
+
+/**
+ * Pure function that buckets qualifying elections by calendar year.
+ * Extracted for independent unit testing — takes already-fetched data and
+ * returns the by_year object without touching the database.
+ */
+const computeByYear = (
+    electionRaces: ElectionRaceData[] | null,
+    electionVotes: VoteCountData[] | null,
+    priorElectionIds: string[],
+    currentYear: number
+): Record<string, YearStats> => {
+    const electionMethodMap: Record<string, ElectionMethodKey> = {};
+    const electionYearMap: Record<string, number> = {};
+    const devElectionIds: string[] = [];
+
+    (electionRaces ?? []).forEach(e => {
+        if (sharedConfig.DEV_USERS.includes(e.owner_id) && !sharedConfig.REAL_ELECTIONS_FROM_DEVS.includes(e.election_id)) {
+            devElectionIds.push(e.election_id);
+            return;
+        }
+        const races = e.races as Race[];
+        const methods = new Set(races.map(r => r.voting_method));
+        if (methods.size === 0) return;
+
+        let methodKey: ElectionMethodKey;
+        if (methods.size > 1) {
+            methodKey = 'multi_method';
+        } else {
+            const vm = [...methods][0] as VotingMethod;
+            const key = methodValueToTextKey[vm];
+            if (!key) return;
+            methodKey = key;
+        }
+        electionMethodMap[e.election_id] = methodKey;
+
+        if (e.create_date) {
+            const year = new Date(e.create_date as string).getUTCFullYear();
+            if (!isNaN(year)) {
+                electionYearMap[e.election_id] = year;
+            }
+        }
+    });
+
+    // Determine min year from qualifying elections only
+    const qualifyingYears = (electionVotes ?? [])
+        .filter(m => !devElectionIds.includes(m.election_id))
+        .filter(m => !priorElectionIds.includes(m.election_id))
+        .filter(m => Number(m.v) >= 2)
+        .filter(m => electionMethodMap[m.election_id] !== undefined)
+        .map(m => electionYearMap[m.election_id])
+        .filter((y): y is number => y !== undefined);
+
+    if (qualifyingYears.length === 0) return {};
+
+    const minYear = Math.min(...qualifyingYears);
+
+    // Build zero-filled contiguous year range from minYear to currentYear
+    const byYear: Record<string, YearStats> = {};
+    for (let y = minYear; y <= currentYear; y++) {
+        byYear[String(y)] = emptyYearStats();
+    }
+
+    // Populate from qualifying elections
+    (electionVotes ?? [])
+        .filter(m => !devElectionIds.includes(m.election_id))
+        .filter(m => !priorElectionIds.includes(m.election_id))
+        .filter(m => Number(m.v) >= 2)
+        .forEach(m => {
+            const methodKey = electionMethodMap[m.election_id];
+            if (!methodKey) return;
+            const year = electionYearMap[m.election_id];
+            if (year === undefined) return;
+            const yearStr = String(year);
+            if (!byYear[yearStr]) return;
+            byYear[yearStr].elections += 1;
+            byYear[yearStr].votes += Number(m.v);
+            byYear[yearStr][`${methodKey}_elections`] += 1;
+            byYear[yearStr][`${methodKey}_votes`] += Number(m.v);
+        });
+
+    return byYear;
+};
 
 const innerGetGlobalElectionStats = async (req: IRequest): Promise<GlobalElectionStats> => {
     Logger.info(req, `getGlobalElectionStats `);
@@ -141,6 +238,7 @@ const innerGetGlobalElectionStats = async (req: IRequest): Promise<GlobalElectio
         votes: legacyVotes,
         legacy_elections: legacyElections,
         legacy_votes: legacyVotes,
+        by_year: {},
         ...Object.fromEntries(ALL_METHOD_KEYS.flatMap(k => [[`${k}_votes`, 0], [`${k}_elections`, 0]])),
     } as GlobalElectionStats;
 
@@ -160,11 +258,18 @@ const innerGetGlobalElectionStats = async (req: IRequest): Promise<GlobalElectio
             stats[`${methodKey}_votes`] += Number(m['v']);
         });
 
+    stats.by_year = computeByYear(
+        electionRaces as ElectionRaceData[] | null,
+        electionVotes as VoteCountData[] | null,
+        priorElections,
+        new Date().getUTCFullYear()
+    );
+
     return stats;
 }
 
 const getGlobalElectionStats = async (req: IRequest, res: Response, next: NextFunction) => {
-    res.json(innerGetGlobalElectionStats(req));
+    res.json(await innerGetGlobalElectionStats(req));
 }
 
 export {
@@ -172,4 +277,5 @@ export {
     innerGetGlobalElectionStats,
     getGlobalElectionStats,
     queryElections,
+    computeByYear,
 }

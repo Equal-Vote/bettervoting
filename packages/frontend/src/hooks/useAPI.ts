@@ -44,8 +44,18 @@ export const usePostElection = () => {
     return useFetch<{ Election: NewElection }, { election: Election }>('/API/Elections', 'post')
 }
 
+type MethodKey = 'star' | 'rcv' | 'approval' | 'ranked_robin' | 'star_pr' | 'choose_one' | 'stv' | 'multi_method';
+type YearStats = { elections: number; votes: number } & { [K in `${MethodKey}_elections` | `${MethodKey}_votes`]: number };
+type GlobalElectionStats = {
+    elections: number;
+    votes: number;
+    legacy_elections: number;
+    legacy_votes: number;
+    by_year: Record<string, YearStats>;
+} & { [K in `${MethodKey}_elections` | `${MethodKey}_votes`]: number };
+
 export const useGetGlobalElectionStats = () => {
-    return useFetch<undefined, { elections: number, votes: number }>('/API/GlobalElectionStats', 'get')
+    return useFetch<undefined, GlobalElectionStats>('/API/GlobalElectionStats', 'get')
 }
 
 export const useEditElection = (election_id: string | undefined) => {
