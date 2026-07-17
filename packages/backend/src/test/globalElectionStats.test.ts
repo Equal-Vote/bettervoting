@@ -2,14 +2,14 @@ require("dotenv").config();
 import { computeByYear } from "../Controllers/Election/getElectionsController";
 import { TestHelper } from "./TestHelper";
 import testInputs from "./testInputs";
-import { Election } from "@equal-vote/star-vote-shared/domain_model/Election";
+import { VotingMethod } from "@equal-vote/star-vote-shared/domain_model/Race";
 
 // Unit tests for computeByYear — pure function, no DB needed
 
 const CURRENT_YEAR = 2026;
 
 function makeRace(method: string) {
-    return { race_id: '0', title: 'R', num_winners: 1, voting_method: method as any, candidates: [] };
+    return { race_id: '0', title: 'R', num_winners: 1, voting_method: method as VotingMethod, candidates: [] };
 }
 
 function electionData(election_id: string, owner_id: string, methods: string[], create_date: string) {

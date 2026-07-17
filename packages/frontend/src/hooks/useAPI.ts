@@ -2,7 +2,7 @@ import { Election, NewElection } from "@equal-vote/star-vote-shared/domain_model
 import { VoterAuth } from '@equal-vote/star-vote-shared/domain_model/VoterAuth';
 import { ElectionRoll } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll";
 import useFetch from "./useFetch";
-import { VotingMethod } from "@equal-vote/star-vote-shared/domain_model/Race";
+import { VotingMethod, MethodTextKey } from "@equal-vote/star-vote-shared/domain_model/Race";
 import { ElectionResults } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
 import { Ballot, NewBallot, AnonymizedBallot, NewBallotWithVoterID, BallotSubmitStatus } from "@equal-vote/star-vote-shared/domain_model/Ballot";
 import { email_request_data } from "@equal-vote/star-vote-backend/src/Controllers/Election/sendEmailController"
@@ -44,15 +44,16 @@ export const usePostElection = () => {
     return useFetch<{ Election: NewElection }, { election: Election }>('/API/Elections', 'post')
 }
 
-type MethodKey = 'star' | 'rcv' | 'approval' | 'ranked_robin' | 'star_pr' | 'choose_one' | 'stv' | 'multi_method';
-type YearStats = { elections: number; votes: number } & { [K in `${MethodKey}_elections` | `${MethodKey}_votes`]: number };
+type MethodKey = MethodTextKey | 'multi_method';
+type MethodCounts = { [K in `${MethodKey}_elections` | `${MethodKey}_votes`]: number };
+type YearStats = { elections: number; votes: number } & MethodCounts;
 type GlobalElectionStats = {
     elections: number;
     votes: number;
     legacy_elections: number;
     legacy_votes: number;
     by_year: Record<string, YearStats>;
-} & { [K in `${MethodKey}_elections` | `${MethodKey}_votes`]: number };
+} & MethodCounts;
 
 export const useGetGlobalElectionStats = () => {
     return useFetch<undefined, GlobalElectionStats>('/API/GlobalElectionStats', 'get')

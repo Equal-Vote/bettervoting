@@ -1,4 +1,3 @@
-import { Ballot } from '@equal-vote/star-vote-shared/domain_model/Ballot';
 import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { Uid } from '@equal-vote/star-vote-shared/domain_model/Uid';
 import { ILoggingContext } from '../../Services/Logging/ILogger';
@@ -101,7 +100,7 @@ export default class ElectionsDB implements IElectionStore {
 
     getElectionsSourcedFromPrior(ctx: ILoggingContext): Promise<Election[] | null> {
         return Promise.resolve(
-            this.elections.filter(e => (e as any).ballot_source === 'prior_election')
+            this.elections.filter(e => e.ballot_source === 'prior_election')
         );
     }
 
@@ -110,8 +109,8 @@ export default class ElectionsDB implements IElectionStore {
 
         const counts: Record<string, number> = {};
         this._ballotsDb.ballots
-            .filter((b: Ballot) => b.status === 'submitted')
-            .forEach((b: Ballot) => {
+            .filter(b => b.status === 'submitted')
+            .forEach(b => {
                 counts[b.election_id] = (counts[b.election_id] ?? 0) + 1;
             });
 
