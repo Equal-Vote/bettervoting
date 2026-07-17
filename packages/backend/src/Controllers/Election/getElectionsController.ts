@@ -112,7 +112,7 @@ const innerGetGlobalElectionStats = async (req: IRequest): Promise<GlobalElectio
     const electionMethodMap: Record<string, ElectionMethodKey> = {};
     electionRaces?.forEach(e => {
         const methods = new Set((e.races as Race[]).map(r => r.voting_method));
-        if(sharedConfig.DEV_USERS.includes(e.owner_id) && !sharedConfig.REAL_ELECTIONS_FROM_DEVS.includes(e.election_id)) {
+        if(e.owner_id == null || (sharedConfig.DEV_USERS.includes(e.owner_id) && !sharedConfig.REAL_ELECTIONS_FROM_DEVS.includes(e.election_id))) {
             devElections.push(e.election_id);
             return;
         }
