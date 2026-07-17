@@ -80,7 +80,7 @@ const Wizard = () => {
             submitTempID = makeID(ID_PREFIXES.VOTER, ID_LENGTHS.VOTER);
             setCookie('temp_id', submitTempID);
         }
-        election.owner_id = authSession.isLoggedIn() ? authSession.getIdField('sub') : submitTempID;
+        election.owner_id = authSession.isLoggedIn() ? authSession.getIdField('sub') : null;
 
         const claimKey = crypto.randomUUID();
         election.claim_key_hash = hashString(claimKey);

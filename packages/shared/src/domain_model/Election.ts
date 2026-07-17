@@ -5,6 +5,8 @@ import { Race } from "./Race";
 import { Uid } from "./Uid";
 import { raceValidation } from "./Race";
 import { checkForDuplicates, emailRegex } from "./Util";
+import { isConstructorDeclaration } from "typescript";
+import debug from 'debug';
 
 export { ElectionState }
 
@@ -15,7 +17,7 @@ export interface Election {
     frontend_url:   string; // base URL for the frontend
     start_time?:    Date | string;   // when the election starts 
     end_time?:      Date | string;   // when the election ends
-    owner_id:       Uid;  // user_id of owner of election
+    owner_id:       Uid | null;  // user_id of owner of election
     audit_ids?:     Uid[];  // user_id of account with audit access
     admin_ids?:     Uid[];  // user_id of account with admin access
     credential_ids?:Uid[];  // user_id of account with credentialling access
@@ -69,7 +71,9 @@ export function electionValidation(obj:Election): string | null {
       return "Invalid End Time Date Format";
     }
   }
-  if (typeof obj.owner_id !== 'string'){
+
+  // Undefined check will allow null
+  if (obj.owner_id === undefined || typeof obj.owner_id !== 'string'){
     return "Invalid Owner ID";
   }
   if (obj.audit_ids) {
