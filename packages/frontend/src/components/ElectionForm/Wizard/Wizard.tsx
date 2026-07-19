@@ -1,27 +1,25 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from "react-router";
-import { PrimaryButton } from '../../styles.js';
-import { Box, Breakpoint, Paper, Typography, useMediaQuery } from '@mui/material';
+import { PrimaryButton, UtilityButton } from '../../styles.js';
+import { Box, Paper, TextField, Typography } from '@mui/material';
 import { usePostElection } from '~/hooks/useAPI';
 import { setCookie, useCookie } from '~/hooks/useCookie';
 import { NewElection } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { setVoterAuthenticationMode } from '@equal-vote/star-vote-shared/domain_model/VoterAuthenticationMode';
 import { makeUniqueIDSync, makeID, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
 
-import { hashString, scrollToElement, StringObject, TransitionBox, useSubstitutedTranslation } from '../../util.js';
+import { hashString, TransitionBox, useSubstitutedTranslation } from '../../util.js';
 import useAuthSession from '../../AuthSessionContextProvider.js';
 import RaceForm from '../Races/RaceForm.js';
 import useConfirm from '../../ConfirmationDialogProvider.js';
-import WizardExtra from './WizardExtra.js';
-import { ElectionContextProvider } from '../../ElectionContextProvider.js';
+import useElection, { ElectionContextProvider } from '../../ElectionContextProvider.js';
 import WizardBasics from './WizardBasics.js';
-import { useTheme } from '@mui/material';
 
 export const makeDefaultElection = () => {
     const ids = [];
     for(let i = 0; i < 1; i++){
         ids.push(makeUniqueIDSync(
-            ID_PREFIXES.CANDIDATE, 
+            ID_PREFIXES.CANDIDATE,
             ID_LENGTHS.CANDIDATE,
             (id: string) => ids.includes(id)
         ));
@@ -34,7 +32,7 @@ export const makeDefaultElection = () => {
         owner_id: '0',
         is_public: false,
         ballot_source: 'live_election',
-        races: [ {   
+        races: [ {
             title: '',
             race_id: '0',
             num_winners: undefined,
@@ -46,7 +44,7 @@ export const makeDefaultElection = () => {
             precincts: undefined,
         } ],
         settings: {
-            voter_access: undefined, // the wizard is responsible for setting this one
+            voter_access: undefined, // onCustomize is responsible for setting this
             voter_authentication: {
                 voter_id: true,
             },
@@ -60,13 +58,54 @@ export const makeDefaultElection = () => {
     } as NewElection
 };
 
+const MultiRaceTitleSection = ({ onCustomize }: { onCustomize: (election: NewElection) => Promise<void> }) => {
+    const { election, updateElection, t } = useElection();
+    const [showDescription, setShowDescription] = useState(false);
+
+    return (
+        <Box sx={{ textAlign: 'left', pl: 1 }}>
+            <TextField
+                required
+                label={t('election_details.title')}
+                value={election.title}
+                fullWidth
+                sx={{ mt: 1, mb: 1, boxShadow: 2 }}
+                onChange={(e) => updateElection(el => { el.title = e.target.value })}
+                slotProps={{ htmlInput: { 'aria-label': 'Title' } }}
+            />
+            <UtilityButton onClick={() => setShowDescription(d => !d)}>
+                {showDescription ? '-' : '+'} Description (Optional)
+            </UtilityButton>
+            {showDescription && (
+                <TextField
+                    multiline
+                    fullWidth
+                    label="Description"
+                    value={election.description ?? ''}
+                    minRows={3}
+                    sx={{ mt: 1, mb: 1, boxShadow: 2 }}
+                    onChange={(e) => updateElection(el => { el.description = e.target.value })}
+                />
+            )}
+            <Typography sx={{ mt: 1 }}>{t('wizard.add_races_later')}</Typography>
+            <Box sx={{ mt: 3, display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', gap: 1 }}>
+                <PrimaryButton
+                    disabled={!election.title}
+                    onClick={() => onCustomize(election)}
+                >
+                    Next
+                </PrimaryButton>
+            </Box>
+        </Box>
+    );
+};
+
 const Wizard = () => {
     const authSession = useAuthSession();
     const defaultTempId = useMemo(() => makeID(ID_PREFIXES.VOTER, ID_LENGTHS.VOTER), []);
     const [tempID] = useCookie('temp_id', defaultTempId);
     const navigate = useNavigate()
-    const [page, setPage] = useState(0);
-    const { isPending, makeRequest: postElection } = usePostElection()
+    const { makeRequest: postElection } = usePostElection()
     const [election, setElection] = useState<NewElection>(makeDefaultElection())
     const [multiRace, setMultiRace] = useState(undefined);
 
@@ -96,15 +135,17 @@ const Wizard = () => {
         navigate(`/${newElection.election.election_id}${subPage}`)
     }
 
-    const theme = useTheme(); 
-
-    const width: StringObject = {xs: '300px', sm: '500px'};
-    const getWidth = () => {
-        const keys: Breakpoint[] = ['sm', 'xs']; // biggest to smallest, must match width keys
-        // NOTE: I'm precomputing ups so that we don't get an error for variable number of hooks
-        const ups = keys.map(key => useMediaQuery(theme.breakpoints.up(key), {noSsr: true}));
-        return Number(width[keys.find((_, i) => ups[i])].replace('px', ''));
-    }
+    const onCustomize = async (electionToSubmit: NewElection) => {
+        const finalElection = {
+            ...electionToSubmit,
+            settings: {
+                ...electionToSubmit.settings,
+                voter_access: 'open',
+                contact_email: authSession.isLoggedIn() ? authSession.getIdField('email') : '',
+            }
+        };
+        await onAddElection(finalElection, '/admin/build_ballot');
+    };
 
     const onNext = async (editedRace) => {
         const updatedElection = {
@@ -113,15 +154,18 @@ const Wizard = () => {
             title: editedRace.title,
             description: editedRace.description,
         }
-        const confirmed = await confirm(t('wizard.publish_confirm'));
+        const confirmed = await confirm({...t('wizard.publish_confirm'), dismissable: true});
+        if (confirmed === null) {
+            return; // dialog dismissed — stay on wizard with inputs intact
+        }
         if (confirmed) {
             onAddElection({...updatedElection, state: 'finalized', settings: setVoterAuthenticationMode(updatedElection.settings, 'open_unique_cookie')}, '/')
-        }else{
-            scrollToElement(document.querySelector('.wizard'));
-            setElection(updatedElection)
-            setPage(1);
+        } else {
+            await onCustomize(updatedElection);
         }
     }
+
+    const width = {xs: '300px', sm: '500px'};
 
     const pageSX = {
         display: 'flex',
@@ -129,7 +173,6 @@ const Wizard = () => {
         width: width,
         flexDirection: 'column',
         textAlign: 'center',
-        //backgroundColor: //'lightShade.main',
         padding: 3,
         borderRadius: '20px',
         minWidth: {xs: '0px', md: '400px'},
@@ -141,32 +184,17 @@ const Wizard = () => {
 
     return <ElectionContextProvider id={undefined} localElection={election} setLocalElection={setElection}>
         <Paper className='wizard' elevation={5} sx={{
-            //maxWidth: '613px',
             width: width,
             margin: 'auto',
             overflow: 'clip',
         }}>
-            <Box
-                sx={{
-                    position: 'relative',
-                    width: `${getWidth()*2}px`,
-                    left: `-${page*getWidth()}px`,
-                    transition: 'left 1s',
-                    display: 'flex',
-                    flexDirection: 'row',
-                }}
-            >
-                <Box sx={pageSX}>
-                    <Typography variant='h5' color={'lightShade.contrastText'}>{t('wizard.title')}</Typography>
-                    <WizardBasics multiRace={multiRace} setMultiRace={setMultiRace}/>
-                    <Box sx={{position: 'relative'}}>
-                        <TransitionBox absolute enabled={multiRace === true} sx={{textAlign: 'left', pl: 1}}>
-                            {t('wizard.add_races_later')}
-                            <Box sx={{ mt: 3, display: "flex", flexDirection: "row", justifyContent: "flex-end", gap: 1 }}>
-                                <PrimaryButton onClick={() => setPage(1)}>Next</PrimaryButton>
-                            </Box>
-                        </TransitionBox>
-                    </Box>
+            <Box sx={pageSX}>
+                <Typography variant='h5' color={'lightShade.contrastText'}>{t('wizard.title')}</Typography>
+                <WizardBasics multiRace={multiRace} setMultiRace={setMultiRace}/>
+                <Box sx={{ position: 'relative' }}>
+                    <TransitionBox absolute enabled={multiRace === true}>
+                        <MultiRaceTitleSection onCustomize={onCustomize} />
+                    </TransitionBox>
                     <TransitionBox enabled={multiRace === false}>
                         <RaceForm
                             raceIndex={0}
@@ -174,9 +202,6 @@ const Wizard = () => {
                             styling='Wizard'
                         />
                     </TransitionBox>
-                </Box>
-                <Box sx={{...pageSX, textAlign: 'left'}}>
-                    <WizardExtra onBack={() => setPage(pg => pg-1)} multiRace={multiRace} onAddElection={onAddElection}/>
                 </Box>
             </Box>
         </Paper>
