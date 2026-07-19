@@ -118,6 +118,23 @@ export default class BallotsDB implements IBallotStore {
             .execute();
     }
 
+    streamSubmittedBallotsByElectionID(election_id: string, ctx: ILoggingContext, db?: Kysely<Database> | Transaction<Database>): AsyncIterableIterator<Ballot> {
+        Logger.debug(ctx, `${tableName}.streamSubmittedBallotsByElectionID ${election_id}`);
+        const client = db || this._postgresClient;
+
+        return client
+            .selectFrom(tableName)
+            .selectAll()
+            .where('election_id', '=', election_id)
+            .where('head', '=', true)
+            .where('status', '=', 'submitted')
+            // Randomize order in the database (gen_random_uuid() is backed by a
+            // strong RNG) so the response can't reveal ballot submission order —
+            // the streaming equivalent of secureShuffle in controllerUtils.
+            .orderBy(sql`gen_random_uuid()`)
+            .stream(500) as AsyncIterableIterator<Ballot>;
+    }
+
     getBallotByVoterID(voter_id: string, election_id: string, ctx: ILoggingContext, db?: Kysely<Database> | Transaction<Database>): Promise<Ballot | undefined> {
         Logger.debug(ctx, `${tableName}.getBallotByVoterID ${logSafeHash(voter_id)} ${election_id}`);
         const client = db || this._postgresClient;
