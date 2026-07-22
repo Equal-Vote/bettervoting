@@ -44,7 +44,8 @@ test.describe('Create Election', () => {
         await page.goto('/');
         
         // Start from About Page (to test nav)
-        await page.getByRole('link', { name: 'About Us' }).click();
+        await page.getByRole('button', { name: 'About Us' }).click();
+        await page.getByRole('menuitem', { name: 'About BetterVoting' }).click();
         await page.getByRole('link', { name: 'Create Election' }).click();
         const electionButton = page.getByRole('radio', { name: 'Election' })
         await expect(electionButton).toBeInViewport({timeout: 10000}); // larger timeout since this requires a full page load, which can take a couple seconds on Firefox in dev mode

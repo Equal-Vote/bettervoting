@@ -27,6 +27,9 @@ const LandingPageSupport = () => {
                 <PrimaryButton href='/volunteer'>
                     Volunteer
                 </PrimaryButton>
+                <PrimaryButton href='https://www.starvoting.org/store'>
+                    Merch
+                </PrimaryButton>
                 <PrimaryButton href='https://equal.vote/donate'>
                     Donate
                 </PrimaryButton>

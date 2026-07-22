@@ -30,6 +30,18 @@ export const createWizardNav = (heading: string, isLandingPage: boolean) => {
         }
 };
 
+export const createFeatureListNav = (isLandingPage: boolean) => {
+    return isLandingPage ?
+        {
+            text: 'Feature List',
+            onClick: () => scrollToElement(document.querySelector(`.features`), { cancelOnUserInput: true }),
+        } : {
+            text: 'Feature List',
+            href: '/',
+            target: '_self',
+        }
+};
+
 const Header = () => {
     const flags = useFeatureFlags();
     const themeSelector = useThemeSelector()
@@ -48,8 +60,34 @@ const Header = () => {
     const navItems = [
         {
             text: t('nav.about'),
-            href: '/about',
-            target: '_self',
+            items: [
+                {
+                    text: 'About BetterVoting',
+                    href: '/about',
+                    target: '_self',
+                },
+                {
+                    text: 'About The Equal Vote Coalition',
+                    href: 'http://equal.vote/',
+                    target: '_self',
+                },
+                {
+                    text: 'Why We Need Better Voting',
+                    href: 'https://www.equal.vote/voting_methods',
+                    target: '_self',
+                },
+                {
+                    text: 'Stories',
+                    href: 'https://starvoting.org/case_studies',
+                    target: '_self',
+                },
+                createFeatureListNav(isLandingPage),
+                {
+                    text: 'Documentation',
+                    href: 'https://docs.bettervoting.com',
+                    target: '_self',
+                },
+            ]
         },
         {
             text: 'Voting Methods',
@@ -108,9 +146,24 @@ const Header = () => {
             ]
         },
         {
-            text: 'Stories' ,
-            href: 'https://starvoting.org/case_studies',
-            target: '_self',
+            text: 'Support Us',
+            items: [
+                {
+                    text: 'Volunteer',
+                    href: '/volunteer',
+                    target: '_self',
+                },
+                {
+                    text: 'Merch',
+                    href: 'https://www.starvoting.org/store',
+                    target: '_self',
+                },
+                {
+                    text: 'Donate',
+                    href: 'https://equal.vote/donate',
+                    target: '_self',
+                },
+            ]
         },
         createWizardNav('Create Election', isLandingPage),
     ] as any[];
@@ -215,13 +268,6 @@ const Header = () => {
                             </MenuItem>
                             <MenuItem component={Link} href='/vote_history'>
                                 {t('nav.past_elections')}
-                            </MenuItem>
-                            <MenuItem
-                                component={Link} 
-                                href='https://docs.bettervoting.com'
-                                target='_blank'
-                            >
-                                {t('nav.help')}
                             </MenuItem>
                             <MenuItem
                                 color='inherit'
