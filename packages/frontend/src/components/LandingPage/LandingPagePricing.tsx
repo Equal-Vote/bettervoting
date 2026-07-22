@@ -20,7 +20,7 @@ const LandingPagePricing = () => {
                 maxWidth: '1300px',
                 margin: 'auto',
             }}>
-                <Typography variant='h4' color={'darkShade.contrastText'} sx={{ textAlign: 'center' }}>{t('landing_page.pricing.title')}</Typography>
+                <Typography variant='h4' sx={{ color: 'darkShade.contrastText', textAlign: 'center' }}>{t('landing_page.pricing.title')}</Typography>
             </Box>
             <Box sx={{
                 display: 'flex',

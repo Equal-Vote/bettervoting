@@ -43,7 +43,7 @@ const FeaturedElection = ({electionId}: { electionId: string }) => {
     }}>
         <CardActionArea sx={{p: { xs: 2, md: 2 }, backgroundColor: 'lightShade.main'}}>
             <CardContent>
-                <Typography variant='h5' color={'lightAccent.contrastText'}>{data == null ? 'null' : data.election.title}</Typography>
+                <Typography variant='h5' sx={{ color: 'lightAccent.contrastText' }}>{data == null ? 'null' : data.election.title}</Typography>
                 <Typography sx={{textAlign: 'right', color: 'lightAccent.contrastText'}}>
                     {data == null ? 'null' : formatter.format(data.election.races.map((race) => race.voting_method))}
                 </Typography>

@@ -17,7 +17,7 @@ const LandingPageFeaturedElections = ({ electionIds }: { electionIds: string[] }
             maxWidth: '1300px',
             margin: 'auto',
         }}>
-            <Typography variant='h4' color={'darkShade.contrastText'} sx={{ textAlign: 'center' }}>{t('landing_page.featured_elections.title')}</Typography>
+            <Typography variant='h4' sx={{ color: 'darkShade.contrastText', textAlign: 'center' }}>{t('landing_page.featured_elections.title')}</Typography>
         </Box>
 
         <Box sx={{

@@ -17,7 +17,7 @@ const LandingPageTestimonials = () => {
             maxWidth: '1300px',
             margin: 'auto',
         }}>
-            <Typography variant='h4' color={'darkShade.contrastText'} sx={{textAlign: 'left'}}>{t('landing_page.testimonials.title')}</Typography>
+            <Typography variant='h4' sx={{color: 'darkShade.contrastText', textAlign: 'left'}}>{t('landing_page.testimonials.title')}</Typography>
         </Box>
         <Box sx={{
             display: 'flex',
@@ -39,7 +39,7 @@ const LandingPageTestimonials = () => {
                     height: '2rem',
                     margin: 'auto',
                 }}/>
-                <Typography variant='h5' color={'darkShade.contrastText'} sx={{textAlign: 'center'}}>
+                <Typography variant='h5' sx={{color: 'darkShade.contrastText', textAlign: 'center'}}>
                     <i>&quot;{testimonial.quote}&quot;<br/>-{testimonial.name}</i>
                 </Typography>
             </Box>
