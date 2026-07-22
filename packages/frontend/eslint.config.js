@@ -1,16 +1,16 @@
-import js from "@eslint/js";
+import base from "../shared/eslint.base.mjs";
 import globals from "globals";
-import tseslint from "typescript-eslint";
 import pluginReact from "eslint-plugin-react";
+import jsxA11y from "eslint-plugin-jsx-a11y";
 import { defineConfig } from "eslint/config";
 
 
 export default defineConfig([
-  { files: ["**/*.{js,mjs,cjs,ts,jsx,tsx}"], plugins: { js }, extends: ["js/recommended"] },
+  ...base,
   { files: ["**/*.{js,mjs,cjs,ts,jsx,tsx}"], languageOptions: { globals: globals.browser } },
-  tseslint.configs.recommended,
   pluginReact.configs.flat.recommended,
   pluginReact.configs.flat["jsx-runtime"],
+  jsxA11y.flatConfigs.recommended,
   {
     settings: {
       react: {
