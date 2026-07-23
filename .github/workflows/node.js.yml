@@ -29,6 +29,18 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
+    - name: Debug license
+      run: |
+        if [ -z "$GITLEAKS_LICENSE" ]; then
+          echo "License is EMPTY"
+          exit 1
+        else
+          echo "License length: ${#GITLEAKS_LICENSE}"
+        fi
+        [ -z "$GH_PAT" ] && echo "GH_PAT empty" || echo "GH_PAT present"
+      env:
+        GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+        GH_PAT: ${{ secrets.GH_PAT }}
     - run: npm i
     - run: npm run build -ws
     - run: npm test
@@ -47,16 +59,6 @@ jobs:
           fi
           echo "base=$before" >> "$GITHUB_OUTPUT"
         fi
-    - name: Debug license
-      run: |
-        if [ -z "$GITLEAKS_LICENSE" ]; then
-          echo "License is EMPTY"
-          exit 1
-        else
-          echo "License length: ${#GITLEAKS_LICENSE}"
-        fi
-      env:
-        GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
     - name: Lint changed files
       run: npm run lint:diff
       env:
