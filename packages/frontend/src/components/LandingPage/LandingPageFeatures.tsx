@@ -13,7 +13,7 @@ const LandingPageFeatures = () => {
     const panels = t('landing_page.features.items') as FeaturePanel[];
 
     return (
-        <Box sx={{
+        <Box className="features" sx={{
             display: 'flex',
             flexDirection: 'column',
             backgroundColor: 'darkShade.main',

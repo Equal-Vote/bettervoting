@@ -129,3 +129,17 @@ For i18n labels with `!tip()` syntax, match a substring: `{ name: /Set Number Of
 - `DEV_DATABASE` — Set to `FALSE` to disable SSL for local Postgres
 - `LOG_LEVEL` — Logging verbosity
 - `FRONTEND_URL` (testing only) — Base URL for Playwright tests
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues on `Equal-Vote/bettervoting` (double check the remotes, as they're named differently depending on the dev environment). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Only `ready-for-agent` is tracked, via the label `sandcastle`; the other four canonical roles have no corresponding label in this repo. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context — one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.

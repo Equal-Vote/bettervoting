@@ -9,6 +9,7 @@
     "./packages/frontend"
   ],
   "scripts": {
+    "prepare": "husky",
     "clean": "npx rimraf node_modules",
     "clean:ws": "npm run clean -ws && npm run clean",
     "test": "cd packages/backend && npm install && npm test",
@@ -16,7 +17,14 @@
     "start": "./replace.sh && node ./packages/backend/build/src/Migrators/migrate-to-latest.js && node ./packages/backend/build/src/index.js",
     "heroku-postbuild": "cd packages/frontend && npm install && npm run build && cd ../backend && npm install && npm run-script build",
     "sandcastle": "npx tsx .sandcastle/main.mts",
-    "sandcastle:merge": "npx tsx .sandcastle/main.mts --merge"
+    "sandcastle:merge": "npx tsx .sandcastle/main.mts --merge",
+    "lint:staged": "lint-staged",
+    "lint:diff": "node scripts/lint-diff.mjs"
+  },
+  "lint-staged": {
+    "packages/frontend/**/*.{js,jsx,ts,tsx}": "eslint --config packages/frontend/eslint.config.js --fix",
+    "packages/backend/**/*.{js,ts}": "eslint --config packages/backend/eslint.config.mjs --fix",
+    "packages/shared/**/*.{js,ts}": "eslint --config packages/shared/eslint.config.mjs --fix"
   },
   "repository": {
     "type": "git",
@@ -32,6 +40,8 @@
   "devDependencies": {
     "@ai-hero/sandcastle": "^0.12.0",
     "@playwright/test": "^1.60.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.1.1",
     "rimraf": "^5.0.5"
   },
   "dependencies": {
