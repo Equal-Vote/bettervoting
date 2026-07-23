@@ -47,6 +47,16 @@ jobs:
           fi
           echo "base=$before" >> "$GITHUB_OUTPUT"
         fi
+    - name: Debug license
+      run: |
+        if [ -z "$GITLEAKS_LICENSE" ]; then
+          echo "License is EMPTY"
+          exit 1
+        else
+          echo "License length: ${#GITLEAKS_LICENSE}"
+        fi
+      env:
+        GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
     - name: Lint changed files
       run: npm run lint:diff
       env:
