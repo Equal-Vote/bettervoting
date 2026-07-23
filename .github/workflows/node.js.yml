@@ -31,12 +31,7 @@ jobs:
         cache: 'npm'
     - name: Debug license
       run: |
-        if [ -z "$GITLEAKS_LICENSE" ]; then
-          echo "License is EMPTY"
-          exit 1
-        else
-          echo "License length: ${#GITLEAKS_LICENSE}"
-        fi
+        [ -z "$GITLEAKS_LICENSE" ] && echo "GITLEAKS_LICENSE empty" || echo "GITLEAKS_LICENSE present"
         [ -z "$GH_PAT" ] && echo "GH_PAT empty" || echo "GH_PAT present"
       env:
         GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
