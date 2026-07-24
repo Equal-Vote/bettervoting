@@ -8,14 +8,18 @@
     "test": "npm install && npm test",
     "clean": "npx rimraf dist node_modules ../node_modules",
     "build": "tsc --project ./ && npm run generate:schema",
-    "generate:schema": "typescript-json-schema tsconfig.json \"*\" --required --out dist/schema.json && node ./fixSchemaRefs.ts"
+    "generate:schema": "typescript-json-schema tsconfig.json \"*\" --required --out dist/schema.json && node ./fixSchemaRefs.ts",
+    "lint": "eslint . --fix"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
     "rimraf": "^5.0.5",
-    "typescript": "^5.9.0"
+    "typescript": "^5.9.0",
+    "typescript-eslint": "^8.65.0"
   },
   "peerDependencies": {
     "typescript": "^5.9.0"

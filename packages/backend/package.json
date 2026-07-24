@@ -15,7 +15,8 @@
     "migrate:up": "node ./build/src/Migrators/migrate-up.js",
     "migrate:down": "node ./build/src/Migrators/migrate-down.js",
     "db_sandbox": "npm run-script build && node ./build/src/test/database_sandbox.js",
-    "generate:openapi": "ts-node ./src/OpenApi/generateSwaggerJSON.ts"
+    "generate:openapi": "ts-node ./src/OpenApi/generateSwaggerJSON.ts",
+    "lint": "eslint . --fix"
   },
   "keywords": [],
   "author": "",
@@ -53,17 +54,23 @@
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
-    "@types/pg-cursor": "^2.7.2",
+    "@eslint/js": "^9.39.5",
     "@types/compression": "^1.8.1",
+    "@types/pg-cursor": "^2.7.2",
     "@types/sanitize-html": "^2.13.0",
     "@types/supertest": "^2.0.12",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.6",
+    "eslint": "^9.39.5",
+    "eslint-plugin-jest": "^29.15.5",
+    "eslint-plugin-security": "^4.0.1",
+    "globals": "^16.5.0",
     "jest": "^29.7.0",
     "rimraf": "^5.0.5",
     "supertest": "^6.2.2",
     "ts-jest": "^29.1.2",
     "tsx": "^4.7.1",
-    "typescript": "^5.9.0"
+    "typescript": "^5.9.0",
+    "typescript-eslint": "^8.65.0"
   }
 }

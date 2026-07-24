@@ -1,0 +1,35 @@
+#!/usr/bin/env sh
+# This hook is OFF by default. To turn it on:
+#   cp .husky/pre-commit.sample .husky/pre-commit && chmod +x .husky/pre-commit
+# `.husky/pre-commit` is gitignored, so activating it is a personal, local choice —
+# it never gets committed and never forces these checks on anyone else who clones
+# the repo. Comment sections in/out below to pick your own level of friction.
+#
+# Recommendation for humans: the first two sections are cheap (only look at what
+# you're committing) and worth keeping on. Build/test add real time to every
+# commit — keep them on if you want the safety net, comment them out if you'd
+# rather only pay that cost in CI.
+#
+# Recommendation for AI agents: keep everything below on, including build/test.
+# The point of this hook is to give a fast, local, un-ignorable feedback loop
+# during a working session — catching a mistake in CI instead is a much slower
+# loop to act on. Only leave e2e off (see note below).
+
+# --- Lint the files you're committing (staged files only, not the whole repo) ---
+npx lint-staged || exit 1
+
+# --- Scan staged changes for secrets ---
+# Requires the gitleaks binary installed locally: https://github.com/gitleaks/gitleaks
+gitleaks protect --staged --verbose || exit 1
+
+# --- Full install/build/test — the same commands CI runs ---
+npm i || exit 1
+npm run build -ws || exit 1
+npm test || exit 1
+
+# --- End-to-end tests ---
+# Spins up the full docker-compose stack — too slow for most people to want on
+# every commit, and CI already runs it on every PR. Uncomment only if you
+# specifically want that extra friction locally (e.g. an agent working unsupervised
+# for a long stretch before pushing).
+# (cd testing && npx playwright test --reporter=list) || exit 1

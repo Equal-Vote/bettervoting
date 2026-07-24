@@ -21,6 +21,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+      with:
+        # Full history, so the lint/secret-scan steps below can diff against a base commit.
+        fetch-depth: 0
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v3
       with:
@@ -29,3 +32,28 @@ jobs:
     - run: npm i
     - run: npm run build -ws
     - run: npm test
+    - name: Determine lint diff base
+      id: lint-diff-base
+      # PRs diff against the base branch; a direct push to main diffs against the
+      # commit that was on main before it (falls back to HEAD~1 for the edge case
+      # of a brand new branch, which shouldn't occur on main in practice).
+      run: |
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          echo "base=${{ github.event.pull_request.base.sha }}" >> "$GITHUB_OUTPUT"
+        else
+          before="${{ github.event.before }}"
+          if [ "$before" = "0000000000000000000000000000000000000000" ]; then
+            before="HEAD~1"
+          fi
+          echo "base=$before" >> "$GITHUB_OUTPUT"
+        fi
+    - name: Lint changed files
+      run: npm run lint:diff
+      env:
+        LINT_DIFF_BASE: ${{ steps.lint-diff-base.outputs.base }}
+    - name: Scan changed files for secrets
+      if: env.GITLEAKS_LICENSE != '' # The token won't be available on PR's so skip step if it's not there
+      uses: gitleaks/gitleaks-action@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
