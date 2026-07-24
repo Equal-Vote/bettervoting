@@ -1,8 +1,7 @@
 # Diff-scoped lint and secret-scan enforcement, not whole-repo
 
-A prior attempt to roll out ESLint across the whole codebase turned into a massive
-overhaul project and stalled. To add real, blocking lint and secret-scan checks
-without repeating that, both are scoped to only what changed rather than the whole
+Linting the whole repo would be a massive project. To add real, blocking lint and secret-scan checks
+without creating too much work, the linter is scoped to only what changed rather than the whole
 repo: `lint-staged` checks staged files in the Husky pre-commit hook, and `npm run
 lint:diff` / gitleaks check the PR's (or push's) diff in CI. Neither ever looks at
 pre-existing files outside that diff, so existing lint/secret debt elsewhere in the
