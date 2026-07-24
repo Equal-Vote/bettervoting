@@ -29,13 +29,6 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-    - name: Debug license
-      run: |
-        [ -z "$GITLEAKS_LICENSE" ] && echo "GITLEAKS_LICENSE empty" || echo "GITLEAKS_LICENSE present"
-        [ -z "$GH_PAT" ] && echo "GH_PAT empty" || echo "GH_PAT present"
-      env:
-        GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
-        GH_PAT: ${{ secrets.GH_PAT }}
     - run: npm i
     - run: npm run build -ws
     - run: npm test
@@ -59,6 +52,7 @@ jobs:
       env:
         LINT_DIFF_BASE: ${{ steps.lint-diff-base.outputs.base }}
     - name: Scan changed files for secrets
+      if: env.GITLEAKS_LICENSE != '' # The token won't be available on PR's so skip step if it's not there
       uses: gitleaks/gitleaks-action@v2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
