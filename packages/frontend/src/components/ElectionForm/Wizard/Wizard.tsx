@@ -157,7 +157,7 @@ const Wizard = () => {
                 }}
             >
                 <Box sx={pageSX}>
-                    <Typography variant='h5' color={'lightShade.contrastText'}>{t('wizard.title')}</Typography>
+                    <Typography variant='h5' sx={{ color: 'lightShade.contrastText' }}>{t('wizard.title')}</Typography>
                     <WizardBasics multiRace={multiRace} setMultiRace={setMultiRace}/>
                     <Box sx={{position: 'relative'}}>
                         <TransitionBox absolute enabled={multiRace === true} sx={{textAlign: 'left', pl: 1}}>

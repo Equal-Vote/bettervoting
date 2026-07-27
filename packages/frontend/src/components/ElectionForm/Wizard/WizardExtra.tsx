@@ -55,7 +55,7 @@ export default ({onBack, multiRace, onAddElection}) => {
     </>
 
     return <>
-        <Typography variant='h5' color={'lightShade.contrastText'}>Just a few more questions...</Typography>
+        <Typography variant='h5' sx={{ color: 'lightShade.contrastText' }}>Just a few more questions...</Typography>
         <Stepper activeStep={stepperStep} orientation="vertical">
             {multiRace &&
             <Step>

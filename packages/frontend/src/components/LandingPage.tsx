@@ -24,10 +24,30 @@ const LandingPage = () => {
             openFeedback();
         }
 
-        if(checkUrl.pathname === "/new_election")
-        {
-            scrollToElement(document.querySelector(`.wizard`))
-        }
+        if(checkUrl.pathname !== "/new_election") return;
+
+        // Jump straight to the wizard, then keep re-aligning while the content
+        // above it (carousel, images) loads and pushes it down. A one-shot
+        // delayed smooth scroll can land short of the wizard (especially on
+        // Firefox) when the page reflows after the scroll starts.
+        const align = () => scrollToElement(document.querySelector(`.wizard`), { behavior: 'auto', delay: 0 });
+        align();
+
+        const observer = new ResizeObserver(align);
+        observer.observe(document.body);
+        const stop = () => observer.disconnect();
+
+        // stop re-aligning once layout has settled, or as soon as the user
+        // scrolls on their own
+        const settleTimeout = setTimeout(stop, 2000);
+        const userEvents: (keyof WindowEventMap)[] = ['wheel', 'pointerdown', 'keydown'];
+        userEvents.forEach((e) => window.addEventListener(e, stop, { passive: true }));
+
+        return () => {
+            clearTimeout(settleTimeout);
+            stop();
+            userEvents.forEach((e) => window.removeEventListener(e, stop));
+        };
     }, [checkUrl]);
 
     
@@ -57,7 +77,7 @@ const LandingPage = () => {
                 <Typography sx={{textAlign:'center', padding: 2, opacity: 0.5}}>
                     {t('nav.beta_warning')}
                 </Typography>
-                <Typography variant="h4" color={'lightShade.contrastText'}> {t('landing_page.hero.title')} </Typography>
+                <Typography variant="h4" sx={{ color: 'lightShade.contrastText' }}> {t('landing_page.hero.title')} </Typography>
                 <LandingPageCarousel />
                 <Typography component="p" sx={{margin: 'auto', width: '80%', textAlign: 'center', mt: 4}}>
                     <i>"BetterVoting is your one-stop, open-source tool for handling all your election needs. Whether it's informal polls or highly secure elections, electronic or paper, single-seat or multi-seat, we've got you covered!" <span className="nobr">- The BetterVoting Team</span></i>

@@ -10,6 +10,8 @@ export interface IBallotStore {
     bulkSubmitBallots: (ballots: Ballot[], ctx: ILoggingContext, reason: string, db?: Kysely<Database> | Transaction<Database>) => Promise<Ballot[]>;
     getBallotByID: (ballot_id: string, ctx: ILoggingContext, db?: Kysely<Database> | Transaction<Database>) => Promise<Ballot | null>;
     getBallotsByElectionID: (election_id: string, ctx: ILoggingContext, db?: Kysely<Database> | Transaction<Database>) => Promise<Ballot[]>;
+    // Streams head, submitted ballots in random order (see Ballots.ts for the anonymity rationale)
+    streamSubmittedBallotsByElectionID: (election_id: string, ctx: ILoggingContext, db?: Kysely<Database> | Transaction<Database>) => AsyncIterableIterator<Ballot>;
     getBallotByVoterID: (voter_id: string, election_id: string, ctx: ILoggingContext, db?: Kysely<Database> | Transaction<Database>) => Promise<Ballot | undefined>;
     delete(ballot_id: Uid, ctx: ILoggingContext, reason: string, db?: Kysely<Database> | Transaction<Database>): Promise<boolean>;
     deleteAllBallotsForElectionID: (election_id: string, ctx: ILoggingContext, db?: Kysely<Database> | Transaction<Database>) => Promise<boolean>;
