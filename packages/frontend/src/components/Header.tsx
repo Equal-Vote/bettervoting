@@ -155,7 +155,7 @@ const Header = () => {
                 },
                 {
                     text: 'Merch',
-                    href: 'https://www.starvoting.org/store',
+                    href: 'https://bettervoting.myspreadshop.com',
                     target: '_self',
                 },
                 {
