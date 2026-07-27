@@ -377,7 +377,6 @@ keyword:
 # Nav Bar
 nav:
   about: About Us
-  help: Help 
   public_elections: Vote in a Poll
   new_election: Create Election
   greeting: Hello, {{name}}
