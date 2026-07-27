@@ -170,14 +170,14 @@ export default class ElectionsDB implements IElectionStore {
             .catch(dneCatcher);
     }
 
-    getElectionRacesForAllElections(ctx: ILoggingContext): Promise<Pick<Election, 'election_id' | 'owner_id' | 'races'>[] | null> {
-        Logger.debug(ctx, `${tableName}.getElectionRacesForAllElections`);
+    getElectionsWithRacesForAllElections(ctx: ILoggingContext): Promise<Pick<Election, 'election_id' | 'owner_id' | 'races' | 'create_date'>[] | null> {
+        Logger.debug(ctx, `${tableName}.getElectionsWithRacesForAllElections`);
         return this._postgresClient
             .selectFrom(tableName)
-            .select(['election_id', 'owner_id', 'races'])
+            .select(['election_id', 'owner_id', 'races', 'create_date'])
             .where('head', '=', true)
             .execute()
-            .catch(dneCatcher) as Promise<Pick<Election, 'election_id' | 'owner_id' | 'races'>[] | null>;
+            .catch(dneCatcher) as Promise<Pick<Election, 'election_id' | 'owner_id' | 'races' | 'create_date'>[] | null>;
     }
 
     // TODO: this function should probably be in the ballots model

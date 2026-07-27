@@ -2,7 +2,7 @@ import { Score } from "./Score";
 import { Uid } from "./Uid";
 
 export interface Vote {
-    race_id: Uid;        // Must match the pollId of the election
+    race_id: Uid;        // Must match the race_id of the Race
     scores: Score[];       // One per candidate
     overvote_rank?: number;
     has_duplicate_rank?: boolean;
