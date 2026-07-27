@@ -42,7 +42,7 @@ function ElectionSwitchSetting({ settingKey, disabled, disabledMessage, onToggle
 }
 
 export default function ElectionSettings() {
-    const { election, updateElection, enqueueWrite } = useElection()
+    const { election, updateElection, enqueueWrite, refreshElection } = useElection()
     const min_rankings = 3;
     const max_rankings = Number(process.env.REACT_APP_MAX_BALLOT_RANKS) ? Number(process.env.REACT_APP_MAX_BALLOT_RANKS) : 8;
     const default_rankings = Number(process.env.REACT_APP_DEFAULT_BALLOT_RANKS) ? Number(process.env.REACT_APP_DEFAULT_BALLOT_RANKS) : 6;
@@ -57,6 +57,11 @@ export default function ElectionSettings() {
             const res = await enqueueWrite(expected_update_date =>
                 makePublicResultsRequest({ public_results: v, expected_update_date })
             );
+            // updateElection updates the context as a side effect of building its
+            // request body, but this write doesn't go through it, so the context
+            // would keep the pre-write value until the next GET — leaving this page
+            // and coming back would re-mount the switch showing the old setting.
+            if (res) await refreshElection();
             return !!res && res.election?.settings?.public_results === v;
         }
     );
