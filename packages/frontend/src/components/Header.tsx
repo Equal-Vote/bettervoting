@@ -37,7 +37,7 @@ export const createFeatureListNav = (isLandingPage: boolean) => {
             onClick: () => scrollToElement(document.querySelector(`.features`), { cancelOnUserInput: true }),
         } : {
             text: 'Feature List',
-            href: '/',
+            href: '/features',
             target: '_self',
         }
 };
