@@ -100,9 +100,14 @@ export default () => {
         </Grid>}
     </Box>
 
-    const [isOpen, setIsOpen] = useOptimisticToggle(election.state === 'open', async (toggled) =>
-        !! await enqueueWrite(expected_update_date => setOpenState({ open: toggled, expected_update_date }))
-    );
+    const [isOpen, setIsOpen] = useOptimisticToggle(election.state === 'open', async (toggled) => {
+        const res = await enqueueWrite(expected_update_date => setOpenState({ open: toggled, expected_update_date }));
+        // Same as setPublicResults in ElectionSettings: this write bypasses
+        // updateElection, so nothing folds the new state into the context.
+        // Stale election.state also mislabels the sidebar (Preview vs Live Ballot).
+        if (res) await fetchElection();
+        return !!res;
+    });
     
     const hasScheduledTimes = !!(election.start_time || election.end_time);
     const canEditState = permissions?.includes('canEditElectionState') ?? false;
