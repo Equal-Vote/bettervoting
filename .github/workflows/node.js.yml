@@ -39,13 +39,13 @@ jobs:
       # of a brand new branch, which shouldn't occur on main in practice).
       run: |
         if [ "${{ github.event_name }}" = "pull_request" ]; then
-          echo "base=${{ github.event.pull_request.base.sha }}" >> "$GITHUB_OUTPUT"
+          echo "PR base=${{ github.event.pull_request.base.sha }}" >> "$GITHUB_OUTPUT"
         else
           before="${{ github.event.before }}"
           if [ "$before" = "0000000000000000000000000000000000000000" ]; then
             before="HEAD~1"
           fi
-          echo "base=$before" >> "$GITHUB_OUTPUT"
+          echo "BEFORE base=$before" >> "$GITHUB_OUTPUT"
         fi
     - name: Lint changed files
       run: npm run lint:diff
