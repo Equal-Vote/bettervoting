@@ -3,6 +3,14 @@
 // Used by CI (node.js.yml) on both the `pull_request` and `push` triggers, so that
 // existing lint debt elsewhere in the repo never blocks a PR — only what it touches.
 import { execFileSync } from "node:child_process";
+import { createRequire } from "node:module";
+import path from "node:path";
+
+// Resolve eslint's own CLI entry point rather than shelling out to `npx`/`npx.cmd`:
+// execFileSync doesn't do the shell/PATHEXT resolution needed to find npx on Windows.
+const require = createRequire(import.meta.url);
+const eslintPkg = require.resolve("eslint/package.json");
+const eslintBin = path.join(path.dirname(eslintPkg), require("eslint/package.json").bin.eslint);
 
 const PACKAGES = [
   { dir: "packages/frontend", config: "packages/frontend/eslint.config.js" },
@@ -38,9 +46,11 @@ for (const pkg of PACKAGES) {
   files.forEach((f) => console.log(`  ${f}`));
 
   try {
-    execFileSync("npx", ["eslint", "--config", pkg.config, ...files], {
-      stdio: "inherit",
-    });
+    execFileSync(
+      process.execPath,
+      [eslintBin, "--config", pkg.config, ...files],
+      { stdio: "inherit" },
+    );
   } catch {
     failed = true;
   }
