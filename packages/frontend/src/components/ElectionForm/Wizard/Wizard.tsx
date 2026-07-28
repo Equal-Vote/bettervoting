@@ -80,8 +80,9 @@ const Wizard = () => {
             submitTempID = makeID(ID_PREFIXES.VOTER, ID_LENGTHS.VOTER);
             setCookie('temp_id', submitTempID);
         }
+        if (election.owner_id != null){
         election.owner_id = authSession.isLoggedIn() ? authSession.getIdField('sub') : submitTempID;
-
+        }
         const claimKey = crypto.randomUUID();
         election.claim_key_hash = hashString(claimKey);
 
@@ -115,7 +116,7 @@ const Wizard = () => {
         }
         const confirmed = await confirm(t('wizard.publish_confirm'));
         if (confirmed) {
-            onAddElection({...updatedElection, state: 'finalized', settings: setVoterAuthenticationMode(updatedElection.settings, 'open_unique_cookie')}, '/')
+            onAddElection({...updatedElection, owner_id: null, state: 'finalized', settings: setVoterAuthenticationMode(updatedElection.settings, 'open_unique_cookie')}, '/')
         }else{
             scrollToElement(document.querySelector('.wizard'));
             setElection(updatedElection)
