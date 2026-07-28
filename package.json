@@ -9,7 +9,6 @@
     "./packages/frontend"
   ],
   "scripts": {
-    "prepare": "husky",
     "clean": "npx rimraf node_modules",
     "clean:ws": "npm run clean -ws && npm run clean",
     "test": "cd packages/backend && npm install && npm test",
