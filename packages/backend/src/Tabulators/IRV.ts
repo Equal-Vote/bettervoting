@@ -171,6 +171,13 @@ function addWeightedVotes(weightedVotes: weightedVote[]): typeof Fraction {
 }
 
 function distributeVotes(remainingCandidates: irvCandidate[], candidateVotes: keyedObject<candidateVoteList>, votesToDistribute: weightedVote[], results: irvResults, electionSettings?: ElectionSettings) {
+    // No candidates left to receive votes (ex. surplus redistribution after the
+    // last remaining candidate wins the final seat), so all ballots are exhausted
+    if (remainingCandidates.length === 0) {
+        votesToDistribute.splice(0, votesToDistribute.length);
+        return;
+    }
+
     // we'll remove as votes get exhausted, hence the backwards iteration
     for(let i = votesToDistribute.length-1; i >= 0; i--){
         let ballot = votesToDistribute[i];
