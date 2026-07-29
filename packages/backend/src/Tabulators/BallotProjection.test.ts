@@ -9,6 +9,7 @@ import { trimLower } from "@equal-vote/star-vote-shared/domain_model/Util";
 import { orderedVotesToVotes } from "@equal-vote/star-vote-shared/domain_model/OrderedVoteCodec";
 import { BallotVotes } from "../Models/IBallotStore";
 import { projectBallots } from "./BallotProjection";
+import { BLOCK_BALLOTS } from "./CompactVoteStore";
 import { VotingMethods } from "./VotingMethodSelecter";
 
 // The compact projection re-encodes the semantic content of every ballot, so a
@@ -427,6 +428,24 @@ describe("BallotProjection matches the verbose projection", () => {
         ];
         const {cvr} = await compareProjection(race, ballots);
         expect(cvr).toEqual([{marks: {}, overvote_rank: undefined, has_duplicate_rank: undefined}]);
+    });
+
+    test("marks stay correct across block boundaries", async () => {
+        // the store keeps marks in BLOCK_BALLOTS-sized blocks and frees each one
+        // as it's consumed, so the block seam is exactly where an indexing
+        // mistake would put a ballot's marks on the wrong ballot
+        const race = makeRace({
+            race_id: 'r0',
+            voting_method: 'STAR',
+            candidateNames: ['Allison', 'Bill', 'Carmen'],
+            enable_write_in: true,
+            write_in_candidates: WRITE_INS,
+        });
+        // generated with slack: some of these ballots skip the race entirely, and
+        // it's the ballots that reach the store that have to span three blocks
+        const ballots = generateBallots(race, BLOCK_BALLOTS * 3, 55);
+        const {cvr} = await compareProjection(race, ballots);
+        expect(cvr.length).toBeGreaterThan(BLOCK_BALLOTS * 2);
     });
 
     test("takeRawVotes releases the compact store", async () => {

@@ -144,7 +144,8 @@ export class RaceProjection {
     /**
      * Expand this race's compact store into the tabulator's input and release
      * the store. Called one race at a time so only a single race's verbose
-     * tabulator input is ever alive.
+     * tabulator input is ever alive; consumeMarks frees the store block by block
+     * as it goes, so the two don't both sit at full size.
      */
     takeRawVotes(): rawVote[] {
         const store = this.store;
@@ -152,21 +153,21 @@ export class RaceProjection {
         const candidateIds = this.candidates.map(c => c.id);
         const candidateCount = store.candidateCount;
         const cvr: rawVote[] = new Array(store.count);
-        for (let b = 0; b < store.count; b++) {
+        store.consumeMarks((ballot, tags, values, offset) => {
             const marks: {[key: string]: number | null} = {};
             for (let i = 0; i < candidateCount; i++) {
-                const tag = store.markTag(b, i);
+                const tag = tags[offset + i];
                 // MARK_ABSENT means the ballot had no entry for this candidate, which
                 // is not the same as an explicit blank — leave the key out entirely
                 if (tag === MARK_ABSENT) continue;
-                marks[candidateIds[i]] = tag === MARK_NULL ? null : store.markValue(b, i);
+                marks[candidateIds[i]] = tag === MARK_NULL ? null : unbox(values[offset + i]);
             }
-            cvr[b] = {
+            cvr[ballot] = {
                 marks,
-                overvote_rank: store.overvoteRank(b) as number | undefined,
-                has_duplicate_rank: store.hasDuplicateRank(b) as boolean | undefined,
+                overvote_rank: store.overvoteRank(ballot) as number | undefined,
+                has_duplicate_rank: store.hasDuplicateRank(ballot) as boolean | undefined,
             };
-        }
+        });
         store.release();
         return cvr;
     }
@@ -176,6 +177,14 @@ export class RaceProjection {
         this.store.release();
     }
 }
+
+// Reading a Float64Array always yields a double, and V8 boxes a double stored
+// into an object property as a HeapNumber — 310k of them for a 31k-ballot race
+// with 10 candidates, which doubles the size of the expanded cvr. Marks are
+// almost always small integers, so hand those back as int32s, which V8 keeps as
+// tagged small ints with no boxing. The value is unchanged either way; anything
+// that isn't an exact int32 (a fraction, NaN, a huge number) falls through.
+const unbox = (value: number) => ((value | 0) === value ? value | 0 : value);
 
 /**
  * Stream every ballot once, projecting it into each race's compact store.

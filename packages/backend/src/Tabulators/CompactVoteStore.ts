@@ -6,13 +6,19 @@ import { encodeOrderedVote } from "@equal-vote/star-vote-shared/domain_model/Ord
 // It stores the same thing an OrderedVote does — a race's marks positionally
 // against a RaceCandidateOrder, plus overvote_rank and has_duplicate_rank — but
 // unrolled into a handful of big buffers instead of one small JS array per
-// ballot. That's the difference between ~9 bytes and ~150 bytes per ballot, and
-// between a few allocations and one per ballot for the GC to trace.
+// ballot. That's the difference between ~100 and ~176 bytes per ballot, and
+// between a handful of allocations and 62,000 per race for the GC to trace.
 //
 // Marks can't be packed into the values array alone: a mark is a number, an
 // explicit null, or absent (the ballot has no entry for that candidate at all),
 // and tabulation distinguishes all three. So each value gets a one-byte tag and
 // the value slot only means anything when the tag says NUMBER.
+//
+// The marks live in fixed-size blocks rather than one growable buffer, for two
+// reasons: appending never has to copy (a doubling buffer transiently holds the
+// old and new copies at once), and consumeMarks can drop each block as soon as
+// it has been read, so expanding the store into the tabulator's input doesn't
+// need room for both at full size.
 
 export const MARK_ABSENT = 0;
 export const MARK_NULL = 1;
@@ -27,7 +33,18 @@ export const DUPLICATE_FALSE = 1;
 export const DUPLICATE_TRUE = 2;
 export const DUPLICATE_NULL = 3;
 
+/** ballots per marks block; ~400KB per block at 10 candidates */
+export const BLOCK_BALLOTS = 4096;
+
 const INITIAL_CAPACITY = 256;
+
+/**
+ * Called once per ballot by consumeMarks. Reads mark `i` as
+ * `tags[offset + i]`, and its value (when the tag is MARK_NUMBER) as
+ * `values[offset + i]`. The raw buffers are handed over rather than a wrapper
+ * object so walking the store allocates nothing per ballot.
+ */
+export type MarkVisitor = (ballot: number, tags: Uint8Array, values: Float64Array, offset: number) => void;
 
 export class CompactVoteStore {
     readonly candidateCount: number;
@@ -38,9 +55,12 @@ export class CompactVoteStore {
     readonly rowValues: Float64Array;
     readonly rowTags: Uint8Array;
 
+    // one entry per BLOCK_BALLOTS ballots; nulled out as they're consumed
+    private markValueBlocks: (Float64Array | null)[] = [];
+    private markTagBlocks: (Uint8Array | null)[] = [];
+
+    // per-ballot, so ~9 bytes each — small enough to keep as plain growable buffers
     private capacity = 0;
-    private markValues = new Float64Array(0);
-    private markTags = new Uint8Array(0);
     private overvoteValues = new Float64Array(0);
     private overvoteTags = new Uint8Array(0);
     private duplicateTags = new Uint8Array(0);
@@ -78,10 +98,16 @@ export class CompactVoteStore {
     /** Commit the scratch row as one more ballot. */
     commitRow(overvote_rank: number | null | undefined, has_duplicate_rank: boolean | null | undefined) {
         if (this.released) throw new Error('CompactVoteStore: write after release');
-        this.grow(this.count + 1);
-        const base = this.count * this.candidateCount;
-        this.markValues.set(this.rowValues, base);
-        this.markTags.set(this.rowTags, base);
+        this.growPerBallot(this.count + 1);
+
+        const blockIndex = (this.count / BLOCK_BALLOTS) | 0;
+        if (blockIndex >= this.markValueBlocks.length) {
+            this.markValueBlocks.push(new Float64Array(BLOCK_BALLOTS * this.candidateCount));
+            this.markTagBlocks.push(new Uint8Array(BLOCK_BALLOTS * this.candidateCount));
+        }
+        const offset = (this.count % BLOCK_BALLOTS) * this.candidateCount;
+        this.markValueBlocks[blockIndex]!.set(this.rowValues, offset);
+        this.markTagBlocks[blockIndex]!.set(this.rowTags, offset);
 
         if (overvote_rank === undefined) {
             this.overvoteTags[this.count] = RANK_UNSET;
@@ -100,12 +126,42 @@ export class CompactVoteStore {
         this.count += 1;
     }
 
+    /**
+     * Walk every ballot's marks in order, freeing each block as soon as it has
+     * been read. The store is empty afterwards: this is a move, not a read, so
+     * that expanding it into the tabulator's input never needs room for the
+     * whole store and the whole expansion at once.
+     */
+    consumeMarks(visit: MarkVisitor) {
+        if (this.released) throw new Error('CompactVoteStore: read after release');
+        const {candidateCount, count} = this;
+        for (let blockIndex = 0; blockIndex < this.markValueBlocks.length; blockIndex++) {
+            const values = this.markValueBlocks[blockIndex]!;
+            const tags = this.markTagBlocks[blockIndex]!;
+            const first = blockIndex * BLOCK_BALLOTS;
+            const last = Math.min(first + BLOCK_BALLOTS, count);
+            for (let ballot = first; ballot < last; ballot++) {
+                visit(ballot, tags, values, (ballot - first) * candidateCount);
+            }
+            // drop the block now that it's been read, so peak memory is the
+            // expansion plus one block rather than the expansion plus the store
+            this.markValueBlocks[blockIndex] = null;
+            this.markTagBlocks[blockIndex] = null;
+        }
+        this.markValueBlocks = [];
+        this.markTagBlocks = [];
+    }
+
     markTag(ballot: number, index: number) {
-        return this.markTags[ballot * this.candidateCount + index];
+        const block = this.markTagBlocks[(ballot / BLOCK_BALLOTS) | 0];
+        if (!block) throw new Error('CompactVoteStore: marks already consumed');
+        return block[(ballot % BLOCK_BALLOTS) * this.candidateCount + index];
     }
 
     markValue(ballot: number, index: number) {
-        return this.markValues[ballot * this.candidateCount + index];
+        const block = this.markValueBlocks[(ballot / BLOCK_BALLOTS) | 0];
+        if (!block) throw new Error('CompactVoteStore: marks already consumed');
+        return block[(ballot % BLOCK_BALLOTS) * this.candidateCount + index];
     }
 
     overvoteRank(ballot: number): number | null | undefined {
@@ -151,28 +207,22 @@ export class CompactVoteStore {
     release() {
         this.released = true;
         this.capacity = 0;
-        this.markValues = new Float64Array(0);
-        this.markTags = new Uint8Array(0);
+        this.markValueBlocks = [];
+        this.markTagBlocks = [];
         this.overvoteValues = new Float64Array(0);
         this.overvoteTags = new Uint8Array(0);
         this.duplicateTags = new Uint8Array(0);
     }
 
-    private grow(needed: number) {
+    private growPerBallot(needed: number) {
         if (needed <= this.capacity) return;
         const capacity = Math.max(INITIAL_CAPACITY, this.capacity * 2, needed);
-        const markValues = new Float64Array(capacity * this.candidateCount);
-        const markTags = new Uint8Array(capacity * this.candidateCount);
         const overvoteValues = new Float64Array(capacity);
         const overvoteTags = new Uint8Array(capacity);
         const duplicateTags = new Uint8Array(capacity);
-        markValues.set(this.markValues);
-        markTags.set(this.markTags);
         overvoteValues.set(this.overvoteValues);
         overvoteTags.set(this.overvoteTags);
         duplicateTags.set(this.duplicateTags);
-        this.markValues = markValues;
-        this.markTags = markTags;
         this.overvoteValues = overvoteValues;
         this.overvoteTags = overvoteTags;
         this.duplicateTags = duplicateTags;
