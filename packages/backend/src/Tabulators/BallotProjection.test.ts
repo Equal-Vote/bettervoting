@@ -10,6 +10,7 @@ import { orderedVotesToVotes } from "@equal-vote/star-vote-shared/domain_model/O
 import { BallotVotes } from "../Models/IBallotStore";
 import { projectBallots } from "./BallotProjection";
 import { BLOCK_BALLOTS } from "./CompactVoteStore";
+import shuffleCandidatesForRandomTiebreak from "./shuffleCandidatesForRandomTiebreak";
 import { VotingMethods } from "./VotingMethodSelecter";
 
 // The compact projection re-encodes the semantic content of every ballot, so a
@@ -446,6 +447,28 @@ describe("BallotProjection matches the verbose projection", () => {
         const ballots = generateBallots(race, BLOCK_BALLOTS * 3, 55);
         const {cvr} = await compareProjection(race, ballots);
         expect(cvr.length).toBeGreaterThan(BLOCK_BALLOTS * 2);
+    });
+
+    test("shuffling the candidate list doesn't disturb the projection", async () => {
+        // getElectionResultsController hands `candidates` to
+        // shuffleCandidatesForRandomTiebreak, which sorts it in place. If the
+        // store's positional order were read off that array rather than the
+        // snapshot, every ballot's marks would land on the wrong candidate —
+        // and nothing about the results would look obviously wrong.
+        const race = makeRace({
+            race_id: 'r0',
+            voting_method: 'STAR',
+            candidateNames: ['Allison', 'Bill', 'Carmen', 'Doug', 'Elle'],
+            enable_write_in: true,
+            write_in_candidates: WRITE_INS,
+        });
+        const ballots = generateBallots(race, 200, 77);
+        const reference = referenceProjection(race, ballots);
+
+        const [projection] = await projectBallots([race], asStream(ballots));
+        shuffleCandidatesForRandomTiebreak(new Date(), projection.candidates, projection.count, race.race_id);
+        expect(projection.candidates.map(c => c.id)).not.toEqual(projection.candidateIds);
+        expect(projection.takeRawVotes()).toEqual(reference.cvr);
     });
 
     test("takeRawVotes releases the compact store", async () => {

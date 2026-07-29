@@ -65,6 +65,7 @@ export class CompactVoteStore {
     private overvoteTags = new Uint8Array(0);
     private duplicateTags = new Uint8Array(0);
     private released = false;
+    private marksConsumed = false;
 
     constructor(candidateCount: number) {
         this.candidateCount = candidateCount;
@@ -72,7 +73,11 @@ export class CompactVoteStore {
         this.rowTags = new Uint8Array(candidateCount);
     }
 
-    /** Clear the scratch row before projecting the next ballot. */
+    /**
+     * Reset the scratch row before projecting the next ballot. Only the tags are
+     * cleared — a stale value can't be read back, because a slot's value is only
+     * ever consulted when this ballot's own setMark tagged it MARK_NUMBER.
+     */
     startRow() {
         this.rowTags.fill(MARK_ABSENT);
     }
@@ -98,6 +103,9 @@ export class CompactVoteStore {
     /** Commit the scratch row as one more ballot. */
     commitRow(overvote_rank: number | null | undefined, has_duplicate_rank: boolean | null | undefined) {
         if (this.released) throw new Error('CompactVoteStore: write after release');
+        // appending after the blocks were handed out would push a fresh block at
+        // the wrong index and silently drop or misplace the ballot
+        if (this.marksConsumed) throw new Error('CompactVoteStore: write after marks were consumed');
         this.growPerBallot(this.count + 1);
 
         const blockIndex = (this.count / BLOCK_BALLOTS) | 0;
@@ -134,6 +142,8 @@ export class CompactVoteStore {
      */
     consumeMarks(visit: MarkVisitor) {
         if (this.released) throw new Error('CompactVoteStore: read after release');
+        if (this.marksConsumed) throw new Error('CompactVoteStore: marks already consumed');
+        this.marksConsumed = true;
         const {candidateCount, count} = this;
         for (let blockIndex = 0; blockIndex < this.markValueBlocks.length; blockIndex++) {
             const values = this.markValueBlocks[blockIndex]!;

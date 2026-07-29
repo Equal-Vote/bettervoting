@@ -32,8 +32,19 @@ export class RaceProjection {
     /** write-ins only participate when the race enables them AND has a write-in list */
     readonly useWriteIns: boolean;
     readonly writeInCandidates: WriteInCandidate[];
-    /** the candidate list this race is tabulated over: race candidates, then approved write-ins */
+    /**
+     * The candidate list this race is tabulated over: race candidates, then
+     * approved write-ins. Callers mutate this — shuffleCandidatesForRandomTiebreak
+     * sorts it in place, and the tabulators write to its entries — so it must
+     * never be used to interpret the store. See candidateIds.
+     */
     readonly candidates: candidate[];
+    /**
+     * The order the store's marks are positional against, snapshotted at
+     * construction. Reading it from `candidates` instead would silently
+     * misattribute every ballot's marks once that array has been shuffled.
+     */
+    readonly candidateIds: Uid[];
     readonly store: CompactVoteStore;
 
     numUnprocessedWriteIns = 0;
@@ -87,6 +98,7 @@ export class RaceProjection {
             });
         });
 
+        this.candidateIds = this.candidates.map(c => c.id);
         this.store = new CompactVoteStore(this.candidates.length);
     }
 
@@ -97,7 +109,7 @@ export class RaceProjection {
 
     /** the candidate order the store's marks are positional against */
     get candidateOrder(): RaceCandidateOrder {
-        return {race_id: this.race.race_id, candidate_id_order: this.candidates.map(c => c.id)};
+        return {race_id: this.race.race_id, candidate_id_order: this.candidateIds};
     }
 
     addVote(vote: Vote) {
@@ -150,7 +162,7 @@ export class RaceProjection {
     takeRawVotes(): rawVote[] {
         const store = this.store;
         if (store.isReleased) throw new Error('RaceProjection: takeRawVotes after the store was released');
-        const candidateIds = this.candidates.map(c => c.id);
+        const candidateIds = this.candidateIds;
         const candidateCount = store.candidateCount;
         const cvr: rawVote[] = new Array(store.count);
         store.consumeMarks((ballot, tags, values, offset) => {

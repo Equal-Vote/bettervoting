@@ -71,6 +71,9 @@ describe("OrderedVoteCodec", () => {
     test("rejects a ballot with the wrong number of races", () => {
         expect(() => orderedVotesToVotes([[1, 2, 3, 0, 0]], raceOrder))
             .toThrow(new OrderedVoteFormatError('Ballot contains different number of races than race_order: 1 != 2'));
+        // the class identity matters: castVoteController turns this into a 400
+        // via instanceof, and would surface a 500 if it ever stopped matching
+        expect(() => orderedVotesToVotes([[1, 2, 3, 0, 0]], raceOrder)).toThrow(OrderedVoteFormatError);
     });
 
     test("rejects a race with the wrong number of candidates", () => {
