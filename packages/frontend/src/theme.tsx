@@ -2,7 +2,7 @@ import React, { useContext } from 'react'
 import { PaletteOptions, Theme, createTheme, responsiveFontSizes, ThemeProvider } from '@mui/material/styles'
 import { createContext } from 'react';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import { TypographyOptions } from '@mui/material/styles/createTypography';
+import { TypographyVariantsOptions } from '@mui/material/styles';
 import { useMediaQuery } from '@mui/material';
 import useFeatureFlags from './components/FeatureFlagContextProvider';
 
@@ -162,7 +162,7 @@ const brandPalette: PaletteOptions = {
   }
 }
 
-const brandTypography: TypographyOptions = {
+const brandTypography: TypographyVariantsOptions = {
   // fontFamily: 'Montserrat',
   fontFamily: 'Verdana, sans-serif',
   button:{

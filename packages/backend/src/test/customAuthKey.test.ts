@@ -33,7 +33,10 @@ describe("Election with custom auth key", () => {
         }
       }); 
 
-    const election = {...testInputs.EmailRollElection};
+    // This test only cares about the custom JWT verification flow, so use an
+    // open+email election (type 3) — the closed+email-invite election the test
+    // previously used would now require simulating the invite/voter_id cookie flow.
+    const election = {...testInputs.OpenEmailElection};
     election.auth_key = customKey.publicKey;
 
     const user1TokenCustomSigned = jwt.sign({ 
@@ -94,6 +97,21 @@ describe("Election with custom auth key", () => {
         expect(response.statusCode).toBe(200);
         expect(response.voterAuth.authorized_voter).toBe(true);
         expect(response.voterAuth.has_voted).toBe(false);
+        // Owner-authenticated reads now retain auth_key so the integration can
+        // do read-modify-write edits and verify the stored key. Non-owner reads
+        // would still see this stripped — covered separately below.
+        expect(response.election.auth_key).toEqual(customKey.publicKey);
+        th.testComplete();
+    });
+
+    test("Non-owner request does NOT see auth_key", async () => {
+        const response = await th.requestBallot(
+            electionId,
+            testInputs.user1token  // standard app-signed token; not the owner of this election
+        );
+
+        // Whether the request is authorized as a voter or not is incidental to this
+        // assertion — the point is that without owner/admin role, auth_key is hidden.
         expect(response.election.auth_key).toBeUndefined();
         th.testComplete();
     });

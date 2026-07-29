@@ -51,6 +51,7 @@ const flagDefinitions = {
 		'(testing only) Disables random candidate order on ballots',
 	FORCE_DISABLE_INSTRUCTION_CONFIRMATION:
 		'(testing only) Disables confirmation prompt on ballots',
+	NOTA: 'Enables the "None of the Above" option when creating races',
 };
 
 export function FeatureFlagContextProvider({ children }: { children: React.ReactNode }) {

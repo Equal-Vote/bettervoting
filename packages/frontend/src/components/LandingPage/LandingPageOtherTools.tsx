@@ -20,7 +20,7 @@ export default function(){
                 maxWidth: '1300px',
                 margin: 'auto',
             }}>
-                <Typography variant='h4' color={'darkShade.contrastText'} sx={{ textAlign: 'center' }}>{t('landing_page.other_tools.title')}</Typography>
+                <Typography variant='h4' sx={{ color: 'darkShade.contrastText', textAlign: 'center' }}>{t('landing_page.other_tools.title')}</Typography>
             </Box>
             <Box sx={{
                 display: 'flex',
@@ -40,13 +40,13 @@ export default function(){
                     }}>
                         <CardActionArea sx={{p: { xs: 2, md: 2 }, backgroundColor: 'lightShade.main'}}>
                             <CardContent>
-                                <Box display='flex' flexDirection='row' gap={1} sx={{pb: 1}}>
+                                <Box sx={{ pb: 1, display: "flex", flexDirection: "row", gap: 1 }}>
                                     <Box
                                         component="img"
                                         sx={{height: '50px',}}
                                         src={item.icon_url}
                                     />
-                                    <Typography component='p' color={'lightAccent.contrastText'}><b>{item.name}</b></Typography>
+                                    <Typography component='p' sx={{ color: 'lightAccent.contrastText' }}><b>{item.name}</b></Typography>
                                 </Box>
                                 <Typography sx={{textAlign: 'left', color: 'lightAccent.contrastText'}}>{item.description}</Typography>
                             </CardContent>

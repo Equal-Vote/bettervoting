@@ -15,10 +15,10 @@
   "license": "ISC",
   "devDependencies": {
     "rimraf": "^5.0.5",
-    "typescript": "^5.3.3"
+    "typescript": "^5.9.0"
   },
   "peerDependencies": {
-    "typescript": "^4.7"
+    "typescript": "^5.9.0"
   },
   "exports": {
     ".": {

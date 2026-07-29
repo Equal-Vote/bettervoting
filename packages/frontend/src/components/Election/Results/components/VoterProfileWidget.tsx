@@ -30,7 +30,7 @@ const VoterProfileWidget = ({topScore, ranked=false} : {topScore: number, ranked
     // post-tabulation reorder in AllocatedScore.ts). Multi-winner races are
     // gated out below (race.num_winners <= 1) because the "runner-up"
     // concept stops being sharp once there are several winners.
-    let [left, right] = candidates.slice(0, 2);
+    const [left, right] = candidates.slice(0, 2);
 
     const avgBallot: {[key: string]:{name, score}} = {};
     candidates.forEach((c) => {

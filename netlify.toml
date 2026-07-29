@@ -11,6 +11,7 @@
   publish = "packages/frontend/build"
 
 [build.environment]
+  NODE_VERSION = "24"
   # Point the frontend to the production backend
   REACT_APP_BACKEND_URL = "https://bettervoting.com"
   REACT_APP_KEYCLOAK_URL = "https://keycloak.prod.equal.vote/realms/Prod/protocol/openid-connect"

@@ -2,7 +2,7 @@ import { electionValidation } from '@equal-vote/star-vote-shared/domain_model/El
 import ServiceLocator from '../../ServiceLocator';
 import Logger from '../../Services/Logging/Logger';
 import { responseErr } from '../../Util';
-import { expectPermission } from "../controllerUtils";
+import { expectPermission, expectUpdateDate } from "../controllerUtils";
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { BadRequest } from "@curveball/http-errors";
 import { IElectionRequest } from "../../IRequest";
@@ -13,7 +13,7 @@ var ElectionsModel = ServiceLocator.electionsDb();
 
 const editElection = async (req: IElectionRequest, res: Response, next: NextFunction) => {
     const inputElection = req.body.Election;
-    Logger.info(req, `editElection: ${inputElection?.election_id}`) 
+    Logger.info(req, `editElection: ${inputElection?.election_id}`)
     expectPermission(req.user_auth.roles, permissions.canEditElection)
     const validationErr = electionValidation(inputElection);
     if (validationErr) {
@@ -30,15 +30,10 @@ const editElection = async (req: IElectionRequest, res: Response, next: NextFunc
         throw new BadRequest("Election ID must match the URL Param")
     }
 
-    // re-opening an election should maintain mutual exclusion of ballot_updates and preliminary results
-    if (inputElection.settings.ballot_updates && inputElection.state === "open" && inputElection.settings.public_results) {
-        inputElection.settings.public_results = false;
-    }
-
     Logger.debug(req, `election ID = ${inputElection}`);
     var failMsg = `Failed to update election`;
 
-    const expected_update_date = req.body.expected_update_date;
+    const expected_update_date = expectUpdateDate(req);
     const updatedElection = await ElectionsModel.updateElection(inputElection, req, `User editing draft Election`, expected_update_date);
     if (!updatedElection) {
         Logger.error(req, failMsg);

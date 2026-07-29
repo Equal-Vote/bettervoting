@@ -15,18 +15,19 @@ export default class ElectionsDB implements IElectionStore {
     createElection(election: Election, ctx:ILoggingContext, reason:string): Promise<Election>{
         Logger.debug(ctx, "Election Mock Creates Election: ", election);
         var copy = JSON.parse(JSON.stringify(election));
+        copy.update_date = Date.now().toString();
         this.elections.push(copy);
         var res = JSON.parse(JSON.stringify(copy));
         return Promise.resolve(res);
     }
 
     
-    updateElection(election: Election, ctx:ILoggingContext, reason:string, expected_update_date?: string): Promise<Election> {
+    updateElection(election: Election, ctx:ILoggingContext, reason:string, expected_update_date: string): Promise<Election> {
         var foundIndex = this.elections.findIndex(dbElection => dbElection.election_id == election.election_id);
         if(foundIndex == -1){
             throw new Error("Election Not Found")
         }
-        if (expected_update_date !== undefined && this.elections[foundIndex].update_date !== expected_update_date) {
+        if (this.elections[foundIndex].update_date !== expected_update_date) {
             throw new Conflict("Concurrent write detected, please try again")
         }
         var copy = JSON.parse(JSON.stringify(election));

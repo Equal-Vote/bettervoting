@@ -70,9 +70,9 @@ const Sandbox = () => {
         //Using theme settings and css can probably replace the grids
         <ElectionContextProvider id={undefined}>
         <Grid container spacing={0} sx={{ p: 3 }}>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
                 <Grid container spacing={0} sx={{ p: 3 }}>
-                    <Grid item xs={12}>
+                    <Grid size={12}>
                         <FormControl fullWidth>
                             <InputLabel variant="standard" htmlFor="uncontrolled-native">
                                 Voting Method
@@ -107,7 +107,7 @@ const Sandbox = () => {
                             </Select>
                         </FormControl>
                     </Grid>
-                    <Grid item xs={12}>
+                    <Grid size={12}>
 
                         <InputLabel variant="standard" htmlFor="uncontrolled-native">
                             Number of Winners
@@ -120,7 +120,7 @@ const Sandbox = () => {
                             onChange={(e) => setNWinners(parseInt(e.target.value))}
                         />
                     </Grid>
-                    <Grid item xs={12}>
+                    <Grid size={12}>
                         <InputLabel variant="standard" htmlFor="uncontrolled-native">
                             Candidates
                         </InputLabel>
@@ -134,7 +134,7 @@ const Sandbox = () => {
                             onChange={(e) => setCandidates(e.target.value)}
                         />
                     </Grid>
-                    <Grid item xs={12}>
+                    <Grid size={12}>
                         <InputLabel variant="standard" htmlFor="uncontrolled-native">
                             Votes
                         </InputLabel>
@@ -155,7 +155,7 @@ const Sandbox = () => {
                     <PrimaryButton onClick={() => getResults()} > Get Results </PrimaryButton>
                     </Grid>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
                 <Paper elevation={3} sx={{width: '100%', maxWidth: '1200px', m: {xs: 0, m: 2}, p: {xs: 1, m: 2}, backgroundColor:'brand.white', marginBottom: 2, '@media print': { boxShadow: 'none'}}}>
                         
                     {data && !error && (
@@ -171,7 +171,7 @@ const Sandbox = () => {
                         />)}
                 </Paper>
             </Grid>
-            <Grid item xs={12} sm={2}>
+            <Grid size={{ xs: 12, sm: 2 }}>
             </Grid>
         </Grid>
         </ElectionContextProvider>

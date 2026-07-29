@@ -90,10 +90,12 @@ export class TestHelper {
         customToken: string | null = null,
         tempId: string | null = null
     ): Promise<ElectionResponse> {
+        const current = await this.fetchElectionById(election.election_id, userToken, customToken, tempId);
         const res = await this.postRequest(
             `/API/Election/${election.election_id}/edit`,
             {
                 Election: election,
+                expected_update_date: current.election?.update_date,
             },
             userToken,
             customToken,
@@ -106,9 +108,10 @@ export class TestHelper {
         election_id: Uid,
         userToken: string | null
     ): Promise<ElectionResponse> {
+        const current = await this.fetchElectionById(election_id, userToken);
         const res = await this.postRequest(
             `/API/Election/${election_id}/finalize`,
-            {},
+            { expected_update_date: current.election?.update_date },
             userToken
         );
         return this.electionResponse(res);

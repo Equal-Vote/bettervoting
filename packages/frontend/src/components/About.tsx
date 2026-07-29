@@ -40,13 +40,7 @@ const About = () => {
         <ul>{t('about.leads').map((content, i) => <li key={i}>{content}</li>)}</ul>
 
         <h2>{t('about.contributors_title')}</h2>
-        <Box
-          display="flex"
-          flexDirection="row"
-          flexWrap="wrap"
-          gap="10px"
-          sx={{ maxWidth: 800 }}
-        >
+        <Box sx={{ maxWidth: 800, display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "10px" }}>
           {t('about.contributors').map(({github_user_name, github_image_id}) => (
             <a href={`https://github.com/${github_user_name}`} target = "_blank" aria-label={`${github_user_name} github profile`} key={github_user_name} rel="noreferrer">
               <Box

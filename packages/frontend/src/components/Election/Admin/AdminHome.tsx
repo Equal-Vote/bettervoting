@@ -1,3 +1,4 @@
+import React from 'react';
 import Grid from "@mui/material/Grid";
 import { Box, Divider } from "@mui/material";
 import { Typography } from "@mui/material";
@@ -15,14 +16,14 @@ import { AdminPageNavigation } from '../Sidebar';
 
 type SectionProps = {
     text: {[key: string]: string}
-    button: JSX.Element
+    button: React.JSX.Element
     permission?: string
     includeDivider?: boolean
 }
 
 const AdminHome = () => {
     const authSession = useAuthSession()
-    const { election, permissions, refreshElection: fetchElection } = useElection()
+    const { election, permissions, refreshElection: fetchElection, enqueueWrite } = useElection()
     const {t} = useSubstitutedTranslation(election.settings.term_type, {time_zone: election.settings.time_zone});
 
     const { makeRequest: archive } = useArchiveEleciton(election.election_id)
@@ -36,7 +37,7 @@ const AdminHome = () => {
         return (permissions && permissions.includes(requiredPermission))
     }
 
-    if (!hasPermission('canEditElectionState')) return <Box width='100%'>
+    if (!hasPermission('canEditElectionState')) return <Box sx={{ width: "100%" }}>
         <Typography align='center' variant="h5" sx={{ color: 'error.main', pl: 2 }}>
             {t('admin_home.admin_access_denied')}
         </Typography>
@@ -66,7 +67,7 @@ const AdminHome = () => {
         const confirmed = await confirm(t('admin_home.archive_confirm'))
         if (!confirmed) return
         try {
-            await archive();
+            await enqueueWrite(expected_update_date => archive({ expected_update_date }));
             await fetchElection()
         } catch (err) {
             console.error(err)
@@ -75,7 +76,7 @@ const AdminHome = () => {
 
     const Section = ({ text, button, permission, includeDivider=true }: SectionProps) => 
         <Grid container sx={{ maxWidth: 800}}>
-            <Grid item xs={12} md={8} sx={{ p: 1 }}>
+            <Grid size={{ xs: 12, md: 8 }} sx={{ p: 1 }}>
                 <Box sx={{ minHeight: { xs: 0, md: 60 } }}>
                     <Typography variant="h5">
                         {text.description}
@@ -92,7 +93,7 @@ const AdminHome = () => {
                     }
                 </Box>
             </Grid>
-            <Grid item xs={12} md={4} sx={{ p: 1, pl: 2, display: 'flex', alignItems: 'center' }}>
+            <Grid size={{ xs: 12, md: 4 }} sx={{ p: 1, pl: 2, display: 'flex', alignItems: 'center' }}>
                 {button}
             </Grid>
             {includeDivider && <Divider style={{width: '100%'}}/>}

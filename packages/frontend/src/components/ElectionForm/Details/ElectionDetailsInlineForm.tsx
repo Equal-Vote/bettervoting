@@ -55,14 +55,14 @@ export default function ElectionDetailsInlineForm() {
                         p: 4,
                     }}
                 >
-                    <Grid item container xs={11}>
-                        <Grid item xs={12}>
+                    <Grid size={11} container>
+                        <Grid size={12}>
                             <Typography variant="h3" component="h4">
                                 {election.title}
                                 <ElectionStateChip state={election.state} />
                             </Typography>
                         </Grid>
-                        <Grid item xs={12}>
+                        <Grid size={12}>
                             {election.description == '' ? (
                                 <Typography gutterBottom component="p" sx={{opacity: .5}}>
                                     {t('admin_home.description_unset')}
@@ -74,11 +74,11 @@ export default function ElectionDetailsInlineForm() {
                                 />
                             )}
                         </Grid>
-                        <Grid item xs={12}>
+                        <Grid size={12}>
                             <Typography sx={{mt: 2, opacity: (election.start_time || election.end_time)? 1 : .5}} component="p" variant='subtitle2'>{timeRange}</Typography>
                         </Grid>
                     </Grid>
-                    <Grid item xs={1} sx={{ m: 0, p: 1 }}>
+                    <Grid size={1} sx={{ m: 0, p: 1 }}>
 
                         <Box sx={{}}>
                             <IconButton

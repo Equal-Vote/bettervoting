@@ -77,7 +77,7 @@ const ElectionHistoryView = () => {
     }, [election?.election_id]);
 
     return (
-        <Box display="flex" justifyContent="center" sx={{ width: "100%" }}>
+        <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
             <Box sx={{ width: "100%", maxWidth: "900px", m: { xs: 0, m: 2 }, p: { xs: 1, m: 2 } }}>
                 <Typography variant="h4" component="h1" sx={{ mb: 1 }}>
                     {t('election_history.title')}

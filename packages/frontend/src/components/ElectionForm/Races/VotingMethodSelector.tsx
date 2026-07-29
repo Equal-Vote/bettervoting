@@ -1,8 +1,8 @@
 import { Edit, ExpandLess, ExpandMore } from "@mui/icons-material";
 import { Box, Button, FormControlLabel, FormHelperText, IconButton, Radio, RadioGroup, TextField, Typography } from "@mui/material"
 import { useEffect, useState } from "react";
-import { PrimaryButton, SecondaryButton } from "~/components/styles";
-import { AddIcon, TransitionBox, useSubstitutedTranslation } from "~/components/util"
+import { PrimaryButton, SecondaryButton, UtilityButton } from "~/components/styles";
+import { TransitionBox, useSubstitutedTranslation } from "~/components/util"
 import EditIcon from '@mui/icons-material/Edit';
 import { methodValueToTextKey } from "@equal-vote/star-vote-shared/domain_model/Race";
 
@@ -113,28 +113,16 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
     </>
 
     const NumWinnersPage = () => <>
-        <Box display='flex' flexDirection='row' gap={3} sx={{width: '100%'}}>
+        <Box sx={{ width: '100%', display: "flex", flexDirection: "row", gap: 3 }}>
             <Typography id="num-winners-label" gutterBottom component="p" sx={{ marginTop: 2 }}>
                 {t('edit_race.number_of_winners')}:
             </Typography>
-            <TextField
-                id='num-winners'
-                type="number"
-                InputProps={{
-                    inputProps: {
-                        min: 2,
-                        "aria-labelledby": "num-winners-label",
-                    }
-                }}
-                fullWidth
-                value={inputtedWinners}
-                sx={{
+            <TextField id='num-winners' type="number" fullWidth value={inputtedWinners} sx={{
                     p: 0,
                     boxShadow: 2,
                     width: '100px',
                     my: 1,
-                }}
-                onChange={(e) => {
+                }} onChange={(e) => {
                     setInputtedWinners(e.target.value);
 
                     if(e.target.value == '' || parseInt(e.target.value) < 1){
@@ -142,10 +130,14 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
                     }
 
                     if(e.target.value != '') applyRaceUpdate(race => { race.num_winners =  parseInt(e.target.value) });
-                }}
-            />
+                }} slotProps={{ input: {
+                    inputProps: {
+                        min: 2,
+                        "aria-labelledby": "num-winners-label",
+                    }
+                } }}/>
         </Box>
-        <Box display='flex' flexDirection='row' justifyContent='flex-end' gap={1} sx={{width: '100%'}}>
+        <Box sx={{ width: '100%', display: "flex", flexDirection: "row", justifyContent: "flex-end", gap: 1 }}>
             <SecondaryButton onClick={() => {
                 setMethodStep('family')
             }}>Back</SecondaryButton>
@@ -171,11 +163,7 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
                     <MethodBullet value='Approval' disabled={isDisabled} />
                 </>}
 
-            <Box
-                display='flex'
-                justifyContent="left"
-                alignItems="center"
-                sx={{ width: '100%', ml: -1 }}>
+            <Box sx={{ width: '100%', ml: -1, display: "flex", justifyContent: "left", alignItems: "center" }}>
                 {showAllMethods &&
                     <IconButton aria-labelledby='more-options' disabled={election.state != 'draft'} onClick={() => setShowAllMethods(false)}>
                         <ExpandMore />
@@ -195,11 +183,7 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
                 transition: 'height .4s, opacity .7s',
                 textAlign: 'left', // this is necessary to keep the items under more options aligned left
             }}>
-                <Box
-                    display='flex'
-                    justifyContent="left"
-                    alignItems="center"
-                    sx={{ width: '100%', pl: 4, mt: -1 }}>
+                <Box sx={{ width: '100%', pl: 4, mt: -1, display: "flex", justifyContent: "left", alignItems: "center" }}>
 
                     {/*<FormHelperText >
                         These voting methods do not guarantee every voter an equally powerful vote if there are more than two candidates.
@@ -214,7 +198,7 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
                     </>}
             </Box>
         </RadioGroup>
-        <Box display='flex' flexDirection='row' justifyContent='flex-end' gap={1}>
+        <Box sx={{ display: "flex", flexDirection: "row", justifyContent: "flex-end", gap: 1 }}>
             <SecondaryButton onClick={() => {
                 setMethodStep(methodFamily === 'single_winner' ? 'family' : 'num_winners')
             }}>Back</SecondaryButton>
@@ -224,22 +208,18 @@ export default ({election, editedRace, isDisabled, setErrors, errors, applyRaceU
     const pad = 0; // 30 // may add this back later
 
     return <Box>
-        <Button
-            // it's hacky, but opacity 0.8 does helps take the edge off the bold a bit
-            sx={{mr: "auto", textDecoration: 'none', textTransform: 'none', color: 'black', fontSize: '1.125rem', opacity: 0.86, textAlign: 'left'}}
-            disabled={methodStep != 'unset' && methodStep != 'done'}
-            onClick={() => setMethodStep('family')}
-        >
-            {methodStep == 'done' && <EditIcon sx={{scale: 1, mr: 1}}/>}
-            {methodStep != 'done' ? <>
-                <AddIcon prefix/> Voting Method
+        <Typography variant='h6'>Voting method</Typography>
+        {(methodStep === 'unset' || methodStep === 'done') && <UtilityButton onClick={() => setMethodStep('family')}>
+            {methodStep == 'unset' ? <>
+                <EditIcon sx={{scale: 1, mr: 1}}/> Select the voting method
             </> : <>
+                <EditIcon sx={{scale: 1, mr: 1}}/>
                 {editedRace.voting_method == undefined ? '___' : t(`methods.${methodValueToTextKey[editedRace.voting_method]}.full_name`)} with&nbsp;
                 {editedRace.num_winners == undefined ? '___' : editedRace.num_winners}&nbsp;
                 {methodFamily == undefined || methodFamily == 'single_winner' ? '' : <>{t(`edit_race.${methodFamily}_adj`)}&nbsp;</>}
                 {methodFamily == 'single_winner'? 'winner' : 'winners'}
             </>}
-        </Button>
+        </UtilityButton>}
         <FormHelperText error sx={{ pl: 1}}>
             {errors.votingMethod}
         </FormHelperText>

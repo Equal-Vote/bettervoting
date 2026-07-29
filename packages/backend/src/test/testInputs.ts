@@ -61,6 +61,8 @@ export default {
         owner_id: '0',
     } as Election,
     
+    // Type 2: closed + voter_id + invitation=email (bv-managed email list).
+    // Voters are pre-listed by email; finalize/sendInvites assigns voter_ids and emails them.
     EmailRollElection : {
         election_id: "0",
         title: 'Election 1',
@@ -92,12 +94,14 @@ export default {
         ] as Race[],
         settings: {
             voter_access: 'closed',
-            voter_authentication: {email: true},
+            voter_authentication: {voter_id: true},
             invitation: 'email',
         } as ElectionSettings
     } as Election,
 
-    RegistrationElection : {
+    // Type 3: open + email (anyone with a verified email may vote, deduped by email).
+    // Used by tests that exercise email-based voter matching against the roll.
+    OpenEmailElection : {
         election_id: "0",
         title: 'Election 1',
         state: 'open',
@@ -127,7 +131,7 @@ export default {
             }
         ] as Race[],
         settings: {
-            voter_access: 'registration',
+            voter_access: 'open',
             voter_authentication: {email: true},
         } as ElectionSettings
     } as Election,
@@ -513,7 +517,7 @@ export default {
             }
         ] as Race[],
         settings: {
-            voter_access: 'closed',
+            voter_access: 'open',
             voter_authentication: {email: true},
         } as ElectionSettings
     } as Election,

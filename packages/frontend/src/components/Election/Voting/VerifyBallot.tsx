@@ -27,7 +27,7 @@ const VerifyBallot = () => {
             {isPending && <div> Loading Data... </div>}
             {data?.ballot &&
                 <>
-                <Box display='flex' flexDirection='column' alignItems='center' sx={{maxWidth: '800px', margin: 'auto'}}>
+                <Box sx={{ maxWidth: '800px', margin: 'auto', display: "flex", flexDirection: "column", alignItems: "center" }}>
                     <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', flexDirection: { xs: 'column', sm: 'row' } }} >
                         {['draft', 'open', 'closed'].includes(election.state) && election.settings.public_results === true &&
                             <Box sx={{ width: '100%',  p: 1, px:{xs: 5, sm: 1} }}>
@@ -50,8 +50,8 @@ const VerifyBallot = () => {
                 </Box>
 
                 <Divider sx={{my: 4}}/>
-                <Grid container direction="column" >
-                    <Grid item sm={12}>
+                <Grid container sx={{ flexDirection: 'column' }} >
+                    <Grid size={{ sm: 12 }}>
                             <Typography component="div" align='left' variant="body1">
                                     <Box sx={{fontWeight: 'bold', m: 1, display: 'inline'}}>{t('ballot_submitted.ballot_id')}</Box>
                                     <Box sx={{fontWeight: 'regular', m: 1, display: 'inline'}}>{`${data.ballot.ballot_id}`}</Box>

@@ -31,8 +31,10 @@ const claimElection = async (req: IElectionRequest, res: Response, next: NextFun
         throw new Unauthorized("User does not have permissions: claim_key mismatch");
     }
 
+    // Claim doesn't expose the election to the client beforehand, so OCC uses the
+    // server's freshly-loaded copy as the expected version.
+    const expected_update_date = req.election.update_date as string;
     req.election.owner_id = req.user.sub;
-    const expected_update_date = req.body.expected_update_date;
     await ElectionsModel.updateElection(req.election, req, `Transferring Ownership`, expected_update_date);
 
     res.send()

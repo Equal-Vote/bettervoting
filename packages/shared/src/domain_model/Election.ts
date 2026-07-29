@@ -15,7 +15,7 @@ export interface Election {
     frontend_url:   string; // base URL for the frontend
     start_time?:    Date | string;   // when the election starts 
     end_time?:      Date | string;   // when the election ends
-    owner_id:       Uid;  // user_id of owner of election
+    owner_id:       Uid | null;  // user_id of owner of election
     audit_ids?:     Uid[];  // user_id of account with audit access
     admin_ids?:     Uid[];  // user_id of account with admin access
     credential_ids?:Uid[];  // user_id of account with credentialling access
@@ -69,7 +69,7 @@ export function electionValidation(obj:Election): string | null {
       return "Invalid End Time Date Format";
     }
   }
-  if (typeof obj.owner_id !== 'string'){
+  if (!(obj.owner_id === null || typeof obj.owner_id === 'string')){
     return "Invalid Owner ID";
   }
   if (obj.audit_ids) {
@@ -128,8 +128,19 @@ export function electionValidation(obj:Election): string | null {
       return settingsError;
     }
   }
-  if (obj.auth_key && typeof obj.auth_key !== 'string'){
-    return "Invalid Auth Key";
+  // Legacy rows store NULL for auth_key, and the API round-trips it as null
+  // back to clients — so null/empty must read as "no auth_key set", not as an
+  // invalid value, or state transitions on those rows would fail validation.
+  if (obj.auth_key !== undefined && obj.auth_key !== null && obj.auth_key !== '') {
+    if (typeof obj.auth_key !== 'string') {
+      return "Invalid Auth Key";
+    }
+    // RS256-only: auth_key must be a PEM-encoded RSA public key. Reject HS256
+    // shared-secret values so the platform never holds material that can
+    // authenticate as the election owner.
+    if (!obj.auth_key.includes('-----BEGIN PUBLIC KEY-----')) {
+      return "auth_key must be a PEM-encoded RS256 public key";
+    }
   }
   if (obj.claim_key_hash && typeof obj.claim_key_hash !== 'string'){
     return "Invalid Claim Key Hash";

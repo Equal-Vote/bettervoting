@@ -51,7 +51,7 @@ export default function GenericBallotView({
   const spelledNumWinners = numWinners < 11 ? t(`spelled_numbers.${numWinners}`) : numWinners;
 
   if(onlyGrid)
-    return <Box border={2} sx={{ mt: 0, ml: 0, mr: 0, width: '100%' }} className="ballot">
+    return <Box className="ballot" sx={{ mt: 0, ml: 0, mr: 0, width: '100%', border: 2 }}>
       <GenericBallotGrid
         ballotContext={ballotContext}
         starHeadings={starHeadings}
@@ -64,23 +64,23 @@ export default function GenericBallotView({
     </Box>
 
   return (
-      <Box border={2} sx={{ mt: 0, ml: 0, mr: 0, width: '100%' }} className="ballot">
-        <Grid container alignItems="center" justifyContent="center" direction="column">
+      <Box className="ballot" sx={{ mt: 0, ml: 0, mr: 0, width: '100%', border: 2 }}>
+        <Grid container sx={{ alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
 
-          <Grid item sx={{ p: 3 }}>
-            <Typography align='center' variant="h5" component="h4" fontWeight={'bold'}>
+          <Grid sx={{ p: 3 }}>
+            <Typography align='center' variant="h5" component="h4" sx={{ fontWeight: 'bold' }}>
               {ballotContext.race.title}
             </Typography>
           </Grid>
           {ballotContext.race.description &&
-            <Grid item sx={{ pb: 5, px: 3 }}>
+            <Grid sx={{ pb: 5, px: 3 }}>
             <FormattedDescription
               description={ballotContext.race.description}
               align='center'
             />
           </Grid>}
 
-          <Grid item xs={8} sx={{ pb:1, px:4 }} className="instructions">
+          <Grid size={8} sx={{ pb:1, px:4 }} className="instructions">
             <Typography align='left' sx={{ typography: { sm: 'body1', xs: 'body2' } }}>
               {election.settings.draggable_ballot && ballotContext.race.voting_method === 'IRV'
                 ? t('ballot.this_election_uses_draggable', {voting_method: methodName, count: ballotContext.race.num_winners, spelled_count: spelledNumWinners})
@@ -120,7 +120,7 @@ export default function GenericBallotView({
             columnValues={columnValues}
           />
 
-          <Grid item xs={10} sx={{ p:5, px:4 }} className="footer">
+          <Grid size={10} sx={{ p:5, px:4 }} className="footer">
             <Typography align='left' sx={{ typography: { sm: 'body1', xs: 'body2' } }}>
               {t(`ballot.methods.${methodKey}.footer_${ballotContext.race.num_winners == 1 ? 'single_winner' : 'multi_winner'}`,
                 {n: ballotContext.race.num_winners})

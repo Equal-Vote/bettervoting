@@ -85,7 +85,7 @@ const STARResultSummaryWidget = ({ results, roundIndex, t }: {results: starResul
                 :
                 <>
                     <ResultsBarChart data={runoffData} stars={1} runoff percentage majorityLegend={t('results.star.runoff_majority')} />
-                    <Box height={50}/> {/*HACK to get the bar chart to be the same height as the pie chart*/}
+                    <Box sx={{ height: 50 }}/> {/*HACK to get the bar chart to be the same height as the pie chart*/}
                 </>
                 }
                 <ToggleButtonGroup

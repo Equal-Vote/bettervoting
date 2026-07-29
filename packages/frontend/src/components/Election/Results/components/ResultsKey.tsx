@@ -6,7 +6,7 @@ interface ResultsKeyProps {
 
 const ResultsKey = ({items}: ResultsKeyProps) =>
     <Paper sx={{display: 'flex', gap: 3, ml: {xs: 'unset', md: 'auto'}, p: 2, flexDirection: 'column'}}>
-            {items.map(([col, txt], i) => <Box key={i} display='flex' sx={{justifyContent: 'flex-start', flexDirection: 'row'}}>
+            {items.map(([col, txt], i) => <Box key={i} sx={{ justifyContent: 'flex-start', flexDirection: 'row', display: "flex" }}>
                 <Box sx={{
                     borderWidth: '3px',
                     borderColor: 'black',

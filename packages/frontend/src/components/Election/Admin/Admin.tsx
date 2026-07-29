@@ -13,14 +13,7 @@ import PublishAndShare from './PublishAndShare';
 
 const AdminPage = ({title, children}) => {
     const {election} = useElection();
-    return <Box
-        display='flex'
-        justifyContent="flex-start"
-        alignItems="flex-start"
-        flexDirection='column'
-        gap={4}
-        sx={{ width: '100%', maxWidth: 800, margin: 'auto' }}
-    >
+    return <Box sx={{ width: '100%', maxWidth: 800, margin: 'auto', display: "flex", justifyContent: "flex-start", alignItems: "flex-start", flexDirection: "column", gap: 4 }}>
         <Box sx={{ml: 0, mr: 'auto'}}>
             <Typography variant="h5">{`${election.title}`}</Typography>
             <Typography variant="h3">{`${title}`}</Typography>

@@ -2,7 +2,7 @@ import { electionValidation } from '@equal-vote/star-vote-shared/domain_model/El
 import ServiceLocator from '../../ServiceLocator';
 import Logger from '../../Services/Logging/Logger';
 import { responseErr } from '../../Util';
-import { expectPermission } from "../controllerUtils";
+import { expectPermission, expectUpdateDate } from "../controllerUtils";
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { BadRequest } from "@curveball/http-errors";
 import { IElectionRequest } from "../../IRequest";
@@ -26,7 +26,7 @@ const editElectionRoles = async (req: IElectionRequest, res: Response, next: Nex
     req.election.admin_ids = req.body.admin_ids
     req.election.audit_ids = req.body.audit_ids
     req.election.credential_ids = req.body.credential_ids
-    const expected_update_date = req.body.expected_update_date;
+    const expected_update_date = expectUpdateDate(req);
     const updatedElection = await ElectionsModel.updateElection(req.election, req, `Update election roles`, expected_update_date);
     if (!updatedElection) {
         Logger.info(req, failMsg);

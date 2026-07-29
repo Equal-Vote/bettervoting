@@ -1,7 +1,7 @@
 import ServiceLocator from '../../ServiceLocator';
 import Logger from '../../Services/Logging/Logger';
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
-import { expectPermission } from "../controllerUtils";
+import { expectPermission, expectUpdateDate } from "../controllerUtils";
 import { BadRequest, InternalServerError } from "@curveball/http-errors";
 import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { IElectionRequest } from "../../IRequest";
@@ -32,17 +32,12 @@ const setOpenState = async (req: IElectionRequest, res: Response, next: NextFunc
     }
     election.state = open ? "open" : "closed";
 
-    // re-opening an election should maintain mutual exclusion of ballot_updates and preliminary results
-    if (election.settings.ballot_updates && election.state === "open" && election.settings.public_results) {
-        election.settings.public_results = false;
-    }
-
     if (msg) {
         Logger.info(req, msg);
         throw new BadRequest(msg);
     }
 
-    const expected_update_date = req.body.expected_update_date;
+    const expected_update_date = expectUpdateDate(req);
     const updatedElection = await ElectionsModel.updateElection(req.election, req, "Open or close election", expected_update_date);
     if (!updatedElection) {
         const failMsg = `Failed to set election state to ${election.state}`;

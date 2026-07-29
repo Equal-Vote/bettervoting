@@ -7,21 +7,23 @@ import { ID_LENGTHS, ID_PREFIXES, makeID } from '@equal-vote/star-vote-shared/ut
 import { useDeleteAllBallots } from '~/hooks/useAPI';
 
 export default function AddRace() {
-    const { election, updateElection, refreshElection } = useElection()
+    const { election, updateElection, refreshElection, enqueueWrite } = useElection()
     const { makeRequest: deleteAllBallots } = useDeleteAllBallots(election.election_id);
 
     const [open, setOpen] = useState(false);
 
     const onAddRace = async (editedRace) => {
-        const success = await updateElection(election => {
+        const updated = await updateElection(election => {
             election.races.push({
                 ...editedRace,
                 race_id: makeID(ID_PREFIXES.RACE, ID_LENGTHS.RACE)
             })
-        }) && await deleteAllBallots();
-        if (!success) return false
-        await refreshElection()
-        return true
+        });
+        if (!updated) return false;
+        const cleared = await enqueueWrite(() => deleteAllBallots());
+        if (!cleared) return false;
+        await refreshElection();
+        return true;
     }
 
     return (

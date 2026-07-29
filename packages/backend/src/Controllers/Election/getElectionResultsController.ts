@@ -125,6 +125,7 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
                     nOvervotes: 0,
                 },
                 tieBreakType: 'none',
+                perm: [],
                 writeInDiagnostics: race.enable_write_in ? {
                     numScoresDisregardedForUnprocessed: numUnprocessedWriteIns,
                     numScoresDisregarded: numExcludedWriteIns,
@@ -138,12 +139,14 @@ const getElectionResults = async (req: IElectionRequest, res: Response, next: Ne
         }
 
         shuffleCandidatesForRandomTiebreak(election.create_date, candidates, cvr.length, race.race_id);
+        const perm = candidates.map(candidate => candidate.id);
 
         const msg = `Tabulating results for ${voting_method} election`
         Logger.info(req, msg);
         const tabulationResult = VotingMethods[voting_method](candidates, cvr, num_winners, election.settings)
         results[race_index] = {
             ...tabulationResult,
+            perm,
             // @ts-ignore - roundResults is a complicated type but we're just returning a slightly modified version of the original so the type should be consistent
             roundResults: tabulationResult.roundResults.map(rr => ({
                 ...rr,

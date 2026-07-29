@@ -100,16 +100,14 @@ const SendEmailDialog = ({open, onClose, onSubmit, targetedEmail=undefined, elec
     >
         <DialogTitle>Prepare Email Blast</DialogTitle>
         <DialogContent>
-            <Box display='flex' flexDirection='row'>
-                <Box display='flex' flexDirection='row-reverse' sx={{
-                    width: templateChosen ? 0 : sizes,
+            <Box sx={{ display: "flex", flexDirection: "row" }}>
+                <Box sx={{ width: templateChosen ? 0 : sizes,
                     height: 'auto',
                     opacity: templateChosen ? 0 : 1,
                     overflow: 'hidden',
-                    transition: 'width .4s, opacity .7s',
-                }}>
+                    transition: 'width .4s, opacity .7s', display: "flex", flexDirection: "row-reverse" }}>
                     {/*minWidth keeps text from wrapping during the transition*/}
-                    <Box display='flex' gap={1} flexDirection={'column'} sx={{width: '100%', minWidth: sizes}}>
+                    <Box sx={{ width: '100%', minWidth: sizes, display: "flex", gap: 1, flexDirection: 'column' }}>
                         <Typography sx={{mb: 1, marginLeft: '15px'}}>Which template would you like to start with?</Typography>
                         {['invite', /*'receipt', */'blank'].map((v, i) =>
                             <Box key={i} sx={{ml: '15px'}}>
@@ -129,11 +127,9 @@ const SendEmailDialog = ({open, onClose, onSubmit, targetedEmail=undefined, elec
                     overflow: 'hidden',
                     transition: 'width .4s, opacity .7s',
                 }}>
-                    <Box display='flex' flexDirection='column' gap={3} sx={{
-                        width: sizes
-                    }}>
+                    <Box sx={{ width: sizes, display: "flex", flexDirection: "column", gap: 3 }}>
                         {/* 93% set to have right side of button match other text fields*/}
-                        <Box display='flex' sx={{width: {xs: '100%', md: '93%'}, flexDirection:{xs: 'column', md: 'row'}, alignItems: 'center', gap: {xs: 1, md: 0}}}>
+                        <Box sx={{ width: {xs: '100%', md: '93%'}, flexDirection:{xs: 'column', md: 'row'}, alignItems: 'center', gap: {xs: 1, md: 0}, display: "flex" }}>
                             <LabelledTextField label='Test Email(s)' fullWidth value={testEmails} setter={setTestEmails}/>
                             {/* 56px is to align with text box */}
                             <SecondaryButton
@@ -167,7 +163,7 @@ const SendEmailDialog = ({open, onClose, onSubmit, targetedEmail=undefined, elec
             </Box>
         </DialogContent>
         <DialogActions>
-            <Box display='flex' flexDirection='column' sx={{width: sizes}}>
+            <Box sx={{ width: sizes, display: "flex", flexDirection: "column" }}>
                 {warning && <Alert 
                     severity='warning'
                     sx={{
@@ -176,7 +172,7 @@ const SendEmailDialog = ({open, onClose, onSubmit, targetedEmail=undefined, elec
                     }}>
                     <Typography>{warning}</Typography>
                 </Alert>}
-                <Box display='flex' flexDirection='row-reverse' gap={2}>
+                <Box sx={{ display: "flex", flexDirection: "row-reverse", gap: 2 }}>
                     <PrimaryButton
                         disabled={!templateChosen}
                         onClick={() => {

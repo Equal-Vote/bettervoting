@@ -14,12 +14,12 @@ import useElection from '../../ElectionContextProvider';
 import useAuthSession from '../../AuthSessionContextProvider';
 import { AdminPageNavigation } from '../Sidebar';
 import { TimeZone, timeZones } from '@equal-vote/star-vote-shared/domain_model/Util';
-import useSyncedState from '~/hooks/useSyncedState';
+import useOptimisticToggle from '~/hooks/useOptimisticToggle';
 
 export default () => {
     const authSession = useAuthSession()
-    const { t, election, refreshElection: fetchElection, permissions } = useElection()
-    
+    const { t, election, refreshElection: fetchElection, permissions, enqueueWrite } = useElection()
+
     const { makeRequest: finalize } = useFinalizeElection(election.election_id)
 
     const { makeRequest: setOpenState } = useSetOpenState(election.election_id)
@@ -33,7 +33,7 @@ export default () => {
         return (permissions && permissions.includes(requiredPermission))
     }
 
-    if (!hasPermission('canEditElectionState')) return <Box width='100%'>
+    if (!hasPermission('canEditElectionState')) return <Box sx={{ width: "100%" }}>
         <Typography align='center' variant="h5" sx={{ color: 'error.main', pl: 2 }}>
             {t('admin_home.admin_access_denied')}
         </Typography>
@@ -43,7 +43,7 @@ export default () => {
         const confirmed = await confirm(t('admin_home.finalize_confirm'));
         if (!confirmed) return;
         try {
-            await finalize();
+            await enqueueWrite(expected_update_date => finalize({ expected_update_date }));
             await fetchElection();
         } catch (err) {
             console.error(err);
@@ -63,7 +63,7 @@ export default () => {
     }
 
     const FinalizeSection = () => <Box sx={{maxWidth: 800}}>
-        <Grid item xs={12} sx={{ p: 1, pt: 3, pb: 0 }}>
+        <Grid size={12} sx={{ p: 1, pt: 3, pb: 0 }}>
             <Typography align='center' variant="body1" sx={{ pl: 2 }}>
                 {t('admin_home.finalize_description')}
             </Typography>
@@ -73,20 +73,20 @@ export default () => {
                 </Typography>
             }
         </Grid>
-        <Grid item xs={12} sx={{ p: 1, pt: 0, display: 'flex', alignItems: 'center' }}>
+        <Grid size={12} sx={{ p: 1, pt: 0, display: 'flex', alignItems: 'center' }}>
             <PrimaryButton
                 disabled={election.title.length === 0 || election.races.length === 0 || !hasPermission('canEditElectionState') || !authSession.isLoggedIn()}
                 fullWidth
                 onClick={() => finalizeElection()}
                 sx={{mt: 2}}
             >
-                <Typography align='center' variant="h4" fontWeight={'bold'}>
+                <Typography align='center' variant="h4" sx={{ fontWeight: 'bold' }}>
                    {t('admin_home.finalize_button')}
                 </Typography>
             </PrimaryButton>
         </Grid>
         {!authSession.isLoggedIn() && 
-        <Grid xs={12} sx={{ p: 1, pt: 0, display: 'flex', alignItems: 'center' }}>
+        <Grid size={12} sx={{ p: 1, pt: 0, display: 'flex', alignItems: 'center' }}>
             <Typography align='center' variant="body1" sx={{ pl: 2, m:'auto' }}>
                 {/* I'm setting an href here and an onClick, so that the url styling will work like other a-href components*/}
                 <a href='#free-account-text' id='free-account-text' onClick={() => {
@@ -100,7 +100,14 @@ export default () => {
         </Grid>}
     </Box>
 
-    const [isOpen, setIsOpen] = useSyncedState(election.state === 'open', async (toggled) => !!await setOpenState({open: toggled}));
+    const [isOpen, setIsOpen] = useOptimisticToggle(election.state === 'open', async (toggled) => {
+        const res = await enqueueWrite(expected_update_date => setOpenState({ open: toggled, expected_update_date }));
+        // Same as setPublicResults in ElectionSettings: this write bypasses
+        // updateElection, so nothing folds the new state into the context.
+        // Stale election.state also mislabels the sidebar (Preview vs Live Ballot).
+        if (res) await fetchElection();
+        return !!res;
+    });
     
     const hasScheduledTimes = !!(election.start_time || election.end_time);
     const canEditState = permissions?.includes('canEditElectionState') ?? false;

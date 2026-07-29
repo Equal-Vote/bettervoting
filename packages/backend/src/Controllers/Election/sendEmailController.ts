@@ -131,8 +131,9 @@ const sendEmailsController = async (req: IElectionRequest, res: Response, next: 
             }
         }
         // Update email campaign count in election db
+        const expected_update_date = election.update_date as string;
         election.settings.email_campaign_count = election.settings.email_campaign_count ? election.settings.email_campaign_count + 1 : 1
-        await ElectionModel.updateElection(election, req, 'Email Campaign')
+        await ElectionModel.updateElection(election, req, 'Email Campaign', expected_update_date)
         message_id = `campaign_${election.settings.email_campaign_count}`
     }
 

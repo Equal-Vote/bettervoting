@@ -353,25 +353,16 @@ const NameMatchingTester = () => {
             <Typography gutterBottom component="p" sx={{ marginTop: 2 }}>
                 Score Threshold
             </Typography>
-            <TextField
-                id={'levenshtein-threshold'}
-                name="Levenshtein Threshold"
-                type="number"
-                InputProps={{
+            <TextField id={'levenshtein-threshold'} name="Levenshtein Threshold" type="number" fullWidth value={threshold} sx={{
+                    p: 0,
+                    boxShadow: 2,
+                }} onChange={(e) => setThreshold(parseFloat(e.target.value))} slotProps={{ input: {
                     inputProps: {
                         min: 0,
                         max: 1,
                         step: 0.05
                     }
-                }}
-                fullWidth
-                value={threshold}
-                sx={{
-                    p: 0,
-                    boxShadow: 2,
-                }}
-                onChange={(e) => setThreshold(parseFloat(e.target.value))}
-            />
+                } }}/>
             <Button variant='outlined' onClick={() => groupNames()} > Group Names </Button>
 
             {groups.length > 0 && (

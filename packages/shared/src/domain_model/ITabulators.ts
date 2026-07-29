@@ -79,6 +79,7 @@ export interface genericResults<CandidateType extends candidate, SummaryType ext
     roundResults: roundResults<CandidateType>[],
     summaryData: SummaryType,
     tieBreakType: tieBreakType,
+    perm?: string[],
     writeInDiagnostics?: {
         numScoresDisregardedForUnprocessed: number,
         numScoresDisregarded: number,

@@ -2,7 +2,7 @@
 name: 'Onboarding Issue: Developer'
 about: Helps new develoeprs get started on the team
 title: 'Onboarding Issue: Developer: [replace brackets with your name]'
-labels: 'Complexity: Prework, Role: Missing'
+labels: 'Role: Missing'
 assignees: ''
 ---
 

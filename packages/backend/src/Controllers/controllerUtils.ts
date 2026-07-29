@@ -45,6 +45,17 @@ export function expectPermission(roles:roles[],permission:permission):any {
       }
 }
 
+// All electionDB writes require an expected_update_date for optimistic concurrency
+// control; without it, concurrent edits would race the (election_id, head=true)
+// unique partial index and surface as opaque 500s instead of clean 409s.
+export function expectUpdateDate(req: IRequest): string {
+    const expected_update_date = req.body?.expected_update_date;
+    if (typeof expected_update_date !== 'string' || expected_update_date.length === 0) {
+        throw new BadRequest("expected_update_date is required");
+    }
+    return expected_update_date;
+}
+
 // Note: it feels weird to have the same util function on both frontend and backend instead of using shared, but they need to use different libraries
 export function hashString(inputString: string) {
     if(inputString === undefined) return undefined;

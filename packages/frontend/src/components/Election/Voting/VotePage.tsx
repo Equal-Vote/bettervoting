@@ -336,20 +336,11 @@ const VotePage = () => {
           <DialogContentText>
 
             {!receiptEmail &&
-              <TextField
-                        id="receipt-email"
-                        inputProps={{ "aria-label": "Receipt Email" }}
-                        label={t('ballot.dialog_email_placeholder')}
-                        fullWidth
-                        type="text"
-                        value={inputEmail}
-                        sx={{
+              <TextField id="receipt-email" label={t('ballot.dialog_email_placeholder')} fullWidth type="text" value={inputEmail} sx={{
                             mx: { xs: 0, },
                             my: { xs: 1 },
                             boxShadow: 2,
-                        }}
-                        onChange={(e) => setInputEmail(e.target.value)}
-                />}
+                        }} onChange={(e) => setInputEmail(e.target.value)} slotProps={{ htmlInput: { "aria-label": "Receipt Email" } }}/>}
             {receiptEmail && <Typography>{`Receipt will be sent to ${receiptEmail}`}</Typography>}
             {pages.map((page, pageIndex) => (
               <Box key={pageIndex}>

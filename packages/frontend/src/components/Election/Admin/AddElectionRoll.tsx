@@ -187,7 +187,7 @@ const AddElectionRoll = ({ onClose }: { onClose: () => void }) => {
     return (
         <form onSubmit={onSubmit}>
             <Container maxWidth='sm'>
-                <Grid container direction="column" >
+                <Grid container sx={{ flexDirection: 'column' }} >
 
                     <Typography align='center' gutterBottom variant="h6" component="h6">
                         Enter voter data
@@ -207,7 +207,7 @@ const AddElectionRoll = ({ onClose }: { onClose: () => void }) => {
                         </Typography>
                     }
 
-                    <Grid item sx={{ p: 1 }}>
+                    <Grid sx={{ p: 1 }}>
                         <FormGroup row>
                             {
                                 emailListOnly ||
@@ -248,14 +248,8 @@ const AddElectionRoll = ({ onClose }: { onClose: () => void }) => {
                             }
                         </FormGroup>
                     </Grid>
-                    <Grid item sx={{ p: 1 }}>
-                        <TextField
-                            id="email-list"
-                            name="email-list"
-                            label={`Voter ${emailListOnly ? "Emails" : "Data"}`}
-                            required
-                            rows={3}
-                            placeholder={
+                    <Grid sx={{ p: 1 }}>
+                        <TextField id="email-list" name="email-list" label={`Voter ${emailListOnly ? "Emails" : "Data"}`} required rows={3} placeholder={
                                 (enableVoterID || enableEmail || enablePrecinct ? 
                                     //https://stackoverflow.com/questions/5501581/why-does-the-map-method-apparently-not-work-on-arrays-created-via-new-arrayc
                                     new Array(2).fill(undefined).map((_, i) => {
@@ -268,19 +262,12 @@ const AddElectionRoll = ({ onClose }: { onClose: () => void }) => {
                                 :
                                     '(pick at least one field)'
                                 )
-                            }
-                            InputLabelProps={{
+                            } multiline fullWidth type="text" value={voterIDList} onChange={(e) => setVoterIDList(e.target.value)} slotProps={{ inputLabel: {
                                 shrink: true
-                            }}
-                            multiline
-                            fullWidth
-                            type="text"
-                            value={voterIDList}
-                            onChange={(e) => setVoterIDList(e.target.value)}
-                        />
+                            } }}/>
                     </Grid>
 
-                    <Grid item sx={{ m: 1 }}>
+                    <Grid sx={{ m: 1 }}>
                         <PrimaryButton
                             fullWidth
                             type='submit'
@@ -288,10 +275,10 @@ const AddElectionRoll = ({ onClose }: { onClose: () => void }) => {
                             Submit
                         </PrimaryButton>
                     </Grid>
-                    <Grid item sx={{ my: 1 }}>
+                    <Grid sx={{ my: 1 }}>
                         <Divider />
                     </Grid>
-                    <Grid item sx={{ m: 1 }}>
+                    <Grid sx={{ m: 1 }}>
                         <Typography align='center' gutterBottom variant="h5" component="h5">
                             OR
                         </Typography>
@@ -304,8 +291,8 @@ const AddElectionRoll = ({ onClose }: { onClose: () => void }) => {
                             }
                         </Typography>
                     </Grid>
-                    <Grid item sx={{ m: 1 }}>
-                        <Box justifyContent={'center'} alignItems={'center'}>
+                    <Grid sx={{ m: 1 }}>
+                        <Box sx={{ justifyContent: 'center', alignItems: 'center' }}>
                             <input
                                 type='file'
                                 accept={'.csv'}

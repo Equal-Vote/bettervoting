@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/playwright:v1.51.1
+FROM mcr.microsoft.com/playwright:v1.60.0
 # Set working directory inside the container
 WORKDIR /app
 # Copy package.json and package-lock.json for dependency installation

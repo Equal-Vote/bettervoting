@@ -1,36 +1,44 @@
-import { ElectionRoll } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll";
+import { ElectionRoll, NewElectionRoll } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll";
 import { ILoggingContext } from "../Services/Logging/ILogger";
+import { Kysely, Transaction } from 'kysely';
+import { Database } from './Database';
 
 export interface IElectionRollStore {
     submitElectionRoll: (
-        electionRolls: ElectionRoll[],
+        electionRolls: NewElectionRoll[],
         ctx: ILoggingContext,
-        reason: string
-    ) => Promise<boolean>;
+        reason: string,
+        db?: Kysely<Database> | Transaction<Database>
+    ) => Promise<ElectionRoll[]>;
     getRollsByElectionID: (
         election_id: string,
-        ctx: ILoggingContext
+        ctx: ILoggingContext,
+        db?: Kysely<Database> | Transaction<Database>
     ) => Promise<ElectionRoll[] | null>;
     getByVoterID: (
         election_id: string,
         voter_id: string,
-        ctx: ILoggingContext
+        ctx: ILoggingContext,
+        db?: Kysely<Database> | Transaction<Database>
     ) => Promise<ElectionRoll | null>;
     getElectionRoll: (
-        election_id: string, 
-        voter_id: string|null, 
-        email: string|null, 
-        ip_hash: string|null, 
-        ctx:ILoggingContext
-        ) => Promise<ElectionRoll[] | null>;
-    update: (
-        election_roll: ElectionRoll,
+        election_id: string,
+        voter_id: string | null,
+        email: string | null,
+        ip_hash: string | null,
         ctx: ILoggingContext,
-        reason: string
+        db?: Kysely<Database> | Transaction<Database>
+    ) => Promise<ElectionRoll[] | null>;
+    update: (
+        election_roll: NewElectionRoll,
+        ctx: ILoggingContext,
+        reason: string,
+        db?: Kysely<Database> | Transaction<Database>
     ) => Promise<ElectionRoll | null>;
     delete: (
         election_roll: ElectionRoll,
         ctx: ILoggingContext,
-        reason: string
+        reason: string,
+        db?: Kysely<Database> | Transaction<Database>
     ) => Promise<boolean>;
 }

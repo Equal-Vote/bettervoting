@@ -10,9 +10,12 @@ export default class AccountServiceUtils {
         token: string,
         key: string
     ) => {
-        // TODO: migrate to storing an explicitly-defined auth_algorithm value in the election db
-        const isCustomKeyAsymmetric = key.includes('-----BEGIN PUBLIC KEY') || key.includes('-----BEGIN CERTIFICATE');
-        const algorithms = isCustomKeyAsymmetric ? ['RS256'] : ['HS256'];
+        // Algorithm selection follows key shape: PEM public-key / certificate
+        // means RS256; everything else (HS256 shared secrets, used by the test
+        // mock) is symmetric. Callers that require RS256 specifically (e.g. the
+        // election-scoped auth_key path) enforce that at their own layer.
+        const isAsymmetric = key.includes('-----BEGIN PUBLIC KEY') || key.includes('-----BEGIN CERTIFICATE');
+        const algorithms = isAsymmetric ? ['RS256'] : ['HS256'];
 
         try {
             return jwt.verify(token, key, { algorithms });

@@ -5,6 +5,7 @@ import { Box, Breakpoint, Paper, Typography, useMediaQuery } from '@mui/material
 import { usePostElection } from '~/hooks/useAPI';
 import { setCookie, useCookie } from '~/hooks/useCookie';
 import { NewElection } from '@equal-vote/star-vote-shared/domain_model/Election';
+import { setVoterAuthenticationMode } from '@equal-vote/star-vote-shared/domain_model/VoterAuthenticationMode';
 import { makeUniqueIDSync, makeID, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
 
 import { hashString, scrollToElement, StringObject, TransitionBox, useSubstitutedTranslation } from '../../util.js';
@@ -52,7 +53,7 @@ export const makeDefaultElection = () => {
             ballot_updates: false,
             public_results: true,
             random_candidate_order: true,
-            require_instruction_confirmation: true,
+            require_instruction_confirmation: false,
             draggable_ballot: false,
             term_type: undefined,
         }
@@ -79,8 +80,9 @@ const Wizard = () => {
             submitTempID = makeID(ID_PREFIXES.VOTER, ID_LENGTHS.VOTER);
             setCookie('temp_id', submitTempID);
         }
+        if (election.owner_id != null){
         election.owner_id = authSession.isLoggedIn() ? authSession.getIdField('sub') : submitTempID;
-
+        }
         const claimKey = crypto.randomUUID();
         election.claim_key_hash = hashString(claimKey);
 
@@ -110,10 +112,11 @@ const Wizard = () => {
             ...election,
             races: [editedRace],
             title: editedRace.title,
+            description: editedRace.description,
         }
         const confirmed = await confirm(t('wizard.publish_confirm'));
         if (confirmed) {
-            onAddElection({...updatedElection, state: 'finalized', settings: {...updatedElection.settings, voter_access: 'open'}}, '/')
+            onAddElection({...updatedElection, owner_id: null, state: 'finalized', settings: setVoterAuthenticationMode(updatedElection.settings, 'open_unique_cookie')}, '/')
         }else{
             scrollToElement(document.querySelector('.wizard'));
             setElection(updatedElection)
@@ -155,12 +158,12 @@ const Wizard = () => {
                 }}
             >
                 <Box sx={pageSX}>
-                    <Typography variant='h5' color={'lightShade.contrastText'}>{t('wizard.title')}</Typography>
+                    <Typography variant='h5' sx={{ color: 'lightShade.contrastText' }}>{t('wizard.title')}</Typography>
                     <WizardBasics multiRace={multiRace} setMultiRace={setMultiRace}/>
                     <Box sx={{position: 'relative'}}>
                         <TransitionBox absolute enabled={multiRace === true} sx={{textAlign: 'left', pl: 1}}>
                             {t('wizard.add_races_later')}
-                            <Box display='flex' flexDirection='row' justifyContent='flex-end' gap={1} sx={{mt: 3}}>
+                            <Box sx={{ mt: 3, display: "flex", flexDirection: "row", justifyContent: "flex-end", gap: 1 }}>
                                 <PrimaryButton onClick={() => setPage(1)}>Next</PrimaryButton>
                             </Box>
                         </TransitionBox>

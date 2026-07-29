@@ -22,7 +22,7 @@ export default function Footer() {
 		>
 			<Container maxWidth="lg">
 				<Grid container spacing={5}>
-					<Grid item xs={12} md={4}>
+					<Grid size={{ xs: 12, md: 4 }}>
 						<Typography
 							variant="h6"
               component="h2"
@@ -37,9 +37,9 @@ export default function Footer() {
 							variant="body2"
 							sx={{ textAlign: 'left' }}
 						>
-							{t('footer.project_description')}
+							{t('footer.project_description', {newWindow: true})}
 						</Typography>
-            <br/>
+						<br/>
 						<Link
 							href="https://www.starvoting.org/"
 							target = "_blank"
@@ -68,7 +68,7 @@ export default function Footer() {
 				elections@equal.vote
 			  </MailTo>
 					</Grid>
-					<Grid item xs={12} md={4}>
+					<Grid size={{ xs: 12, md: 4 }}>
 						<Typography
 							variant="h6"
               component="h2"
@@ -91,7 +91,7 @@ export default function Footer() {
 							{t('footer.about_us_description')}
 						</Typography>
 					</Grid>
-					<Grid item xs={12} md={4}>
+					<Grid size={{ xs: 12, md: 4 }}>
 						<Box
 							component="img"
 							alt="Equal Vote Coalition Logo"
@@ -167,7 +167,7 @@ export default function Footer() {
 					</Grid>
 				</Grid>
 				{/* Commenting out copyright until that's figured out */}
-				{/* <Box mt={5}>
+				{/* <Box sx={{ mt: 5 }}>
           <Typography variant="body2" color="text.secondary" align="center">
             {"Copyright © "}
             <Link color="inherit" href="https://your-website.com/">
