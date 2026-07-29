@@ -41,4 +41,10 @@ export interface IElectionRollStore {
         reason: string,
         db?: Kysely<Database> | Transaction<Database>
     ) => Promise<boolean>;
+    archiveRollsByElectionID: (
+        election_id: string,
+        ctx: ILoggingContext,
+        reason: string,
+        db?: Kysely<Database> | Transaction<Database>
+    ) => Promise<number>;
 }
