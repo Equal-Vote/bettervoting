@@ -1130,6 +1130,12 @@ admin_home:
     title: Confirm Adding First Voters
     message: Once your first voters have been added, your voter list settings will be locked in for this election. Would you like to continue?
 
+  clear_voter_roll_button: Clear Voter List
+  clear_voter_roll_confirm:
+    title: Confirm Clearing Voter List
+    message: This removes all {{voter_count}} voters from your election and unlocks your voter list settings so you can change them. You'll need to add your voters again afterwards. Would you like to continue?
+    submit: 'Yes, clear the list'
+
   finalize_email_confirm:
     title: Send Email Blast
     message: You can send emails from the voters tab at anytime. Would you like to notify your voters? 

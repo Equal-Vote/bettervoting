@@ -141,6 +141,34 @@ test.describe('Add Voters', () => {
         await page.getByLabel('Voter Data').fill(voterIds.join('\n'));
         await page.getByRole('button', {name: 'Submit'}).click();
     });
+    test('clear voters to unlock the voter list settings', async ({ page, request }) => {
+        const response = await request.post(`${API_BASE_URL}/Election/${electionId}/rolls`, {
+            data: {
+                "electionRoll": voterIds.map(voter_id => ({ state: 'approved', voter_id }))
+            }
+        });
+        await expect(response).toBeOK();
+
+        await page.goto(`/${electionId}/admin/voters`);
+        await expect(page.getByText('1–5 of 5')).toBeVisible();
+
+        // adding the first voter locks the voter list settings
+        await expect(page.getByRole('radio', { name: 'Yes' })).toBeDisabled();
+
+        await page.getByRole('button', { name: 'Clear Voter List' }).click();
+        await page.getByRole('button', { name: 'Yes, clear the list' }).click();
+
+        // roll is empty and the settings unlock again
+        await expect(page.getByText("This election doesn't have any voters yet")).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Clear Voter List' })).toHaveCount(0);
+        await expect(page.getByRole('radio', { name: 'Yes' })).toBeEnabled();
+
+        // which was the point: the admin can now pick the other voter ID scheme
+        const emailList = page.getByRole('radio', { name: /BetterVoting-managed voter IDs/ });
+        await emailList.click();
+        await expect(emailList).toBeChecked();
+    });
+
     test('vote in election restricted by ID', async ({ page, request }) => {
         await page.goto(`/`);
         const response = await request.post(`${API_BASE_URL}/Election/${electionId}/rolls`, {
