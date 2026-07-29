@@ -709,9 +709,6 @@
           "require_instruction_confirmation": {
             "type": "boolean"
           },
-          "strict_ballot_privacy": {
-            "type": "boolean"
-          },
           "term_type": {
             "enum": [
               "election",
@@ -3844,7 +3841,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Sequence of events that have occurred at or after the moment the\nelection was finalized. Includes state transitions, per-ballot\nedits, and cumulative-count milestones for ballots cast and roll\nadditions. Designed so that close/reopen patterns by admins are\npublicly visible. No voter IDs, ballot IDs, or vote contents are\nreturned.\n"
+            "description": "Sequence of events that have occurred at or after the moment the\nelection was finalized. Event types are state_change,\npreliminary_results_change, ballots_milestone, upload_ballots,\nballots_edited_milestone, and voter_id_revealed. Designed so that\nclose/reopen patterns, admin ballot uploads, and break-glass voter\nID reveals are publicly visible. Ballot-related events are\ntruncated to the UTC day and counts are reported on a milestone\nladder; no voter IDs, ballot IDs, or vote contents are returned.\n"
           },
           "404": {
             "description": "Election has not been finalized"

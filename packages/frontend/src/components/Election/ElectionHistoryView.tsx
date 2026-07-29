@@ -5,11 +5,10 @@ import { HistoryEvent, useGetElectionHistory } from "../../hooks/useAPI";
 
 const chipColor = (type: HistoryEvent['type']): "success" | "error" | "warning" | "info" | "default" => {
     switch (type) {
-        case 'finalization_summary': return 'default';
         case 'state_change': return 'info';
         case 'preliminary_results_change': return 'warning';
         case 'ballots_milestone': return 'success';
-        case 'rolls_milestone': return 'success';
+        case 'upload_ballots': return 'info';
         case 'ballots_edited_milestone': return 'warning';
         case 'voter_id_revealed': return 'error';
         default: return 'default';
@@ -18,11 +17,10 @@ const chipColor = (type: HistoryEvent['type']): "success" | "error" | "warning" 
 
 const chipLabel = (type: HistoryEvent['type'], t: (k: string) => string): string => {
     switch (type) {
-        case 'finalization_summary': return t('election_history.chip.finalized');
         case 'state_change': return t('election_history.chip.state_change');
         case 'preliminary_results_change': return t('election_history.chip.preliminary_results');
         case 'ballots_milestone': return t('election_history.chip.ballots');
-        case 'rolls_milestone': return t('election_history.chip.rolls');
+        case 'upload_ballots': return t('election_history.chip.upload');
         case 'ballots_edited_milestone': return t('election_history.chip.edits');
         case 'voter_id_revealed': return t('election_history.chip.reveal');
         default: return type;
@@ -31,15 +29,6 @@ const chipLabel = (type: HistoryEvent['type'], t: (k: string) => string): string
 
 const describe = (event: HistoryEvent, t: (k: string, v?: object) => string): string => {
     switch (event.type) {
-        case 'finalization_summary':
-            return event.voter_ids_revealed_at_finalization > 0
-                ? t('election_history.desc.finalization_summary_with_reveals', {
-                    rolls: event.rolls_at_finalization,
-                    reveals: event.voter_ids_revealed_at_finalization,
-                })
-                : t('election_history.desc.finalization_summary', {
-                    rolls: event.rolls_at_finalization,
-                });
         case 'state_change':
             return event.from === null
                 ? t('election_history.desc.state_initial', { to: event.to })
@@ -50,8 +39,8 @@ const describe = (event: HistoryEvent, t: (k: string, v?: object) => string): st
                 : t('election_history.desc.preliminary_off');
         case 'ballots_milestone':
             return t('election_history.desc.ballots_milestone', { count: event.count });
-        case 'rolls_milestone':
-            return t('election_history.desc.rolls_milestone', { count: event.count });
+        case 'upload_ballots':
+            return t('election_history.desc.upload_ballots', { count: event.count });
         case 'ballots_edited_milestone':
             return t('election_history.desc.edits_milestone', { count: event.count });
         case 'voter_id_revealed':
@@ -61,18 +50,20 @@ const describe = (event: HistoryEvent, t: (k: string, v?: object) => string): st
     }
 };
 
-// Voter-related events arrive day-rounded from the backend; show date only.
-// Admin events keep precise timestamps; show date + time.
-const isDayRounded = (type: HistoryEvent['type']) =>
+// Ballot- and voter-related events arrive truncated to the UTC day from the
+// backend; render them as a bare date in UTC so the local timezone offset
+// can't shift them onto a neighbouring day. Admin state changes keep precise
+// timestamps and are shown as date + time.
+const isDayTruncated = (type: HistoryEvent['type']) =>
     type === 'ballots_milestone' ||
-    type === 'rolls_milestone' ||
+    type === 'upload_ballots' ||
     type === 'ballots_edited_milestone' ||
     type === 'voter_id_revealed';
 
 const formatTimestamp = (event: HistoryEvent, t: (k: string, v?: object) => string): string => {
     const date = new Date(event.timestamp);
-    if (isDayRounded(event.type)) {
-        return date.toLocaleDateString();
+    if (isDayTruncated(event.type)) {
+        return date.toLocaleDateString(undefined, { timeZone: 'UTC' });
     }
     return t('listed_datetime', { listed_datetime: date });
 };

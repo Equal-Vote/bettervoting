@@ -74,11 +74,13 @@ electionsRouter.get('/Election/:id', asyncHandler(returnElection));
  *       200:
  *         description: |
  *           Sequence of events that have occurred at or after the moment the
- *           election was finalized. Includes state transitions, per-ballot
- *           edits, and cumulative-count milestones for ballots cast and roll
- *           additions. Designed so that close/reopen patterns by admins are
- *           publicly visible. No voter IDs, ballot IDs, or vote contents are
- *           returned.
+ *           election was finalized. Event types are state_change,
+ *           preliminary_results_change, ballots_milestone, upload_ballots,
+ *           ballots_edited_milestone, and voter_id_revealed. Designed so that
+ *           close/reopen patterns, admin ballot uploads, and break-glass voter
+ *           ID reveals are publicly visible. Ballot-related events are
+ *           truncated to the UTC day and counts are reported on a milestone
+ *           ladder; no voter IDs, ballot IDs, or vote contents are returned.
  *       404:
  *         description: Election has not been finalized
  */

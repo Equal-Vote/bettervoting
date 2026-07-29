@@ -22,11 +22,10 @@ export const useElectionExists = (electionID: string | undefined) => {
 }
 
 export type HistoryEvent =
-    | { type: 'finalization_summary'; timestamp: string; rolls_at_finalization: number; voter_ids_revealed_at_finalization: number }
     | { type: 'state_change'; timestamp: string; from: string | null; to: string }
     | { type: 'preliminary_results_change'; timestamp: string; to: boolean }
     | { type: 'ballots_milestone'; timestamp: string; count: number }
-    | { type: 'rolls_milestone'; timestamp: string; count: number }
+    | { type: 'upload_ballots'; timestamp: string; count: number }
     | { type: 'ballots_edited_milestone'; timestamp: string; count: number }
     | { type: 'voter_id_revealed'; timestamp: string };
 

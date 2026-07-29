@@ -62,9 +62,6 @@ export default function ElectionSettings() {
 
     const { makeRequest: makePublicResultsRequest } = useSetPublicResults(election.election_id)
 
-    const strictPrivacyEnabled = !!election.settings.strict_ballot_privacy;
-    const publicResultsDisabled = strictPrivacyEnabled && !['closed', 'archived'].includes(election.state);
-
     const [publicResults, setPublicResults] = useSyncedState(
         election.settings.public_results ?? false,
         async (v) => {
@@ -72,13 +69,6 @@ export default function ElectionSettings() {
             return !!res && res.election?.settings?.public_results === v;
         }
     );
-
-    const setStrictBallotPrivacy = async (enabled: boolean) => !! await updateElection(e => {
-        e.settings.strict_ballot_privacy = enabled;
-        if (enabled && !['closed', 'archived'].includes(e.state)) {
-            e.settings.public_results = false;
-        }
-    });
 
     return <>
         <Grid item xs={12} sx={{ m: 0, my: 0, p: 1 }}>
@@ -123,10 +113,6 @@ export default function ElectionSettings() {
 
                     <ElectionSwitchSetting settingKey="random_candidate_order" />
                     <ElectionSwitchSetting settingKey="ballot_updates" />
-                    <ElectionSwitchSetting
-                        settingKey="strict_ballot_privacy"
-                        onToggle={setStrictBallotPrivacy}
-                    />
                     <ElectionSwitchSetting settingKey="require_instruction_confirmation" />
                     <ElectionSwitchSetting settingKey="draggable_ballot" />
                     <ElectionSwitchSetting
@@ -149,8 +135,6 @@ export default function ElectionSettings() {
                         label={election.state === 'closed' || election.state === 'archived' ? t('election_settings.public_results') : t('election_settings.preliminary_results')}
                         toggled={publicResults}
                         onToggle={setPublicResults}
-                        disabled={publicResultsDisabled}
-                        disabledMessage={publicResultsDisabled ? t('disabled_msgs.strict_ballot_privacy_public_results') : undefined}
                     />
                 </FormGroup>
             </FormControl>

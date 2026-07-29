@@ -12,6 +12,10 @@ export interface DevElectionDefinition {
     makeBallots: () => Ballot[];
     makeElectionRolls?: () => ElectionRoll[];
     makeEmailEvents?: () => Omit<EmailEvent, 'id'>[];
+    // How many ballots — taken from the end of makeBallots() — to stamp as a
+    // single admin bulk upload rather than browser submissions. Gives the
+    // public audit log an upload_ballots event to render. Defaults to 0.
+    adminUploadedBallots?: number;
 }
 
 export function validateDefinition(def: DevElectionDefinition): void {

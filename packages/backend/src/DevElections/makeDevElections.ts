@@ -162,13 +162,27 @@ async function main() {
             console.warn(`  Skipping ${ballots.length} ballot(s): state '${def.election.state}' has no voting window`);
         } else if (ballots.length > 0 && ballotWindow !== null) {
             const ballotTimes = spreadTimes(ballots.length, ballotWindow.fromMs, ballotWindow.toMs);
-            const timedBallots = ballots.map((b, i) => ({
-                ...b,
-                create_date: new Date(ballotTimes[i]).toISOString(),
-                update_date: ballotTimes[i].toString(),
-                date_submitted: ballotTimes[i],
-            }));
-            console.info(`  Inserting ${timedBallots.length} ballot(s)...`);
+            // The trailing `adminUploadedBallots` ballots represent one bulk
+            // upload, so they all share the first batch member's timestamp
+            // instead of being spread out like browser submissions.
+            const uploadCount = Math.min(def.adminUploadedBallots ?? 0, ballots.length);
+            const firstUploadIndex = ballots.length - uploadCount;
+            const timedBallots = ballots.map((b, i) => {
+                const isUpload = i >= firstUploadIndex;
+                const ms = isUpload ? ballotTimes[firstUploadIndex] : ballotTimes[i];
+                return {
+                    ...b,
+                    create_date: new Date(ms).toISOString(),
+                    update_date: ms.toString(),
+                    date_submitted: ms,
+                    history: [{
+                        action_type: isUpload ? 'submitted_via_admin' : 'submitted_via_browser',
+                        actor: isUpload ? 'devadmin' : '',
+                        timestamp: ms,
+                    }],
+                };
+            });
+            console.info(`  Inserting ${timedBallots.length} ballot(s)${uploadCount > 0 ? ` (${uploadCount} as an admin upload)` : ''}...`);
             await db.insertInto('ballotDB').values(timedBallots).execute();
         }
 

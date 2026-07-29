@@ -4,6 +4,7 @@ import { NotFound } from '@curveball/http-errors';
 import { IElectionRequest } from '../../IRequest';
 import { Response, NextFunction } from 'express';
 import { ElectionRollAction } from '@equal-vote/star-vote-shared/domain_model/ElectionRoll';
+import { BallotAction } from '@equal-vote/star-vote-shared/domain_model/Ballot';
 
 const className = 'election.Controllers';
 
@@ -11,12 +12,12 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 // Voter-related events expose only day-level granularity to avoid leaking
 // per-voter timing that could be cross-referenced with traffic logs or
-// roll-history timestamps to deanonymize.
-const roundToDayIso = (ms: number) => new Date(Math.round(ms / DAY_MS) * DAY_MS).toISOString();
+// roll-history timestamps to deanonymize. Truncating (rather than rounding to
+// the nearest day) keeps the reported day the day the event actually happened.
+const truncateToDayIso = (ms: number) => new Date(Math.floor(ms / DAY_MS) * DAY_MS).toISOString();
 
-// First-time-reached count milestones (cumulative) for ballot casts and roll
-// additions. Coarse enough to bucket large elections, fine enough to give small
-// ones some signal.
+// First-time-reached count milestones (cumulative) for ballot casts. Coarse
+// enough to bucket large elections, fine enough to give small ones some signal.
 const COUNT_MILESTONES = [
     1, 5, 10, 25, 50, 100, 250, 500,
     1000, 2500, 5000, 10000, 25000, 50000,
@@ -31,15 +32,30 @@ const EDIT_MILESTONES = [
 ];
 
 const REVEAL_ACTION_TYPE = '🚨 VOTER_ID_REVEALED';
+const ADMIN_SUBMIT_ACTION_TYPE = 'submitted_via_admin';
 
-type MilestoneType = 'ballots_milestone' | 'rolls_milestone' | 'ballots_edited_milestone';
+// Admin-submitted ballots from a single uploadBallots request are stamped with
+// independent Date.now() calls, so a large batch can straddle several seconds.
+// Anything within this gap is treated as one upload action.
+const UPLOAD_BATCH_GAP_MS = 5 * 60 * 1000;
 
-type HistoryEvent =
-    | { type: 'finalization_summary'; timestamp: string; rolls_at_finalization: number; voter_ids_revealed_at_finalization: number }
+type MilestoneType = 'ballots_milestone' | 'ballots_edited_milestone';
+
+// Spelled out one member per type (rather than reusing MilestoneType for a
+// single member) so the union stays discriminated on `type`.
+export type HistoryEvent =
     | { type: 'state_change'; timestamp: string; from: string | null; to: string }
     | { type: 'preliminary_results_change'; timestamp: string; to: boolean }
-    | { type: MilestoneType; timestamp: string; count: number }
+    | { type: 'ballots_milestone'; timestamp: string; count: number }
+    | { type: 'ballots_edited_milestone'; timestamp: string; count: number }
+    | { type: 'upload_ballots'; timestamp: string; count: number }
     | { type: 'voter_id_revealed'; timestamp: string };
+
+// The row shapes buildHistory needs — a structural subset of what the
+// electionDB / ballotDB / electionRollDB selects return.
+export type ElectionHistoryRow = { state: string; settings: { public_results?: boolean } | null; update_date: Date | string };
+export type BallotHistoryRow = { ballot_id: string; update_date: Date | string; history?: BallotAction[] | null };
+export type RollHistoryRow = { history?: ElectionRollAction[] | null };
 
 const msToIso = (ms: number) => new Date(ms).toISOString();
 
@@ -48,18 +64,7 @@ const msToIso = (ms: number) => new Date(ms).toISOString();
 const parseUpdateMs = (value: Date | string): number =>
     typeof value === 'string' ? parseInt(value, 10) : value.getTime();
 
-const firstSeenMsByKey = <T extends { update_date: Date | string }>(rows: T[], keyOf: (r: T) => string) => {
-    const out = new Map<string, number>();
-    for (const r of rows) {
-        const ts = parseUpdateMs(r.update_date);
-        const k = keyOf(r);
-        const prior = out.get(k);
-        if (prior === undefined || ts < prior) out.set(k, ts);
-    }
-    return out;
-};
-
-// Milestones are voter-related, so timestamps are rounded to the nearest day.
+// Milestones are voter-related, so timestamps are truncated to the day.
 const emitMilestones = (
     type: MilestoneType,
     ladder: number[],
@@ -69,44 +74,45 @@ const emitMilestones = (
         .filter(m => sortedFirstSeenMs.length >= m)
         .map(m => {
             const rawMs = sortedFirstSeenMs[m - 1];
-            return { event: { type, timestamp: roundToDayIso(rawMs), count: m }, rawMs };
+            return { event: { type, timestamp: truncateToDayIso(rawMs), count: m }, rawMs };
         });
 
-const getElectionHistory = async (req: IElectionRequest, res: Response, next: NextFunction) => {
-    const electionId = req.election.election_id;
-    Logger.info(req, `${className}.getElectionHistory ${electionId}`);
+// Collapse a sorted list of admin-submit timestamps into upload batches, so a
+// single "upload 400 ballots" action reads as one event rather than 400.
+const clusterUploads = (sortedMs: number[]): { startMs: number; count: number }[] => {
+    const batches: { startMs: number; count: number }[] = [];
+    for (const ms of sortedMs) {
+        const current = batches[batches.length - 1];
+        if (current !== undefined && ms - current.startMs <= UPLOAD_BATCH_GAP_MS) {
+            current.count++;
+        } else {
+            batches.push({ startMs: ms, count: 1 });
+        }
+    }
+    return batches;
+};
 
-    const db = ServiceLocator.database();
-
-    // Need full version histories (head=false rows included). For rolls we only
-    // need head=true: each update inserts a fresh row carrying the full appended
-    // history array, so the head row contains every reveal action ever recorded.
-    const [electionRows, ballotRows, rollHeadRows] = await Promise.all([
-        db.selectFrom('electionDB')
-            .where('election_id', '=', electionId)
-            .select(['state', 'settings', 'update_date'])
-            .orderBy('update_date', 'asc')
-            .execute(),
-        db.selectFrom('ballotDB')
-            .where('election_id', '=', electionId)
-            .select(['ballot_id', 'update_date'])
-            .orderBy('update_date', 'asc')
-            .execute(),
-        db.selectFrom('electionRollDB')
-            .where('election_id', '=', electionId)
-            .where('head', '=', true)
-            .select(['voter_id', 'create_date', 'history'])
-            .execute(),
-    ]);
-
+/**
+ * Derive the public audit log from raw version rows. Kept free of Express and
+ * the DB so the event-shaping rules can be unit tested directly.
+ *
+ * `electionRows` must be ordered by update_date ascending (transitions are read
+ * by walking it), and `rollHeadRows` must be the head=true roll rows only.
+ * `ballotRows` may arrive in any order.
+ */
+export const buildHistory = (
+    electionRows: ElectionHistoryRow[],
+    ballotRows: BallotHistoryRow[],
+    rollHeadRows: RollHistoryRow[],
+): { finalizedAtMs: number; events: HistoryEvent[] } => {
     const finalizeRow = electionRows.find(r => r.state === 'finalized');
     if (!finalizeRow) {
         throw new NotFound('Election has not been finalized');
     }
     const finalizedAtMs = parseUpdateMs(finalizeRow.update_date);
 
-    // Track (event, rawMs) pairs so we can filter on the true timestamp even
-    // when the emitted event hides sub-day precision.
+    // Track (event, rawMs) pairs so we can filter and order on the true
+    // timestamp even when the emitted event hides sub-day precision.
     const pairs: { event: HistoryEvent; rawMs: number }[] = [];
 
     // State + preliminary-results transitions, walking electionDB rows in order.
@@ -132,85 +138,123 @@ const getElectionHistory = async (req: IElectionRequest, res: Response, next: Ne
         prevPublicResults = publicResults;
     }
 
-    // Ballot cast milestones (earliest update_date per ballot_id = first-cast time).
-    const ballotFirstSeen = firstSeenMsByKey(ballotRows, r => r.ballot_id);
-    const castTimes = Array.from(ballotFirstSeen.values()).sort((a, b) => a - b);
-    pairs.push(...emitMilestones('ballots_milestone', COUNT_MILESTONES, castTimes));
-
-    // Roll-addition milestones. create_date on head=true rolls is preserved
-    // from the original insert, so it doubles as the first-seen time for the voter.
-    const rollAddTimes = rollHeadRows
-        .map(r => new Date(r.create_date as string | Date).getTime())
-        .sort((a, b) => a - b);
-    pairs.push(...emitMilestones('rolls_milestone', COUNT_MILESTONES, rollAddTimes));
-
-    // Ballot edit milestones: each row past the first for a given ballot_id is
-    // an edit. Sort their timestamps and emit on the finer EDIT ladder.
-    const editTimes: number[] = [];
-    const seenBallot = new Set<string>();
+    // Collect every version of every ballot, plus the admin-submit actions
+    // recorded in their history arrays. Grouping by ballot_id (rather than
+    // trusting row order) is what makes the first-cast vs edit split reliable.
+    const versionsByBallot = new Map<string, number[]>();
+    const adminSubmitTimes: number[] = [];
+    const seenAdminSubmit = new Set<string>();
     for (const row of ballotRows) {
-        if (seenBallot.has(row.ballot_id)) {
-            editTimes.push(parseUpdateMs(row.update_date));
+        const rowMs = parseUpdateMs(row.update_date);
+        const versions = versionsByBallot.get(row.ballot_id);
+        if (versions === undefined) {
+            versionsByBallot.set(row.ballot_id, [rowMs]);
         } else {
-            seenBallot.add(row.ballot_id);
+            versions.push(rowMs);
+        }
+        // A ballot's history array is re-persisted on every version, so the same
+        // admin-submit action shows up on multiple rows; dedupe per ballot.
+        const history = (row.history ?? []) as BallotAction[];
+        for (const action of history) {
+            if (action?.action_type === ADMIN_SUBMIT_ACTION_TYPE && typeof action.timestamp === 'number') {
+                const key = `${row.ballot_id}:${action.timestamp}`;
+                if (seenAdminSubmit.has(key)) continue;
+                seenAdminSubmit.add(key);
+                adminSubmitTimes.push(action.timestamp);
+            }
         }
     }
+
+    // Earliest version of a ballot is the cast; every later one is an edit.
+    const castTimes: number[] = [];
+    const editTimes: number[] = [];
+    for (const versions of versionsByBallot.values()) {
+        versions.sort((a, b) => a - b);
+        castTimes.push(versions[0]);
+        editTimes.push(...versions.slice(1));
+    }
+
+    castTimes.sort((a, b) => a - b);
     editTimes.sort((a, b) => a - b);
+    adminSubmitTimes.sort((a, b) => a - b);
+
+    pairs.push(...emitMilestones('ballots_milestone', COUNT_MILESTONES, castTimes));
     pairs.push(...emitMilestones('ballots_edited_milestone', EDIT_MILESTONES, editTimes));
 
+    // Admin ballot uploads. The batch size is reported exactly — it is a
+    // property of the admin's action, not of any individual voter — but the
+    // timestamp is still truncated to the day since it bounds when the
+    // uploaded ballots entered the count.
+    for (const batch of clusterUploads(adminSubmitTimes)) {
+        pairs.push({
+            event: { type: 'upload_ballots', timestamp: truncateToDayIso(batch.startMs), count: batch.count },
+            rawMs: batch.startMs,
+        });
+    }
+
     // Break-glass voter ID reveals: scan each head roll row's history field
-    // for the reveal action_type. Voter-related, so round to day.
+    // for the reveal action_type. Voter-related, so truncate to day.
     for (const roll of rollHeadRows) {
         const history = (roll.history ?? []) as ElectionRollAction[];
         for (const action of history) {
             if (action?.action_type === REVEAL_ACTION_TYPE && typeof action.timestamp === 'number') {
                 pairs.push({
-                    event: { type: 'voter_id_revealed', timestamp: roundToDayIso(action.timestamp) },
+                    event: { type: 'voter_id_revealed', timestamp: truncateToDayIso(action.timestamp) },
                     rawMs: action.timestamp,
                 });
             }
         }
     }
 
-    // Compute the at-finalization snapshot from pre-finalize activity:
-    // how many voters were already on the roll and how many break-glass
-    // voter ID reveals had already happened. These collapse into a single
-    // summary "event" pinned to the finalize moment.
-    const rollsAtFinalization = rollHeadRows.filter(roll => {
-        const createdMs = new Date(roll.create_date as string | Date).getTime();
-        return createdMs <= finalizedAtMs;
-    }).length;
-
-    let revealsBeforeFinalization = 0;
-    for (const roll of rollHeadRows) {
-        const history = (roll.history ?? []) as ElectionRollAction[];
-        for (const action of history) {
-            if (action?.action_type === REVEAL_ACTION_TYPE
-                && typeof action.timestamp === 'number'
-                && action.timestamp <= finalizedAtMs) {
-                revealsBeforeFinalization++;
-            }
-        }
-    }
-
-    const summary: HistoryEvent = {
-        type: 'finalization_summary',
-        timestamp: msToIso(finalizedAtMs),
-        rolls_at_finalization: rollsAtFinalization,
-        voter_ids_revealed_at_finalization: revealsBeforeFinalization,
-    };
-
-    // Events strictly after finalize, sorted chronologically. Pre-finalize
-    // activity is captured by the summary above.
-    const postFinalize = pairs
-        .filter(p => p.rawMs > finalizedAtMs)
+    // Events from the finalize moment onward, sorted chronologically. The
+    // transition into 'finalized' is itself the first event; everything before
+    // it is drafting, which isn't part of the public record.
+    const events = pairs
+        .filter(p => p.rawMs >= finalizedAtMs)
         .sort((a, b) => a.rawMs - b.rawMs)
         .map(p => p.event);
+
+    return { finalizedAtMs, events };
+};
+
+const getElectionHistory = async (req: IElectionRequest, res: Response, next: NextFunction) => {
+    const electionId = req.election.election_id;
+    Logger.info(req, `${className}.getElectionHistory ${electionId}`);
+
+    const db = ServiceLocator.database();
+
+    // Need full version histories (head=false rows included) for elections and
+    // ballots. For rolls we only need head=true: each update inserts a fresh row
+    // carrying the full appended history array, so the head row contains every
+    // reveal action ever recorded.
+    const [electionRows, ballotRows, rollHeadRows] = await Promise.all([
+        db.selectFrom('electionDB')
+            .where('election_id', '=', electionId)
+            .select(['state', 'settings', 'update_date'])
+            .orderBy('update_date', 'asc')
+            .execute(),
+        db.selectFrom('ballotDB')
+            .where('election_id', '=', electionId)
+            .select(['ballot_id', 'update_date', 'history'])
+            .orderBy('update_date', 'asc')
+            .execute(),
+        db.selectFrom('electionRollDB')
+            .where('election_id', '=', electionId)
+            .where('head', '=', true)
+            .select(['history'])
+            .execute(),
+    ]);
+
+    const { finalizedAtMs, events } = buildHistory(
+        electionRows as ElectionHistoryRow[],
+        ballotRows as BallotHistoryRow[],
+        rollHeadRows as RollHistoryRow[],
+    );
 
     res.json({
         election_id: electionId,
         finalized_at: msToIso(finalizedAtMs),
-        events: [summary, ...postFinalize],
+        events,
     });
 };
 
