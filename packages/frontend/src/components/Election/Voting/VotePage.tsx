@@ -19,6 +19,7 @@ import { useSubstitutedTranslation } from "~/components/util";
 import DraftWarning from "../DraftWarning";
 import SupportBlurb from "../SupportBlurb";
 import ElectionStateWarning from "../ElectionStateWarning"
+import PreliminaryResultsNotice from "../PreliminaryResultsNotice"
 import WriteInSection from "./WriteInSection"
 import { NOTA_ID, makeWriteInCandidateId, isWriteInCandidate } from "@equal-vote/star-vote-shared/utils/makeID";
 
@@ -263,6 +264,10 @@ const VotePage = () => {
         state="archived"
         title="archived_warning.title"
         description="archived_warning.description"/>
+      {/* Sits above BallotPageSelector so it renders once per ballot rather than
+          once per race, and so it also covers DraggableIRVBallotView, which
+          bypasses GenericBallotView entirely. */}
+      <PreliminaryResultsNotice/>
       <BallotContext.Provider value={{
         instructionsRead: pages[currentPage].instructionsRead,
         setInstructionsRead: setInstructionsRead,
