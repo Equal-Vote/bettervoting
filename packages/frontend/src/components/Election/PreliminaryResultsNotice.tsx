@@ -5,15 +5,22 @@ import useElection from "../ElectionContextProvider";
 // docs/help/preliminary_results.md, as published by the docs site.
 const ARTICLE_URL = 'https://docs.bettervoting.com/help/preliminary_results.html';
 
+// Shared by this notice and the line in the submit-confirm dialog, so the two
+// cannot drift apart — a voter who is shown one has to be shown the other.
+//
+// public_results does two jobs. While voting is open it means "live tally
+// visible", which is what the notice is about. Once the election closes it means
+// "final results published", which carries none of the same inference risk — so
+// neither surface can follow the flag alone.
+export function useShowsLiveTally() {
+    const { election } = useElection();
+    return election.settings.public_results === true
+        && (election.state === 'open' || election.state === 'draft');
+}
+
 export default function PreliminaryResultsNotice() {
     const { t, election } = useElection();
-
-    // public_results does two jobs. While voting is open it means "live tally
-    // visible", which is what this notice is about. Once the election closes it
-    // means "final results published", which carries none of the same inference
-    // risk — so the notice must not follow the flag alone.
-    const showsLiveTally = election.settings.public_results === true
-        && (election.state === 'open' || election.state === 'draft');
+    const showsLiveTally = useShowsLiveTally();
 
     if (!showsLiveTally) return <></>;
 

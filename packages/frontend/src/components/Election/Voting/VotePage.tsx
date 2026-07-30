@@ -19,7 +19,7 @@ import { useSubstitutedTranslation } from "~/components/util";
 import DraftWarning from "../DraftWarning";
 import SupportBlurb from "../SupportBlurb";
 import ElectionStateWarning from "../ElectionStateWarning"
-import PreliminaryResultsNotice from "../PreliminaryResultsNotice"
+import PreliminaryResultsNotice, { useShowsLiveTally } from "../PreliminaryResultsNotice"
 import WriteInSection from "./WriteInSection"
 import { NOTA_ID, makeWriteInCandidateId, isWriteInCandidate } from "@equal-vote/star-vote-shared/utils/makeID";
 
@@ -240,6 +240,7 @@ const VotePage = () => {
   }
 
   const {t} = useSubstitutedTranslation(election.settings.term_type)
+  const showsLiveTally = useShowsLiveTally()
 
 
   if(pages.length == 0){
@@ -339,6 +340,14 @@ const VotePage = () => {
         <DialogTitle>{t('ballot.dialog_submit_title')}</DialogTitle>
         <DialogContent>
           <DialogContentText>
+            {/* The banner above the ballot is scrollable-past, and it is greyed out
+                behind this dialog. This is the only surface the voter must actively
+                confirm, so it carries one sentence rather than nothing. */}
+            {showsLiveTally &&
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                {t('ballot.dialog_preliminary_results')}
+              </Typography>
+            }
 
             {!receiptEmail &&
               <TextField id="receipt-email" label={t('ballot.dialog_email_placeholder')} fullWidth type="text" value={inputEmail} sx={{
