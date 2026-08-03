@@ -91,7 +91,7 @@ const MultiRaceTitleSection = ({ onCustomize }: { onCustomize: (election: NewEle
             <Typography sx={{ mt: 1 }}>{t('wizard.add_races_later')}</Typography>
             <Box sx={{ mt: 3, display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', gap: 1 }}>
                 <PrimaryButton
-                    disabled={!election.title}
+                    disabled={!election.title.trim()}
                     onClick={() => onCustomize(election)}
                 >
                     Next
@@ -140,11 +140,7 @@ const Wizard = () => {
     const onCustomize = async (electionToSubmit: NewElection) => {
         const finalElection = {
             ...electionToSubmit,
-            settings: {
-                ...electionToSubmit.settings,
-                voter_access: 'open',
-                contact_email: authSession.isLoggedIn() ? authSession.getIdField('email') : '',
-            }
+            settings: setVoterAuthenticationMode(electionToSubmit.settings, 'open_unique_cookie'),
         };
         await onAddElection(finalElection, '/admin/build_ballot');
     };
