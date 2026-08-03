@@ -75,7 +75,7 @@ const MultiRaceTitleSection = ({ onCustomize }: { onCustomize: (election: NewEle
                 slotProps={{ htmlInput: { 'aria-label': 'Title' } }}
             />
             <UtilityButton onClick={() => setShowDescription(d => !d)}>
-                {showDescription ? '-' : '+'} Description (Optional)
+                {showDescription ? '-' : '+'} {t('wizard.description_title')}
             </UtilityButton>
             {showDescription && (
                 <TextField

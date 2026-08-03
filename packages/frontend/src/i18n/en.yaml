@@ -877,6 +877,8 @@ wizard:
 
   term_question: Which term best describes your situation?
 
+  description_title: Description (Optional)
+
   multi_race_question: How many {{races}} will your {{election}} include?
   single_race: Just one
   multi_race: More than one
