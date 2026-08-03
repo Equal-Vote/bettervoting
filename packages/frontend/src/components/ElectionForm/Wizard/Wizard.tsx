@@ -64,6 +64,7 @@ const MultiRaceTitleSection = ({ onCustomize }: { onCustomize: (election: NewEle
 
     return (
         <Box sx={{ textAlign: 'left', pl: 1 }}>
+            <Typography variant='h6'>{t('election_details.title')}</Typography>
             <TextField
                 required
                 label={t('election_details.title')}
