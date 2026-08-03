@@ -343,7 +343,7 @@ const TitleAndDescription = ({setErrors, errors, editedRace, applyRaceUpdate, op
 
         <Box>
             <UtilityButton onClick={() => setShowDescription(d => !d)}>
-                {showDescription? '-' : '+'} {t('wizard.description_title')}
+                {showDescription? '-' : '+'} {t('race_form.description_title')}
             </UtilityButton>
             {showDescription && <>
                 <TextField

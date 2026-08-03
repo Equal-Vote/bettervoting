@@ -870,6 +870,7 @@ editable_ballots:
 
 race_form:
   candidates_title: '{{capital_candidates}}'
+  description_title: Description (Optional)
 
 # Landing Page -> New Election Wizard
 wizard:
