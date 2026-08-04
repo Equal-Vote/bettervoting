@@ -67,7 +67,7 @@ function STARResultsViewer({ filterRandomFromLogs }: {filterRandomFromLogs: bool
 
 function RankedRobinResultsViewer() {
   let {results} = useRace();
-  const {t} = useRace();
+  const {race, t} = useRace();
   results = results as rankedRobinResults;
 
   const candidates = results.summaryData.candidates;
@@ -81,7 +81,7 @@ function RankedRobinResultsViewer() {
           }
           percentage
           percentDenominator={results.summaryData.candidates.length-1}
-          stars={1}
+          stars={race.num_winners}
         />
       </Widget>
     </WidgetContainer>
@@ -89,7 +89,7 @@ function RankedRobinResultsViewer() {
     <DetailExpander>
       <WidgetContainer>
         <Widget title={t('results.ranked_robin.table_title')}>
-          <ResultsTable className='rankedRobinTable' data={[
+          <ResultsTable className='rankedRobinTable' winningRows={race.num_winners} data={[
             t('results.ranked_robin.table_columns'),
             ...results.summaryData.candidates.map(c => [
               c.name, c.copelandScore, formatPercent(c.copelandScore / (results.summaryData.candidates.length-1))
@@ -172,7 +172,7 @@ function IRVResultsViewer() {
 
 function PluralityResultsViewer() {
   const { results } = useRace();
-  const { t } = useRace();
+  const { race, t } = useRace();
 
   return <ResultsViewer methodKey='choose_one'>
     <WidgetContainer>
@@ -184,7 +184,7 @@ function PluralityResultsViewer() {
               votes: c.score,
             }))
           }
-          stars={1}
+          stars={race.num_winners}
           percentage
         />
       </Widget>
@@ -193,7 +193,7 @@ function PluralityResultsViewer() {
     <DetailExpander>
       <WidgetContainer>
         <Widget title={t('results.choose_one.table_title')}>
-          <ResultsTable className='chooseOneTable' data={[
+          <ResultsTable className='chooseOneTable' winningRows={race.num_winners} data={[
             t('results.choose_one.table_columns'),
             ...results.summaryData.candidates.map(c => [
               c.name, c.score, formatPercent(c.score / results.summaryData.nTallyVotes)
