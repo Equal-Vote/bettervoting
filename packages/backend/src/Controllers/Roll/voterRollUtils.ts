@@ -15,9 +15,11 @@ export async function getOrCreateElectionRoll(req: IRequest, election: Election,
     // Checks for existing election roll for user
     Logger.info(req, `getOrCreateElectionRoll`)
     const ip_hash = hashString(req.ip!)
-    // Get data that is used for voter authentication
+    // Get data that is used for voter authentication. Each of these holds the *value* to
+    // authenticate on, or null when this election doesn't authenticate on it — they are not
+    // booleans, and they're what both the roll lookup and the roll we write are built from.
     // NOTE: I'm ensuring that undefined is coaleced into null, that makes it compliant with the type when calling getElectionRoll
-    const require_ip_hash = (election.settings.voter_authentication.ip_address ? ip_hash : null) ?? null;
+    const auth_ip_hash = (election.settings.voter_authentication.ip_address ? ip_hash : null) ?? null;
     const email = election.settings.voter_authentication.email ? req.user?.email : null
     
     // Get voter ID if required and available, otherwise set to null
@@ -34,8 +36,8 @@ export async function getOrCreateElectionRoll(req: IRequest, election: Election,
     // This is an odd way of going about this, rather than getting a roll that matches all three we get all that match any of the fields and
     // check the output for a number of edge cases.
     var electionRollEntries = null
-    if ((require_ip_hash || email || voter_id)) {
-        electionRollEntries = await ElectionRollModel.getElectionRoll(String(election.election_id), voter_id, email, require_ip_hash, ctx);
+    if ((auth_ip_hash || email || voter_id)) {
+        electionRollEntries = await ElectionRollModel.getElectionRoll(String(election.election_id), voter_id, email, auth_ip_hash, ctx);
     }
 
     if (electionRollEntries == null) {
@@ -65,12 +67,12 @@ export async function getOrCreateElectionRoll(req: IRequest, election: Election,
             election_id: String(election.election_id),
             email: email ?? undefined,
             voter_id: new_voter_id,
-            ip_hash: require_ip_hash ?? undefined,
+            ip_hash: auth_ip_hash ?? undefined,
             submitted: false,
             state: ElectionRollState.approved,
             history: history,
         }]
-        if ((require_ip_hash || email || voter_id)) {
+        if ((auth_ip_hash || email || voter_id)) {
             // Return the row the DB actually wrote — its update_date is the canonical value
             // that OCC will check against on the cast-vote path.
             const inserted = await ElectionRollModel.submitElectionRoll(roll, ctx, `User requesting Roll and is authorized`)
