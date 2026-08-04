@@ -28,6 +28,12 @@ Ballot text for a Bloc STAR race (also listed in [Paper Ballots](paper_ballots.h
 > * This election will elect X winners. Give your favorite five stars. Give your last choice zero or leave blank. Equal scores are allowed. Score other candidates as desired.
 > * The two highest scoring candidates are finalists. Your full vote goes to the finalist you prefer. The candidate with the most votes is elected. This process repeats with remaining candidates until all seats are filled.
 
+**If you are printing a real ballot, prefer the specification's wording.** The [STAR Voting Technical Specifications](https://www.starvoting.org/technical_specifications) (v1.3, §3.d) prescribe this multi-winner explanation:
+
+> This election will use STAR Voting to elect x winners. In STAR Voting, the two highest scoring candidates are finalists and your vote goes to the finalist you prefer. **The finalist preferred by the most voters wins.** This process repeats until all seats have been filled.
+
+The difference is one clause and it matters. *"The candidate with the most votes is elected"* invites a voter to read stars as votes and conclude the top scorer wins — which Bloc STAR does not guarantee. *"The finalist preferred by the most voters wins"* names both the field and the currency, and closes that reading. (§3.e permits paraphrase "with the meaning unchanged", so the shorter version is licensed; §3.c also puts the winner count above the race rather than inside the instructions.)
+
 ## How the count works
 
 For each seat, in order:
@@ -66,7 +72,7 @@ Three candidates, two seats, three ballots:
 Three things this small election is worth reading twice for:
 
 * **Removing a winner changes nothing but the field.** B and C score 1 and 2 in the first scoring round and 1 and 2 again in the second. The second seat is the first count with one column deleted.
-* **"Majority preferred" means preferred out of who is left, by the voters who expressed a preference.** A was scored above C by all three voters. C won seat 2 while being preferred by one voter out of three — one of the two who expressed a preference between B and C at all. Later seats are contested by weaker candidates, so the support behind the last seat is normally well below the support behind the first. When reading the results, note that a runoff percentage is a share of **everyone who voted**, including the ballots that scored both finalists equally — those are shown as *Equal Support*. So a seat can be won on a number well under 50%, and the more voters who are indifferent between the two finalists, the lower that number goes.
+* **"Majority preferred" means preferred out of who is left, by the voters who expressed a preference.** A was scored above C by all three voters. C won seat 2 while being preferred by one voter out of three — one of the two who expressed a preference between B and C at all. Later seats are contested by weaker candidates, so the support behind the last seat is normally well below the support behind the first, and a runoff percentage is a share of the voters who expressed a preference between *those two finalists*, not a share of everyone who voted.
 * **Small elections really do tie.** Settle your tiebreaker protocol before the election rather than after — see [Ties](ties.html).
 
 ## Running a Bloc STAR election on BetterVoting
