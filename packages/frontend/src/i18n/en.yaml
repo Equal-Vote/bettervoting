@@ -40,6 +40,9 @@ ballot:
   dialog_cancel: Cancel
   dialog_submit: Submit
   dialog_abstention: Abstained - No preference was expressed
+  dialog_preliminary_results: >
+    Results for this {{election}} are public while voting is open.
+
   warnings:
     skipped_rank: Do not skip rankings. Rank candidates in order to clearly show preferences. Candidates left blank are ranked last.
     duplicate_rank: Do not rank multiple candidates equally. (Ranking candidates equally can void your ballot.)
@@ -851,6 +854,18 @@ draft_warning:
     This {{election}} is still being drafted.
     All ballots will be counted as test votes and
     shall be reset prior to the final {{election}}.
+
+preliminary_results_notice:
+  title: Results are public while voting is open
+  description: >
+    Anyone with a link to this {{election}} can see the results before voting closes,
+    and those results update as {{votes}} are submitted. In a small {{election}} — or
+    if only a few people vote in a short window — it can be possible to work out how
+    someone voted.
+  closed_list: >
+    This {{election}} uses a voter list. Administrators can see which voters have voted
+    and when, which alongside live results can narrow that down further.
+  link_text: What preliminary results reveal
 
 temporary_access_warning:
   title: Unlock more with a free bettervoting account!
