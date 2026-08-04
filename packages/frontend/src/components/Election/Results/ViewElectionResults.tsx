@@ -12,8 +12,11 @@ import SupportBlurb from '../SupportBlurb';
 import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
 import ElectionStateWarning from '../ElectionStateWarning';
 import { AdminPageNavigation } from '../Sidebar';
+import useFeatureFlags from '../../FeatureFlagContextProvider';
+import { SecondaryButton } from '../../styles';
 
 const ViewElectionResults = () => {
+    const flags = useFeatureFlags();
     const { election } = useElection();
     const { data, isPending, makeRequest: getResults } = useGetResults(election.election_id)
     useEffect(() => { election.settings.public_results && getResults() }, [election.settings.public_results])
@@ -107,18 +110,31 @@ const ViewElectionResults = () => {
                     />
                   </Box>
                 )}
+
+                {/* The /history page is live for every finalized election
+                    regardless of this flag; the flag only controls whether
+                    voters are pointed at it while we iterate on presentation. */}
+                {flags.isSet('AUDIT_LOG') && election.state !== 'draft' && (
+                  <Box
+                    sx={{
+                      width: "100%",
+                      p: 2,
+                      px: { xs: 5, sm: 1 },
+                    }}
+                  >
+                    <SecondaryButton
+                      fullWidth
+                      href={`/${election.election_id}/history`}
+                    >
+                      {t('election_history.link')}
+                    </SecondaryButton>
+                  </Box>
+                )}
               </Box>
             </Box>
             <a href="https://www.equal.vote/donate">
               {t("ballot_submitted.donate")}
             </a>
-            {election.state !== 'draft' && (
-              <Typography variant="caption" sx={{ display: 'block', mt: 2, color: 'text.secondary' }}>
-                <a href={`/${election.election_id}/history`} style={{ color: 'inherit' }}>
-                  {t('election_history.link')}
-                </a>
-              </Typography>
-            )}
           </Box>
         </Box>
         <SupportBlurb />

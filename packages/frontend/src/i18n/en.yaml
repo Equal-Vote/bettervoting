@@ -19,21 +19,12 @@ election_history:
   title: Election Audit Log
   subtitle: A public record of everything that has happened to this election since it was finalized.
   ladder_note: 'Note: ballot counts are reported only at specific milestones (1, 5, 10, 25, 50, 100, 250, ...) to protect voter privacy, and ballot edits use a finer ladder (1, 2, 5, 10, 25, ...). Ballot-related events are reported to day-level precision for the same reason.'
-  link: View audit log
+  link: Audit Log
   loading: Loading audit log…
   empty: No events recorded yet.
   not_finalized: This election has not been finalized yet, so no audit log is available.
-  col:
-    event: Event
-    description: Description
-    when: When
-  chip:
-    state_change: State
-    preliminary_results: Preliminary Results
-    ballots: Ballots
-    upload: Ballots Uploaded
-    edits: Ballot Edits
-    reveal: Voter ID Revealed
+  # Column headers and event chip labels live in EnhancedTable's head cell pool,
+  # which keys its group filters and chip colours off plain English strings.
   desc:
     state_initial: 'Election entered "{{to}}" state'
     state_change: 'State changed from "{{from}}" to "{{to}}"'

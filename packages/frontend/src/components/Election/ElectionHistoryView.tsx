@@ -1,72 +1,8 @@
 import { useEffect } from "react";
-import { Box, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import useElection from "../ElectionContextProvider";
-import { HistoryEvent, useGetElectionHistory } from "../../hooks/useAPI";
-
-const chipColor = (type: HistoryEvent['type']): "success" | "error" | "warning" | "info" | "default" => {
-    switch (type) {
-        case 'state_change': return 'info';
-        case 'preliminary_results_change': return 'warning';
-        case 'ballots_milestone': return 'success';
-        case 'upload_ballots': return 'info';
-        case 'ballots_edited_milestone': return 'warning';
-        case 'voter_id_revealed': return 'error';
-        default: return 'default';
-    }
-};
-
-const chipLabel = (type: HistoryEvent['type'], t: (k: string) => string): string => {
-    switch (type) {
-        case 'state_change': return t('election_history.chip.state_change');
-        case 'preliminary_results_change': return t('election_history.chip.preliminary_results');
-        case 'ballots_milestone': return t('election_history.chip.ballots');
-        case 'upload_ballots': return t('election_history.chip.upload');
-        case 'ballots_edited_milestone': return t('election_history.chip.edits');
-        case 'voter_id_revealed': return t('election_history.chip.reveal');
-        default: return type;
-    }
-};
-
-const describe = (event: HistoryEvent, t: (k: string, v?: object) => string): string => {
-    switch (event.type) {
-        case 'state_change':
-            return event.from === null
-                ? t('election_history.desc.state_initial', { to: event.to })
-                : t('election_history.desc.state_change', { from: event.from, to: event.to });
-        case 'preliminary_results_change':
-            return event.to
-                ? t('election_history.desc.preliminary_on')
-                : t('election_history.desc.preliminary_off');
-        case 'ballots_milestone':
-            return t('election_history.desc.ballots_milestone', { count: event.count });
-        case 'upload_ballots':
-            return t('election_history.desc.upload_ballots', { count: event.count });
-        case 'ballots_edited_milestone':
-            return t('election_history.desc.edits_milestone', { count: event.count });
-        case 'voter_id_revealed':
-            return t('election_history.desc.voter_revealed');
-        default:
-            return '';
-    }
-};
-
-// Ballot- and voter-related events arrive truncated to the UTC day from the
-// backend; render them as a bare date in UTC so the local timezone offset
-// can't shift them onto a neighbouring day. Admin state changes keep precise
-// timestamps and are shown as date + time.
-const isDayTruncated = (type: HistoryEvent['type']) =>
-    type === 'ballots_milestone' ||
-    type === 'upload_ballots' ||
-    type === 'ballots_edited_milestone' ||
-    type === 'voter_id_revealed';
-
-const formatTimestamp = (event: HistoryEvent, t: (k: string, v?: object) => string): string => {
-    const date = new Date(event.timestamp);
-    if (isDayTruncated(event.type)) {
-        return date.toLocaleDateString(undefined, { timeZone: 'UTC' });
-    }
-    return t('listed_datetime', { listed_datetime: date });
-};
+import { useGetElectionHistory } from "../../hooks/useAPI";
+import EnhancedTable from "../EnhancedTable";
 
 const ElectionHistoryView = () => {
     const { election, t } = useElection();
@@ -82,11 +18,12 @@ const ElectionHistoryView = () => {
                 <Typography variant="h4" component="h1" sx={{ mb: 1 }}>
                     {t('election_history.title')}
                 </Typography>
-                <Typography variant="body2" sx={{ mb: 3, color: 'text.secondary' }}>
+                <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
                     {t('election_history.subtitle')}
                 </Typography>
-
-                {isPending && <Typography>{t('election_history.loading')}</Typography>}
+                <Typography variant="caption" sx={{ display: 'block', mb: 3, color: 'text.secondary', fontStyle: 'italic' }}>
+                    {t('election_history.ladder_note')}
+                </Typography>
 
                 {error && (
                     <Typography color="text.secondary">
@@ -94,43 +31,18 @@ const ElectionHistoryView = () => {
                     </Typography>
                 )}
 
-                {data && data.events.length === 0 && (
-                    <Typography color="text.secondary">{t('election_history.empty')}</Typography>
-                )}
-
-                {data && data.events.length > 0 && (
-                    <>
-                        <Typography variant="caption" sx={{ display: 'block', mb: 2, color: 'text.secondary', fontStyle: 'italic' }}>
-                            {t('election_history.ladder_note')}
-                        </Typography>
-                        <TableContainer component={Paper} variant="outlined">
-                            <Table size="small">
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell>{t('election_history.col.event')}</TableCell>
-                                        <TableCell>{t('election_history.col.description')}</TableCell>
-                                        <TableCell>{t('election_history.col.when')}</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {data.events.map((event, i) => (
-                                        <TableRow key={i}>
-                                            <TableCell>
-                                                <Chip
-                                                    label={chipLabel(event.type, t)}
-                                                    color={chipColor(event.type)}
-                                                    size="small"
-                                                    variant="outlined"
-                                                />
-                                            </TableCell>
-                                            <TableCell>{describe(event, t)}</TableCell>
-                                            <TableCell>{formatTimestamp(event, t)}</TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    </>
+                {!error && (
+                    <EnhancedTable
+                        title={t('election_history.title')}
+                        headKeys={['history_event', 'history_description', 'history_when']}
+                        data={data?.events ?? []}
+                        defaultSortBy='history_when'
+                        // Rows aren't links — the audit log is the whole record.
+                        handleOnClick={() => undefined}
+                        isPending={isPending}
+                        pendingMessage={t('election_history.loading')}
+                        emptyContent={t('election_history.empty')}
+                    />
                 )}
             </Box>
         </Box>
