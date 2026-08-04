@@ -30,7 +30,17 @@ export default class CastVoteStore {
 
         if (event.roll) {
             event.roll.submitted = true;
-            await this._rollStore.update(event.roll, ctx, `User submits a ballot`);
+            // Mirror the real store: it archives the current head row if there is one and
+            // then inserts. For elections that authenticate on nothing, getOrCreateElectionRoll
+            // hands back a roll it never persisted, so there is no head row to update and the
+            // insert is what creates it. The mock used to no-op in that case, which hid
+            // everything the cast-vote path writes to the roll for open_open elections.
+            const existing = await this._rollStore.getByVoterID(event.roll.election_id, event.roll.voter_id, ctx);
+            if (existing) {
+                await this._rollStore.update(event.roll, ctx, `User submits a ballot`);
+            } else {
+                await this._rollStore.submitElectionRoll([event.roll], ctx, `User submits a ballot`);
+            }
         }
     }
 
