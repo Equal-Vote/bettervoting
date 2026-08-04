@@ -157,6 +157,10 @@ methods:
     full_name: STAR Voting
     short_name: STAR Voting
     learn_link: https://www.starvoting.org/star
+  star_bloc:
+    full_name: Bloc STAR Voting
+    short_name: Bloc STAR
+    learn_link: https://docs.bettervoting.com/help/bloc_star.html
   star_pr:
     full_name: Proportional STAR Voting
     short_name: STAR PR
