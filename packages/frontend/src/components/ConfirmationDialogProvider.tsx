@@ -5,17 +5,18 @@ import {
     useRef,
     useState,
 } from 'react';
-import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material'
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton } from '@mui/material'
+import CloseIcon from '@mui/icons-material/Close';
 import { PrimaryButton, SecondaryButton } from './styles';
 import { useSubstitutedTranslation } from './util';
 // Built from this example buth with MUI dialogs: https://akashhamirwasia.com/blog/building-expressive-confirm-dialog-api-in-react/
 // Uses a context provider to allow any component to access a confirm dialog component using the useConfirm hook
-// Example: 
+// Example:
 // import useConfirm from '../../ConfirmationDialogProvider';
 // const confirm = useConfirm()
 // const confirmed = await confirm(
 //      {
-//          title: 'Confirm This Action', 
+//          title: 'Confirm This Action',
 //          message: "Are you sure you want to do this?"
 //      })
 
@@ -24,26 +25,27 @@ interface ConfirmData {
     message: string
     cancel?: string
     submit?: string
+    dismissable?: boolean
 }
 
-type confirmContext = (data: ConfirmData) => Promise<boolean>
+type confirmContext = (data: ConfirmData) => Promise<boolean | null>
 
 const ConfirmDialog = createContext<confirmContext>(null);
 
 export function ConfirmDialogProvider({ children }:  { children: React.ReactNode }) {
-    const [state, setState] = useState({ isOpen: false, title: '', message: '', submit: null, cancel: null});
+    const [state, setState] = useState({ isOpen: false, title: '', message: '', submit: null, cancel: null, dismissable: false });
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const fn = useRef((choice: boolean) => {  });
+    const fn = useRef((choice: boolean | null) => {  });
 
     const {t} = useSubstitutedTranslation();
 
     const confirm = useCallback(
         (data: ConfirmData) => {
-            return new Promise((resolve: (value: boolean) => void) => {
-                setState({ ...state, ...data, isOpen: true });
+            return new Promise((resolve: (value: boolean | null) => void) => {
+                setState({ ...state, ...data, isOpen: true, dismissable: data.dismissable ?? false });
                 fn.current = (choice) => {
                     resolve(choice);
-                    setState({ isOpen: false, title: '', message: '', submit: null, cancel: null });
+                    setState({ isOpen: false, title: '', message: '', submit: null, cancel: null, dismissable: false });
                 };
             });
         },
@@ -56,8 +58,20 @@ export function ConfirmDialogProvider({ children }:  { children: React.ReactNode
             <Dialog
                 open={state.isOpen}
                 fullWidth
+                onClose={state.dismissable ? () => fn.current(null) : undefined}
             >
-                <DialogTitle>{state.title}</DialogTitle>
+                <DialogTitle>
+                    {state.title}
+                    {state.dismissable && (
+                        <IconButton
+                            aria-label={t('keyword.close')}
+                            onClick={() => fn.current(null)}
+                            sx={{ position: 'absolute', right: 8, top: 8 }}
+                        >
+                            <CloseIcon />
+                        </IconButton>
+                    )}
+                </DialogTitle>
                 <DialogContent>
                     <DialogContentText>{state.message}</DialogContentText>
                 </DialogContent>
