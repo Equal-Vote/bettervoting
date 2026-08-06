@@ -115,6 +115,14 @@ export const usePostRolls = (election_id: string) => {
     return useFetch<{ electionRoll: ElectionRoll[] }, object>(`/API/Election/${election_id}/rolls/`, 'post')
 }
 
+export const useClearRolls = (election_id: string) => {
+    return useFetch<undefined, { election: Election, cleared: number }>(
+        `/API/Election/${election_id}/rolls/`,
+        'delete',
+        'Voter List Cleared!',
+    )
+}
+
 export const useSetPublicResults = (election_id: string) => {
     return useFetch<{ public_results: boolean, expected_update_date: string }, { election: Election }>(`/API/Election/${election_id}/setPublicResults`, 'post')
 }

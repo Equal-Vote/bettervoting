@@ -17,7 +17,9 @@ export default class ElectionRollDB implements IElectionRollStore{
         const inserted: ElectionRoll[] = [];
         electionRolls.forEach(function(roll){
             Logger.debug(ctx, `Mock Election Roll Store:  submit:  ${JSON.stringify(roll)}`);
-            var existing = self._electionRolls.find(x => x.election_id==roll.election_id && x.voter_id==roll.voter_id)
+            // Mirrors the partial unique index: only head rows conflict, so a voter_id
+            // whose rows have all been archived can be re-added.
+            var existing = self._electionRolls.find(x => x.election_id==roll.election_id && x.voter_id==roll.voter_id && x.head)
             if (existing){
                 Logger.error(ctx, `Already have conflicting voter roll entry!  ${JSON.stringify(existing)}`);
             }
@@ -34,7 +36,7 @@ export default class ElectionRollDB implements IElectionRollStore{
     }
 
     getRollsByElectionID(election_id: string, ctx:ILoggingContext): Promise<ElectionRoll[] | null> {
-        const electionRolls = this._electionRolls.filter(roll => roll.election_id===election_id)
+        const electionRolls = this._electionRolls.filter(roll => roll.election_id===election_id && roll.head)
         if (!electionRolls){
             return Promise.resolve(null)
         }
@@ -44,7 +46,7 @@ export default class ElectionRollDB implements IElectionRollStore{
 
     getByVoterID(election_id: string,voter_id:string, ctx:ILoggingContext): Promise<ElectionRoll | null> {
         Logger.debug(ctx, `MockElectionRolls getByVoterID ${election_id}, voter:${voter_id}`);
-        const roll = this._electionRolls.find(electionRolls => electionRolls.election_id==election_id && electionRolls.voter_id==voter_id)
+        const roll = this._electionRolls.find(electionRolls => electionRolls.election_id==election_id && electionRolls.voter_id==voter_id && electionRolls.head)
 
         if (!roll){
             Logger.debug(ctx, "Mock ElectionRoll DB could not match election and voter. Current data:\n"+JSON.stringify(this._electionRolls));
@@ -59,6 +61,7 @@ export default class ElectionRollDB implements IElectionRollStore{
         Logger.debug(ctx, `MockElectionRolls get election:${election_id}, voter_id:${voter_id}, email: ${email}, ip_hash: ${ip_hash}`);
         let roll = this._electionRolls.filter(electionRolls => {
             if (electionRolls.election_id!==election_id) return false
+            if (!electionRolls.head) return false
             if (ip_hash && electionRolls.ip_hash===ip_hash) return true
             if (voter_id && electionRolls.voter_id ===voter_id) return true
             if (email && electionRolls.email === email) return true
@@ -79,7 +82,7 @@ export default class ElectionRollDB implements IElectionRollStore{
         const index = this._electionRolls.findIndex(electionRoll => {
             var electionMatch = electionRoll.election_id===voter_roll.election_id;
             var voterMatch = electionRoll.voter_id===voter_roll.voter_id;
-            return electionMatch && voterMatch
+            return electionMatch && voterMatch && electionRoll.head
         });
         if (index < 0){
             return Promise.resolve(null)
@@ -92,6 +95,18 @@ export default class ElectionRollDB implements IElectionRollStore{
         };
         this._electionRolls[index] = sanitized;
         return Promise.resolve(JSON.parse(JSON.stringify(sanitized)));
+    }
+
+    archiveRollsByElectionID(election_id: string, ctx:ILoggingContext, reason:string, db?: any): Promise<number> {
+        Logger.debug(ctx, `MockElectionRolls archiveRollsByElectionID ${election_id}`);
+        let archived = 0;
+        this._electionRolls.forEach(roll => {
+            if (roll.election_id === election_id && roll.head) {
+                roll.head = false;
+                archived++;
+            }
+        });
+        return Promise.resolve(archived)
     }
 
     delete(voter_roll: ElectionRoll, ctx:ILoggingContext,reason:string): Promise<boolean> {

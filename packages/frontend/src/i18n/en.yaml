@@ -756,10 +756,11 @@ tips:
 
   public_results:
     title: Public Results
-    description: |
-      Allows voters to see the results of the {{election}}.
-      If enabled while voting is open then voters will be shown to the preliminary results after completing their ballot.
-      High profile {{elections}} will usually keep the results hidden, and then reveal them after the {{election}} is closed.
+    description: >
+      Controls whether voters can see {{election}} results.
+      When enabled during an open {{election}}, voters will see preliminary results after submitting their {{ballot}}.
+      High-profile {{elections}} typically keep results hidden until the {{election}} closes.
+    learn_link: https://docs.bettervoting.com/help/preliminary_results.html
 
   voter_groups:
     title: Enable Voter Groups
@@ -1149,6 +1150,12 @@ admin_home:
   add_first_voter_roll_confirm:
     title: Confirm Adding First Voters
     message: Once your first voters have been added, your voter list settings will be locked in for this election. Would you like to continue?
+
+  clear_voter_roll_button: Clear Voter List
+  clear_voter_roll_confirm:
+    title: Confirm Clearing Voter List
+    message: This removes all {{voter_count}} voters from your election and unlocks your voter list settings so you can change them. You'll need to add your voters again afterwards. Would you like to continue?
+    submit: 'Yes, clear the list'
 
   finalize_email_confirm:
     title: Send Email Blast
