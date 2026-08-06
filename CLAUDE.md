@@ -8,6 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Notes on dependencies
 - The root `package.json` `overrides` for `qs` exists because Netlify's npm mirror lagged behind npmjs.org for a freshly published patch (`qs@6.15.2`, May 2026) and `npm ci` failed with `ETARGET`. Safe to remove once you can confirm Netlify deploys without it.
+- `sanitize-html` >=2.17.6 pulls in `htmlparser2@12`, which dropped its CommonJS build (pure ESM, no `require` export condition). Node 22.12+/24 handles this fine via native `require(esm)`, so the app runs unaffected, but Jest's own module system can't parse it, so backend tests mock `sanitize-html` — see `packages/backend/src/__mocks__/sanitize-html.js` (auto-applied by Jest's node-module manual-mock convention, no config wiring needed). Do **not** "fix" this by downgrading/overriding `htmlparser2` — the 2.17.6 bump is a real XSS security patch (GHSA-jxwj-j7wr-gfrw) and the htmlparser2 upgrade is part of it. Upstream tracked the Jest/ESM friction at apostrophecms/apostrophe#5526 and closed it with no fix — they consider it expected, not a bug in their library.
 
 ## Commands
 
