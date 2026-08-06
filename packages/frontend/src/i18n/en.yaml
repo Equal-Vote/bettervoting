@@ -871,12 +871,15 @@ editable_ballots:
 
 race_form:
   candidates_title: '{{capital_candidates}}'
+  description_title: Description (Optional)
 
 # Landing Page -> New Election Wizard
 wizard:
   title: Create an Election or Poll
 
   term_question: Which term best describes your situation?
+
+  description_title: Description (Optional)
 
   multi_race_question: How many {{races}} will your {{election}} include?
   single_race: Just one
@@ -915,7 +918,7 @@ wizard:
   publish_confirm:
       title: Publish?
       message: Would you like to publish your simple poll now or continue to customize further? !tip(full_editor)
-      cancel: 'See more options'
+      cancel: 'Customize in editor'
       submit: 'Publish Now'
 
 # Landing Page -> Return to Classic Dialog
