@@ -11,9 +11,6 @@ import { TestHelper } from "./TestHelper";
 const th = new TestHelper();
 type TiebreakCandidate = candidate & { tieBreakOrder: number };
 
-// The mock event queue processes ballots asynchronously with a 1s delay.
-// We must wait for it to flush before reading ballots back.
-const waitForQueue = async () => (await th.eventQueue).waitUntilJobsFinished();
 
 afterEach(() => {
     jest.clearAllMocks();
@@ -207,8 +204,6 @@ describe("Write-In Candidates", () => {
     });
 
     test("Get write-in names", async () => {
-        await waitForQueue();
-
         const res = await th.getRequest(
             `/API/Election/${election.election_id}/getWriteIns`,
             testInputs.user1token,
@@ -250,8 +245,6 @@ describe("Write-In Candidates", () => {
     });
 
     test("Get results includes approved write-in, excludes unapproved", async () => {
-        await waitForQueue();
-
         const res = await th.getRequest(
             `/API/ElectionResult/${election.election_id}`,
             testInputs.user1token,

@@ -1,6 +1,5 @@
 import { randomUUID } from "crypto";
-import { ILoggingContext } from "../Logging/ILogger";
-import { EventHandler, IEventQueue, JobInsert } from "./IEventQueue";
+import { EventHandler, IEventQueue } from "./IEventQueue";
 import { QueueName } from "./QueueName";
 
 type Job = {
@@ -9,18 +8,23 @@ type Job = {
     data: object
 }
 
+/**
+ * In-memory stand-in for PGBossEventQueue. pg-boss keeps its jobs in Postgres,
+ * so the backend unit tests — which run entirely against in-memory fakes — need
+ * a substitute rather than the real thing.
+ *
+ * Jobs run inline: publish() does not resolve until its handlers have finished.
+ * That keeps tests deterministic and leaves nothing scheduled once a test file
+ * ends. When a test needs to observe the state *between* "job enqueued" and
+ * "job handled" — e.g. to check that a response is sent without waiting on the
+ * queue — use pause() / resume() rather than a sleep.
+ */
 export class MockEventQueue implements IEventQueue {
 
-    private _delay = 1000;
-    
     private _handlers:Map<QueueName,EventHandler> = new Map();
     private _pendingJobs:Array<Job> = [];
-    private _working:boolean = false;
+    private _draining:boolean = false;
     private _paused:boolean = false;
-
-
-    constructor(){
-    }
 
     public subscribe(queue:QueueName, handler:EventHandler):void {
         if (this._handlers.has(queue)){
@@ -30,54 +34,46 @@ export class MockEventQueue implements IEventQueue {
     }
 
     public async publish(queue:QueueName, data:object):Promise<string> {
-        var j = {
+        const job = {
             queue: queue,
             data: data,
             id: randomUUID()
         }
-        this._pendingJobs.push(j);
-        this.triggerJobs();
-        return j.id;
+        this._pendingJobs.push(job);
+        await this.drain();
+        return job.id;
     }
 
     public async publishBatch(queue:QueueName, data:object[]):Promise<object> {
-        var j = data.map(d => ({
+        const jobs = data.map(d => ({
             queue: queue,
             data: d,
             id: randomUUID()
         }))
-        this._pendingJobs.push(...j);
-        this.triggerJobs();
-        return j;
+        this._pendingJobs.push(...jobs);
+        await this.drain();
+        return jobs;
     }
 
-    private async triggerJobs(){
-        if (this._working){
+    /**
+     * Runs every pending job to completion. Does nothing while paused, and is
+     * re-entrant safe: a handler that publishes another job leaves it for the
+     * loop already running rather than starting a nested one.
+     */
+    public async drain():Promise<void> {
+        if (this._paused || this._draining){
             return;
         }
-        if (this._paused){
-            return
-        }
-        this._working = true;
-        await new Promise(r => setTimeout(r, this._delay));
-        await this.processNextJob();
-    }
-
-    private async processNextJob(){
-        var j = this._pendingJobs.shift();
-        if (!j){
-            console.info("Event queue empty");
-            this._working = false;
-            return;
-        }
+        this._draining = true;
         try {
-            console.info("MEQ: Processing job: " + JSON.stringify(j));
-            await this.doJob(j);
-        } catch (e:any) {
-            console.info("MEQ: Exception handling job: " + JSON.stringify(j));
+            var job = this._pendingJobs.shift();
+            while (job){
+                await this.doJob(job);
+                job = this._pendingJobs.shift();
+            }
+        } finally {
+            this._draining = false;
         }
-        this._working = false;
-        this.triggerJobs();
     }
 
     private async doJob(job:Job){
@@ -86,16 +82,26 @@ export class MockEventQueue implements IEventQueue {
             console.info("ERROR: no handler for queue "+job.queue);
             return;
         }
-        await h(job);
+        try {
+            await h(job);
+        } catch (e:any) {
+            // pg-boss retries a failed job; the mock just reports it, so that a
+            // broken handler shows up in the test output instead of vanishing.
+            console.info(`MEQ: Exception handling job ${job.id} on ${job.queue}: ${e?.stack ?? e}`);
+        }
     }
 
     public pause(){
         this._paused = true;
     }
 
-    public resume(){
+    public async resume(){
         this._paused = false;
-        this.triggerJobs();
+        await this.drain();
+    }
+
+    public pendingJobCount():number {
+        return this._pendingJobs.length;
     }
 
     public async clearStorage():Promise<void> {
@@ -105,12 +111,4 @@ export class MockEventQueue implements IEventQueue {
     public async debugInfo():Promise<string> {
         return "MEQ Debug:  " + JSON.stringify(this._pendingJobs);
     }
-
-    public async waitUntilJobsFinished():Promise<void> {
-        while(this._pendingJobs.length > 0){
-            await new Promise(r => setTimeout(r, this._delay));
-        }
-    }
-
-
 }
