@@ -66,6 +66,17 @@ export default function ElectionSettings() {
         }
     );
 
+    // is_public is a top-level Election column, not an entry in Election.settings, so
+    // this can't use ElectionSwitchSetting (which writes into election.settings).
+    const [isPublic, setIsPublic] = useOptimisticToggle(
+        !!election.is_public,
+        async (v) => !!await updateElection(e => { e.is_public = v; })
+    );
+
+    // getOpenElections filters on settings.voter_access == 'open' in addition to
+    // is_public, so on a voter-list election the flag would have no visible effect.
+    const browsable = election.settings.voter_access === 'open';
+
     // Inclusive [min_rankings, max_rankings] — drives the rank-limit selector below.
     const rankOptions = Array.from({ length: max_rankings - min_rankings + 1 }, (_, i) => min_rankings + i);
 
@@ -113,6 +124,15 @@ export default function ElectionSettings() {
                         label={election.state === 'closed' || election.state === 'archived' ? t('election_settings.public_results') : t('election_settings.preliminary_results')}
                         toggled={publicResults}
                         onToggle={setPublicResults}
+                    />
+                    {/* Also can't use ElectionSwitchSetting — is_public lives on the
+                        election, not on election.settings. */}
+                    <SwitchSetting
+                        label={t('election_settings.is_public')}
+                        toggled={isPublic}
+                        onToggle={setIsPublic}
+                        disabled={election.state !== 'draft' || !browsable}
+                        disabledMessage={browsable ? undefined : t('disabled_msgs.is_public_when_voter_list')}
                     />
                     {/* max_rankings is set for every election (defaulting to default_rankings),
                         so this is always shown rather than gated behind a toggle. Kept last so the
