@@ -707,6 +707,7 @@ tabulation_logs:
 
 disabled_msgs:
     ballot_updates_when_open: Only supported when election uses email list
+    is_public_when_voter_list: Only supported when anyone with the link can {{vote}}
 
 #######################################
 #### PRIORITY 4 : Info Bubbles ####
