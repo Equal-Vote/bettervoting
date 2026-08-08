@@ -2,7 +2,8 @@
 layout: default
 title: Ties
 nav_order: 6
-parent: BetterVoting Documentation
+parent: Counting and Results
+grand_parent: BetterVoting Documentation
 ---
 
 {:toc}

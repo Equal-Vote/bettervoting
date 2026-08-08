@@ -2,7 +2,8 @@
 layout: default
 title: Frequently Asked Questions
 nav_order: 99
-parent: BetterVoting Documentation
+parent: Reference
+grand_parent: BetterVoting Documentation
 ---
 
 # Frequently Asked Questions

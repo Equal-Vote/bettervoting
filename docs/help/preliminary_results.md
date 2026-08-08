@@ -2,7 +2,8 @@
 layout: default
 title: Preliminary Results
 nav_order: 8
-parent: BetterVoting Documentation
+parent: Counting and Results
+grand_parent: BetterVoting Documentation
 ---
 
 # Preliminary Results

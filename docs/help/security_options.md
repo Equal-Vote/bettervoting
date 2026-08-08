@@ -2,7 +2,8 @@
 layout: default
 title: Security Options
 nav_order: 7
-parent: BetterVoting Documentation
+parent: Setting Up Your Election
+grand_parent: BetterVoting Documentation
 ---
 
 # BetterVoting Security Options

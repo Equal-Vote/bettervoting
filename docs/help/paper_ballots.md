@@ -2,7 +2,8 @@
 layout: default
 title: Paper Ballots
 nav_order: 5
-parent: BetterVoting Documentation
+parent: Setting Up Your Election
+grand_parent: BetterVoting Documentation
 ---
 
 {:toc}
