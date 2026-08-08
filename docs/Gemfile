@@ -1,0 +1,10 @@
+source "https://rubygems.org"
+
+# The same gem GitHub Pages runs, so a local preview matches production.
+# It pins Jekyll 3.9 and bundles the plugins Pages enables by default,
+# including jekyll-remote-theme (needed for `remote_theme:` in _config.yml).
+gem "github-pages", group: :jekyll_plugins
+
+# ffi >= 1.17 requires Ruby >= 3.0, which conflicts with the Ruby 2.7 that
+# github-pages' Jekyll 3.9 expects. Without this pin bundler fails to resolve.
+gem "ffi", "< 1.17"
