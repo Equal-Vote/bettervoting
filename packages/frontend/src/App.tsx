@@ -51,6 +51,7 @@ const App = () => {
               <Route path='/new_election' element={<LandingPage />} /> 
                 <Route path='/new-election' element={<Redirect href='/new_election'/>} /> 
                 <Route path='/newelection' element={<Redirect href='/new_election'/>} /> 
+              <Route path='/features' element={<LandingPage />} /> 
               <Route path='/feedback' element={<LandingPage />} />   
               <Route path='/about' element={<About />} />
               <Route path='/invitations' element={<ElectionInvitations />} />
