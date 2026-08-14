@@ -628,7 +628,10 @@ results_ext:
     most familiar with.
 
   score_range_title: Range of Scores
-  score_range_sub_title: Difference between maximum and minimum score on ballots
+  score_range_sub_title_one: 'Difference between maximum and minimum score on ballots ({{count}} ballot)'
+  score_range_sub_title: 'Difference between maximum and minimum score on ballots ({{count}} ballots)'
+  score_range_abstention_note_one: 'This chart also counts {{count}} ballot that gave every candidate the same score. The tabulation treats that as an abstention, which is why the voter count at the top of the page is lower.'
+  score_range_abstention_note: 'This chart also counts {{count}} ballots that gave every candidate the same score. The tabulation treats those as abstentions, which is why the voter count at the top of the page is lower.'
   score_range_warning: > 
     In order to have a maximum impact on the scoring round of STAR Voting, voters need to 
     follow the instructions on the ballot and indicate at at least one zero (or blank),
