@@ -9,6 +9,7 @@ parent: BetterVoting Documentation
 
 - [How do you run races with "None of the Above"?](#how-do-you-run-races-with-none-of-the-above)
 - [What does "write-in scores not counted" mean?](#write-in-scores-not-counted)
+- [Why is the top scoring candidate different from the winner?](#top-scorer-vs-winner)
 
 ## How do you run races with "None of the Above"?
 
@@ -27,3 +28,20 @@ A “score” in this context is one voter’s rating of one candidate. For exam
 - **The admin chose not to approve a write-in.** For example, joke entries or candidates who are ineligible may be intentionally excluded.
 
 If you are an election admin, you can review and approve write-in candidates from the admin panel by clicking the pencil icon next to any race with write-ins enabled.
+
+## Why is the top scoring candidate different from the winner?
+{: #top-scorer-vs-winner}
+
+STAR Voting is counted in two rounds, and they measure two different things. The scoring round measures **how much** support each candidate has. The runoff round measures **how many** voters prefer one finalist to the other. Usually the same candidate leads both. When they differ, the runoff decides it — and that is by design, not a quirk of the count.
+
+The reason the two rounds can disagree is that the runoff throws away the size of a preference and keeps only its direction:
+
+| A ballot scoring… | In the scoring round | In the runoff |
+|---|---|---|
+| Ada 5, Ben 4 | a 1-star edge for Ada — small | one full vote for Ada |
+| Ada 5, Ben 0 | a 5-star edge for Ada — large | one full vote for Ada |
+| Ada 3, Ben 3 | no edge either way | no vote either way — [equal support](https://www.starvoting.org/equal_preference) |
+
+So a candidate can lead the scoring round on a handful of enthusiastic ballots while more voters — counting one voter, one vote — prefer the other finalist. The runoff winner is the one **more voters preferred**, which is what "majority" means, and it is the reason a voter can score their honest favourite top without worrying that doing so throws the election.
+
+The runoff is also why scoring everyone at the extremes is not required to be heard: your full vote goes to whichever finalist you scored higher, however small the gap you gave them.
