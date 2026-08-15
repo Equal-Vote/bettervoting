@@ -6,6 +6,32 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Always use the full remote URL (not a remote name) when running git push (e.g. `git push https://github.com/ArendPeter/bettervoting.git <branch>`).
 - Never push to any URL matching `github.com/Equal-Vote/*` without explicit confirmation.
 
+## Writing issues and pull requests
+
+The point of these rules is that a human reads the result. A description that reads like it
+was generated wastes the reviewer's attention, and on a volunteer project that is the scarcest
+thing there is.
+
+- **Ask the user for one sentence in their own words** before opening an issue or a PR, and
+  lead with it. Their sentence says what they actually wanted; yours says what the diff did.
+- **Say what you verified, and what you did not.** "Typechecked, and clicked through at 1280
+  and 390" is useful. "Everything works" is not. If a part of the change was not exercised —
+  no login, no device, no data — write that down; the reviewer will find out anyway, and
+  cheaper from you than from production.
+- **Link the issue** with `Closes #123` so it closes on merge, and use a
+  [conventional](https://www.conventionalcommits.org/) title (`fix:`, `feat:`, `chore:`,
+  `docs:`) — the repo's PR guide is
+  [docs.bettervoting.com](https://docs.bettervoting.com/contributions/developers/2_how_to_open_a_pull_request.html).
+- **Screenshots for anything visual**, desktop and mobile (mobile can be as narrow as 320px),
+  per the PR template.
+- **Report what you found, not only what you fixed.** If the issue is already half-fixed on
+  `main`, or the real cause is somewhere else, say so plainly in the description — that is
+  often worth more than the patch.
+- **One issue per PR.** If a fix needs an unrelated change to work, put it in its own commit
+  and name it in the description, so a maintainer can split it without archaeology.
+- **Keep it short.** Prefer a table or five bullets over an essay, and never restate the diff
+  line by line — the diff is right there.
+
 ## Notes on dependencies
 - The root `package.json` `overrides` for `qs` exists because Netlify's npm mirror lagged behind npmjs.org for a freshly published patch (`qs@6.15.2`, May 2026) and `npm ci` failed with `ETARGET`. Safe to remove once you can confirm Netlify deploys without it.
 
