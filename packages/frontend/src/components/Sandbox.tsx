@@ -87,7 +87,10 @@ const Sandbox = () => {
             if (row.trim() === '') return // a trailing newline is not a ballot
             const data = row.split(':')
             const marks = (data.length == 2 ? data[1] : data[0]).split(/[\s,]+/).filter(d => d !== ' ' && d !== '')
-            const vote = marks.map((score) => parseInt(score)).filter(d => !isNaN(d))
+            // Number, not parseInt, and the same conversion the validation uses:
+            // parseInt('1e2') is 1 where Number is 100, so the two disagreeing
+            // is how a validated mark becomes a different submitted mark.
+            const vote = marks.map(Number)
 
             if (vote.length !== nCandidates) {
                 fail('Each ballot must have the same length as the number of candidates')
@@ -100,7 +103,7 @@ const Sandbox = () => {
             }
 
             if (data.length == 2) {
-                const nBallots = parseInt(data[0]);
+                const nBallots = Number(data[0]);
                 // Array(NaN) and Array(-1) both throw, and the throw escapes an
                 // async effect with no handler, leaving the last error on screen.
                 if (!Number.isInteger(nBallots) || nBallots < 1) {

@@ -47,6 +47,16 @@ test.describe('Sandbox score validation', () => {
         await expect(page.getByText('Use scores between 0 and 5')).toBeVisible();
     });
 
+    test('rejects a fractional repeat count instead of truncating it', async ({ page }) => {
+        // parseInt('2.5') is 2, so the count was validated after it had already
+        // been rounded and 2.5:... quietly became two ballots.
+        await page.goto('/sandbox');
+        await expect(page.locator('#cvr')).toBeVisible();
+
+        await enter(page, '2.5:5,4,3,2,1');
+        await expect(page.getByText('is not a number of ballots')).toBeVisible();
+    });
+
     test('does not reject a rank above 5 under a ranked method', async ({ page }) => {
         await page.goto('/sandbox');
         await expect(page.locator('#cvr')).toBeVisible();
