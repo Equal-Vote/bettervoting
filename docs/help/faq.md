@@ -32,16 +32,8 @@ If you are an election admin, you can review and approve write-in candidates fro
 ## Why is the top scoring candidate different from the winner?
 {: #top-scorer-vs-winner}
 
-STAR Voting is counted in two rounds, and they measure two different things. The scoring round measures **how much** support each candidate has. The runoff round measures **how many** voters prefer one finalist to the other. Usually the same candidate leads both. When they differ, the runoff decides it — and that is by design, not a quirk of the count.
+STAR Voting is counted in two rounds. The **Scoring Round** adds up the stars and picks the two finalists — it measures *how much* support each candidate has. The **Automatic Runoff** then asks *how many* voters prefer one finalist to the other, and your ballot counts as one vote for whichever of the two you scored higher.
 
-The reason the two rounds can disagree is that the runoff throws away the size of a preference and keeps only its direction:
+So a candidate can collect the most stars and still lose to the finalist more voters preferred. That is the runoff doing its job, not a counting error.
 
-| A ballot scoring… | In the scoring round | In the runoff |
-|---|---|---|
-| Ada 5, Ben 4 | a 1-star edge for Ada — small | one full vote for Ada |
-| Ada 5, Ben 0 | a 5-star edge for Ada — large | one full vote for Ada |
-| Ada 3, Ben 3 | no edge either way | no vote either way — [equal support](https://www.starvoting.org/equal_preference) |
-
-So a candidate can lead the scoring round on a handful of enthusiastic ballots while more voters — counting one voter, one vote — prefer the other finalist. The runoff winner is the one **more voters preferred**, which is what "majority" means, and it is the reason a voter can score their honest favourite top without worrying that doing so throws the election.
-
-The runoff is also why scoring everyone at the extremes is not required to be heard: your full vote goes to whichever finalist you scored higher, however small the gap you gave them.
+[Why the highest score doesn't always win](top_score_vs_winner.md) walks through a small election where this happens, and explains what it means for voters and for whoever is running the election.
