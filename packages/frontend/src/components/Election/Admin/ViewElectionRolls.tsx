@@ -167,7 +167,7 @@ const ViewElectionRolls = () => {
                             </PermissionHandler>
                         }
                         {usesEmail &&
-                            <SecondaryButton onClick={() => setDialogOpen(true)} sx={{ml: 2}}>Draft Email Blast</SecondaryButton>
+                            <SecondaryButton onClick={() => { fetchRolls(); setDialogOpen(true); }} sx={{ml: 2}}>Draft Email Blast</SecondaryButton>
                         }
                         {canClearRolls &&
                             <PermissionHandler permissions={permissions} requiredPermission={'canAddToElectionRoll'}>
