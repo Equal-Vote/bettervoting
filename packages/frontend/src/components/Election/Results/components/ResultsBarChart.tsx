@@ -80,20 +80,27 @@ const [rawNumbers, setRawNumbers] = useState(false);
   }
 
   // Add majority
+  // NOTE: majorityOffset on its own draws no line — the <Line> below keys off
+  // majorityLegend, so with no legend there is nothing to render. It runs this
+  // block purely for the spacer row and colour rotation.
   if (majorityLegend || majorityOffset) {
     const sum = data.reduce((prev, d, i) => {
       if(i == data.length-1) return prev; // don't include exhausted or equal support votes in the denominator
       return prev + d[xKey];
     }, 0);
     const m = sum / 2;
-    data = data.map((d, i) => {
-      const s = { ...d };
-      s[majorityLegend] = i < 2 ? m : null;
-      return s;
-    });
-    const s = { name: "" };
-    s[majorityLegend] = m;
-    data.unshift(s);
+    if (majorityLegend) {
+      // The marker spans the whole plot. Setting it on the first two rows only
+      // stopped the dashed line short of the exhausted / equal-support bar,
+      // which reads as "the threshold doesn't apply to this row" while that bar
+      // visibly crosses it.
+      data = data.map((d) => ({ ...d, [majorityLegend]: m }));
+      const s = { name: "" };
+      s[majorityLegend] = m;
+      data.unshift(s);
+    } else {
+      data.unshift({ name: "" });
+    }
     colors.unshift(colors.pop());
   }
 
