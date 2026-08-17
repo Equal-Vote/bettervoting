@@ -12,7 +12,7 @@ This section is for you if someone sent you a voting link — by email, text, QR
 
 ## You got a voting link — here's what to do
 
-1. **Open the link.** No app to install and no account to create. Depending on how the election was set up, you may be asked for your email or a verification code first.
+1. **Open the link.** No app to install and no account to create. Depending on how the election was set up, you may be asked to enter a voter ID, or to sign in first.
 2. **Read the instructions at the top of the ballot.** They tell you how this election is scored — for example, in a STAR Voting election you give every candidate a score from 0 to 5, and giving two candidates the same score is allowed.
 3. **Fill out the ballot and press Submit.** You can leave candidates blank; a blank counts as no support.
 4. **Keep your receipt.** Before submitting, you can enter your email to get a ballot receipt. If the election allows ballot updates, the link in that receipt is how you change your vote later.
