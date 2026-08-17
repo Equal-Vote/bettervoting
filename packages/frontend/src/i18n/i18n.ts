@@ -6,6 +6,7 @@ import en from './en.yaml';
 import ptBR from './pt-BR.yaml';
 import pl from './pl.yaml';
 import es from './es.yaml';
+import de from './de.yaml';
 
 i18n
   // detect user language
@@ -37,6 +38,9 @@ i18n
       },
       'pl': {
         translation: pl
+      },
+      'de': {
+        translation: de
       },
     }
   });
