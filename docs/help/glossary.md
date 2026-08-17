@@ -19,7 +19,7 @@ A voting method where you mark every candidate you approve of — as many or as 
 
 ## Archived
 
-The final election state. Archiving prevents any future changes and hides the election from your elections page. An admin can archive an election from any state, and it cannot be undone. Voters cannot cast ballots in an archived election.
+The final election state. Archiving prevents any future changes and hides the election from your elections page. The owner can archive an election from any state, and it cannot be undone. Voters cannot cast ballots in an archived election.
 
 ## Auditor
 
@@ -35,7 +35,7 @@ The set of choices one voter submits — your scores, ranks, approvals, or selec
 
 ## Ballot ID
 
-The identifier shown on your confirmation page (and in your email receipt, for email-list elections) after you submit your ballot. It lets you return to view your ballot, and — if the election allows ballot updates — change it while voting is open.
+The identifier for your submitted ballot. It appears in your email receipt, and deliberately **not** on the confirmation screen in your browser — so that nobody can stand over you and demand you prove how you voted. It lets you return to view your ballot, and — if the election allows ballot updates — change it while voting is open.
 
 ## Basic Multi-Winner
 
@@ -75,7 +75,7 @@ A vocabulary setting, not a functional one. Choosing "poll" swaps the words show
 
 ## Email list
 
-One of the two kinds of restricted voter list (see also [ID list](#id-list)). You provide voter email addresses; when the election opens, BetterVoting emails each voter a unique private voting link, and sends a receipt after they vote. The recommended option for high-security elections — see [Security Options](security_options.md).
+One of the two kinds of restricted voter list (see also [ID list](#id-list)). You provide voter email addresses; each voter gets a unique private voting link, which the organiser sends when they choose to — nothing goes out automatically. Voters receive a receipt after they vote. The recommended option for high-security elections — see [Security Options](security_options.md).
 
 ## Equal Support
 
@@ -87,7 +87,7 @@ In Ranked Choice Voting and STV, a ballot becomes exhausted when it can no longe
 
 ## Finalized
 
-The state between draft and open. Finalizing locks the election — it can no longer be edited — deletes all test votes, and (for email-list elections) queues the voter invitations. Finalizing is one-way: there is no return to draft. If no start time is set, the election opens immediately.
+The state between draft and open. Finalizing locks the election — it can no longer be edited — and deletes all test votes. It does not email anyone — sending invitations is a separate step the organiser takes. Finalizing is one-way: there is no return to draft. If no start time is set, the election opens immediately.
 
 ## ID list
 
