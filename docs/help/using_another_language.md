@@ -17,11 +17,11 @@ So most people never need this page. If the site is already showing your languag
 
 ## Choosing a language yourself
 
-There is no language menu on the site. To pick a language, **add `?lng=` and the language code to the end of the address**:
+There is no language menu on the site. To pick a language, **take the address you already have and add `?lng=` and the language code to the end of it**.
 
-```
-https://bettervoting.com/your-election-id?lng=es
-```
+So if your voting link is `bettervoting.com/a1b2c3`, you'd open `bettervoting.com/a1b2c3?lng=es` for Spanish.
+
+The examples below use `a1b2c3` to stand in for your own election's address — replace it with yours. Opening the examples as written will give you an "Election not found" error, because no such election exists.
 
 | Language | Code | Add to the address | |
 |:---|:---|:---|:---|
@@ -40,11 +40,12 @@ More languages are added over time, so this list may be shorter than what's actu
 {: .warning }
 > **Your choice is remembered.** Once you've used `?lng=`, BetterVoting keeps showing you that language on later visits, even without the parameter. To switch back to English you have to say so explicitly, with `?lng=en` — clearing the parameter alone won't do it. This surprises people who were only trying a language out.
 
-If your election link already has a `?` in it, join the language setting on with `&` instead:
+If your link already contains a `?`, join the language setting on with `&` instead of a second `?`:
 
-```
-https://bettervoting.com/your-election-id?something=1&lng=es
-```
+| Your link | Add this | Result |
+|:---|:---|:---|
+| `bettervoting.com/a1b2c3` | `?lng=es` | `bettervoting.com/a1b2c3?lng=es` |
+| `bettervoting.com/a1b2c3?id=42` | `&lng=es` | `bettervoting.com/a1b2c3?id=42&lng=es` |
 
 ## Why some text is still in English
 
