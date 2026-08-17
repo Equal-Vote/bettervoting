@@ -23,14 +23,19 @@ There is no language menu on the site. To pick a language, **add `?lng=` and the
 https://bettervoting.com/your-election-id?lng=es
 ```
 
-| Language | Code | Add to the address |
-|:---|:---|:---|
-| English | `en` | `?lng=en` |
-| Spanish · Español | `es` | `?lng=es` |
-| Polish · Polski | `pl` | `?lng=pl` |
-| Portuguese (Brazil) · Português | `pt-BR` | `?lng=pt-BR` |
+| Language | Code | Add to the address | |
+|:---|:---|:---|:---|
+| English | `en` | `?lng=en` | |
+| Spanish · Español | `es` | `?lng=es` | |
+| Polish · Polski | `pl` | `?lng=pl` | |
+| Portuguese (Brazil) · Português | `pt-BR` | `?lng=pt-BR` | |
+| German · Deutsch | `de` | `?lng=de` | *in review* |
+| French · Français | `fr` | `?lng=fr` | *in review* |
+| Italian · Italiano | `it` | `?lng=it` | *in review* |
 
-More languages are added over time, so this list may be shorter than what's actually available — it costs nothing to try your own code and see.
+Languages marked *in review* have been submitted and are being checked by a native speaker before going live — try the code and you'll see whether yours has landed yet.
+
+More languages are added over time, so this list may be shorter than what's actually available. It costs nothing to try your own code and see.
 
 {: .warning }
 > **Your choice is remembered.** Once you've used `?lng=`, BetterVoting keeps showing you that language on later visits, even without the parameter. To switch back to English you have to say so explicitly, with `?lng=en` — clearing the parameter alone won't do it. This surprises people who were only trying a language out.
