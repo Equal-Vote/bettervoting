@@ -89,7 +89,7 @@ Only **submitted** ballots are included. Partially saved, uncast ballots are not
 
 ## Voters can find their own ballot
 
-Each row carries a `ballot_id`, and each voter is shown their own ballot ID on the confirmation screen after voting (and in the email receipt, if enabled). That gives every voter a receipt-check: find your ID in the published file and confirm your ballot is recorded exactly as you cast it — while nobody else can tell which row is yours.
+Each row carries a `ballot_id`, and each voter is sent their own ballot ID in their email receipt after voting (and in the email receipt, if enabled). That gives every voter a receipt-check: find your ID in the published file and confirm your ballot is recorded exactly as you cast it — while nobody else can tell which row is yours.
 
 ## Auditing: re-count the election yourself
 
