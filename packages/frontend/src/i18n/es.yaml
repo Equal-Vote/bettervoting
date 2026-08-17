@@ -15,6 +15,26 @@ election_home:
   drafted: Esta elección está en fase de elaboración
   archived: Esta elección se ha archivado
 
+election_history:
+  title: Registro de Auditoría de la Elección
+  subtitle: Un registro público de todo lo que ha ocurrido con esta elección desde que fue finalizada.
+  ladder_note: 'Nota: los conteos de boletas se reportan solo en hitos específicos (1, 5, 10, 25, 50, 100, 250, ...) para proteger la privacidad de los votantes, y las ediciones de boletas usan una escala más fina (1, 2, 5, 10, 25, ...). Por la misma razón, los eventos relacionados con boletas se reportan con precisión de día.'
+  link: Registro de Auditoría
+  loading: Cargando el registro de auditoría…
+  empty: Aún no se han registrado eventos.
+  not_finalized: Esta elección aún no ha sido finalizada, por lo que no hay registro de auditoría disponible.
+  # Column headers and event chip labels live in EnhancedTable's head cell pool,
+  # which keys its group filters and chip colours off plain English strings.
+  desc:
+    state_initial: 'La elección entró en el estado "{{to}}"'
+    state_change: 'El estado cambió de "{{from}}" a "{{to}}"'
+    preliminary_on: Resultados preliminares habilitados
+    preliminary_off: Resultados preliminares deshabilitados
+    ballots_milestone: 'Las boletas emitidas alcanzaron {{count}}'
+    upload_ballots: 'Un administrador cargó {{count}} boleta(s)'
+    edits_milestone: 'Las ediciones de boletas alcanzaron {{count}}'
+    voter_revealed: Un administrador usó la herramienta de emergencia para revelar el ID de un votante
+
 # Ballot (ex. https://bettervoting.com/j87vqp/vote)
 ballot:
   this_election_uses: Esta {{election}} usará el {{voting_method}} para eligir a {{spelled_count}} $t(winner.winner).
@@ -26,11 +46,20 @@ ballot:
   submit_ballot: Enviar
   submitting: Enviando...
 
+  # Draggable RCV UI strings
+  available: Candidatos disponibles
+  yourRankings: Su clasificación
+  drop_here: Suelte aquí a los candidatos para clasificarlos
+  no_available: No hay candidatos disponibles
+  instructions: Arrastre a los candidatos de la lista izquierda a la derecha. Los candidatos a la derecha forman su orden de preferencia; los de la izquierda quedan sin clasificar.
+  instructions_rcv_draggable: Arrastre a los candidatos de izquierda → derecha. La posición 1 es su primera opción. Sin clasificar significa sin preferencia.
+
   dialog_submit_title: Enviar {{capital_ballot}}?
   dialog_send_receipt: Enviar recibo de votación por email? 
   dialog_email_placeholder: Recibo por email 
   dialog_cancel: Cancelar
   dialog_submit: Enviar
+  dialog_abstention: Abstención - No se expresó ninguna preferencia
   warnings:
     skipped_rank: No omita preferencias. Ordene a los candidatos para mostrar claramente sus preferencias. Los candidatos que se dejen en blanco se clasificarán en último lugar.
     duplicate_rank: No clasifique a varios candidatos por igual. (Clasificar a los candidatos por igual puede anular su voto.)
@@ -47,7 +76,7 @@ ballot:
       heading_prefix: ''
     star_pr:
       instruction_bullets:
-       - Dele a su(s) favorito(s) cinco estrellas.
+       - Dele a su(s) {{candidate}}(s) favorito(s) cinco estrellas.
        - Dele cero estrellas a su última opción o déjelo en blanco.
        - Calfique a otros {{candidates}} según lo desee.
        - Las puntuaciones iguales indican el mismo apoyo.
@@ -99,7 +128,7 @@ ballot:
         - '{{capital_candidates}} dejados en blanco se clasifican como último de su preferencia.'
       footer_single_winner: |
         {{capital_candidates}} son comparados en enfrentamientos cara a cara.
-        Un {{candidate}} gana un enfrentamiento si es mejor valorado que otro {{candidate}} por el número de votos.
+        Un {{candidate}} gana un enfrentamiento si es mejor valorado que el oponente por más votantes.
       left_title: ''
       right_title: ''
     choose_one:
@@ -116,6 +145,7 @@ support_blurb: Para asistencia con esta {{election}} por favor contacte a [{{ema
 # Share Button dropdown (ex. https://bettervoting.com/pres24/thanks)
 share:
   button: Compartir {{capital_election}}
+  button_results: Compartir resultados de {{capital_election}}
   facebook: Facebook
   X: X
   reddit: Reddit
@@ -176,6 +206,13 @@ ballot_submitted:
   results: Resultados
   donate: Donar a Equal Vote para apoyar el software de votación de código abierto.
   end_time: '{{capital_election}} termina el {{date}} a las {{time}}'
+  update_ballot_disabled: Esta elección no permite actualizar las boletas. Todas las boletas son definitivas una vez enviadas
+  update_ballot_enabled_open: Puede actualizar su boleta usando el enlace en su recibo por email
+  update_ballot_enabled_closed: La elección ha cerrado. Todas las boletas son definitivas
+  status: 'Estado:'
+  precinct: 'Recinto:'
+  ballot_id: 'ID de la boleta:'
+  update_ballot: 'Actualizar boleta:'
 
 # Localisation for numbers
 number:
@@ -186,6 +223,8 @@ number:
 
 # Results Example: bettervoting.com/tcvc7r/results
 results:
+  admin_results_toggle: 'Los resultados de {{capital_election}} son públicos !tip(public_results)'
+
   preliminary_title: RESULTADOS PRELIMINARES
   official_title: RESULTADOS OFICIALES
   election_title: |
@@ -196,6 +235,9 @@ results:
   loading_election: Cargando {{capital_election}}...
   details: Detalles de la Contienda
   additional_info: Estadísticas para Nerds
+  not_enough_candidates: |
+    Esta contienda actualmente solo tiene un candidato.
+    Los resultados se mostrarán cuando los administradores de la elección aprueben candidatos adicionales.
   waiting_for_results: |
     Todavía esperando por resultados
     Ningún voto se ha emitido
@@ -203,12 +245,15 @@ results:
     Hay un solo voto hasta ahora.
     Los resultados totales serán mostrados una vez se hayan emitido más votos.
   tie_title: '¡Empate!'
-  random_tiebreak_subtitle: '{{names}} ganó después de un desempate.'
+  random_tiebreak_subtitle: '{{names}} ganó después de un desempate !tip(random_tie_order)'
+  win_long_title_prefix: '⭐Ganadores⭐'
   win_title_postfix_one: '¡Gana!'
   win_title_postfix: '¡Ganan!'
   vote_count: '{{n}} votantes'
   method_context: 'Método de votación: {{voting_method}}'
   learn_link_text: Cómo {{voting_method}} funciona
+
+  admin_title: Controles de Resultados del Administrador
 
   choose_one:
     bar_title: Votos por {{capital_candidate}}
@@ -242,6 +287,7 @@ results:
     exhausted: Agotados
     tabulation_candidate_column: '{{capital_candidate}}'
     round_column: Ronda {{n}}
+    bloc_results_title: Primera y última ronda para determinar a cada ganador
 
   stv:
     table_title: Rondas de Tabulación del VUT
@@ -256,6 +302,7 @@ results:
       - Cada voto se le suma al finalista preferido por el elector.
       - El finalista con más votos gana.
     runoff_majority: mayoría de votantes con preferencia
+    runoff_no_preference_footnote: "El {{percentage}}% de los votantes no expresó preferencia entre los dos finalistas."
     score_table_title: Tabla de Puntuaciones
     score_table_columns:
       - '{{capital_candidate}}'
@@ -272,6 +319,7 @@ results:
     tiebreaker_note_text: 
       - Los desemptes se resuelven usando el [Protocolo Oficial de Desempate](https://starvoting.org/ties) siempre que sea posible.
       - Los empates son 10 veces menos probables con la Votación Estrella que con la Votación por Elección Única y generalmente se resuelven a medida que aumenta el número de votantes.
+      - Para entender cómo se resolvió el empate, recomendamos [aprender más sobre el Protocolo Oficial de Desempate de la Votación Estrella](https://starvoting.org/ties) y luego seguir los pasos a continuación para ver cómo se resolvió en esta elección.
     equal_preferences_title: Distribución de apoyo igualitario
     equal_preferences: Apoyo igualitario
     score_higher_than_runoff_title: ¿Por qué el candidato con mayor puntuación es diferente del ganador?
@@ -289,7 +337,7 @@ results:
     # Ultimately, the runoff winner becomes the final winner because they are preferred by more voters over the runner-up.
 
   star_pr:
-    chart_title: Resultados de la Ronda
+    chart_title: Resultados de la Ronda {{n}}
     table_title: Tabla de Resultados
     table_columns:
       - '{{capital_candidate}}'
@@ -319,8 +367,11 @@ keyword:
     candidate: candidato
     candidates: candidatos
     race: contienda
+    races: contiendas
+    race_title: título del cargo electo
     ballot: boleta
     vote: voto
+    votes: votos
 
   poll:
     election: encuesta
@@ -328,8 +379,11 @@ keyword:
     candidate: opción
     candidates: opciones
     race: pregunta
+    races: preguntas
+    race_title: título de la pregunta
     ballot: respuesta
     vote: respuesta
+    votes: respuestas
 
   # General Terms
   yes: Sí
@@ -338,6 +392,7 @@ keyword:
   save: Guardar
   cancel: Cancelar
   submit: Enviar
+  close: Cerrar
 
   # This is used in tables and charts
   total: Total
