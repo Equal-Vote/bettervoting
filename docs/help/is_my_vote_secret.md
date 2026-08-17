@@ -45,7 +45,7 @@ Not everyone with access to an election can.
 | Credentialer | No |
 | Everyone else | Only if the organiser turned on public results |
 
-And there's a timing rule on top: **while an election is still open, ballots are not available to anyone** unless the organiser has deliberately made results public. An organiser cannot quietly watch votes arrive during a live election.
+And there's a timing rule on top: **the full set of ballots is not available to anyone while an election is still open**, unless the organiser has deliberately made results public. An organiser cannot quietly watch the votes arrive during a live election.
 
 ## What this does and doesn't protect against
 
