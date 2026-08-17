@@ -71,7 +71,7 @@ If instead you see `You must log in to access this election`, this election veri
 
 ## I never received my invitation email
 
-For elections that use an email list, invitations are sent once the election starts — not when you're added to the list. If voting is open and you have nothing:
+For elections that use an email list, the organiser sends the invitations themselves — nothing goes out automatically when you're added to the list, or when voting opens. So if voting has started and you have nothing, it's worth knowing that the most likely explanation is simply that they haven't sent them yet. If voting is open and you have nothing:
 
 1. **Search your mailbox** for the election's name. The standard subject is *"Invitation to Vote In"* followed by the election title (organisers can customise it).
 2. **Check your spam or junk folder.** Automated invitations are frequently filtered.
