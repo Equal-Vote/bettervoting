@@ -10,7 +10,7 @@ parent: BetterVoting Documentation
 Several settings change what the ballot looks like and how voters interact with it. Most of them live on the **Settings** page of your election's admin panel; write-in candidates are enabled per race in the race editor. This page explains what each option does, what the voter sees, and when you would want it.
 
 {: .note }
-> Ballot options can only be changed while your election is still a **draft**. Once voting opens, the ballot is locked so that every voter votes on the same ballot. (Results visibility is the exception — see [Preliminary Results](preliminary_results.md).)
+> Ballot options can only be changed while your election is still a **draft**. Once you finalize, the ballot is locked so that every voter votes on the same ballot. (Results visibility is the exception — see [Preliminary Results](preliminary_results.md).)
 
 ## Quick reference
 
