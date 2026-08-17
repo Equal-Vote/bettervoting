@@ -1,0 +1,392 @@
+#######################################################
+#### PRIORITY 0 : Core Voting Path + Basic Results ####
+#######################################################
+
+# Initial Landing page for voter (ex. https://bettervoting.com/j87vqp/)
+election_home:
+  # start_time example: https://bettervoting.com/tcpwth
+  start_time: '{{capital_election}} inizia il {{datetime, datetime}}'
+  end_time: '{{capital_election}} termina il {{datetime, datetime}}'
+  ended_time: '{{capital_election}} ha avuto termine il {{datetime, datetime}}'
+  vote: Vota
+  or_view_results: oppure guarda i risultati
+  ballot_submitted: '{{capital_ballot}} inviata'
+  view_results: Visualizza i risultati
+  drafted: Questa elezione è ancora in fase di bozza
+  archived: Questa elezione è stata archiviata
+
+election_history:
+  title: Registro di controllo dell'elezione
+  subtitle: Un registro pubblico di tutto ciò che è accaduto a questa elezione dopo la sua finalizzazione.
+  ladder_note: 'Nota: per proteggere la privacy dei votanti, il numero di schede viene riportato solo al raggiungimento di determinate soglie (1, 5, 10, 25, 50, 100, 250, ...), mentre per le modifiche alle schede vale una scala più fine (1, 2, 5, 10, 25, ...). Per lo stesso motivo gli eventi relativi alle schede sono riportati con precisione al giorno.'
+  link: Registro di controllo
+  loading: Caricamento del registro di controllo…
+  empty: Nessun evento registrato finora.
+  not_finalized: Questa elezione non è ancora stata finalizzata, quindi non è disponibile alcun registro di controllo.
+  # Column headers and event chip labels live in EnhancedTable's head cell pool,
+  # which keys its group filters and chip colours off plain English strings.
+  desc:
+    state_initial: 'L''elezione è entrata nello stato "{{to}}"'
+    state_change: 'Stato cambiato da "{{from}}" a "{{to}}"'
+    preliminary_on: Risultati preliminari abilitati
+    preliminary_off: Risultati preliminari disabilitati
+    ballots_milestone: 'Le schede ricevute hanno raggiunto quota {{count}}'
+    upload_ballots: 'Un amministratore ha caricato {{count}} scheda/e'
+    edits_milestone: 'Le modifiche alle schede hanno raggiunto quota {{count}}'
+    voter_revealed: Un amministratore ha usato lo strumento di emergenza per rivelare l'identificativo di un votante
+
+# Ballot (ex. https://bettervoting.com/j87vqp/vote)
+ballot:
+  this_election_uses: Tale {{election}} utilizzerà il metodo {{voting_method}} per eleggere {{spelled_count}} $t(winner.winner).
+  this_election_uses_draggable: Tale {{election}} utilizzerà il metodo {{voting_method}} con schede trascinabili per eleggere {{spelled_count}} $t(winner.winner).
+  instructions_checkbox: Ho letto le istruzioni
+  learn_more: Scopri di più su {{voting_method}}
+  previous: Indietro
+  next: Avanti
+  submit_ballot: Invia
+  submitting: Invio in corso...
+
+  # Draggable RCV UI strings
+  available: Candidati disponibili
+  yourRankings: La tua classifica
+  drop_here: Trascina qui i candidati per metterli in classifica
+  no_available: Nessun candidato disponibile
+  instructions: Trascina i candidati dall'elenco di sinistra a quello di destra. I candidati a destra formano la tua classifica; quelli a sinistra restano senza posizione.
+  instructions_rcv_draggable: Trascina i candidati da sinistra a destra. La posizione 1 è la tua prima scelta. Senza posizione significa nessuna preferenza.
+
+  dialog_submit_title: Inviare la {{capital_ballot}}?
+  dialog_send_receipt: Inviare la ricevuta della scheda via email?
+  dialog_email_placeholder: Email per la ricevuta (facoltativa)
+  dialog_cancel: Annulla
+  dialog_submit: Invia
+  dialog_abstention: Astensione - nessuna preferenza espressa
+  warnings:
+    skipped_rank: Non saltare posizioni. Metti i candidati in ordine per esprimere chiaramente le tue preferenze. I candidati lasciati in bianco vengono classificati per ultimi.
+    duplicate_rank: Non assegnare la stessa posizione a più candidati. (Posizioni uguali possono invalidare la tua scheda.)
+
+  methods:
+    approval:
+      instruction_bullets:
+        - Riempi il cerchio accanto alla tua preferenza
+        - Puoi selezionare {{candidates}} a piacere, senza limiti di numero
+      footer_single_winner: Il maggior numero di voti decide quale {{candidate}} vince
+      footer_multi_winner: Il maggior numero di voti decide quali {{n}} {{candidates}} vincono
+      left_title: ''
+      right_title: ''
+      heading_prefix: ''
+    star_pr:
+      instruction_bullets:
+       - Assegna cinque stelle a ogni {{candidate}} che preferisci.
+       - Assegna zero alle tue ultime scelte o lasciale in bianco.
+       - Assegna liberamente un punteggio a eventuali {{candidates}} rimanenti.
+       - Punteggi uguali indicano pari sostegno.
+      footer_single_winner: ''
+      footer_multi_winner: >
+        Nel Voto STAR Proporzionale i vincitori vengono selezionati in più turni. A ogni turno, il punteggio totale più alto
+        determina quale {{candidate}} conquista il seggio; i sostenitori più convinti di tale {{candidate}} vengono quindi
+        considerati rappresentati. Ai turni successivi partecipano tutti i votanti non ancora pienamente rappresentati.
+      # These show above the star columns
+      left_title: 'Peggiore'
+      right_title: 'Migliore'
+    star:
+      instruction_bullets:
+       - Assegna cinque stelle ai tuoi preferiti.
+       - Assegna zero stelle alle tue ultime scelte o lasciale in bianco.
+       - Assegna liberamente un punteggio a eventuali {{candidates}} rimanenti.
+       - Punteggi uguali indicano pari sostegno.
+      footer_single_winner: |
+        I punteggi totali decidono quali due {{candidates}} accedono al ballottaggio.
+        Il tuo voto va per intero al finalista che preferisci.
+      footer_multi_winner: >
+        Questa elezione utilizza il Voto STAR ed eleggerà {{n}} vincitori.
+        Nel Voto STAR i punteggi totali decidono quali due {{candidates}} accedono al ballottaggio, e vince il finalista preferito dal maggior numero di votanti.
+      # These show above the star columns
+      left_title: 'Peggiore'
+      right_title: 'Migliore'
+    rcv:
+      instruction_bullets:
+        - Classifica {{candidates}} in ordine di preferenza. (1º, 2º, 3º, ecc.)
+        - Non è consentito assegnare la stessa posizione a più {{candidates}}.
+        - '{{capital_candidates}} senza posizione finiscono all''ultimo posto'
+      footer_single_winner: >
+        Come viene conteggiata la RCV: le schede vengono contate in turni a eliminazione. A ogni turno il tuo voto va,
+        se possibile, al candidato che hai messo più in alto in classifica. Se nessun candidato ottiene la maggioranza
+        dei voti rimanenti, il candidato con meno voti viene eliminato. Se il tuo voto non può essere trasferito,
+        non verrà contato nei turni successivi. Il candidato che in un turno ottiene la maggioranza dei voti rimanenti
+        viene eletto.
+      left_title: ''
+      right_title: ''
+    stv:
+      instruction_bullets:
+        - Classifica {{candidates}} in ordine di preferenza. (1º, 2º, 3º, ecc.)
+        - Non è consentito assegnare la stessa posizione a più {{candidates}}.
+        - '{{capital_candidates}} senza posizione finiscono all''ultimo posto'
+      footer_multi_winner: ''
+      left_title: ''
+      right_title: ''
+    ranked_robin:
+      instruction_bullets:
+        - Classifica {{candidates}} in ordine di preferenza.
+        - Posizioni uguali sono consentite
+        - '{{capital_candidates}} senza posizione finiscono all''ultimo posto'
+      footer_single_winner: |
+        {{capital_candidates}} si affrontano in confronti diretti uno contro uno.
+        Ogni {{candidate}} vince un confronto se riceve, da un maggior numero di votanti, una posizione migliore rispetto all'avversario
+      left_title: ''
+      right_title: ''
+    choose_one:
+      instruction_bullets:
+        - Riempi il cerchio accanto alla tua preferenza
+      footer_single_winner: Il maggior numero di voti decide quale {{candidate}} vince
+      footer_multi_winner: Il maggior numero di voti decide quali {{n}} {{candidates}} vincono
+      left_title: ''
+      right_title: ''
+
+# Displayed at the bottom of voter pages (ex. https://bettervoting.com/j87vqp/)
+support_blurb: Per assistenza in merito a tale {{election}}, contatta [{{email}}](mailto)
+
+# Share Button dropdown (ex. https://bettervoting.com/pres24/thanks)
+share:
+  button: Condividi {{capital_election}}
+  button_results: Condividi risultati {{capital_election}}
+  facebook: Facebook
+  X: X
+  reddit: Reddit
+  copy_link: Copia link
+  link_copied: Link copiato!
+
+# Number translations (used for {{spelled_count}})
+spelled_numbers:
+  1: un
+  2: due
+  3: tre
+  4: quattro
+  5: cinque
+  6: sei
+  7: sette
+  8: otto
+  9: nove
+  10: dieci
+
+# Winner pluralization
+winner:
+  winner_one: vincitore
+  winner_other: vincitori
+
+methods:
+  star:
+    full_name: Voto STAR
+    short_name: Voto STAR
+    learn_link: https://www.starvoting.org/star
+  star_pr:
+    full_name: Voto STAR Proporzionale
+    short_name: STAR PR
+    learn_link: https://www.starvoting.org/star-pr
+  approval:
+    full_name: Voto di Approvazione
+    short_name: Voto di Approvazione
+    learn_link: https://www.youtube.com/watch?v=db6Syys2fmE
+  rcv:
+    full_name: Voto per Ordine di Preferenza (RCV)
+    short_name: RCV
+    learn_link: https://www.youtube.com/watch?v=oHRPMJmzBBw
+  stv:
+    full_name: Voto Singolo Trasferibile
+    short_name: STV
+    learn_link: https://www.youtube.com/watch?v=ItywbxafCk4
+  ranked_robin:
+    full_name: Ranked Robin
+    short_name: Ranked Robin
+    learn_link: https://www.equal.vote/ranked_robin
+  choose_one:
+    full_name: Voto a Scelta Unica
+    short_name: Scelta Unica
+
+# Confirmation (after you've submitted a ballot)
+#(ex. https://bettervoting.com/<election_id>/ballot/<ballot_id>)
+ballot_submitted:
+  title: '{{capital_ballot}} inviata'
+  description: Grazie per aver votato!
+  results: Risultati
+  donate: Dona a Equal Vote per sostenere il software elettorale open source
+  end_time: '{{capital_election}} termina il {{date}} alle {{time}}'
+  update_ballot_disabled: Questa elezione non consente modifiche alla scheda. Le schede inviate sono definitive
+  update_ballot_enabled_open: Puoi aggiornare la tua scheda tramite il link nella email di ricevuta
+  update_ballot_enabled_closed: L'elezione si è conclusa. Tutte le schede sono definitive
+  status: 'Stato:'
+  precinct: 'Seggio:'
+  ballot_id: 'ID scheda:'
+  update_ballot: 'Aggiorna scheda:'
+
+# Localisation for numbers
+number:
+  rank_ordinal_one: "{{count}}º"
+  rank_ordinal_two: "{{count}}º"
+  rank_ordinal_few: "{{count}}º"
+  rank_ordinal_other: "{{count}}º"
+
+# Results Example: bettervoting.com/tcvc7r/results
+results:
+  admin_results_toggle: '{{capital_election}}: i risultati sono pubblici !tip(public_results)'
+
+  preliminary_title: RISULTATI PRELIMINARI
+  official_title: RISULTATI UFFICIALI
+  election_title: |
+    {{capital_election}}:
+    {{title}}
+  race_title: '{{capital_race}} {{n}}: {{title}}'
+  single_candidate_result: 'Soltanto {{name}} è presente come {{candidate}} e vince quindi automaticamente'
+  loading_election: 'Caricamento in corso: {{capital_election}}...'
+  details: Dettagli della votazione
+  additional_info: Statistiche per nerd
+  not_enough_candidates: |
+    Questa votazione ha al momento una sola candidatura.
+    I risultati verranno mostrati quando gli amministratori dell'elezione avranno approvato altre candidature.
+  waiting_for_results: |
+    In attesa dei risultati
+    Nessun voto è stato ancora espresso
+  tie_title: 'Pareggio!'
+  random_tiebreak_subtitle: 'Vittoria di {{names}} dopo lo spareggio !tip(random_tie_order)'
+  win_long_title_prefix: '⭐Vincitori⭐'
+  win_title_postfix_one: 'vince!'
+  win_title_postfix: 'vincono!'
+  vote_count: '{{n}} votanti'
+  method_context: 'Metodo di voto: {{voting_method}}'
+  learn_link_text: Come funziona {{voting_method}}
+
+  admin_title: Controlli dei risultati per amministratori
+
+  choose_one:
+    bar_title: Voti per ogni {{capital_candidate}}
+    table_title: Tabella
+    table_columns:
+      - '{{capital_candidate}}'
+      - Voti
+      - '% di tutti i voti'
+
+  approval:
+    bar_title: Approvazione dei candidati
+    table_title: Tabella
+    table_columns:
+      - '{{capital_candidate}}'
+      - Voti
+      - '% di tutti i voti'
+
+  ranked_robin:
+    bar_title: Vittorie nei confronti diretti
+    table_title: Tabella
+    table_columns:
+      - '{{capital_candidate}}'
+      - 'N. vittorie'
+      - Percentuale di vittorie
+
+  rcv:
+    first_choice_title: Prime preferenze
+    final_round_title: Ballottaggio finale
+    table_title: Turni di spoglio RCV
+    runoff_majority: soglia di maggioranza (½ dei voti attivi rimanenti)
+    exhausted: Esaurite
+    tabulation_candidate_column: '{{capital_candidate}}'
+    round_column: Turno {{n}}
+    bloc_results_title: Primo e ultimo turno per individuare ciascun vincitore
+
+  stv:
+    table_title: Turni di spoglio STV
+
+  star:
+    score_title: Turno di punteggio
+    score_description:
+      - Si sommano le stelle di tutte le schede.
+      - I punteggi totali decidono quali due {{candidates}} accedono al ballottaggio.
+    runoff_title: Ballottaggio automatico
+    runoff_description:
+      - Ogni voto va al finalista preferito dal votante.
+      - Vince il finalista con più voti.
+    runoff_majority: soglia di maggioranza (½ dei votanti con una preferenza)
+    runoff_no_preference_footnote: "Il {{percentage}}% dei votanti non ha espresso alcuna preferenza tra i due finalisti."
+    score_table_title: Tabella dei punteggi
+    score_table_columns:
+      - '{{capital_candidate}}'
+      - Punteggio
+    runoff_table_title: Tabella del ballottaggio
+    runoff_table_columns:
+      - '{{capital_candidate}}'
+      - Voti al ballottaggio
+      - '% voti al ballottaggio'
+      - '% tra i finalisti'
+
+    detailed_steps_title: Passaggi dello spoglio
+    tiebreaker_note_title: Una nota sugli spareggi
+    tiebreaker_note_text:
+      - Questa elezione ha richiesto uno spareggio. Con il Voto STAR i pareggi sono molto meno probabili che con il Voto a Scelta Unica o con il Voto per Ordine di Preferenza.
+      - In genere i pareggi cessano di essere un problema al crescere del numero di votanti; quando però si verificano, BetterVoting segue un protocollo di spareggio per selezionare i vincitori più rappresentativi.
+      - Per capire come è stato risolto il pareggio, consigliamo di [scoprire di più sul protocollo ufficiale di spareggio del Voto STAR](https://starvoting.org/ties) e poi di seguire i passaggi qui sotto per vedere come è stato applicato in questa elezione.
+    equal_preferences_title: Distribuzione del pari sostegno
+    equal_preferences: Pari sostegno
+    score_higher_than_runoff_title: Perché il candidato col punteggio più alto è diverso dal vincitore?
+    score_higher_than_runoff_text: |
+      Il candidato col punteggio più alto spesso coincide con il vincitore del ballottaggio, ma non sempre.
+      Il turno di punteggio misura il sostegno complessivo per ciascun candidato,
+      ma alla fine vince il finalista preferito dal maggior numero di votanti.
+      Questo garantisce l'uguaglianza del voto e incoraggia il voto sincero.
+
+  star_pr:
+    chart_title: Risultati del turno {{n}}
+    table_title: Tabella dei risultati
+    table_columns:
+      - '{{capital_candidate}}'
+    round_column: Turno {{n}}
+
+keyword:
+  # Method Terms
+  star:
+    preferences: punteggi
+  star_pr:
+    preferences: punteggi
+  approval:
+    preferences: approvazioni
+  rcv:
+    preferences: posizioni
+  stv:
+    preferences: posizioni
+  ranked_robin:
+    preferences: posizioni
+  choose_one:
+    preferences: preferenze
+
+  # Election vs Poll Terms
+  election:
+    election: elezione
+    elections: elezioni
+    candidate: candidato
+    candidates: candidati
+    race: votazione
+    races: votazioni
+    race_title: titolo della carica elettiva
+    ballot: scheda
+    vote: voto
+    votes: voti
+
+  poll:
+    election: sondaggio
+    elections: sondaggi
+    candidate: opzione
+    candidates: opzioni
+    race: domanda
+    races: domande
+    race_title: titolo della domanda
+    ballot: risposta
+    vote: risposta
+    votes: risposte
+
+  # General Terms
+  yes: Sì
+  no: No
+
+  save: Salva
+  cancel: Annulla
+  submit: Invia
+  close: Chiudi
+
+  # This is used in tables and charts
+  total: Totale
