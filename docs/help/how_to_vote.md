@@ -37,7 +37,7 @@ What you're asked to do depends on the method the organiser chose. The ballot te
 
 A few things you might notice, all of them normal:
 
-* **The candidates may be in a different order than on someone else's ballot.** Some organisers turn on randomised order so that being listed first isn't an advantage.
+* **The candidates may be in a different order than on someone else's ballot.** Randomised order is on by default, so that being listed first isn't an advantage.
 * **You may have to confirm you've read the instructions** before the submit button becomes available.
 * **You can leave a candidate blank.** A blank is not a vote against them; it just isn't support for them.
 

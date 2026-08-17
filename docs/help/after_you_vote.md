@@ -48,9 +48,11 @@ Once results are published, the page shows more than just the winner — includi
 
 ## Who can see how I voted?
 
-Your ballot is not shown publicly alongside your name. What the organiser can see depends on how they set the election up — in an election with a voter list, they can see **who has voted**, because that's how reminders to non-voters work.
+**Nobody can see how you voted — including the person running the election.** That isn't a setting they chose; it's built in. When ballots are handed over for viewing, your identity is stripped from them first, and they're deliberately shuffled so the order can't be matched against who voted when.
 
-If ballot secrecy matters for your situation, ask the organiser directly what they configured before you vote. They chose the settings, and they're the only ones who can tell you what applies to your election.
+What an organiser *can* see, in an election with a voter list, is **who has voted** — not how. That's what makes reminders to non-voters possible.
+
+Two limits worth knowing. If you got an email receipt, that link shows your own ballot, so anyone with access to your inbox could see it too. And in a very small race — three voters, a 3–0 result — everyone can work out everyone's vote by arithmetic. No system can prevent that.
 
 ## Related
 
