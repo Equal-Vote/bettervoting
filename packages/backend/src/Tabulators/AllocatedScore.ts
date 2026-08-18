@@ -149,7 +149,11 @@ export function AllocatedScore(candidates: candidate[], votes: rawVote[], nWinne
         let weight_on_split = findWeightOnSplit(cand_df, split_point);
 
         // quota = spent_above + weight_on_split*new_weight
-        let new_weight = (quota.sub(spent_above)).div(weight_on_split);
+        // weight_on_split is the total weight sitting exactly on the split point, so
+        // when it is zero there is no partially represented ballot to reweight and the
+        // surplus has nowhere to go. Dividing by it throws in fraction.js, which used to
+        // 500 the results endpoint for any race with no ballots.
+        let new_weight = weight_on_split.equals(0) ? new Fraction(0) : (quota.sub(spent_above)).div(weight_on_split);
         results.logs.push(
             `The ${rounded(weight_on_split)} voters who gave ${summaryData.candidates[w].name} ${rounded(split_point.mul(MAX_SCORE))} stars are partially represented. `+
             `${percent(new_weight)} of their remaining vote will go toward ${summaryData.candidates[w].name} and ${percent(new Fraction(1).sub(new_weight))} will be preserved for future rounds.`)
@@ -285,6 +289,9 @@ function findSplitPoint(cand_df_sorted: winner_scores[], quota: typeof Fraction)
             return c.weighted_score;
         }
     }
+
+    // No ballots at all, so there is no score to split on.
+    if (cand_df_sorted.length === 0) return new Fraction(0);
 
     return cand_df_sorted.slice(-1)[0].weighted_score
 }
