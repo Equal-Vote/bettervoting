@@ -44,7 +44,7 @@ const VoterAuth = () => {
 
   const isAuthorized = voterAuth?.authorized_voter
   const missingEmail = voterAuth?.required === "Email Validation Required"
-  const missingVoterID = voterAuth?.required === "Voter ID Required"
+  const missingVoterID = voterAuth?.required === "Voter ID Required for closed elections"
 
   return (
     <Box sx={{ p: 1, flexGrow: 1 }}>
