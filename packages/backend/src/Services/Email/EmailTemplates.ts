@@ -96,7 +96,7 @@ export function Receipt(election: Election, email: string, ballot: Ballot, url: 
         from: process.env.FROM_EMAIL_ADDRESS ?? '',
         subject: `Ballot Receipt For ${election.title}`,
         text: `${election.state === 'draft' ? '[⚠️Test Ballot]' : ''} Thank you for voting in ${election.title}, you can view your ballot and ballot status at \
-               ${ballotVerifyUrl}. ${election.settings.ballot_updates && roll ? `While the election is still open, you can update you ballot at ${ballotUpdateUrl}`: ''}`,
+               ${ballotVerifyUrl}. ${election.settings.ballot_updates && roll ? `While the election is still open, you can update your ballot at ${ballotUpdateUrl}`: ''}`,
         html: emailTemplate(`
           <div> 
             ${election.state === 'draft' ? "<h3>⚠️This was cast as a test ballot. All test ballots will be removed once the election is finalized, and at that time you will need to vote again.⚠️</h3>" : ''}
