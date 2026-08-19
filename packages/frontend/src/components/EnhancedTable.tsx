@@ -21,6 +21,7 @@ import { epochToDateString, getLocalTimeZoneShort, NumberObject, useSubstitutedT
 import { Checkbox, FormControl, ListItemText, MenuItem, Select, TextField, Chip } from '@mui/material';
 import { ElectionState } from '@equal-vote/star-vote-shared/domain_model/Election';
 import Link from "@mui/material/Link";
+import { describeHistoryEvent, formatHistoryTimestamp, historyChipLabel, historyFilterGroups } from './Election/electionHistoryFormat';
 
 export type HeadKey = keyof typeof headCellPool;
 
@@ -265,6 +266,33 @@ const headCellPool = {
     label: 'Votes',
     filterType: 'search',
     formatter: (_, election, __, voteCounts) => Number(voteCounts[election.election_id] ?? 0)
+  },
+  history_event: {
+    id: 'history_event',
+    numeric: false,
+    disablePadding: false,
+    label: 'Event',
+    filterType: 'groups',
+    filterGroups: historyFilterGroups(),
+    formatter: (_, event) => historyChipLabel(event.type),
+  },
+  history_description: {
+    id: 'history_description',
+    numeric: false,
+    disablePadding: false,
+    label: 'Description',
+    filterType: 'search',
+    formatter: (_, event, t) => describeHistoryEvent(event, t),
+  },
+  history_when: {
+    id: 'history_when',
+    numeric: false,
+    disablePadding: false,
+    // Deliberately not isDate: the formatted value is already lexicographically
+    // sortable, which keeps the ordering correct in every locale.
+    label: 'When (UTC)',
+    filterType: 'search',
+    formatter: (_, event) => formatHistoryTimestamp(event),
   },
 }
 
