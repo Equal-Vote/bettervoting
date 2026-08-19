@@ -197,6 +197,25 @@ export default class ElectionRollDB implements IElectionRollStore {
         }
     }
 
+    // Clears the roll without destroying it: every head row for the election is demoted to
+    // head=false, so getRollsByElectionID / getByVoterID stop seeing them but the rows (and
+    // their history) survive for auditing. The partial unique index is on (election_id,
+    // voter_id) WHERE head, so the same voter_id can be re-added afterwards.
+    async archiveRollsByElectionID(election_id: string, ctx: ILoggingContext, reason: string, db?: Kysely<Database> | Transaction<Database>): Promise<number> {
+        Logger.debug(ctx, `${tableName}.archiveRollsByElectionID ${election_id}: ${reason}`);
+
+        const client = db || this._postgresClient;
+        const archived = await client
+            .updateTable(tableName)
+            .where('election_id', '=', election_id)
+            .where('head', '=', true)
+            .set('head', false)
+            .returning('voter_id')
+            .execute()
+
+        return archived.length
+    }
+
     delete(election_roll: ElectionRoll, ctx: ILoggingContext, reason: string): Promise<boolean> {
         Logger.debug(ctx, `${tableName}.delete`);
         var sqlString = `DELETE FROM ${this._tableName} WHERE election_id = $1 AND voter_id=$2`;

@@ -80,6 +80,9 @@ const definition: DevElectionDefinition = {
     electionId: ELECTION_ID,
     election,
     makeBallots,
+    // Last 2 ballots arrive as an admin bulk upload, so the public audit log
+    // for this election has an upload_ballots event to show.
+    adminUploadedBallots: 2,
 };
 
 export default definition;

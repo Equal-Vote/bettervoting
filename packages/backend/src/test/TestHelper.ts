@@ -240,6 +240,32 @@ export class TestHelper {
         return r.send({ electionRoll: electionRoll });
     }
 
+    async clearElectionRoll(
+        electionId: Uid,
+        userToken: string | null,
+        customToken: string| null = null
+    ): Promise<any> {
+        var r = request(this.expressApp)
+            .delete(`/API/Election/${electionId}/rolls`)
+            .set("Accept", "application/json");
+
+        r = this.addUserTokenVoterIdCookie(r, userToken, null, customToken, null);
+        return r.send();
+    }
+
+    async fetchElectionRoll(
+        electionId: Uid,
+        userToken: string | null,
+        customToken: string| null = null
+    ): Promise<any> {
+        var r = request(this.expressApp)
+            .get(`/API/Election/${electionId}/rolls`)
+            .set("Accept", "application/json");
+
+        r = this.addUserTokenVoterIdCookie(r, userToken, null, customToken, null);
+        return r.send();
+    }
+
     private addUserTokenVoterIdCookie(
         req: any,
         userToken: string | null,
