@@ -39,6 +39,17 @@ export const BLOCK_BALLOTS = 4096;
 const INITIAL_CAPACITY = 256;
 
 /**
+ * Ballots the first block of a race is sized for. Blocks are addressed as
+ * `count / BLOCK_BALLOTS` either way; this only controls how much of that
+ * range is actually allocated up front, so a race with a handful of ballots
+ * doesn't reserve a full block. It doubles up to BLOCK_BALLOTS on demand.
+ * Every race in the election has a live store while the ballots stream, so
+ * without this a 20-race election paid a full block per race no matter how
+ * few ballots were cast.
+ */
+const INITIAL_BLOCK_BALLOTS = 64;
+
+/**
  * Called once per ballot by consumeMarks. Reads mark `i` as
  * `tags[offset + i]`, and its value (when the tag is MARK_NUMBER) as
  * `values[offset + i]`. The raw buffers are handed over rather than a wrapper
@@ -58,6 +69,9 @@ export class CompactVoteStore {
     // one entry per BLOCK_BALLOTS ballots; nulled out as they're consumed
     private markValueBlocks: (Float64Array | null)[] = [];
     private markTagBlocks: (Uint8Array | null)[] = [];
+    // ballots each block is currently sized for; only ever below BLOCK_BALLOTS
+    // for a block that is still the last one (see ensureBlockCapacity)
+    private blockCapacity: number[] = [];
 
     // per-ballot, so ~9 bytes each — small enough to keep as plain growable buffers
     private capacity = 0;
@@ -100,6 +114,33 @@ export class CompactVoteStore {
         return this.rowTags[index];
     }
 
+    /**
+     * Make sure block `blockIndex` can hold `ballots` ballots, growing it by
+     * doubling (capped at BLOCK_BALLOTS) and copying what's already there.
+     * Only the newest block is ever short of BLOCK_BALLOTS, and it stops
+     * growing once it reaches a full block, so the copying is bounded by one
+     * block's worth of work per store.
+     */
+    private ensureBlockCapacity(blockIndex: number, ballots: number) {
+        const have = this.blockCapacity[blockIndex] ?? 0;
+        if (have >= ballots) return;
+
+        let capacity = have === 0 ? INITIAL_BLOCK_BALLOTS : have * 2;
+        while (capacity < ballots) capacity *= 2;
+        if (capacity > BLOCK_BALLOTS) capacity = BLOCK_BALLOTS;
+
+        const values = new Float64Array(capacity * this.candidateCount);
+        const tags = new Uint8Array(capacity * this.candidateCount);
+        const priorValues = this.markValueBlocks[blockIndex];
+        if (priorValues) {
+            values.set(priorValues);
+            tags.set(this.markTagBlocks[blockIndex]!);
+        }
+        this.markValueBlocks[blockIndex] = values;
+        this.markTagBlocks[blockIndex] = tags;
+        this.blockCapacity[blockIndex] = capacity;
+    }
+
     /** Commit the scratch row as one more ballot. */
     commitRow(overvote_rank: number | null | undefined, has_duplicate_rank: boolean | null | undefined) {
         if (this.released) throw new Error('CompactVoteStore: write after release');
@@ -109,11 +150,9 @@ export class CompactVoteStore {
         this.growPerBallot(this.count + 1);
 
         const blockIndex = (this.count / BLOCK_BALLOTS) | 0;
-        if (blockIndex >= this.markValueBlocks.length) {
-            this.markValueBlocks.push(new Float64Array(BLOCK_BALLOTS * this.candidateCount));
-            this.markTagBlocks.push(new Uint8Array(BLOCK_BALLOTS * this.candidateCount));
-        }
-        const offset = (this.count % BLOCK_BALLOTS) * this.candidateCount;
+        const ballotInBlock = this.count % BLOCK_BALLOTS;
+        this.ensureBlockCapacity(blockIndex, ballotInBlock + 1);
+        const offset = ballotInBlock * this.candidateCount;
         this.markValueBlocks[blockIndex]!.set(this.rowValues, offset);
         this.markTagBlocks[blockIndex]!.set(this.rowTags, offset);
 
@@ -160,6 +199,7 @@ export class CompactVoteStore {
         }
         this.markValueBlocks = [];
         this.markTagBlocks = [];
+        this.blockCapacity = [];
     }
 
     markTag(ballot: number, index: number) {
@@ -219,6 +259,7 @@ export class CompactVoteStore {
         this.capacity = 0;
         this.markValueBlocks = [];
         this.markTagBlocks = [];
+        this.blockCapacity = [];
         this.overvoteValues = new Float64Array(0);
         this.overvoteTags = new Uint8Array(0);
         this.duplicateTags = new Uint8Array(0);
