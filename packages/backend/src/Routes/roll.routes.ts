@@ -9,7 +9,8 @@ import {
     flagElectionRoll,
     invalidateElectionRoll,
     uninvalidateElectionRoll,
-    revealVoterIdByEmail
+    revealVoterIdByEmail,
+    clearElectionRoll
 } from '../Controllers/Roll';
 import {
     getElectionByID,
@@ -166,6 +167,43 @@ rollRouter.get('/Election/:id/rolls/:voter_id', asyncHandler(getByVoterID))
  *         description: Election not found
  */
 rollRouter.post('/Election/:id/rolls/', asyncHandler(addElectionRoll))
+
+/**
+ * @swagger
+ * /Election/{id}/rolls:
+ *   delete:
+ *     summary: Clear the entire election roll (draft elections only)
+ *     description: Archives every voter on the roll (marks them as non-head) rather than deleting the rows, so the roll reads as empty and the voter auth settings unlock again. Only permitted while the election is in draft.
+ *     tags: [Rolls]
+ *     security:
+ *      - ApiKeyAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The election ID
+ *     responses:
+ *       200:
+ *         description: Roll cleared
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 election:
+ *                   type: object
+ *                   $ref: '#/components/schemas/Election'
+ *                 cleared:
+ *                   type: number
+ *                   description: Number of voters removed from the roll
+ *       400:
+ *         description: Election is not in draft
+ *       404:
+ *         description: Election not found
+ */
+rollRouter.delete('/Election/:id/rolls/', asyncHandler(clearElectionRoll))
 
 /** 
  * @swagger
