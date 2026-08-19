@@ -13,6 +13,7 @@ import PGBossEventQueue from "./Services/EventQueue/PGBossEventQueue";
 import AccountService from "./Services/Account/AccountService"
 import GlobalData from "./Services/GlobalData";
 import { Kysely, PostgresDialect } from 'kysely'
+import Cursor from 'pg-cursor';
 import { Database } from "./Models/Database";
 import { SerializeParametersPlugin } from "./Models/serialize-parameters/serialize-parameters-plugin";
 
@@ -41,7 +42,8 @@ function postgres(): any {
         _postgresClient = new Pool(connectionConfig);
 
         const dialect = new PostgresDialect({
-            pool: _postgresClient
+            pool: _postgresClient,
+            cursor: Cursor, // required for Kysely's .stream() to page rows instead of buffering them
         })
 
         _DB = new Kysely<Database>({

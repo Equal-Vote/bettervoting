@@ -128,10 +128,10 @@ const LandingPageCarousel = () => {
                 // height must be hard coded so that there isn't resizing when cycling between slides
                 height: {xs: '500px', md: '300px'}, display: "flex", gap: "50px" }}>
             <Box sx={{textAlign: {xs: 'center', md: 'left'}}}>
-                <Typography variant="h3" color={'lightShade.contrastText'}>
+                <Typography variant="h3" sx={{ color: 'lightShade.contrastText' }}>
                     {t(`landing_page.hero.methods.${methodKeys[animIndex]}.title`)} 
                 </Typography>
-                {animIndex != methodKeys.length-1 && <Typography variant="h5" color={'lightShade.contrastText'}>
+                {animIndex != methodKeys.length-1 && <Typography variant="h5" sx={{ color: 'lightShade.contrastText' }}>
                     {t(`landing_page.hero.methods.${methodKeys[animIndex]}.recommendation`)} 
                 </Typography>}
             </Box>

@@ -31,7 +31,7 @@
     "@types/luxon": "^3.3.0",
     "@types/node": "^24.0.0",
     "@types/pg": "^8.10.2",
-    "axios": "^1.15.0",
+    "axios": "^1.18.1",
     "compression": "^1.8.1",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
@@ -45,6 +45,7 @@
     "multer": "^2.2.0",
     "pg": "^8.7.3",
     "pg-boss": "^8.0.0",
+    "pg-cursor": "^2.21.0",
     "qs": "^6.15.2",
     "sanitize-html": "^2.13.1",
     "socket.io": "^4.7.5",
@@ -52,6 +53,7 @@
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
+    "@types/pg-cursor": "^2.7.2",
     "@types/compression": "^1.8.1",
     "@types/sanitize-html": "^2.13.0",
     "@types/supertest": "^2.0.12",
