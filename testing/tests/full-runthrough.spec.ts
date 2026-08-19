@@ -10,22 +10,20 @@ test('Full Runthrough', async ({ page }) => {
 	await page.getByRole('button', { name: 'Create Election' }).click();
 	await page.getByRole('radio', { name: 'Poll' }).check();
 	await page.getByRole('radio', { name: 'More than one' }).check();
-	await page.getByRole('button', { name: 'Next' }).first().click();
 	await page.getByRole('textbox', { name: 'Title', exact: true }).fill('Playwright Test Election');
-	await page.getByRole('button', { name: 'Continue' }).click();
-	await page.getByRole('radio', { name: 'No' }).check();
-	await page.getByRole('button', { name: 'Continue' }).click();
-	await page.getByRole('button', { name: 'Allows multiple votes per device' }).click();
+	await page.getByRole('button', { name: 'Next' }).first().click();
 
-	// Description + Start/End Times
-	await expect(page.getByText('draft')).toBeVisible({ timeout: 2000 });
-	const url = await page.url();
+	// Multi-race "Next" now applies sensible defaults (open access, device-ID auth)
+	// and navigates directly to /admin/build_ballot.
+	await expect(page).toHaveURL(/\/admin\/build_ballot/, { timeout: 5000 });
+	const url = page.url();
 	const urlArray = url.split('/');
-	electionId = urlArray[urlArray.length - 2];
+	electionId = urlArray[urlArray.length - 3];
 	// Auth settings moved to Manage Voters page
 	await page.getByRole('link', { name: 'Manage Voters' }).click();
-	await expect(page.getByLabel('no limit')).toBeChecked();
+	await expect(page.getByRole('radio', { name: 'device' })).toBeChecked();
 	await page.getByRole('link', { name: 'Admin Home' }).click();
+	await expect(page.getByText('draft')).toBeVisible({ timeout: 2000 });
 	await page.getByRole('button', { name: 'Edit Election Details' }).click();
 	await page.getByRole('textbox', { name: 'Title' }).fill('Playwright Test Election Updated');
 	await page.getByRole('textbox', { name: 'Election Description' }).fill('Playwright Test Election Description');
@@ -60,14 +58,13 @@ test('Full Runthrough', async ({ page }) => {
 	await page.getByRole('link', { name: 'Build Ballot' }).click();
 	await page.getByRole('button', { name: 'Add Race' }).click();
 	await page.getByRole('textbox', { name: 'Title' }).fill('Race 1');
-	await page.getByRole('button', { name: 'Description' }).click();
+	await page.getByRole('button', { name: /Description/ }).click();
 	await page
 		.getByRole('textbox', { name: 'Description' })
 		.fill('Race 1 Description');
-	await page.getByRole('button', { name: 'Voting Method' }).click();
+	await page.getByRole('button', { name: 'Select the voting method' }).click();
 	await page.getByRole('radio', { name: 'Single-Winner' }).check();
 	await page.getByRole('radio', { name: 'STAR Voting' }).click();
-	await page.getByRole('button', { name: 'Choices' }).click();
 	await expect(page.getByRole('button', { name: 'Delete Candidate Number 2' })).toBeDisabled();
 	await expect(
 		page.getByRole('button', { name: 'Drag Candidate Number 2' })
@@ -81,20 +78,19 @@ test('Full Runthrough', async ({ page }) => {
 
 	// Adding Race 2
 	await page
-		.getByRole('button', { name: 'Add' })
+		.getByRole('button', { name: 'Add Race' })
 		.click({ timeout: 10000 });
 	const raceDialog = await page.getByRole('dialog', { name: 'Edit Race' });
 	await raceDialog.getByRole('textbox', { name: 'Title' }).fill('Race 2');
 	await raceDialog.getByRole('textbox', { name: 'Title' }).blur();
-	await raceDialog.getByRole('button', { name: 'Description' }).click();
+	await raceDialog.getByRole('button', { name: /Description/ }).click();
 	await raceDialog
 		.getByRole('textbox', { name: 'Description' })
 		.fill('Race 2 Description');
 	await raceDialog.getByRole('textbox', { name: 'Description' }).blur();
-	await raceDialog.getByRole('button', { name: 'Voting Method' }).click();
+	await raceDialog.getByRole('button', { name: 'Select the voting method' }).click();
 	await raceDialog.getByRole('radio', { name: 'Single-Winner' }).check();
 	await raceDialog.getByLabel('Ranked Robin').click();
-	await raceDialog.getByRole('button', { name: 'Choices' }).click();
 	for (let i = 1; i <= 10; i++) {
 		await raceDialog
 			.getByRole('textbox', { name: `Candidate ${i} Name` }).fill(`Candidate ${i}`);
@@ -103,7 +99,6 @@ test('Full Runthrough', async ({ page }) => {
 	}
 	await raceDialog.getByRole('button', { name: 'Drag Candidate Number 10' }).click();
 	await raceDialog.getByRole('button', { name: 'Delete Candidate Number 10' }).click();
-	await page.getByRole('button', { name: 'Submit' }).click(); // must be page since it's a separate popup
 	await expect(raceDialog.getByLabel('Candidate 11 Form')).not.toBeVisible();
 	await raceDialog.getByRole('textbox', { name: `Candidate 10 Name` }).fill(`Candidate 10`);
 	await raceDialog.getByRole('textbox', { name: `Candidate 10 Name` }).blur();
@@ -126,7 +121,6 @@ test('Full Runthrough', async ({ page }) => {
 		await page.getByRole('link', { name: 'Vote', exact: true }).click();
 		await page.waitForURL(`**/${electionId}/vote`)
 
-		await page.getByLabel('I have read the instructions').click();
 		await page.getByRole('radio', { name: 'Score Candidate 1 5' }).click();
 		await page.getByRole('radio', { name: 'Score Candidate 2 4' }).click();
 		await page.getByRole('radio', { name: 'Score Candidate 3 3' }).click();
@@ -135,7 +129,6 @@ test('Full Runthrough', async ({ page }) => {
 		await page.getByRole('radio', { name: 'Score Candidate 6 0' }).click();
 
 		await page.getByRole('button', { name: 'Next' }).click();
-		await page.getByLabel('I have read the instructions').click();
 		//check that the highest rank is 8
 		const columnHeadings = await page.locator('.column-headings');
 		const columnHeadingElements = await columnHeadings.evaluateAll(

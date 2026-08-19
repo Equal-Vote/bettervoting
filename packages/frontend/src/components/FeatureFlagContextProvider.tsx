@@ -51,6 +51,9 @@ const flagDefinitions = {
 		'(testing only) Disables random candidate order on ballots',
 	FORCE_DISABLE_INSTRUCTION_CONFIRMATION:
 		'(testing only) Disables confirmation prompt on ballots',
+	NOTA: 'Enables the "None of the Above" option when creating races',
+	AUDIT_LOG:
+		'Shows the link to an election\'s public audit log on the results page. The /history page and its API are live regardless — this only controls whether voters are pointed at them',
 };
 
 export function FeatureFlagContextProvider({ children }: { children: React.ReactNode }) {

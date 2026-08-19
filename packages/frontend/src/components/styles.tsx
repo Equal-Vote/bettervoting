@@ -1,7 +1,7 @@
 import { Box, Button, ClickAwayListener, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Link, Paper, TextFieldProps, Tooltip, Typography } from "@mui/material"
 import { TextField } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import React, { ReactNode, useState, isValidElement } from "react";
+import React, { ReactNode, useRef, useState, isValidElement } from "react";
 import en from './en.yaml';
 import { useSubstitutedTranslation } from "./util";
 import useRace from "./RaceContextProvider";
@@ -24,14 +24,23 @@ export const Tip = (props: {name?: TipName, children?: ReactNode, content?: {tit
 
     const [clicked, setClicked] = useState(false);
     const [hovered, setHovered] = useState(false);
+    // The tooltip body renders in a portal, so ClickAwayListener counts taps inside it as "away".
+    // On touch that fires at touchend, before the browser synthesizes the click, and closing the
+    // tooltip flips the popper to pointer-events:none, so links in the tip never get clicked.
+    // Mice are unaffected: ClickAwayListener listens for 'click' there, which the link already got.
+    // Keeping the tip open for taps landing inside its body lets those links work on mobile.
+    const tipBody = useRef<HTMLSpanElement | null>(null);
     const learnLinkKey = props.name ? `tips.${props.name as string}.learn_link` : 'asdfasdf';
-    return <ClickAwayListener onClickAway={() => setClicked(false)}>
-        <Tooltip title={<>
+    return <ClickAwayListener onClickAway={(e) => {
+            if (tipBody.current?.contains(e.target as Node)) return;
+            setClicked(false);
+        }}>
+        <Tooltip title={<span ref={tipBody}>
                 <strong>{props.name ? t(`tips.${props.name as string}.title`, props.values ?? {}) : props.content.title}</strong>
                 <br/>
                 {props.name ? t(`tips.${props.name as string}.description`, props.values ?? {}) : props.content.description}
                 {i18n.exists(learnLinkKey) && <a href={t(learnLinkKey)} target='_blank' rel="noreferrer">Learn More</a>}
-            </>} onOpen={() => setHovered(true)} onClose={() => setHovered(false)} open={clicked || hovered} placement='top' slotProps={{
+            </span>} onOpen={() => setHovered(true)} onClose={() => setHovered(false)} open={clicked || hovered} placement='top' slotProps={{
                 tooltip: {
                     sx: {
                         background: '#2B344AFF', 
@@ -189,6 +198,28 @@ export const SecondaryButton = (props: CustomButtonProps) => (
             '&:hover': {
                 color: 'black',
                 borderColor: 'black',
+            },
+            ...props.sx,
+        }}
+    >
+        {props.children}
+    </Button>
+)
+
+export const UtilityButton = (props: CustomButtonProps) => (
+    <Button
+        {...props}
+        sx={{
+            textDecoration: 'none',
+            textTransform: 'none',
+            color: 'text.secondary',
+            fontSize: '0.9rem',
+            fontWeight: 500,
+            px: 1,
+            py: 0.5,
+            '&:hover': {
+                backgroundColor: 'transparent',
+                color: 'text.primary',
             },
             ...props.sx,
         }}

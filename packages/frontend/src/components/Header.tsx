@@ -20,7 +20,9 @@ export const createWizardNav = (heading: string, isLandingPage: boolean) => {
     return isLandingPage ?
         {
             text: heading,
-            onClick: () => scrollToElement(document.querySelector(`.wizard`)),
+            // cancelOnUserInput so the delayed scroll can't kick in mid-interaction
+            // if something else gets clicked before it starts
+            onClick: () => scrollToElement(document.querySelector(`.wizard`), { cancelOnUserInput: true }),
         } : {
             text: heading,
             href: '/new_election',
@@ -199,7 +201,7 @@ const Header = () => {
                                 {t('nav.your_account')}
                             </MenuItem>
                             {isLandingPage && 
-                            <MenuItem component={Link} onClick={() => scrollToElement(document.querySelector(`.wizard`))}>
+                            <MenuItem component={Link} onClick={() => scrollToElement(document.querySelector(`.wizard`), { cancelOnUserInput: true })}>
                                 {t('nav.new_election')}
                             </MenuItem>
                             }
