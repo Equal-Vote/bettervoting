@@ -20,6 +20,7 @@ export const sharedConfig = {
     FF_PRECINCTS: 'false',
     FF_THEMES: 'false',
     FF_ALL_STATS: 'false',
+    FF_AUDIT_LOG: 'false',
     DEV_USERS: [
         'bc111019-40b1-41ad-9cc4-c292d3a8dc84', // Arend -  primary
         'df7d74a1-a2f6-48a7-b386-64705d1ec629', // Arend

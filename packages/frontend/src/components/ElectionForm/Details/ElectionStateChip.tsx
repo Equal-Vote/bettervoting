@@ -38,6 +38,21 @@ const getStateColor = (state: string) => {
       return 'green';
     case 'Error':
       return 'red';
+    // Audit log events. Nothing here is red: a voter ID reveal is usually done
+    // for a good reason (an email issue, say), and on any election of size we
+    // expect a few. Red would read as an alarm to voters when it isn't one.
+    case 'State':
+      return 'blue';
+    case 'Preliminary Results':
+      return 'purple';
+    case 'Ballots':
+      return 'green';
+    case 'Ballots Uploaded':
+      return 'purple';
+    case 'Ballot Edits':
+      return 'orange';
+    case 'Voter ID Revealed':
+      return 'orange';
     default:
       return 'gray4';
   }
