@@ -11,6 +11,7 @@ import { BallotVotes } from "../Models/IBallotStore";
 import { projectBallots } from "./BallotProjection";
 import { BLOCK_BALLOTS } from "./CompactVoteStore";
 import shuffleCandidatesForRandomTiebreak from "./shuffleCandidatesForRandomTiebreak";
+import { get as getTinyRand } from "./tinyrand";
 import { VotingMethods } from "./VotingMethodSelecter";
 
 // The compact projection re-encodes the semantic content of every ballot, so a
@@ -110,21 +111,19 @@ const makeRace = (overrides: Partial<Race> & {race_id: string, voting_method: Vo
     write_in_candidates: overrides.write_in_candidates,
 } as Race);
 
-// deterministic RNG so a failure is always reproducible
-const mulberry32 = (seed: number) => () => {
-    seed = (seed + 0x6D2B79F5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-};
-
-const shuffled = <T,>(items: T[], rand: () => number): T[] => {
-    const copy = [...items];
-    for (let i = copy.length - 1; i > 0; i--) {
-        const j = Math.floor(rand() * (i + 1));
-        [copy[i], copy[j]] = [copy[j], copy[i]];
-    }
-    return copy;
+// Deterministic RNG so a failure is always reproducible. This is the same
+// generator the production tiebreak shuffler uses, so there's one seeded RNG
+// in the backend rather than a hand-rolled second one here.
+const makeRand = (seed: number) => {
+    const gen = getTinyRand(0, seed);
+    return {
+        next: () => gen._get() / 0x100000000,
+        shuffled: <T,>(items: T[]): T[] => {
+            const copy = [...items];
+            gen.shuffle(copy);
+            return copy;
+        },
+    };
 };
 
 /**
@@ -135,7 +134,7 @@ const shuffled = <T,>(items: T[], rand: () => number): T[] => {
  * race entirely.
  */
 const generateBallots = (race: Race, count: number, seed: number): BallotVotes[] => {
-    const rand = mulberry32(seed);
+    const {next: rand, shuffled} = makeRand(seed);
     const maxMark = ['IRV', 'STV', 'RankedRobin'].includes(race.voting_method) ? race.candidates.length
         : ['Approval', 'Plurality'].includes(race.voting_method) ? 1 : 5;
     const ballots: BallotVotes[] = [];
@@ -173,7 +172,7 @@ const generateBallots = (race: Race, count: number, seed: number): BallotVotes[]
             }
         }
 
-        const vote: Vote = {race_id: race.race_id, scores: shuffled(scores, rand)};
+        const vote: Vote = {race_id: race.race_id, scores: shuffled(scores)};
         const overvoteRoll = rand();
         if (overvoteRoll < 0.1) vote.overvote_rank = 1 + Math.floor(rand() * maxMark);
         const duplicateRoll = rand();
