@@ -448,6 +448,49 @@ describe("BallotProjection matches the verbose projection", () => {
         expect(cvr.length).toBeGreaterThan(BLOCK_BALLOTS * 2);
     });
 
+    test("no ballot is lost at a block boundary, at any stream length", async () => {
+        // The store's last block is almost always partial, so "the stream ended
+        // mid-block" is the normal case rather than an edge case. takeRawVotes
+        // pre-sizes the output with `new Array(store.count)` and fills by index,
+        // which means a skipped ballot leaves a hole rather than a short array —
+        // cvr.length alone would not notice. Check the contents at every count
+        // straddling a block seam, plus the degenerate small ones.
+        const race = makeRace({race_id: 'r0', voting_method: 'STAR', candidateNames: ['Allison', 'Bill', 'Carmen']});
+        const counts = new Set([0, 1, 2, 3]);
+        for (const k of [1, 2, 3]) for (const d of [-2, -1, 0, 1, 2]) counts.add(BLOCK_BALLOTS * k + d);
+
+        for (const n of [...counts].sort((a, b) => a - b)) {
+            // every ballot marked distinctly so a dropped or duplicated one shows up
+            const ballots: BallotVotes[] = Array.from({length: n}, (_, i) => ({
+                votes: [{
+                    race_id: 'r0',
+                    scores: [
+                        {candidate_id: 'c-Allison', score: i % 6},
+                        {candidate_id: 'c-Bill', score: (i + 2) % 6},
+                        {candidate_id: 'c-Carmen', score: (i + 4) % 6},
+                    ],
+                    overvote_rank: i % 7 === 0 ? (i % 5) + 1 : undefined,
+                }],
+            }));
+            const [projection] = await projectBallots([race], asStream(ballots));
+            expect(projection.count).toBe(n);
+            const cvr = projection.takeRawVotes();
+            expect(cvr.length).toBe(n);
+            // scanned by hand rather than with a per-ballot expect: at three
+            // blocks that would be ~100k matcher calls and dominate the suite
+            const problems: string[] = [];
+            for (let i = 0; i < n && problems.length < 3; i++) {
+                const got = cvr[i];
+                if (got === undefined) { problems.push(`cvr[${i}] is a hole`); continue; }
+                const wantMarks = {'c-Allison': i % 6, 'c-Bill': (i + 2) % 6, 'c-Carmen': (i + 4) % 6};
+                if (JSON.stringify(got.marks) !== JSON.stringify(wantMarks)) problems.push(`cvr[${i}].marks = ${JSON.stringify(got.marks)}`);
+                const wantRank = i % 7 === 0 ? (i % 5) + 1 : undefined;
+                if (got.overvote_rank !== wantRank) problems.push(`cvr[${i}].overvote_rank = ${got.overvote_rank}, want ${wantRank}`);
+            }
+            expect(`n=${n}: ${problems.join('; ')}`).toBe(`n=${n}: `);
+        }
+    });
+
     test("shuffling the candidate list doesn't disturb the projection", async () => {
         // getElectionResultsController hands `candidates` to
         // shuffleCandidatesForRandomTiebreak, which sorts it in place. If the
