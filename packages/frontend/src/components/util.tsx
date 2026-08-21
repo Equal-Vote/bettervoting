@@ -311,14 +311,29 @@ export const truncName = (name, maxSize) => {
   return name.slice(0, maxSize - 3).concat("...");
 };
 
+// Fallback when the feedback widget isn't there to click.
+export const FEEDBACK_EMAIL = 'elections@equal.vote';
+
 export const openFeedback = () => {
-  // simulate clicking the feedback button
-  const launcherFrame = document.getElementById("launcher-frame");
-  const button =
-    (launcherFrame as HTMLIFrameElement).contentWindow.document.getElementsByClassName(
-      "launcher-button"
-    )[0];
-  (button as HTMLButtonElement).click();
+  // Simulate clicking the widget's own button. Every step here can fail on a
+  // browser that hasn't loaded the widget — the iframe may be absent, blocked,
+  // or still loading, and reading its document can throw outright. Unguarded,
+  // any of those turned the Feedback menu item into a no-op with nothing but a
+  // console error (#1080, reported on iOS).
+  try {
+    const launcherFrame = document.getElementById("launcher-frame") as HTMLIFrameElement | null;
+    const button = launcherFrame?.contentWindow?.document
+      ?.getElementsByClassName("launcher-button")[0] as HTMLButtonElement | undefined;
+    if (button) {
+      button.click();
+      return;
+    }
+  } catch (err) {
+    console.warn('Feedback widget could not be opened', err);
+  }
+
+  // Rather than appear broken, hand the user a way to reach us.
+  window.location.href = `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent('BetterVoting feedback')}`;
 };
 
 export function scrollToElement(e, opts: { behavior?: ScrollBehavior; delay?: number; cancelOnUserInput?: boolean } = {}) {
