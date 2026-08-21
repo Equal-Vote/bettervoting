@@ -16,8 +16,7 @@ import { io } from "../../socketHandler";
 import { Server } from "socket.io";
 import { expectPermission } from "../controllerUtils";
 import { permissions } from "@equal-vote/star-vote-shared/domain_model/permissions";
-import { OrderedVote } from "@equal-vote/star-vote-shared/domain_model/Vote";
-import { Score } from "@equal-vote/star-vote-shared/domain_model/Score";
+import { OrderedVoteFormatError, orderedVotesToVotes } from "@equal-vote/star-vote-shared/domain_model/OrderedVoteCodec";
 import { makeUniqueID, ID_LENGTHS, ID_PREFIXES } from "@equal-vote/star-vote-shared/utils/makeID";
 
 const ElectionsModel = ServiceLocator.electionsDb();
@@ -124,28 +123,15 @@ async function makeBallotEvent(req: IElectionRequest, targetElection: Election, 
 }
 
 const mapOrderedNewBallot = (ballot: OrderedNewBallot, raceOrder: RaceCandidateOrder[]): NewBallot => {
-    let subBallot: any = {...ballot};
-    delete subBallot.orderedVotes;
-    if(ballot.orderedVotes.length != raceOrder.length){
-        throw new BadRequest(`Ballot contains different number of races than race_order: ${ballot.orderedVotes.length} != ${raceOrder.length}`)
-    }
-    return {
-        ...subBallot,
-        votes: ballot.orderedVotes.map((vote: OrderedVote, i) => {
-            // +2 accounts for overvote_rank and has_duplicate_rank
-            if(vote.length != raceOrder[i].candidate_id_order.length+2){
-                throw new BadRequest(`Race ${i} contains different number of candidates than race_order: ${vote.length} != ${raceOrder[i].candidate_id_order.length+2}`)
-            }
-            return {
-                race_id: raceOrder[i].race_id,
-                scores: vote.slice(0, -2).map((s, j) => ({
-                    candidate_id: raceOrder[i].candidate_id_order[j],
-                    score: s
-                } as Score)),
-                overvote_rank: vote.at(-2),
-                has_duplicate_rank: vote.at(-1) == 1,
-            }
-        })
+    const {orderedVotes, ...subBallot} = ballot;
+    try {
+        return {
+            ...subBallot,
+            votes: orderedVotesToVotes(orderedVotes, raceOrder)
+        }
+    } catch (err: any) {
+        if (err instanceof OrderedVoteFormatError) throw new BadRequest(err.message);
+        throw err;
     }
 }
 async function uploadBallotsController(req: IElectionRequest, res: Response, next: NextFunction) {

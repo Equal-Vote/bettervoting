@@ -1,15 +1,35 @@
 # Initial Landing page for voter (ex. https://bettervoting.com/j87vqp/)
 election_home:
   # start_time example: https://bettervoting.com/tcpwth
-  start_time: '{{capital_election}} Wybory zaczynają się {{datetime, datetime}}'
-  end_time: '{{capital_election}} Wybory kończą się {{datetime, datetime}}'
+  start_time: '{{capital_election}} zaczynają się {{datetime, datetime}}'
+  end_time: '{{capital_election}} kończą się {{datetime, datetime}}'
   ended_time: '{{capital_election}} zakończyły się {{datetime, datetime}}'
   vote: Głosuj
   or_view_results: lub wyświetl wyniki
-  ballot_submitted: '{{capital_ballot}} Karta głosowania wprowadzona'
+  ballot_submitted: '{{capital_ballot}} została wysłana'
   view_results: Wyświetl wyniki 
   drafted: Te wybory są jeszcze w fazie projektowania
   archived: Te wybory zostały zarchiwizowane
+
+election_history:
+  title: Dziennik audytu wyborów
+  subtitle: Publiczny zapis wszystkiego, co wydarzyło się w tych wyborach od momentu ich sfinalizowania.
+  ladder_note: 'Uwaga: liczba oddanych kart do głosowania jest raportowana tylko przy określonych progach (1, 5, 10, 25, 50, 100, 250, ...) w celu ochrony prywatności głosujących, a edycje kart korzystają z drobniejszej skali (1, 2, 5, 10, 25, ...). Z tego samego powodu zdarzenia dotyczące kart do głosowania są raportowane z dokładnością do dnia.'
+  link: Dziennik audytu
+  loading: Ładowanie dziennika audytu…
+  empty: Nie zarejestrowano jeszcze żadnych zdarzeń.
+  not_finalized: Te wybory nie zostały jeszcze sfinalizowane, więc dziennik audytu nie jest dostępny.
+  # Column headers and event chip labels live in EnhancedTable's head cell pool,
+  # which keys its group filters and chip colours off plain English strings.
+  desc:
+    state_initial: 'Wybory weszły w stan "{{to}}"'
+    state_change: 'Stan zmienił się z "{{from}}" na "{{to}}"'
+    preliminary_on: Wyniki wstępne włączone
+    preliminary_off: Wyniki wstępne wyłączone
+    ballots_milestone: 'Liczba oddanych kart do głosowania osiągnęła {{count}}'
+    upload_ballots: 'Administrator wgrał {{count}} kart(y) do głosowania'
+    edits_milestone: 'Liczba edycji kart do głosowania osiągnęła {{count}}'
+    voter_revealed: Administrator użył narzędzia awaryjnego, aby ujawnić identyfikator głosującego
 
 # Ballot (ex. https://bettervoting.com/j87vqp/vote)
 ballot:
@@ -22,11 +42,20 @@ ballot:
   submit_ballot: Wyślij
   submitting: Wysyłam...
 
+  # Draggable RCV UI strings
+  available: Dostępni kandydaci
+  yourRankings: Twój ranking
+  drop_here: Upuść tutaj kandydatów, aby ich uszeregować
+  no_available: Brak dostępnych kandydatów
+  instructions: Przeciągnij kandydatów z listy po lewej stronie na prawą. Kandydaci po prawej tworzą Twój ranking; po lewej pozostają nieuszeregowani.
+  instructions_rcv_draggable: Przeciągnij kandydatów z lewej → na prawą. Pozycja 1 to Twój najlepszy wybór. Nieuszeregowani oznaczają brak preferencji.
+
   dialog_submit_title: Wyślij {{capital_ballot}}?
   dialog_send_receipt: Czy wysłać e-mail z potwierdzeniem głosowania? 
   dialog_email_placeholder: Potwierdzenie e-mailem
   dialog_cancel: Anuluj
   dialog_submit: Wyślij
+  dialog_abstention: Wstrzymanie się - nie wyrażono żadnej preferencji
   warnings:
     skipped_rank: Nie pomijaj rankingów.  Uszereguj kandydatów, wskazując swoje preferencje.  Niewybrani kandydaci będą na końcu.
     duplicate_rank: Nie przyznawaj równej pozycji kilku kandydatom. (Równe rankingi mogą unieważnić Twój głos.)
@@ -34,101 +63,115 @@ ballot:
   methods:
     approval:
       instruction_bullets:
-        - Fill in the bubble next to your favorite
-        - You can select as many {{candidates}} as you like
-      footer_single_winner: The {{candidate}} with the most votes wins
-      footer_multi_winner: The {{n}} {{candidates}} with the most votes wins
+        - Zaznacz pole obok swojego faworyta
+        - Możesz zaznaczyć dowolną liczbę — {{candidates}} nie podlegają limitowi
+      footer_single_winner: Wygrywa {{candidate}} z największą liczbą głosów
+      footer_multi_winner: 'Wygrywają {{candidates}} z największą liczbą głosów (liczba zwycięzców: {{n}})'
       left_title: ''
       right_title: ''
       heading_prefix: ''
     star_pr:
       instruction_bullets:
-       - Give your favorite(s) five stars.
-       - Give your last choice(s) zero stars or leave blank.
-       - Score other {{candidates}} as desired.
-       - Equal scores indicate equal support.
+       - Swojemu faworytowi (lub faworytom) daj pięć gwiazdek — to maksimum, jakie może otrzymać {{candidate}}.
+       - Swojemu ostatniemu wyborowi (lub wyborom) daj zero gwiazdek albo zostaw puste pole.
+       - Resztę oceń według uznania — {{candidates}} mogą otrzymać od 0 do 5 gwiazdek.
+       - Równe oceny oznaczają równe poparcie.
       footer_single_winner: ''
       footer_multi_winner: >
-        Winners in Proportional STAR Voting are selected in rounds. Each round elects the {{candidate}} with the highest total score,
-        then designates that {{candidate}}'s strongest supporters as represented. Subsequent rounds include all voters who are not yet
-        fully represented.
-      # These show above the star columns 
-      left_title: 'Worst'
-      right_title: 'Best'
+        Zwycięzcy w metodzie Proportional STAR Voting wyłaniani są w kolejnych rundach. W każdej rundzie zwycięża {{candidate}}
+        z najwyższym łącznym wynikiem, a najsilniejsi zwolennicy, jakich ma {{candidate}}, zostają uznani za reprezentowanych.
+        W kolejnych rundach uczestniczą wszyscy głosujący, którzy nie są jeszcze w pełni reprezentowani.
+      # These show above the star columns
+      left_title: 'Najgorzej'
+      right_title: 'Najlepiej'
     star:
       instruction_bullets:
-       - Give your favorite(s) five stars.
-       - Give your last choice(s) zero stars or leave blank.
-       - Score other {{candidates}} as desired.
-       - Equal scores indicate equal support.
+       - Swojemu faworytowi (lub faworytom) daj pięć gwiazdek.
+       - Swojemu ostatniemu wyborowi (lub wyborom) daj zero gwiazdek albo zostaw puste pole.
+       - Resztę oceń według uznania — {{candidates}} mogą otrzymać od 0 do 5 gwiazdek.
+       - Równe oceny oznaczają równe poparcie.
       footer_single_winner: |
-        The two highest scoring {{candidates}} are finalists.
-        Your full vote goes to the finalist you prefer.
+        Do finału przechodzą {{candidates}} z dwoma najwyższymi wynikami.
+        Twój pełny głos trafia do finalisty, którego wolisz.
       footer_multi_winner: >
-        This election uses STAR Voting and will elect {{n}} winners.
-        In STAR Voting the two highest scoring {{candidates}} are finalists and the finalist preferred by more voters wins.
-      # These show above the star columns 
-      left_title: 'Worst'
-      right_title: 'Best'
-    rcv: 
+        Te wybory wykorzystują metodę STAR Voting i wyłonią {{n}} zwycięzców.
+        W głosowaniu STAR do finału przechodzą {{candidates}} z dwoma najwyższymi wynikami, a wygrywa finalista preferowany przez większą liczbę głosujących.
+      # These show above the star columns
+      left_title: 'Najgorzej'
+      right_title: 'Najlepiej'
+    rcv:
       instruction_bullets:
-        - Rank the {{candidates}} in order of preference. (1st, 2nd, 3rd, etc.)
-        - Ranking {{candidates}} equally is not allowed.
-        - '{{capital_candidates}} left blank are ranked last'
-      footer_single_winner: > 
-        How RCV is counted: Ballots are counted in elimination rounds. In each round, your vote goes to the candidate you ranked highest, 
-        if possible. If no candidate has a majority of remaining votes the candidate with the fewest votes is eliminated. 
-        If your vote is unable to transfer, it will not be counted in later rounds. If a candidate has a majority of remaining votes 
-        in a round, they are elected.
+        - Uszereguj według swoich preferencji — {{candidates}} otrzymują pozycje 1., 2., 3. itd.
+        - Nadawanie równych pozycji nie jest dozwolone ({{candidates}} muszą mieć różne pozycje).
+        - '{{capital_candidates}} pozostawieni bez pozycji trafiają na koniec'
+      footer_single_winner: >
+        Jak liczone jest RCV: karty do głosowania są liczone w rundach eliminacyjnych. W każdej rundzie Twój głos trafia,
+        jeśli to możliwe, do najwyżej uszeregowanego przez Ciebie kandydata. Jeśli żaden kandydat nie ma większości pozostałych głosów,
+        odpada kandydat z najmniejszą liczbą głosów. Jeśli Twojego głosu nie można przenieść, nie będzie on liczony w kolejnych rundach.
+        Kandydat, który w danej rundzie zdobędzie większość pozostałych głosów, zostaje wybrany.
+      left_title: ''
+      right_title: ''
+    stv:
+      instruction_bullets:
+        - Uszereguj według swoich preferencji — {{candidates}} otrzymują pozycje 1., 2., 3. itd.
+        - Nadawanie równych pozycji nie jest dozwolone ({{candidates}} muszą mieć różne pozycje).
+        - '{{capital_candidates}} pozostawieni bez pozycji trafiają na koniec'
+      footer_multi_winner: ''
       left_title: ''
       right_title: ''
     ranked_robin:
       instruction_bullets:
-        - Rank the {{candidates}} in order of preference.
-        - Equal ranks are allowed
-        - '{{capital_candidates}} left blank are ranked last'
+        - Uszereguj według swoich preferencji — {{candidates}} otrzymują kolejne pozycje.
+        - Równe pozycje są dozwolone
+        - '{{capital_candidates}} pozostawieni bez pozycji trafiają na koniec'
       footer_single_winner: |
-        {{capital_candidates}} are compared in one-on-one match-ups.
-        A {{candidate}} wins a match-up if they are ranked higher than the opponent by more voters
+        {{capital_candidates}} rywalizują w pojedynkach jeden na jeden.
+        Pojedynek wygrywa {{candidate}} z wyższą pozycją u większej liczby głosujących
       left_title: ''
       right_title: ''
     choose_one:
       instruction_bullets:
-        - Fill in the bubble next to your favorite
-      footer_single_winner: The {{candidate}} with the most votes wins
-      footer_multi_winner: The {{n}} {{candidates}} with the most votes win
+        - Zaznacz pole obok swojego faworyta
+      footer_single_winner: Wygrywa {{candidate}} z największą liczbą głosów
+      footer_multi_winner: 'Wygrywają {{candidates}} z największą liczbą głosów (liczba zwycięzców: {{n}})'
       left_title: ''
       right_title: ''
 
 # Displayed at the bottom of voter pages (ex. https://bettervoting.com/j87vqp/)
-support_blurb: For support on this {{election}} please contact [{{email}}](mailto)
+support_blurb: 'Aby uzyskać pomoc dotyczącą tego głosowania ({{election}}), napisz na adres [{{email}}](mailto)'
 
 # Share Button dropdown (ex. https://bettervoting.com/pres24/thanks)
 share:
-  button: Share {{capital_election}}
+  button: 'Udostępnij: {{capital_election}}'
+  button_results: 'Udostępnij wyniki: {{capital_election}}'
   facebook: Facebook
   X: X
   reddit: Reddit
-  copy_link: Copy Link
-  link_copied: Link Copied!
+  copy_link: Kopiuj link
+  link_copied: Link skopiowany!
 
 # Number translations (used for {{spelled_count}})
+# NOTE: these are in the accusative (masculine-personal) case, because their only
+# use is in ballot.this_election_uses: "…aby wybrać {{spelled_count}} $t(winner.winner)".
 spelled_numbers:
-  1: one
-  2: two
-  3: three
-  4: four
-  5: five
-  6: six
-  7: seven
-  8: eight
-  9: nine
-  10: ten
+  1: jednego
+  2: dwóch
+  3: trzech
+  4: czterech
+  5: pięciu
+  6: sześciu
+  7: siedmiu
+  8: ośmiu
+  9: dziewięciu
+  10: dziesięciu
 
-# Winner pluralization
+# Winner pluralization (accusative, governed by "aby wybrać" — see spelled_numbers note).
+# Polish needs the _few/_many plural categories in addition to _one/_other.
 winner:
-  winner_one: winner
-  winner_other: winners
+  winner_one: zwycięzcę
+  winner_few: zwycięzców
+  winner_many: zwycięzców
+  winner_other: zwycięzców
 
 methods: 
   star:
@@ -161,113 +204,134 @@ methods:
 
 # Confirmation (after you've submitted a ballot)
 ballot_submitted:
-  title: '{{capital_ballot}} Submitted'
-  description: Thank you for voting!
-  results: Results
-  donate: Donate to Equal Vote to support open source voting software
-  end_time: '{{capital_election}} ends {{date}} at {{time}}'
+  title: '{{capital_ballot}} została wysłana'
+  description: Dziękujemy za oddanie głosu!
+  results: Wyniki
+  donate: Przekaż darowiznę na rzecz Equal Vote, aby wesprzeć otwarte oprogramowanie do głosowania
+  end_time: '{{capital_election}} — zakończenie: {{date}} o {{time}}'
+  update_ballot_disabled: Te wybory nie pozwalają na aktualizowanie kart do głosowania. Wszystkie karty są ostateczne po wysłaniu
+  update_ballot_enabled_open: Możesz zaktualizować swoją kartę do głosowania, korzystając z linku w e-mailu z potwierdzeniem
+  update_ballot_enabled_closed: Wybory zostały zakończone. Wszystkie karty do głosowania są ostateczne
+  status: 'Status:'
+  precinct: 'Obwód:'
+  ballot_id: 'ID karty do głosowania:'
+  update_ballot: 'Aktualizuj kartę do głosowania:'
 
 # Localisation for numbers
 number:
-  rank_ordinal_one: "{{count}}st"
-  rank_ordinal_two: "{{count}}nd"
-  rank_ordinal_few: "{{count}}rd"
-  rank_ordinal_other: "{{count}}th"
+  rank_ordinal_one: "{{count}}."
+  rank_ordinal_two: "{{count}}."
+  rank_ordinal_few: "{{count}}."
+  rank_ordinal_other: "{{count}}."
 
 # Results Example: bettervoting.com/tcvc7r/results
 results:
-  preliminary_title: PRELIMINARY RESULTS
-  official_title: OFFICIAL RESULTS
+  admin_results_toggle: '{{capital_election}} - wyniki są publiczne !tip(public_results)'
+
+  preliminary_title: WYNIKI WSTĘPNE
+  official_title: WYNIKI OFICJALNE
   election_title: |
-    {{capital_election}} Name:
+    {{capital_election}} — nazwa:
     {{title}}
   race_title: '{{capital_race}} {{n}}: {{title}}'
-  single_candidate_result: '{{name}} is the only {{candidate}}, and wins by default'
-  loading_election: Loading {{capital_election}}...
-  details: Race Details
-  additional_info: Stats for Nerds
+  single_candidate_result: '{{name}} to jedyny {{candidate}}, więc wygrywa automatycznie'
+  loading_election: 'Ładowanie: {{capital_election}}...'
+  details: Szczegóły rywalizacji
+  additional_info: Statystyki dla dociekliwych
+  not_enough_candidates: |
+    Ta rywalizacja ma obecnie tylko jednego kandydata.
+    Wyniki zostaną wyświetlone, gdy administratorzy wyborów zatwierdzą dodatkowych kandydatów.
   waiting_for_results: |
-    Still waiting for results
-    No votes have been cast
+    Wciąż czekamy na wyniki
+    Nie oddano jeszcze żadnych głosów
   single_vote: |
-    There's only one vote so far.
-    Full results will be displayed once there's more votes.
-  tie_title: 'Tied!'
-  random_tiebreak_subtitle: '{{names}} won after tie breaker'
-  win_title_postfix_one: 'Wins!'
-  win_title_postfix: 'Win!'
-  vote_count: '{{n}} voters'
-  method_context: 'Voting Method: {{voting_method}}'
-  learn_link_text: How {{voting_method}} works
+    Na razie oddano tylko jeden głos.
+    Pełne wyniki pojawią się, gdy głosów będzie więcej.
+  tie_title: 'Remis!'
+  random_tiebreak_subtitle: '{{names}} — zwycięstwo po rozstrzygnięciu remisu !tip(random_tie_order)'
+  win_long_title_prefix: '⭐Zwycięzcy⭐'
+  win_title_postfix_one: 'wygrywa!'
+  win_title_postfix: 'wygrywają!'
+  vote_count: 'Liczba głosujących: {{n}}'
+  method_context: 'Metoda głosowania: {{voting_method}}'
+  learn_link_text: Jak działa {{voting_method}}
+
+  admin_title: Panel administratora wyników
 
   choose_one:
-    bar_title: Votes for each {{capital_candidate}}
-    table_title: Table
+    bar_title: Liczba głosów — {{capital_candidate}}
+    table_title: Tabela
     table_columns:
       - '{{capital_candidate}}'
-      - Votes
-      - '% All Votes'
+      - Głosy
+      - '% wszystkich głosów'
 
   approval:
-    bar_title: Candidate Approval
-    table_title: Table
+    bar_title: Aprobata kandydatów
+    table_title: Tabela
     table_columns:
       - '{{capital_candidate}}'
-      - Votes
-      - '% All Votes'
+      - Głosy
+      - '% wszystkich głosów'
 
   ranked_robin:
-    bar_title: Head-to-head wins
-    table_title: Table
+    bar_title: Wygrane pojedynki
+    table_title: Tabela
     table_columns:
       - '{{capital_candidate}}'
-      - '# Wins'
-      - Win Rate
+      - Liczba wygranych
+      - Odsetek wygranych
 
   rcv:
-    first_choice_title: First Choice Preferences
-    final_round_title: Final Runoff
-    table_title: Ranked Choice Tabulation Rounds
-    runoff_majority: majority of remaining active votes
-    exhausted: Exhausted
+    first_choice_title: Preferencje pierwszego wyboru
+    final_round_title: Finałowa dogrywka
+    table_title: Rundy tabulacji RCV
+    runoff_majority: większość pozostałych aktywnych głosów
+    exhausted: Wyczerpane
     tabulation_candidate_column: '{{capital_candidate}}'
-    round_column: Round {{n}}
+    round_column: Runda {{n}}
+    bloc_results_title: Pierwsza i ostatnia runda wyłaniania każdego zwycięzcy
+
+  stv:
+    table_title: Rundy tabulacji STV
 
   star:
-    score_title: Scoring Round
+    score_title: Runda oceniania
     score_description:
-      - Add the stars from all the ballots.
-      - The two highest scoring {{candidates}} are the finalists.
-    runoff_title: Automatic Runoff Round
+      - Zsumuj gwiazdki ze wszystkich kart do głosowania.
+      - Do finału przechodzą {{candidates}} z dwoma najwyższymi wynikami.
+    runoff_title: Runda automatycznej dogrywki
     runoff_description:
-      - Each vote goes to the voter's preferred finalist.
-      - Finalist with most votes wins.
-    runoff_majority: majority of voters with preference
-    score_table_title: Scores Table
+      - Każdy głos trafia do finalisty preferowanego przez głosującego.
+      - Wygrywa finalista z największą liczbą głosów.
+    runoff_majority: większość głosujących z preferencją
+    runoff_no_preference_footnote: "{{percentage}}% głosujących nie wyraziło preferencji między dwoma finalistami."
+    score_table_title: Tabela wyników
     score_table_columns:
       - '{{capital_candidate}}'
-      - Score
-    runoff_table_title: Runoff Table
+      - Wynik
+    runoff_table_title: Tabela dogrywki
     runoff_table_columns:
       - '{{capital_candidate}}'
-      - Runoff Votes
-      - '% Runoff Votes'
-      - '% Between Finalists'
+      - Głosy w dogrywce
+      - '% głosów w dogrywce'
+      - '% między finalistami'
 
-    detailed_steps_title: Tabulation Steps
-    tiebreaker_note_title: A note on Tiebreakers
-    tiebreaker_note_text: 
-      - Ties are broken using the [Offical Tiebreaker Protocol](https://starvoting.org/ties) whenever possible.
-      - Ties are 10 times less likely to occur with STAR Voting than with Choose-One Voting and generally resolve as the number of voters increases.
-    equal_preferences_title: Distribution of Equal Support
-    equal_preferences: Equal Support
-    score_higher_than_runoff_title: Why is the top scoring candidate different from the winner?
+    detailed_steps_title: Kroki tabulacji
+    tiebreaker_note_title: Uwaga o rozstrzyganiu remisów
+    tiebreaker_note_text:
+      - Remisy są rozstrzygane, gdy tylko to możliwe, zgodnie z [oficjalnym protokołem rozstrzygania remisów](https://starvoting.org/ties).
+      - W głosowaniu STAR remisy zdarzają się dziesięciokrotnie rzadziej niż w głosowaniu na jednego kandydata i zwykle przestają występować wraz ze wzrostem liczby głosujących.
+      - Aby zrozumieć, jak rozstrzygnięto remis, zalecamy [zapoznać się z oficjalnym protokołem rozstrzygania remisów w głosowaniu STAR](https://starvoting.org/ties), a następnie prześledzić poniższe kroki, aby zobaczyć, jak rozstrzygnięto go w tych wyborach.
+    equal_preferences_title: Rozkład równego poparcia
+    equal_preferences: Równe poparcie
+    score_higher_than_runoff_title: Dlaczego kandydat z najwyższym wynikiem różni się od zwycięzcy?
     score_higher_than_runoff_text: |
-      The top-scoring candidate often matches the runoff winner, but not always. 
-      In the runoff, only the most preferred votes count, which can shift the outcome. 
-      For example, a 5 vs. 4-star vote has less impact in scoring but counts fully in the runoff, 
-      while a 5 vs. 0-star vote makes a big difference in scoring but is equal in the runoff. 
-      The runoff winner comes out on top because more voters prefer them over the runner-up.
+      Kandydat z najwyższym wynikiem często pokrywa się ze zwycięzcą dogrywki, ale nie zawsze.
+      W dogrywce liczy się wyłącznie to, którego finalistę głosujący woli, co może zmienić rozstrzygnięcie.
+      Na przykład głos 5 kontra 4 gwiazdki ma mniejszy wpływ w rundzie oceniania, ale w dogrywce liczy się w pełni,
+      a głos 5 kontra 0 gwiazdek robi dużą różnicę w ocenianiu, lecz w dogrywce waży tyle samo.
+      Zwycięzca dogrywki wygrywa, ponieważ więcej głosujących woli go od drugiego finalisty.
     # Alternate Text:
     # The top-scoring candidate usually matches the winner in the runoff, but not always. 
     # The runoff round counts only the votes for the candidate a voter most prefers, which can lead to different weightings than in the scoring round. 
@@ -276,55 +340,64 @@ results:
     # Ultimately, the runoff winner becomes the final winner because they are preferred by more voters over the runner-up.
 
   star_pr:
-    chart_title: Round Results
-    table_title: Results Table
+    chart_title: Wyniki rundy {{n}}
+    table_title: Tabela wyników
     table_columns:
       - '{{capital_candidate}}'
-    round_column: Round {{n}}
+    round_column: Runda {{n}}
 
 keyword:
   # Method Terms
   star:
-    preferences: scores
+    preferences: oceny
   star_pr:
-    preferences: scores
+    preferences: oceny
   approval:
-    preferences: approvals
+    preferences: aprobaty
   rcv:
-    preferences: ranks
+    preferences: pozycje
   stv:
-    preferences: ranks
+    preferences: pozycje
   ranked_robin:
-    preferences: ranks
+    preferences: pozycje
   choose_one:
-    preferences: preferences
+    preferences: preferencje
 
   # Election vs Poll Terms
-  election: 
+  # NOTE: these are interpolated in the NOMINATIVE case; the surrounding strings
+  # are phrased so the nominative reads correctly.
+  election:
     election: wybory
-    elections: elections
-    candidate: candidate
-    candidates: candidates
-    race: race
-    ballot: ballot
-    vote: vote
+    elections: wybory
+    candidate: kandydat
+    candidates: kandydaci
+    race: rywalizacja
+    races: rywalizacje
+    race_title: nazwa wybieranego urzędu
+    ballot: karta do głosowania
+    vote: głos
+    votes: głosy
 
   poll:
-    election: poll
-    elections: polls
-    candidate: option
-    candidates: options
-    race: question
-    ballot: response
-    vote: response
+    election: ankieta
+    elections: ankiety
+    candidate: opcja
+    candidates: opcje
+    race: pytanie
+    races: pytania
+    race_title: tytuł pytania
+    ballot: odpowiedź
+    vote: odpowiedź
+    votes: odpowiedzi
 
   # General Terms
   yes: Yes
   no: No
 
-  save: Save
-  cancel: Cancel
-  submit: Submit
+  save: Zapisz
+  cancel: Anuluj
+  submit: Wyślij
+  close: Zamknij
 
   # This is used in tables and charts
-  total: Total 
+  total: Suma

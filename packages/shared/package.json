@@ -14,8 +14,10 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/sanitize-html": "^2.13.0",
     "rimraf": "^5.0.5",
-    "typescript": "^5.9.0"
+    "typescript": "^5.9.0",
+    "typescript-json-schema": "^0.65.1"
   },
   "peerDependencies": {
     "typescript": "^5.9.0"
@@ -46,12 +48,6 @@
     }
   },
   "dependencies": {
-    "@equal-vote/star-vote-backend": "^1.0.0",
-    "@equal-vote/star-vote-frontend": "^0.1.0",
-    "@types/sanitize-html": "^2.13.0",
-    "sanitize-html": "^2.13.1",
-    "socket.io": "^4.7.5",
-    "socket.io-client": "^4.7.5",
-    "typescript-json-schema": "^0.65.1"
+    "sanitize-html": "^2.17.7"
   }
 }
