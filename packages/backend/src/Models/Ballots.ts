@@ -3,7 +3,7 @@ import { Uid } from '@equal-vote/star-vote-shared/domain_model/Uid';
 import { ILoggingContext } from '../Services/Logging/ILogger';
 import Logger from '../Services/Logging/Logger';
 import { logSafeHash } from '../Services/Logging/logSafeHash';
-import { IBallotStore } from './IBallotStore';
+import { BallotVotes, IBallotStore } from './IBallotStore';
 import { Kysely, sql, Transaction } from 'kysely';
 import { Database } from './Database';
 import { InternalServerError } from '@curveball/http-errors';
@@ -133,6 +133,26 @@ export default class BallotsDB implements IBallotStore {
             // the streaming equivalent of secureShuffle in controllerUtils.
             .orderBy(sql`gen_random_uuid()`)
             .stream(500) as AsyncIterableIterator<Ballot>;
+    }
+
+    // Tabulation only reads the marks, so select just the `votes` column and
+    // stream it from a cursor. Skipping ballot_id/history/timestamps and never
+    // holding the full result set is what keeps a large election's tabulation
+    // from inflating the heap (see issue #1425).
+    //
+    // The filter deliberately matches getBallotsByElectionID (head only, any
+    // status) rather than streamSubmittedBallotsByElectionID — narrowing it to
+    // submitted ballots here would silently change election results.
+    streamVotesByElectionID(election_id: string, ctx: ILoggingContext, db?: Kysely<Database> | Transaction<Database>): AsyncIterableIterator<BallotVotes> {
+        Logger.debug(ctx, `${tableName}.streamVotesByElectionID ${election_id}`);
+        const client = db || this._postgresClient;
+
+        return client
+            .selectFrom(tableName)
+            .select('votes')
+            .where('election_id', '=', election_id)
+            .where('head', '=', true)
+            .stream(500) as AsyncIterableIterator<BallotVotes>;
     }
 
     getBallotByVoterID(voter_id: string, election_id: string, ctx: ILoggingContext, db?: Kysely<Database> | Transaction<Database>): Promise<Ballot | undefined> {
