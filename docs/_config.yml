@@ -8,6 +8,12 @@ logo: images/logo.png
 # site, which already knows which repo it is building.
 repository: Equal-Vote/bettervoting
 
+# Renders ```mermaid fenced code blocks as diagrams. just-the-docs loads the
+# library from jsDelivr at this version; without the key the fence renders as
+# a plain code block. Bumping the version is the only maintenance this needs.
+mermaid:
+  version: "11.4.1"
+
 # Enables `redirect_from:` in a page's front matter, so a page that moves can
 # leave its old URL working. Without this key the front matter is silently
 # ignored and the old URL 404s. The gem ships with the `github-pages` bundle
