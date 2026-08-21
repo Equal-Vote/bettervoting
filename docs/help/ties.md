@@ -1,8 +1,9 @@
 ---
 layout: default
 title: Ties
-nav_order: 6
-parent: BetterVoting Documentation
+nav_order: 3
+parent: Counting and Results
+grand_parent: Running an Election
 ---
 
 {:toc}

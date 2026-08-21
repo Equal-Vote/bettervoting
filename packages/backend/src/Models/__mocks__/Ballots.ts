@@ -1,7 +1,7 @@
 import { Ballot } from "@equal-vote/star-vote-shared/domain_model/Ballot";
 import { Uid } from "@equal-vote/star-vote-shared/domain_model/Uid";
 import { ILoggingContext } from "../../Services/Logging/ILogger";
-import { IBallotStore } from "../IBallotStore";
+import { BallotVotes, IBallotStore } from "../IBallotStore";
 
 export default class BallotsDB implements IBallotStore {
     ballots: Ballot[] = [];
@@ -44,6 +44,17 @@ export default class BallotsDB implements IBallotStore {
         }
         for (const ballot of ballots) {
             yield JSON.parse(JSON.stringify(ballot));
+        }
+    }
+
+    // mirrors getBallotsByElectionID's filter (see Ballots.ts) so tabulation
+    // sees exactly the same ballots as the old non-streaming path
+    async *streamVotesByElectionID(election_id: string, ctx:ILoggingContext): AsyncIterableIterator<BallotVotes> {
+        const ballots = this.ballots.filter(
+            (ballot) => ballot.election_id === election_id
+        );
+        for (const ballot of ballots) {
+            yield { votes: JSON.parse(JSON.stringify(ballot.votes)) };
         }
     }
 
