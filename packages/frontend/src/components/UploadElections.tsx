@@ -10,6 +10,7 @@ import { Candidate } from "@equal-vote/star-vote-shared/domain_model/Candidate";
 import { Election, NewElection } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { useGetElections } from "~/hooks/useAPI";
 import { OrderedNewBallot, RaceCandidateOrder } from "@equal-vote/star-vote-shared/domain_model/Ballot";
+import { encodeOrderedVote } from "@equal-vote/star-vote-shared/domain_model/OrderedVoteCodec";
 import { inferElectionSettings } from "./ElectionSettingInference";
 import { PrimaryButton, SecondaryButton } from "./styles";
 import { makeDefaultElection } from "./ElectionForm/Wizard/Wizard";
@@ -169,7 +170,7 @@ const UploadElections = () => {
                         delete subBallot.votes;
                         return {
                             ...subBallot,
-                            orderedVotes: b.votes.map(v => [...v.scores.map(s => s.score), v.overvote_rank, v.has_duplicate_rank? 1 : 0])
+                            orderedVotes: b.votes.map(v => encodeOrderedVote(v.scores.map(s => s.score), v.overvote_rank, v.has_duplicate_rank ?? false))
                         }
                     });
 
