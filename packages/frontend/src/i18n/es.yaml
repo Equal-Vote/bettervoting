@@ -204,8 +204,8 @@ results:
     Los resultados totales serán mostrados una vez se hayan emitido más votos.
   tie_title: '¡Empate!'
   random_tiebreak_subtitle: '{{names}} ganó después de un desempate.'
-  win_title_postfix_one: '¡Gana!'
-  win_title_postfix: '¡Ganan!'
+  win_title_one: '⭐ {{names}} ¡Gana! ⭐'
+  win_title: '⭐ {{names}} ¡Ganan! ⭐'
   vote_count: '{{n}} votantes'
   method_context: 'Método de votación: {{voting_method}}'
   learn_link_text: Cómo {{voting_method}} funciona

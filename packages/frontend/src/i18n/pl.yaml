@@ -194,8 +194,8 @@ results:
     Full results will be displayed once there's more votes.
   tie_title: 'Tied!'
   random_tiebreak_subtitle: '{{names}} won after tie breaker'
-  win_title_postfix_one: 'Wins!'
-  win_title_postfix: 'Win!'
+  win_title_one: '⭐ {{names}} Wins! ⭐'
+  win_title: '⭐ {{names}} Win! ⭐'
   vote_count: '{{n}} voters'
   method_context: 'Voting Method: {{voting_method}}'
   learn_link_text: How {{voting_method}} works

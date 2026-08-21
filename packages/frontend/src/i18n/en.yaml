@@ -246,9 +246,10 @@ results:
     No votes have been cast
   tie_title: 'Tied!'
   random_tiebreak_subtitle: '{{names}} won after tiebreaker !tip(random_tie_order)'
-  win_long_title_prefix: '⭐Winners⭐'
-  win_title_postfix_one: 'wins!'
-  win_title_postfix: 'win!'
+  win_long_title_prefix: '⭐ Winners ⭐'
+  win_uncontested_title: '⭐ {{name}} wins uncontested ⭐'
+  win_title_one: '⭐ {{names}} wins! ⭐'
+  win_title: '⭐ {{names}} win! ⭐'
   vote_count: '{{n}} voters'
   method_context: 'Voting Method: {{voting_method}}'
   learn_link_text: How {{voting_method}} works
