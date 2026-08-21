@@ -95,7 +95,7 @@ const AddElectionRoll = ({ onClose }: { onClose: () => void }) => {
                 return;
             }
 
-            const dialogTitle = 'You entered duplicate emails, which is not supported. Would you like us to remove duplicates?'
+            const dialogTitle = 'You entered the same voter more than once, which is not supported. Would you like us to remove duplicates?'
             const confirmed = await confirm({ title: dialogTitle, message: '', submit: 'Yes', cancel: 'No' });
             if (confirmed) {
                 const newRolls = removeDuplicates(rolls)
@@ -143,7 +143,7 @@ const AddElectionRoll = ({ onClose }: { onClose: () => void }) => {
 
 
 
-            const dialogTitle = 'You entered duplicate emails, which is not supported. Would you like us to remove duplicates?'
+            const dialogTitle = 'You entered the same voter more than once, which is not supported. Would you like us to remove duplicates?'
             const confirmed = await confirm({ title: dialogTitle, message: '', submit: 'Yes', cancel: 'No' });
             if (confirmed) {
                 const newRolls = removeDuplicates(rolls)
@@ -155,16 +155,30 @@ const AddElectionRoll = ({ onClose }: { onClose: () => void }) => {
         fileReader.readAsText(e.target.files[0]);
     }
 
+    // What identifies a row is whichever of these columns it actually carries.
+    // Keying on email alone meant that with the Email column unticked — every
+    // admin-managed voter ID election — each row keyed to the empty string, so
+    // the second row always "duplicated" the first.
+    function identityKeys(roll: RollInput): string[] {
+        const keys: string[] = [];
+        const email = (roll.email || "").trim().toLowerCase();
+        const voterId = (roll.voter_id || "").trim().toLowerCase();
+        if (email) keys.push(`email:${email}`);
+        if (voterId) keys.push(`voter_id:${voterId}`);
+        return keys;
+    }
+
     function removeDuplicates(checkRolls: RollInput[]): RollInput[] {
         const seen = new Set<string>();
         const uniqueRolls: RollInput[] = [];
 
         for (const roll of checkRolls) {
-            const email = (roll.email || "").trim().toLowerCase();
-            if (!seen.has(email)) {
-                seen.add(email);
-                uniqueRolls.push(roll);
-            }
+            const keys = identityKeys(roll);
+            // A row carrying no identifying column cannot duplicate anything,
+            // so it is kept rather than collapsed into the first such row.
+            if (keys.length > 0 && keys.some(key => seen.has(key))) continue;
+            keys.forEach(key => seen.add(key));
+            uniqueRolls.push(roll);
         }
 
         return uniqueRolls;
@@ -173,11 +187,9 @@ const AddElectionRoll = ({ onClose }: { onClose: () => void }) => {
     function duplicatesExist(pendingRolls: RollInput[]): boolean {
         const seen = new Set<string>();
         for (const roll of pendingRolls) {
-            const email = (roll.email || "").trim().toLowerCase();
-            if (seen.has(email)) return true;
-            if (!seen.has(email)) {
-                seen.add(email);
-            }
+            const keys = identityKeys(roll);
+            if (keys.some(key => seen.has(key))) return true;
+            keys.forEach(key => seen.add(key));
         }
 
         return false;

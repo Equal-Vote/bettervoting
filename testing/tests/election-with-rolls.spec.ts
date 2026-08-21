@@ -140,6 +140,12 @@ test.describe('Add Voters', () => {
         await page.getByRole('button', {name: 'Submit'}).click(); // confirm that voter list setings can be updated after the first voter
         await page.getByLabel('Voter Data').fill(voterIds.join('\n'));
         await page.getByRole('button', {name: 'Submit'}).click();
+
+        // Every row must land. Without this the test passed while the duplicate
+        // check — which keyed on email, absent in this mode — collapsed five
+        // voter IDs into one (#1513).
+        await page.goto(`/${electionId}/admin/voters`);
+        await expect(page.getByText(`1–${voterIds.length} of ${voterIds.length}`)).toBeVisible();
     });
     test('clear voters to unlock the voter list settings', async ({ page, request }) => {
         const response = await request.post(`${API_BASE_URL}/Election/${electionId}/rolls`, {
