@@ -21,6 +21,22 @@ export const useElectionExists = (electionID: string | undefined) => {
     return useFetch<undefined, { exists: boolean | string}>(`/API/Election/${electionID}/exists`, 'get')
 }
 
+export type HistoryEvent =
+    | { type: 'state_change'; timestamp: string; from: string | null; to: string }
+    | { type: 'preliminary_results_change'; timestamp: string; to: boolean }
+    | { type: 'ballots_milestone'; timestamp: string; count: number }
+    | { type: 'upload_ballots'; timestamp: string; count: number }
+    | { type: 'ballots_edited_milestone'; timestamp: string; count: number }
+    | { type: 'voter_id_revealed'; timestamp: string };
+
+export const useGetElectionHistory = (electionID: string | undefined) => {
+    return useFetch<undefined, {
+        election_id: string,
+        finalized_at: string,
+        events: HistoryEvent[]
+    }>(`/API/Election/${electionID}/history`, 'get')
+}
+
 export const useGetElections = () => {
     return useFetch<undefined, {
         elections_as_official: Election[] | null,
@@ -97,6 +113,14 @@ export const usePutElectionRoles = (election_id: string) => {
 
 export const usePostRolls = (election_id: string) => {
     return useFetch<{ electionRoll: ElectionRoll[] }, object>(`/API/Election/${election_id}/rolls/`, 'post')
+}
+
+export const useClearRolls = (election_id: string) => {
+    return useFetch<undefined, { election: Election, cleared: number }>(
+        `/API/Election/${election_id}/rolls/`,
+        'delete',
+        'Voter List Cleared!',
+    )
 }
 
 export const useSetPublicResults = (election_id: string) => {

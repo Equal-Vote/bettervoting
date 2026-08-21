@@ -6,7 +6,7 @@ import AddElectionRoll from "./AddElectionRoll";
 import PermissionHandler from "../../PermissionHandler";
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, Radio, RadioGroup, Typography } from "@mui/material";
 import EnhancedTable, { HeadKey }  from "./../../EnhancedTable";
-import { useGetRolls, useSendEmails } from "../../../hooks/useAPI";
+import { useClearRolls, useGetRolls, useSendEmails } from "../../../hooks/useAPI";
 import useElection from "../../ElectionContextProvider";
 import useFeatureFlags from "../../FeatureFlagContextProvider";
 import { ElectionRollResponse } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll";
@@ -21,6 +21,7 @@ const ViewElectionRolls = () => {
     const { election, permissions, t, updateElection } = useElection()
     const { data, isPending, makeRequest: fetchRolls } = useGetRolls(election.election_id)
     const sendEmails = useSendEmails(election.election_id)
+    const clearRolls = useClearRolls(election.election_id)
     useEffect(() => {
         if(election.settings.voter_access == 'closed')  fetchRolls()
     }, [])
@@ -94,6 +95,16 @@ const ViewElectionRolls = () => {
         [data]
     );
 
+    // Adding the first voter locks the voter auth radios above. While the election is still a
+    // draft that lock is undoable: clearing the roll empties it and re-enables the radios.
+    const canClearRolls = election.state === 'draft' && electionRollData.length > 0;
+
+    const onClearRolls = async () => {
+        if (!await confirm(t('admin_home.clear_voter_roll_confirm', { voter_count: electionRollData.length }))) return;
+        if (!await clearRolls.makeRequest()) return;
+        await fetchRolls();
+    }
+
     return (
         <>
             <Box>
@@ -157,6 +168,13 @@ const ViewElectionRolls = () => {
                         }
                         {usesEmail &&
                             <SecondaryButton onClick={() => setDialogOpen(true)} sx={{ml: 2}}>Draft Email Blast</SecondaryButton>
+                        }
+                        {canClearRolls &&
+                            <PermissionHandler permissions={permissions} requiredPermission={'canAddToElectionRoll'}>
+                                <SecondaryButton onClick={onClearRolls} disabled={clearRolls.isPending} sx={{ml: 2}}>
+                                    {t('admin_home.clear_voter_roll_button')}
+                                </SecondaryButton>
+                            </PermissionHandler>
                         }
                         <EnhancedTable
                             headKeys={headKeys}
