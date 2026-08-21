@@ -133,4 +133,45 @@ describe("IRV Tests", () => {
         expect(results.exhaustedVoteCounts).toStrictEqual([1,2,3]); 
         expect(results.nExhaustedViaOvervote).toBe(3); 
     })
+
+    test("No ballots have been cast yet", () => {
+        // Regression test for election mkvb4f, which 500'd its results page.
+        // With no votes at all nobody can reach the quota, so every round eliminates
+        // another candidate. Once the last one was gone the loop kept going and read
+        // remainingCandidates[0] off an empty array, throwing on .hareScores.
+        // STV survives this because it seats the survivors once they can fill the
+        // remaining seats; plain IRV has no such branch, so it has to stop instead.
+        const candidates = ['Alice', 'Bob', 'Carol']
+
+        const results = IRV(...mapMethodInputs(candidates, []), 2)
+        expect(results.elected.length).toBe(0);
+        expect(results.summaryData.nTallyVotes).toBe(0);
+    })
+
+    test("Single winner with no ballots", () => {
+        // The same crash never needed multiple seats: an ordinary single-winner IRV
+        // race that nobody had voted in yet was enough to take the results page down.
+        const candidates = ['Alice', 'Bob', 'Carol']
+
+        const results = IRV(...mapMethodInputs(candidates, []))
+        expect(results.elected.length).toBe(0);
+    })
+
+    test("Every ballot exhausts before the seats are filled", () => {
+        // Bloc IRV, two seats, every voter ranking only Alice. Alice takes the majority
+        // and wins seat one; the pool is rebuilt as Bob and Carol and every ballot is
+        // redistributed, but none of them rank either candidate, so all are exhausted.
+        // With no active votes left neither can reach the quota, so both are eliminated
+        // and seat two is simply left unfilled rather than crashing.
+        const candidates = ['Alice', 'Bob', 'Carol']
+
+        const votes = [
+            [1, 0, 0, 0],
+            [1, 0, 0, 0],
+            [1, 0, 0, 0],
+        ]
+        const results = IRV(...mapMethodInputs(candidates, votes), 2)
+        expect(results.elected.length).toBe(1);
+        expect(results.elected[0].name).toBe('Alice');
+    })
 })

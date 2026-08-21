@@ -40,6 +40,36 @@ These variables indicate the title of the document as well as where it's located
 * ``parent: ✍️Writers`` is the title field from the parent document. Make sure this matches exactly otherwise your file won't be accessbile!
 * ``has_children: true`` is an optional field that should be added to documents that should be a folder for other documents
 
+## Previewing your changes locally
+
+For a typo or a quick wording change, editing on GitHub as described above is the easiest way — you don't need any of this.
+
+It's more useful when you're **adding a new page or moving things around**. GitHub's preview shows you Markdown, but not this site: it won't show where your page lands in the sidebar, and it won't tell you whether the ``parent:`` in your header matched. If you have Docker, you can run the whole documentation site on your own machine and see exactly what gets published.
+
+Note that the docs are **not** part of the app's ``docker-compose.yml`` — that runs the website itself (backend, database, Keycloak), not this site. These pages are built by GitHub Pages straight from the ``docs/`` folder, so previewing them means running Jekyll yourself.
+
+From inside the ``docs/`` directory, run:
+
+```bash
+docker run --rm -v "$PWD":/site -w /site -p 4000:4000 ruby:2.7 sh -c "bundle install && bundle exec jekyll serve --host 0.0.0.0 --port 4000"
+```
+
+Then open [http://localhost:4000](http://localhost:4000). Edit any ``.md`` file and Jekyll rebuilds it automatically — just refresh the page. Press ``Ctrl+C`` to stop the server.
+
+The first run downloads and installs the gems, which takes a few minutes. To keep them between runs so later starts are quick, add a named volume:
+
+```bash
+docker run --rm -v "$PWD":/site -w /site -v bvdocs-gems:/usr/local/bundle -p 4000:4000 ruby:2.7 sh -c "bundle install && bundle exec jekyll serve --host 0.0.0.0 --port 4000"
+```
+
+The ``Gemfile`` in this directory installs the ``github-pages`` gem, which is the same gem GitHub Pages runs. That way what you see locally matches what gets published.
+
+### Troubleshooting
+
+* **"No repo name found. Specify using PAGES_REPO_NWO..."** — one of the Pages plugins needs to know which repository it's building. It usually reads that from your ``origin`` git remote, but the command above only mounts the ``docs/`` folder, and ``.git`` lives a level up outside the container. That's why ``_config.yml`` sets ``repository: Equal-Vote/bettervoting``. If you've removed that line or you're building a copy of this folder somewhere else, add ``-e PAGES_REPO_NWO=Equal-Vote/bettervoting`` to the ``docker run`` command instead.
+* **Bundler says ``ffi`` is incompatible with your Ruby version** — make sure you're using ``ruby:2.7`` as shown above. The ``Gemfile`` pins ``ffi`` for exactly this reason, but a newer Ruby image will still pull in other gems that don't match Jekyll 3.9.
+* **Don't use the ``jekyll/jekyll`` Docker images** — they're no longer maintained, and the tags you'd expect (like ``3.9``) don't exist anymore. The ``ruby:2.7`` image plus the ``github-pages`` gem is what this site actually builds with.
+
 ## Tips
 
 After you've added new documentation pages, it could be good to link to it from info bubbles so that your page will be more discoverable. Follow [the steps at 'updating website text'](2_updating_website_text#tips-and-info-bubbles) to learn more.

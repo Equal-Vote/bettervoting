@@ -66,7 +66,7 @@ You can use the ``[ text ]( url )`` pattern whenever you want to include hyperli
 ### Bold
 
 ```
-voting_end: '**Voting ends on {{datetime, datetime}}**'
+voting_end: '**Voting ends on {% raw %}{{datetime, datetime}}{% endraw %}**'
 ```
 
 The above example bolds the text by adding ``** ... **`` around it
