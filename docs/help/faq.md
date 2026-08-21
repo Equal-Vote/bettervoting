@@ -9,6 +9,7 @@ parent: BetterVoting Documentation
 
 - [How do you run races with "None of the Above"?](#how-do-you-run-races-with-none-of-the-above)
 - [What does "write-in scores not counted" mean?](#write-in-scores-not-counted)
+- [Why is the top scoring candidate different from the winner?](#top-scorer-vs-winner)
 
 ## How do you run races with "None of the Above"?
 
@@ -27,3 +28,12 @@ A “score” in this context is one voter’s rating of one candidate. For exam
 - **The admin chose not to approve a write-in.** For example, joke entries or candidates who are ineligible may be intentionally excluded.
 
 If you are an election admin, you can review and approve write-in candidates from the admin panel by clicking the pencil icon next to any race with write-ins enabled.
+
+## Why is the top scoring candidate different from the winner?
+{: #top-scorer-vs-winner}
+
+STAR Voting is counted in two rounds. The **Scoring Round** adds up the stars and picks the two finalists — it measures *how much* support each candidate has. The **Automatic Runoff** then asks *how many* voters prefer one finalist to the other, and your ballot counts as one vote for whichever of the two you scored higher.
+
+So a candidate can collect the most stars and still lose to the finalist more voters preferred. That is the runoff doing its job, not a counting error.
+
+[Why the highest score doesn't always win](top_score_vs_winner.md) walks through a small election where this happens, and explains what it means for voters and for whoever is running the election.
