@@ -35,10 +35,17 @@ const toSnake = (k: string): string =>
         .replace(/([A-Z]+)([A-Z][a-z])/g, '$1_$2')
         .toLowerCase();
 
+// A Date is an object but NOT a record: it has no own enumerable properties, so
+// recursing into one yields `{}` and destroys the timestamp. Election.create_date /
+// update_date / start_time / end_time are all typed `Date | string`, so both
+// recursive passes below have to treat a Date as a scalar and leave it alone.
+const isRecord = (v: any): boolean =>
+    v !== null && typeof v === 'object' && !Array.isArray(v) && !(v instanceof Date);
+
 // Deep-convert object keys to snake_case; values are left untouched.
 const deepSnake = (v: any): any => {
     if (Array.isArray(v)) return v.map(deepSnake);
-    if (v && typeof v === 'object') {
+    if (isRecord(v)) {
         const out: any = {};
         for (const [k, val] of Object.entries(v)) out[toSnake(k)] = deepSnake(val);
         return out;
@@ -49,7 +56,7 @@ const deepSnake = (v: any): any => {
 // Recursively drop null / undefined values (keeps the file terse).
 const omitEmpty = (v: any): any => {
     if (Array.isArray(v)) return v.map(omitEmpty);
-    if (v && typeof v === 'object') {
+    if (isRecord(v)) {
         const out: any = {};
         for (const [k, val] of Object.entries(v)) {
             if (val === null || val === undefined) continue;
@@ -70,11 +77,19 @@ const normalizeTimestamp = (v: any): string | undefined => {
     return Number.isNaN(d.getTime()) ? String(v) : d.toISOString();
 };
 
+// Every Election field that is typed `Date | string` (domain_model/Election.ts).
+const TIMESTAMP_FIELDS = ['create_date', 'update_date', 'start_time', 'end_time'] as const;
+
+// Normalization runs BEFORE omitEmpty, not after: omitEmpty walks the object graph,
+// so handing it a raw Date turns the field into `{}` and there is nothing left to
+// normalize. normalizeTimestamp returns undefined for null/empty, which the
+// omitEmpty pass then drops, so absent timestamps stay absent.
 const cleanElection = (e: Election): any => {
-    const cleaned: any = omitEmpty({ ...e });
-    if (cleaned.create_date) cleaned.create_date = normalizeTimestamp(cleaned.create_date);
-    if (cleaned.update_date) cleaned.update_date = normalizeTimestamp(cleaned.update_date);
-    return cleaned;
+    const cleaned: any = { ...e };
+    for (const field of TIMESTAMP_FIELDS) {
+        if (field in cleaned) cleaned[field] = normalizeTimestamp(cleaned[field]);
+    }
+    return omitEmpty(cleaned);
 };
 
 // Ballots stay compact (id + score). Candidate names are NOT repeated on every

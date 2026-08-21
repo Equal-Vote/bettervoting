@@ -154,4 +154,41 @@ describe('buildElectionExport (v2 export format)', () => {
         expect(out.election).not.toHaveProperty('audit_ids'); // null omitted
         expect(out.election).not.toHaveProperty('public_archive_id');
     });
+
+    // Election types every one of these as `Date | string`. A Date has no own
+    // enumerable properties, so a recursive empty-value pass flattens it to `{}`:
+    // create_date/update_date then exported as the string "[object Object]", and
+    // start_time/end_time as a bare `{}`. The tests above only ever passed strings,
+    // which is why that went unnoticed.
+    test('normalizes Date-valued timestamps, not just strings', () => {
+        const when = new Date('2026-07-05T13:41:39.541Z');
+        const election3: any = {
+            election_id: 'e3',
+            title: 'Date-valued timestamps',
+            head: true,
+            create_date: when,
+            update_date: when,
+            start_time: when,
+            end_time: when,
+            races: [],
+            settings: {},
+        };
+        const o: any = buildElectionExport(election3, [], undefined);
+        for (const field of ['create_date', 'update_date', 'start_time', 'end_time']) {
+            expect(o.election[field]).toBe(when.toISOString());
+        }
+        expect(JSON.stringify(o)).not.toContain('[object Object]');
+    });
+
+    test('a Date-valued timestamp survives a round-trip through JSON', () => {
+        const when = new Date('2026-07-05T13:41:39.541Z');
+        const o: any = buildElectionExport(
+            { election_id: 'e4', title: 'T', head: true, create_date: when, update_date: when, races: [], settings: {} } as any,
+            [],
+            undefined,
+        );
+        const reparsed = JSON.parse(JSON.stringify(o));
+        expect(Number.isNaN(Date.parse(reparsed.election.create_date))).toBe(false);
+        expect(Date.parse(reparsed.election.create_date)).toBe(when.getTime());
+    });
 });
