@@ -24,13 +24,17 @@ const LandingPage = () => {
             openFeedback();
         }
 
-        if(checkUrl.pathname !== "/new_election") return;
+
+        let className = '';
+        if(checkUrl.pathname === "/new_election") className='.wizard';
+        if(checkUrl.pathname === "/features") className='.features';
+        if(className === '') return;
 
         // Jump straight to the wizard, then keep re-aligning while the content
         // above it (carousel, images) loads and pushes it down. A one-shot
         // delayed smooth scroll can land short of the wizard (especially on
         // Firefox) when the page reflows after the scroll starts.
-        const align = () => scrollToElement(document.querySelector(`.wizard`), { behavior: 'auto', delay: 0 });
+        const align = () => scrollToElement(document.querySelector(className), { behavior: 'auto', delay: 0 });
         align();
 
         const observer = new ResizeObserver(align);

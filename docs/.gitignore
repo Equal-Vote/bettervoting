@@ -1,0 +1,10 @@
+# Local Jekyll preview artifacts — see contributions/writers/4_adding_documentation.md
+_site/
+.jekyll-cache/
+.jekyll-metadata
+vendor/
+
+# Not committed on purpose: the lockfile resolves differently per platform and
+# Ruby version, and GitHub Pages ignores it anyway (it builds with its own
+# pinned gem set). Leaving it out keeps contributors from fighting over it.
+Gemfile.lock

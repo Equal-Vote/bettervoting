@@ -85,6 +85,7 @@ export default function({name, onClick=undefined, desktopText=undefined, mobileI
             }}
             open={Boolean(anchorEl)}
             onClose={handleClose}
+            disableAutoFocusItem // This was added since clicking an item would have it be highlghted on the next page 
             sx={{ [`&.${popoverClasses.root}`]: {xs: {}, md: { pointerEvents: "none" }}, }}
             disableScrollLock
             // https://github.com/mui/material-ui/issues/10072
