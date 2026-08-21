@@ -25,7 +25,7 @@ Use the chart above to plan out the flow of your election. You should have a pla
 ## Step 2: Identify your voters
 Does your election have a finite number of possible voters? Do you know their identities? Is your election open to all who show up? Regardless, registering or credentialing your voters is key to ensuring that each individual is who they claim to be and ensuring that individuals only vote once.
 
-Advance registration or in-person credentialing at the time of your election are two good options for confirming voter identity.
+Advanced registration or in-person credentialing at the time of your election are two good options for confirming voter identity.
 
 ## Step 3: Printing ballots
 
