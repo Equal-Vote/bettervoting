@@ -805,6 +805,7 @@ tips:
     description: >
       Elect the first winner as you would in single-winner, then repeat the process until all seats are filled.
       Best for electing strong winners with as much support as possible.
+    learn_link: https://docs.bettervoting.com/help/bloc_star.html
 
   proportional_multi_winner:
     title: Proportional Multi-Winner
