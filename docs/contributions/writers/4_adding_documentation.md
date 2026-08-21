@@ -78,13 +78,42 @@ One catch worth knowing: that rewrite only happens when the target file **exists
 
 ## Renaming and moving pages
 
-**Avoid it if the page is already published.** A page's address comes from its filename, several documentation links are built into the BetterVoting app itself, and there is currently no redirect from an old address to a new one — so a rename turns every existing link into a dead one.
+**Think twice before renaming a page that is already published.** A page's address comes from its filename, and several documentation links are built into the BetterVoting app itself, so a rename changes an address other things point at.
 
-You can reorganise the sidebar freely without this risk, because the navigation is built entirely from the ``parent`` and ``nav_order`` fields rather than from where files sit. Changing those moves a page in the menu while its address stays exactly the same.
+It is not a one-way door, though. The site is built with the ``jekyll-redirect-from`` plugin, which lets a renamed page keep its old address working. List the old address in the renamed file's header:
+
+```yaml
+---
+layout: default
+title: Ties
+nav_order: 6
+parent: BetterVoting Documentation
+redirect_from:
+  - /help/tie_breakers.html
+---
+```
+
+The build then writes a small page at ``/help/tie_breakers.html`` that forwards to the new address, so existing links and bookmarks still arrive in the right place. Leave that line in permanently — the old address works for exactly as long as it is listed — and give a page one entry for every address it has ever had.
+
+Two things a redirect does not cover. Renaming a **heading** changes the link to that heading, and two of the app's links point at one (``ties.html#random-tie-breakers`` is shown to voters when a tie is broken), so heading text is part of an address too. And links written inside other documentation pages are worth updating to the new filename anyway, so readers aren't bounced through a redirect.
+
+You can reorganise the sidebar without any of this, because the navigation is built entirely from the ``parent`` and ``nav_order`` fields rather than from where files sit. Changing those moves a page in the menu while its address stays exactly the same.
 
 ## Curly braces
 
-If you need to write literal double curly braces — ``{{`` and ``}}`` — wrap that part in ``{% raw %}`` and ``{% endraw %}``. The site's template engine reads those braces before the page is rendered and will otherwise swallow the text. This has silently broken a page before.
+The engine that builds this site reads your page before it becomes HTML — including inside code blocks — and treats anything wrapped in double curly braces as a value to substitute. If your page means to *show* those characters, they disappear from the published page, and the only trace is a warning in the build log that nobody reads. This has silently broken a page here before.
+
+To keep them, wrap that stretch of the page in a ``raw`` block. Everything between the two tags is published exactly as written:
+
+<!-- The opening brace of each tag below is emitted as a string, so the build
+     prints the tags instead of running them. Edit with care: written plainly,
+     they would switch the engine off in the middle of this page. -->
+
+```
+{{ "{" }}% raw %}
+Your total is {{ "{{" }} total }}
+{{ "{" }}% endraw %}
+```
 
 ## Tips
 
