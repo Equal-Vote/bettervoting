@@ -1,7 +1,6 @@
 require('dotenv').config();
 const request = require('supertest');
 import { ElectionRoll, ElectionRollState } from '@equal-vote/star-vote-shared/domain_model/ElectionRoll';
-import { MockEventQueue } from '../Services/EventQueue/MockEventQueue';
 import { TestHelper } from './TestHelper';
 import testInputs from './testInputs';
 
@@ -46,9 +45,6 @@ describe("ID Roll", () => {
     test("Authorized voter submits ballot", async () => {
         const response = await th.submitBallotWithId(ID, testInputs.Ballot2, testInputs.user1token, testInputs.IDRoll[0].voter_id);
         expect(response.statusCode).toBe(200)
-
-        const eventQueue:MockEventQueue = await th.eventQueue;
-        await eventQueue.waitUntilJobsFinished();
         th.testComplete();
     })
     test("Get voter auth, is authorized and has voted", async () => {

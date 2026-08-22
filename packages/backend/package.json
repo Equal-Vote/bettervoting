@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "pretest": "npm run generate:openapi",
-    "test": "jest --forceExit --detectOpenHandles",
+    "test": "jest",
     "start": "npm run build && node ./build/src/index.js",
     "predev": "npm run generate:openapi",
     "dev": "node verifyShared.js && tsx watch ./src",

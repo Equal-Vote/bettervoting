@@ -1,12 +1,10 @@
 require("dotenv").config();
 const request = require("supertest");
-import makeApp from "../app";
-import { MockEventQueue } from "../Services/EventQueue/MockEventQueue";
 import { TestHelper } from "./TestHelper";
 import testInputs from "./testInputs";
 
-const app = makeApp();
 const th = new TestHelper();
+const app = th.expressApp;
 
 afterEach(() => {
     jest.clearAllMocks();
@@ -85,8 +83,6 @@ describe("Email List Voter Auth", () => {
             aliceVoterId
         );
         expect(response.statusCode).toBe(200);
-        const eventQueue: MockEventQueue = await th.eventQueue;
-        await eventQueue.waitUntilJobsFinished();
         th.testComplete();
     });
 
