@@ -926,7 +926,7 @@ wizard:
 
   email_list_title: BetterVoting-managed voter IDs
   email_list_title_with_tip: $t(wizard.email_list_title) !tip(email_list)
-  email_list_description: Provide voter emails. BetterVoting will create private voting links and send them by email once the election starts
+  email_list_description: Provide voter emails. BetterVoting creates a private voting link for each voter, ready for you to send from the Voters tab
 
   id_list_title: Admin-managed voter IDs
   id_list_title_with_tip: $t(wizard.id_list_title) !tip(id_list)
