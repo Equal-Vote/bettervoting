@@ -155,6 +155,63 @@ If you need help, please request for assistance on the #bettervoting slack chann
   }
 
   /**
+   * Find open pull requests in this repository that reference the issue.
+   *
+   * A PR referencing an issue does not bump that issue's updated_at, so an issue
+   * whose fix is already sitting in review still looks stale to the check above
+   * (see #1296, which was pinged twice while its PR was open).
+   */
+  private async getOpenLinkedPullRequests(issueNumber: number): Promise<number[]> {
+    const referenced = new Set<number>();
+    let page = 1;
+
+    while (true) {
+      const timeline = await this.octokit.issues.listEventsForTimeline({
+        owner: this.config.owner,
+        repo: this.config.repo,
+        issue_number: issueNumber,
+        per_page: 100,
+        page: page,
+      });
+
+      if (timeline.data.length === 0) break;
+
+      for (const event of timeline.data) {
+        if (event.event !== 'cross-referenced') continue;
+
+        // A cross-reference can come from an issue rather than a PR, and from
+        // another repository. Only same-repo pull requests count.
+        const source = (event as any).source?.issue;
+        if (!source?.pull_request) continue;
+        if (source.repository?.full_name &&
+            source.repository.full_name !== `${this.config.owner}/${this.config.repo}`) continue;
+
+        referenced.add(source.number);
+      }
+
+      page++;
+    }
+
+    const open: number[] = [];
+    for (const pullNumber of referenced) {
+      try {
+        const pull = await this.octokit.pulls.get({
+          owner: this.config.owner,
+          repo: this.config.repo,
+          pull_number: pullNumber,
+        });
+        // Re-read the state rather than trusting the timeline's copy, which is a
+        // snapshot from when the reference was made.
+        if (pull.data.state === 'open') open.push(pullNumber);
+      } catch (error) {
+        console.error(`  ⚠️  Could not read PR #${pullNumber} linked from issue #${issueNumber}:`, error);
+      }
+    }
+
+    return open.sort((a, b) => a - b);
+  }
+
+  /**
    * Check stale status for assigned issues
    */
   async checkStaleIssues(issues: IssueData[]): Promise<{ warnings: number; inactive: number }> {
@@ -173,6 +230,16 @@ If you need help, please request for assistance on the #bettervoting slack chann
       console.log(`\n  Checking issue #${issue.number}: ${issue.title}`);
       console.log(`    Last updated: ${ageDisplay}`);
       console.log(`    Assignees: ${issue.assignees.map(a => a.login).join(', ')}`);
+
+      // Only pay for the timeline lookup on issues that are about to be actioned.
+      if (timeSinceUpdate >= this.config.warningWeeks) {
+        const openPullRequests = await this.getOpenLinkedPullRequests(issue.number);
+        if (openPullRequests.length > 0) {
+          const list = openPullRequests.map(n => `#${n}`).join(', ');
+          console.log(`    ⏭️  Open pull request${openPullRequests.length === 1 ? '' : 's'} ${list} — skipping (${ageDisplay})`);
+          continue;
+        }
+      }
 
       if (timeSinceUpdate >= this.config.unassignWeeks) {
         // Issue should get inactive label
