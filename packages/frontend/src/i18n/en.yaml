@@ -1275,6 +1275,9 @@ emails:
     Voters will not be able to cast ballots until the elction has opened.
   post_end_warning: >
     This election is already closed on {{datetime, datetime}} and voters will not be able to cast ballots.
+  delivery_note: >
+    Not seeing emails in your inbox? First make sure to check spam. If that doesn't work,
+    please use the feedback widget in the corner and a team member will work with you promptly.
   invite:
     subject: Invitation to vote in {{title}}
     body: |

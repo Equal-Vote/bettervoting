@@ -172,6 +172,9 @@ const SendEmailDialog = ({open, onClose, onSubmit, targetedEmail=undefined, elec
                     }}>
                     <Typography>{warning}</Typography>
                 </Alert>}
+                <Typography sx={{ color: '#808080', fontSize: '0.9rem', mx: 1, mb: 1 }}>
+                    {t('emails.delivery_note')}
+                </Typography>
                 <Box sx={{ display: "flex", flexDirection: "row-reverse", gap: 2 }}>
                     <PrimaryButton
                         disabled={!templateChosen}
