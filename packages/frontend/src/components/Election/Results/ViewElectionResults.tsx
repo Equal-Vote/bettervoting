@@ -45,6 +45,14 @@ const ViewElectionResults = () => {
             <Typography variant="h4" component="h4">
               {t("results.election_title", { title: election.title })}
             </Typography>
+            {election.create_date && (
+              <Typography
+                component="p"
+                sx={{ color: "#808080", fontSize: "0.9rem", mt: 1 }}
+              >
+                {t("results.created_date", { listed_datetime: election.create_date })}
+              </Typography>
+            )}
 
             {isPending && <div> {t("results.loading_election")} </div>}
             {!election.settings.public_results && (
