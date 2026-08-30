@@ -323,11 +323,13 @@ results:
     equal_preferences_title: Distribution of Equal Support
     equal_preferences: Equal Support
     score_higher_than_runoff_title: Why is the top scoring candidate different from the winner?
-    score_higher_than_runoff_text: |
-      The top-scoring candidate often matches the runoff winner, but not always.
-      The scoring round captures the overall support for each of the candidates,
-      but ultimately the winning candidate is the finalist preferred by the most voters.
-      This ensures equality of the vote, and also encourages honest voting.
+    score_higher_than_runoff_text: >
+      The scoring round measures how much support each candidate has; the runoff
+      measures how many voters prefer one finalist to the other. Usually the same
+      candidate leads both, and when they differ the runoff decides it: the winner
+      is the finalist more voters preferred. That is what keeps one voter to one
+      vote, and what makes it safe to score your honest favourite top.
+      [Why the two rounds can disagree](https://docs.bettervoting.com/help/top_score_vs_winner.html)
 
   star_pr:
     chart_title: Round {{n}} Results
