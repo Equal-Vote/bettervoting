@@ -55,6 +55,14 @@ const STARResultSummaryWidget = ({ results, roundIndex, t }: {results: starResul
         ? (noPreferenceVotes / results.summaryData.nTallyVotes * 100).toFixed(1)
         : '0.0';
 
+    // The marker is half of the voters who expressed a preference, while the bar
+    // labels are shares of everyone who voted — so the legend has to say which
+    // number it is half of, or a 33% bar sits to the right of a "majority" line.
+    const preferenceVotes = pieData[0].votes + pieData[1].votes;
+    // With enough voters scoring the finalists equally, neither finalist can be
+    // preferred by half the electorate at all. Worth saying out loud.
+    const noOverallMajorityPossible = Math.max(pieData[0].votes, pieData[1].votes) <= results.summaryData.nTallyVotes / 2;
+
     const runoffData = [...pieData]
     runoffData.push({
       name: t('results.star.equal_preferences'),
@@ -84,7 +92,12 @@ const STARResultSummaryWidget = ({ results, roundIndex, t }: {results: starResul
                     </>
                 :
                 <>
-                    <ResultsBarChart data={runoffData} stars={1} runoff percentage majorityLegend={t('results.star.runoff_majority')} />
+                    <ResultsBarChart data={runoffData} stars={1} runoff percentage majorityLegend={t('results.star.runoff_majority', {n: preferenceVotes})} />
+                    {noOverallMajorityPossible &&
+                        <Typography variant="body2" sx={{ fontStyle: 'italic', textAlign: 'center', mt: 1 }}>
+                            {t('results.star.runoff_no_overall_majority', {equal_votes: noPreferenceVotes, total_votes: results.summaryData.nTallyVotes})}
+                        </Typography>
+                    }
                     <Box sx={{ height: 50 }}/> {/*HACK to get the bar chart to be the same height as the pie chart*/}
                 </>
                 }

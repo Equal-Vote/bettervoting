@@ -39,6 +39,13 @@ export function IRVWinnerView ( {win, context}:{
     }
   ];
 
+  // Half of the votes still active in the final round — which is what the
+  // marker is drawn at, while the bar labels are shares of every ballot in the
+  // chart including the exhausted ones. The legend names which it is half of.
+  const activeVotes = runoffData
+    .slice(0, -1)
+    .reduce((sum, d) => sum + (d.votes ?? 0), 0);
+
   return <WidgetContainer>
     <Widget title={t('results.rcv.first_choice_title')}>
       <ResultsBarChart data={firstRoundData} percentage majorityOffset/>
@@ -46,7 +53,7 @@ export function IRVWinnerView ( {win, context}:{
     <Widget title={t('results.rcv.final_round_title')}>
       < ResultsBarChart
         data={runoffData} runoff stars={1} percentage
-        majorityLegend={t('results.rcv.runoff_majority')}
+        majorityLegend={t('results.rcv.runoff_majority', {n: activeVotes})}
       />
     </Widget>
   </WidgetContainer>
