@@ -143,6 +143,62 @@ export const useArchiveEleciton = (election_id: string) => {
     return useFetch<{ expected_update_date: string }, { election: Election }>(`/API/Election/${election_id}/archive`, 'post')
 }
 
+// Bulk archive is a plain function rather than a useFetch hook: useFetch binds one
+// election_id at render time, and hooks can't be called in a loop over a selection.
+// The per-election endpoint is reused as-is so that each archive keeps the auth,
+// optimistic-concurrency and history-logging that router.param('id', ...) provides.
+export interface BulkArchiveTarget {
+    election_id: string
+    title: string
+    update_date: string
+}
+
+export interface BulkArchiveOutcome {
+    archived: BulkArchiveTarget[]
+    failed: { target: BulkArchiveTarget, message: string }[]
+}
+
+const archiveOneElection = async (target: BulkArchiveTarget): Promise<void> => {
+    const res = await fetch(`/API/Election/${target.election_id}/archive`, {
+        method: 'post',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ expected_update_date: target.update_date }),
+    })
+    if (res.ok) return
+    let message = `${res.status}`
+    try {
+        const body = await res.json()
+        if (body?.error) message = body.error
+    } catch { /* non-JSON error body, keep the status */ }
+    throw new Error(message)
+}
+
+// Archives in small batches so a 40-election selection doesn't open 40 sockets at once.
+// Partial success is expected and reported rather than rolled back — re-running a bulk
+// archive is harmless, since the backend rejects an already-archived election.
+export const archiveElections = async (
+    targets: BulkArchiveTarget[],
+    batchSize = 5,
+): Promise<BulkArchiveOutcome> => {
+    const outcome: BulkArchiveOutcome = { archived: [], failed: [] }
+    for (let i = 0; i < targets.length; i += batchSize) {
+        const batch = targets.slice(i, i + batchSize)
+        const results = await Promise.all(batch.map(target =>
+            archiveOneElection(target)
+                .then(() => ({ target, message: null }))
+                .catch((err: Error) => ({ target, message: err.message || 'Unknown error' }))
+        ))
+        results.forEach(({ target, message }) => {
+            if (message === null) outcome.archived.push(target)
+            else outcome.failed.push({ target, message })
+        })
+    }
+    return outcome
+}
+
 export const useSetOpenState = (election_id: string) => {
     return useFetch<{ open: boolean, expected_update_date: string }, { election: Election }>(`/API/Election/${election_id}/setOpenState`, 'post')
 }

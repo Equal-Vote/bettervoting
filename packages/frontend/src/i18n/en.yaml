@@ -1072,6 +1072,27 @@ election_state:
   closed: closed
   archived: archived
 
+# Bulk actions in a table toolbar (My Elections & Polls)
+bulk_actions:
+  selected_one: '{{count}} selected'
+  selected_other: '{{count}} selected'
+  menu_button: Actions
+  clear: Clear selection
+  archive:
+    menu_item: Archive
+    confirm_title: Confirm Archive
+    confirm_message_one: Archive this election? Archiving prevents future changes and hides it from this page. This action cannot be undone.
+    confirm_message_other: Archive these {{count}} elections? Archiving prevents future changes and hides them from this page. This action cannot be undone.
+    confirm_submit_one: Archive 1 election
+    confirm_submit_other: Archive {{count}} elections
+    done_one: Archived 1 election.
+    done_other: Archived {{count}} elections.
+    skipped_one: Skipped 1 that you don't own or that was already archived.
+    skipped_other: Skipped {{count}} that you don't own or that were already archived.
+    failed_one: '1 failed — {{first_title}}: {{first_error}}'
+    failed_other: '{{count}} failed, starting with {{first_title}}: {{first_error}}'
+    none_eligible: Nothing to archive here — you can only archive elections you own that aren't already archived.
+
 # Admin Home
 admin_home:
   header_invitations_sent: Invitations have been sent to your voters

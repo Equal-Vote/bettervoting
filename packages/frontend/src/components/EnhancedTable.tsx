@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useMemo, ReactNode, MouseEvent, ChangeEvent } from 'react';
+import { useState, useMemo, useEffect, ReactNode, MouseEvent, ChangeEvent } from 'react';
 import { alpha } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
@@ -18,7 +18,9 @@ import Paper from '@mui/material/Paper';
 import { makeChipStyle } from './ElectionForm/Details/ElectionStateChip';
 import { visuallyHidden } from '@mui/utils';
 import { epochToDateString, getLocalTimeZoneShort, NumberObject, useSubstitutedTranslation } from './util';
-import { Checkbox, FormControl, ListItemText, MenuItem, Select, TextField, Chip } from '@mui/material';
+import { Button, Checkbox, FormControl, IconButton, ListItemIcon, ListItemText, Menu, MenuItem, Select, TextField, Chip, Tooltip } from '@mui/material';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import CloseIcon from '@mui/icons-material/Close';
 import { ElectionState } from '@equal-vote/star-vote-shared/domain_model/Election';
 import Link from "@mui/material/Link";
 import { describeHistoryEvent, formatHistoryTimestamp, historyChipLabel, historyFilterGroups } from './Election/electionHistoryFormat';
@@ -31,9 +33,22 @@ interface TableData {
   [key: string]: string | number
 }
 
+// An entry in the toolbar's Actions menu, shown once rows are selected.
+// onAction receives the selected rows (the formatted rows, so the underlying
+// record is on row.raw) and may be async — the menu stays disabled until it settles.
+export interface BulkAction {
+  key: string;
+  label: string;
+  icon?: ReactNode;
+  onAction: (rows: any[]) => void | Promise<void>;
+}
+
 interface EnhancedTableToolbarProps {
   numSelected: number;
   tableTitle: string;
+  actions?: { key: string, label: string, icon?: ReactNode, run: () => void }[];
+  onClearSelection?: () => void;
+  actionsPending?: boolean;
 }
 
 interface HeadCell {
@@ -56,6 +71,10 @@ interface EnhancedTableHeadProps {
   headCells: HeadCell[];
   filters: string[];
   setFilters: (filtersUpdater: (filters: string[]) => string[]) => void
+  selectable?: boolean;
+  allOnPageSelected?: boolean;
+  someOnPageSelected?: boolean;
+  onSelectAllOnPage?: (event: ChangeEvent<HTMLInputElement>) => void;
 }
 
 const headCellPool = {
@@ -306,6 +325,12 @@ interface EnhancedTableProps {
   isPending: boolean
   pendingMessage: string,
   emptyContent: any,
+  // Row selection is opt-in: a table only grows checkboxes when it passes both
+  // bulkActions and getRowId. Without that the other tables sharing this component
+  // (public archive, elections you voted in, ...) would sprout checkboxes with
+  // nothing to do.
+  bulkActions?: BulkAction[],
+  getRowId?: (row: any) => string,
 }
 
 const limit = (string = '', limit = 0) => {
@@ -427,6 +452,17 @@ function EnhancedTableHead(props: EnhancedTableHeadProps) {
   return (
     <TableHead>
       <TableRow>
+        {props.selectable &&
+          <TableCell padding="checkbox" sx={{ verticalAlign: 'top', pt: 2 }}>
+            <Checkbox
+              color="primary"
+              indeterminate={props.someOnPageSelected && !props.allOnPageSelected}
+              checked={props.allOnPageSelected}
+              onChange={props.onSelectAllOnPage}
+              slotProps={{ input: { 'aria-label': 'select all rows on this page' } }}
+            />
+          </TableCell>
+        }
         {props.headCells.map((headCell, cellInd) => (
           <TableCell
             key={headCell.id}
@@ -487,6 +523,9 @@ function EnhancedTableHead(props: EnhancedTableHeadProps) {
 
 function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
   const { numSelected } = props;
+  const { t } = useSubstitutedTranslation();
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+  const hasActions = numSelected > 0 && (props.actions?.length ?? 0) > 0;
 
   return (
     <Toolbar
@@ -500,14 +539,66 @@ function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
       }}
     >
 
-      <Typography
-        sx={{ flex: '1 1 100%' }}
-        variant="h6"
-        id="tableTitle"
-        component="div"
-      >
-        {props.tableTitle}
-      </Typography>
+      {hasActions ?
+        <>
+          <Typography
+            sx={{ flex: '1 1 100%' }}
+            color="inherit"
+            variant="subtitle1"
+            component="div"
+          >
+            {t('bulk_actions.selected', { count: numSelected })}
+          </Typography>
+          <Button
+            variant="outlined"
+            size="small"
+            sx={{ whiteSpace: 'nowrap' }}
+            disabled={props.actionsPending}
+            endIcon={<ArrowDropDownIcon />}
+            aria-haspopup="menu"
+            onClick={(e) => setMenuAnchor(e.currentTarget)}
+          >
+            {t('bulk_actions.menu_button')}
+          </Button>
+          <Menu
+            anchorEl={menuAnchor}
+            open={Boolean(menuAnchor)}
+            onClose={() => setMenuAnchor(null)}
+          >
+            {props.actions.map(action =>
+              <MenuItem
+                key={action.key}
+                onClick={() => { setMenuAnchor(null); action.run(); }}
+              >
+                {action.icon && <ListItemIcon>{action.icon}</ListItemIcon>}
+                <ListItemText>{action.label}</ListItemText>
+              </MenuItem>
+            )}
+          </Menu>
+          <Tooltip title={t('bulk_actions.clear')}>
+            <span>
+              <IconButton
+                size="small"
+                sx={{ ml: 1 }}
+                disabled={props.actionsPending}
+                aria-label={t('bulk_actions.clear')}
+                onClick={props.onClearSelection}
+              >
+                <CloseIcon />
+              </IconButton>
+            </span>
+          </Tooltip>
+        </>
+        :
+        <Typography
+          sx={{ flex: '1 1 100%' }}
+          variant="h6"
+          id="tableTitle"
+          component="div"
+        >
+          {props.tableTitle}
+        </Typography>
+      }
     </Toolbar>
   );
 }
@@ -517,7 +608,8 @@ function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
 export default function EnhancedTable(props: EnhancedTableProps) {
   const [order, setOrder] = useState<Order>(props.defaultSortBy == 'email' ? 'asc' : 'desc');
   const [orderBy, setOrderBy] = useState<Extract<keyof TableData, string>>(props.defaultSortBy);
-  const [selected] = useState<readonly string[]>([]);
+  const [selected, setSelected] = useState<readonly string[]>([]);
+  const [actionsPending, setActionsPending] = useState(false);
   const [page, setPage] = useState(0);
   const [dense] = useState(true);
   const [rowsPerPage, setRowsPerPage] = useState(25);
@@ -596,13 +688,70 @@ export default function EnhancedTable(props: EnhancedTableProps) {
     [order, orderBy, page, rowsPerPage, filteredRows],
   );
 
+  const selectable = Boolean(props.bulkActions?.length && props.getRowId);
+  const getRowId = props.getRowId ?? (() => '');
+  const columnCount = headCells.length + (selectable ? 1 : 0);
+
+  // A selected row that a filter has since hidden must not stay actionable — otherwise
+  // "Archive 12" could reach rows the user can no longer see.
+  useEffect(() => {
+    if (!selectable) return;
+    const stillPresent = new Set(filteredRows.map(row => getRowId(row)));
+    setSelected(prev => {
+      const next = prev.filter(id => stillPresent.has(id));
+      return next.length === prev.length ? prev : next;
+    });
+  }, [filteredRows, selectable]);
+
+  const selectedRows = useMemo(
+    () => selectable ? filteredRows.filter(row => selected.includes(getRowId(row))) : [],
+    [filteredRows, selected, selectable],
+  );
+
+  // "Select all" is scoped to the current page — the rows actually on screen.
+  const visibleIds = useMemo(() => visibleRows.map(row => getRowId(row)), [visibleRows, selectable]);
+  const numSelectedOnPage = visibleIds.filter(id => selected.includes(id)).length;
+
+  const handleSelectAllOnPage = (event: ChangeEvent<HTMLInputElement>) => {
+    if (event.target.checked) {
+      setSelected(prev => Array.from(new Set([...prev, ...visibleIds])));
+    } else {
+      setSelected(prev => prev.filter(id => !visibleIds.includes(id)));
+    }
+  };
+
+  const handleToggleRow = (id: string) => {
+    setSelected(prev => prev.includes(id) ? prev.filter(other => other !== id) : [...prev, id]);
+  };
+
+  const toolbarActions = (props.bulkActions ?? []).map(action => ({
+    key: action.key,
+    label: action.label,
+    icon: action.icon,
+    run: async () => {
+      setActionsPending(true);
+      try {
+        await action.onAction(selectedRows);
+      } finally {
+        setActionsPending(false);
+        setSelected([]);
+      }
+    },
+  }));
+
 
   return (
     <Container>
       <Box sx={{ pt: 2, width: '100%', display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column" }}>
         {props.isPending && <Typography align='center' variant="h3" component="h2"> {props.pendingMessage} </Typography>}
         {!props.isPending && <Paper elevation={8} sx={{ width: '100%', mb: 2 }}>
-          <EnhancedTableToolbar numSelected={selected.length} tableTitle={props.title} />
+          <EnhancedTableToolbar
+            numSelected={selectedRows.length}
+            tableTitle={props.title}
+            actions={toolbarActions}
+            actionsPending={actionsPending}
+            onClearSelection={() => setSelected([])}
+          />
           <TableContainer>
             <Table
               sx={{ minWidth: 750 }}
@@ -616,11 +765,15 @@ export default function EnhancedTable(props: EnhancedTableProps) {
                 headCells={headCells}
                 filters={filters}
                 setFilters={setFilters}
+                selectable={selectable}
+                allOnPageSelected={visibleIds.length > 0 && numSelectedOnPage === visibleIds.length}
+                someOnPageSelected={numSelectedOnPage > 0}
+                onSelectAllOnPage={handleSelectAllOnPage}
               />
               <TableBody>
                 {visibleRows.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={headCells.length} align="center" sx={{ py: 4 }}>
+                    <TableCell colSpan={columnCount} align="center" sx={{ py: 4 }}>
                       <Typography variant="body1" color="text.secondary">
                         {props.emptyContent}
                       </Typography>
@@ -629,14 +782,29 @@ export default function EnhancedTable(props: EnhancedTableProps) {
                 )}
                 {visibleRows.map((row, index) => {
                   const labelId = `enhanced-table-checkbox-${index}`;
+                  const rowId = getRowId(row);
+                  const isSelected = selectable && selected.includes(rowId);
                   return (
                     <TableRow
                       hover
                       onClick={() => props.handleOnClick(row)}
                       tabIndex={-1}
                       key={labelId}
+                      selected={isSelected}
                       sx={{ cursor: 'pointer' }}
                     >
+                      {selectable &&
+                        // The whole row is a link to the election, so the checkbox has to
+                        // swallow the click or ticking a box navigates away from the list.
+                        <TableCell padding="checkbox" onClick={(e) => e.stopPropagation()}>
+                          <Checkbox
+                            color="primary"
+                            checked={isSelected}
+                            onChange={() => handleToggleRow(rowId)}
+                            slotProps={{ input: { 'aria-labelledby': labelId } }}
+                          />
+                        </TableCell>
+                      }
                       {headCells.map((col, colInd) => {
                         //const isElectionState = col.id === 'election_state';
                         const groupFilter = col.filterType == 'groups';
@@ -667,7 +835,7 @@ export default function EnhancedTable(props: EnhancedTableProps) {
                       height: (dense ? 33 : 53) * emptyRows,
                     }}
                   >
-                    <TableCell colSpan={6} />
+                    <TableCell colSpan={columnCount} />
                   </TableRow>
                 )}
               </TableBody>
