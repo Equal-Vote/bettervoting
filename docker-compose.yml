@@ -22,7 +22,6 @@ services:
         - CLASSIC_ELECTION_COUNT=0
         - CLASSIC_VOTE_COUNT=0
         - SENDGRID_API_KEY='SG.<insert api key>' 
-        - SENDGRID_GROUP_ID='<insert group id>'
         - EMAIL_TEST_MODE=if defined will prevent emails from being sent from email service while testing
         - FROM_EMAIL_ADDRESS=elections@star.vote
     depends_on: 
