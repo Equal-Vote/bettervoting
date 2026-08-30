@@ -12,6 +12,7 @@ import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
 import { Imsg } from '../../Services/Email/IEmail';
 import { logSafeHash } from '../../Services/Logging/logSafeHash';
+import { recordInviteResponse } from './sendInvitesController';
 
 var ElectionRollModel = ServiceLocator.electionRollDb();
 var ElectionModel = ServiceLocator.electionsDb();
@@ -32,6 +33,10 @@ export type email_request_data = {
     }
     target: 'all' | 'has_voted' | 'has_not_voted' | 'single' | 'test',
     testEmails?: string[],
+    // Which template the blast started from. 'invite' blasts update each targeted roll's
+    // email_data.inviteResponse (the "Email invite status" the admin UI shows); other
+    // blasts (e.g. 'blank' updates/reminders) leave the invite status untouched.
+    template?: 'invite' | 'blank',
 }
 
 export type email_request_event = {
@@ -46,7 +51,8 @@ export type email_request_event = {
     },
     message_id: string,
     sender: string,
-    test_email: string // empty string implies it's a real email
+    test_email: string, // empty string implies it's a real email
+    template?: 'invite' | 'blank',
 }
 
 const makeTestRoll = (election_id: string, email: string) => <ElectionRoll>{
@@ -151,7 +157,8 @@ const sendEmailsController = async (req: IElectionRequest, res: Response, next: 
                 sender: req.user.email,
                 email: email_request.email,
                 message_id: message_id,
-                test_email: email_request.target == 'test' ? (roll.email ?? '') : ''
+                test_email: email_request.target == 'test' ? (roll.email ?? '') : '',
+                template: email_request.template
             }
         )
     })
@@ -222,6 +229,14 @@ async function handleSendEmailEvent(job: { id: string; data: email_request_event
     }
 
     if(event.test_email) return; // skip the database updates if it's a test email
+
+    if (event.template === 'invite') {
+        // Invitation blasts are how invites are actually sent from the current UI, but only
+        // the legacy sendInvite(s) endpoints used to write email_data.inviteResponse — the
+        // field the roll table's "Email Invites" column reads — so every row kept reading
+        // "Not Sent" after a blast. Record it here the same way the legacy path does.
+        recordInviteResponse(electionRoll, emailResponse)
+    }
 
     const historyUpdate: ElectionRollAction = {
         action_type: event.message_id,

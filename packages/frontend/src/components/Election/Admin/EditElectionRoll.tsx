@@ -57,11 +57,13 @@ const EditElectionRoll = ({ roll, fetchRolls }:Props) => {
         subject,
         body,
         target,
+        template,
     } : {
         subject: string,
         body: string,
         target: 'all' | 'has_voted' | 'has_not_voted' | 'single' | 'test'
         testEmails: string[],
+        template?: 'invite' | 'blank',
     }) => {
         setDialogOpen(false);
 
@@ -70,9 +72,11 @@ const EditElectionRoll = ({ roll, fetchRolls }:Props) => {
             email: { subject: string, body: string },
             voter_id?: string,
             recipient_email?: string,
+            template?: 'invite' | 'blank',
         } = {
             target,
             email: { subject, body },
+            template,
         };
 
         if (roll.voter_id) {

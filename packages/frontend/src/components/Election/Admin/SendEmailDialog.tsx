@@ -11,7 +11,7 @@ import { ElectionRoll } from "@equal-vote/star-vote-shared/domain_model/Election
 interface SendEmailDialogProps {
     open: boolean;
     onClose: () => void;
-    onSubmit: (data: { subject: string, body: string, target: string }) => void;
+    onSubmit: (data: { subject: string, body: string, target: string, template?: 'invite' | 'blank' }) => void;
     targetedEmail?: string;
     electionRoll?: ElectionRoll[]; // TODO: replace this with the official type
 }
@@ -28,6 +28,7 @@ const SendEmailDialog = ({open, onClose, onSubmit, targetedEmail=undefined, elec
     const authSession = useAuthSession()
     const [audience, setAudience] = useState(targetedEmail? 'single' : 'all')
     const [templateChosen, setTemplateChosen] = useState(false)
+    const [templateId, setTemplateId] = useState<'invite' | 'blank' | undefined>(undefined)
     const [emailSubject, setEmailSubject] = useState('Update for Election')
     const [emailBody, setEmailBody] = useState('')
     const [testEmails, setTestEmails] = useState(authSession.getIdField('email')) // TODO: replace this with the official type
@@ -59,6 +60,7 @@ const SendEmailDialog = ({open, onClose, onSubmit, targetedEmail=undefined, elec
 
     const setTemplate = (template_id) => {
         setTemplateChosen(true);
+        setTemplateId(template_id);
         setEmailSubject(t(`emails.${template_id}.subject`,{
             skipProcessing: true, // processing must occur in backend
             title: election.title,
@@ -181,6 +183,7 @@ const SendEmailDialog = ({open, onClose, onSubmit, targetedEmail=undefined, elec
                                 subject: emailSubject,
                                 body: emailBody,
                                 target: audience,
+                                template: templateId,
                             })
                         }}>
                         {targetedEmail? 'Send Email' : `Send ${getVoterCount()} Emails`}
