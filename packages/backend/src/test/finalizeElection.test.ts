@@ -41,9 +41,6 @@ describe("Finalize Election", () => {
             electionId,
             testInputs.user1token
         );
-        //Wait a few seconds for job queue to process emails, I imagine there's a better way to do this.
-        await new Promise(resolve => setTimeout(resolve, 4000));
-
         expect(response.statusCode).toBe(200);
         th.testComplete();
     });

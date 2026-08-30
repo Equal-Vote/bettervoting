@@ -9,10 +9,6 @@ import { TestHelper } from "./TestHelper";
 
 const th = new TestHelper();
 
-// The mock event queue processes ballots asynchronously with a 1s delay.
-// We must wait for it to flush before reading ballots back.
-const waitForQueue = async () => (await th.eventQueue).waitUntilJobsFinished();
-
 afterEach(() => {
     jest.clearAllMocks();
     th.afterEach();
@@ -70,8 +66,6 @@ describe("Anonymized ballots endpoint", () => {
     });
 
     test("Returns all submitted ballots, anonymized", async () => {
-        await waitForQueue();
-
         const res = await th.getRequest(
             `/API/Election/${election.election_id}/anonymizedBallots`,
             testInputs.user1token,
