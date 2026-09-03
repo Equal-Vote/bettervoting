@@ -1,19 +1,19 @@
 import { Box, Checkbox, FormControlLabel, FormGroup, Typography } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
-import { useSubstitutedTranslation } from "./util";
-import EnhancedTable from "./EnhancedTable";
+import { useSubstitutedTranslation } from "../../util";
+import EnhancedTable from "../../EnhancedTable";
 import { rankColumnCSV } from "./cvrParsers";
 import { makeID, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
 import Papa from 'papaparse';
-import useAuthSession from "./AuthSessionContextProvider";
+import useAuthSession from "../../AuthSessionContextProvider";
 import { Candidate } from "@equal-vote/star-vote-shared/domain_model/Candidate";
 import { Election, NewElection } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { useGetElections } from "~/hooks/useAPI";
 import { OrderedNewBallot, RaceCandidateOrder } from "@equal-vote/star-vote-shared/domain_model/Ballot";
 import { encodeOrderedVote } from "@equal-vote/star-vote-shared/domain_model/OrderedVoteCodec";
-import { inferElectionSettings } from "./ElectionSettingInference";
-import { PrimaryButton, SecondaryButton } from "./styles";
-import { makeDefaultElection } from "./ElectionForm/Wizard/Wizard";
+import { inferElectionSettings } from "../../ElectionSettingInference";
+import { PrimaryButton, SecondaryButton } from "../../styles";
+import { makeDefaultElection } from "../../ElectionForm/Wizard/Wizard";
 
 const UploadElections = () => {
     const [addToPublicArchive, setAddToPublicArchive] = useState(true)
