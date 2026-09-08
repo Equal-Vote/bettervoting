@@ -566,7 +566,7 @@ landing_page:
         icon_url: https://starbestfit.com/_next/static/media/logo.4a868e2a.svg
         url: https://starbestfit.com/
       - name: STAR Voting on Google Forms
-        description: Use our Google Forms plugin to let tabulate votes cast on Google Forms
+        description: Use our plugin to tally STAR Voting elections on Google Forms
         icon_url: https://www.gstatic.com/images/branding/product/2x/forms_2020q4_48dp.png
         url: https://docs.bettervoting.com/other_tools/google_forms.html
       - name: STAR Voting on Google Sheets
