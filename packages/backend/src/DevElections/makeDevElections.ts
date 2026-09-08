@@ -4,6 +4,7 @@ require('dotenv').config({ path: path.resolve(__dirname, '../../.env') })
 import servicelocator from '../ServiceLocator'
 import { DevElectionDefinition, validateDefinition } from './types'
 import { ElectionState } from '@equal-vote/star-vote-shared/domain_model/ElectionStates'
+import { BallotActionType } from '@equal-vote/star-vote-shared/domain_model/Ballot'
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -176,7 +177,7 @@ async function main() {
                     update_date: ms.toString(),
                     date_submitted: ms,
                     history: [{
-                        action_type: isUpload ? 'submitted_via_admin' : 'submitted_via_browser',
+                        action_type: (isUpload ? 'submitted_via_admin' : 'submitted_via_browser') as BallotActionType,
                         actor: isUpload ? 'devadmin' : '',
                         timestamp: ms,
                     }],

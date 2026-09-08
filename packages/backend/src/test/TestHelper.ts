@@ -226,6 +226,19 @@ export class TestHelper {
         return r.send({ ballot: ballot });
     }
 
+    async uploadBallots(
+        electionId: Uid,
+        ballots: Array<{ ballot: any; voter_id: string }>,
+        raceOrder: any[],
+        userToken: string | null
+    ): Promise<any> {
+        return this.postRequest(
+            `/API/Election/${electionId}/uploadBallots`,
+            { ballots, race_order: raceOrder },
+            userToken
+        );
+    }
+
     async submitElectionRoll(
         electionId: Uid,
         electionRoll: any[],

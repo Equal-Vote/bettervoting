@@ -5,6 +5,9 @@ import { Score } from "./Score";
 import { Uid } from "./Uid";
 import { OrderedVote, Vote } from "./Vote";
 
+export type BallotSubmitType = 'submitted_via_browser' | 'submitted_via_admin' | 'submitted_via_discord';
+export type BallotActionType = BallotSubmitType;
+
 export interface NewBallotWithVoterID {
     voter_id: string;
     ballot: OrderedNewBallot;
@@ -29,7 +32,7 @@ export interface RaceCandidateOrder {
     candidate_id_order: Uid[];
 }
 
-export interface NewBallot extends PartialBy<Ballot,'ballot_id'|'create_date'|'update_date'|'head'> {}
+export interface NewBallot extends PartialBy<Ballot,'ballot_id'|'create_date'|'update_date'|'head'|'election_id'|'status'|'date_submitted'> {}
 
 export interface OrderedNewBallot extends PartialBy<NewBallot,'votes'> {
     orderedVotes: OrderedVote[]
@@ -43,7 +46,7 @@ export interface AnonymizedBallot {
 }
 
 export interface BallotAction {
-    action_type:string;
+    action_type: BallotActionType;
     actor:Uid;
     timestamp:number;
 }

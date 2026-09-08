@@ -1,6 +1,7 @@
 import { Election } from "@equal-vote/star-vote-shared/domain_model/Election";
 import { ElectionRoll } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll";
-import { Ballot, ballotValidation, NewBallot, OrderedNewBallot, RaceCandidateOrder } from '@equal-vote/star-vote-shared/domain_model/Ballot';
+import { Ballot, BallotSubmitType, ballotValidation, NewBallot, OrderedNewBallot, RaceCandidateOrder } from '@equal-vote/star-vote-shared/domain_model/Ballot';
+import { DEFAULT_ALLOWED_SUBMIT_TYPES } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
 import ServiceLocator from "../../ServiceLocator";
 import Logger from "../../Services/Logging/Logger";
 import { BadRequest, Conflict, InternalServerError, Unauthorized } from "@curveball/http-errors";
@@ -27,9 +28,6 @@ const EmailService = ServiceLocator.emailService();
 const AccountService = ServiceLocator.accountService();
 
 
-// NOTE: discord isn't implemented yet, but that's the plan for the future
-type BallotSubmitType = 'submitted_via_browser' | 'submitted_via_admin' | 'submitted_via_discord';
-
 const castVoteEventQueue = "castVoteEvent";
 
 async function makeBallotEvent(req: IElectionRequest, targetElection: Election, inputBallot: NewBallot, submitType: BallotSubmitType, voter_id?: string, adminUsername?: string){
@@ -39,6 +37,11 @@ async function makeBallotEvent(req: IElectionRequest, targetElection: Election, 
     // TODO: we may be able to shortcut further for elections that don't require authentication
     //       ^ that could be huge when creating elections from a set of ballots
     if(targetElection.state !== 'draft' && req.election.ballot_source !== 'prior_election') {
+        const allowedTypes = targetElection.settings.allowed_submit_types ?? DEFAULT_ALLOWED_SUBMIT_TYPES;
+        if (!allowedTypes.includes(submitType)) {
+            throw new BadRequest(`Ballot submission type '${submitType}' is not allowed for this election`);
+        }
+
         const missingAuthData = checkForMissingAuthenticationData(req, targetElection, req, voter_id)
         if (missingAuthData !== null) {
             throw new Unauthorized(missingAuthData);

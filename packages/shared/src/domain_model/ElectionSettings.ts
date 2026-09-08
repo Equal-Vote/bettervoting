@@ -1,6 +1,7 @@
 import { timeZones, TimeZone } from "./Util";
 import { ElectionState } from "./ElectionStates"
 import { getVoterAuthenticationMode } from "./VoterAuthenticationMode";
+import { BallotSubmitType } from "./Ballot";
 
 export interface registration_field {
   field_name: string;
@@ -24,6 +25,8 @@ export type VoterAccess = typeof VoterAcessArray[number];
 const InvitationTypes = ['email', 'address'] as const;
 export type InvitationType = typeof InvitationTypes[number];
 
+export const DEFAULT_ALLOWED_SUBMIT_TYPES: BallotSubmitType[] = ['submitted_via_browser', 'submitted_via_discord'];
+
 export interface ElectionSettings {
     voter_access?:         VoterAccess;  //   Who is able to vote in election?
     voter_authentication: authentication; // How will voters be authenticated?
@@ -41,6 +44,7 @@ export interface ElectionSettings {
     contact_email?: string; // Public contact email for voters to reach out to
     exhaust_on_N_repeated_skipped_marks?: number; // number of skipped ranks before exhausting
     draggable_ballot?: boolean; // Use draggable interface for IRV ballots
+    allowed_submit_types?: BallotSubmitType[]; // Which submission channels are allowed for this election
 }
 function settingsCompatiblityValidation(settings: ElectionSettings, electionState?: ElectionState): string {
     let errorMsg = ''
@@ -98,6 +102,19 @@ export function electionSettingsValidation(obj:ElectionSettings, electionState?:
   }
   if (obj.draggable_ballot && typeof obj.draggable_ballot !== 'boolean'){
     return "Invalid Draggable Ballot";
+  }
+  if (obj.allowed_submit_types !== undefined) {
+    if (!Array.isArray(obj.allowed_submit_types)) {
+      return "Invalid Allowed Submit Types";
+    }
+    const validTypes: BallotSubmitType[] = ['submitted_via_browser', 'submitted_via_admin', 'submitted_via_discord'];
+    if (!obj.allowed_submit_types.every((t: string) => validTypes.includes(t as BallotSubmitType))) {
+      return "Invalid Allowed Submit Types value";
+    }
+    const resolved = obj.allowed_submit_types ?? DEFAULT_ALLOWED_SUBMIT_TYPES;
+    if (resolved.length === 0) {
+      return "allowed_submit_types must not be empty";
+    }
   }
 
   const compatibilityError = settingsCompatiblityValidation(obj, electionState);
