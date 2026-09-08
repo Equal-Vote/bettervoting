@@ -1,7 +1,7 @@
 import { timeZones, TimeZone } from "./Util";
 import { ElectionState } from "./ElectionStates"
 import { getVoterAuthenticationMode } from "./VoterAuthenticationMode";
-import { BallotSubmitType } from "./Ballot";
+import { BALLOT_SUBMIT_TYPES, BallotSubmitType } from "./Ballot";
 
 export interface registration_field {
   field_name: string;
@@ -107,13 +107,12 @@ export function electionSettingsValidation(obj:ElectionSettings, electionState?:
     if (!Array.isArray(obj.allowed_submit_types)) {
       return "Invalid Allowed Submit Types";
     }
-    const validTypes: BallotSubmitType[] = ['submitted_via_browser', 'submitted_via_admin', 'submitted_via_discord'];
-    if (!obj.allowed_submit_types.every((t: string) => validTypes.includes(t as BallotSubmitType))) {
-      return "Invalid Allowed Submit Types value";
-    }
-    const resolved = obj.allowed_submit_types ?? DEFAULT_ALLOWED_SUBMIT_TYPES;
-    if (resolved.length === 0) {
+    if (obj.allowed_submit_types.length === 0) {
       return "allowed_submit_types must not be empty";
+    }
+    const validTypes: readonly string[] = BALLOT_SUBMIT_TYPES;
+    if (!obj.allowed_submit_types.every((t: string) => validTypes.includes(t))) {
+      return "Invalid Allowed Submit Types value";
     }
   }
 

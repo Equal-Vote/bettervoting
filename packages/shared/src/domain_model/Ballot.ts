@@ -5,7 +5,8 @@ import { Score } from "./Score";
 import { Uid } from "./Uid";
 import { OrderedVote, Vote } from "./Vote";
 
-export type BallotSubmitType = 'submitted_via_browser' | 'submitted_via_admin' | 'submitted_via_discord';
+export const BALLOT_SUBMIT_TYPES = ['submitted_via_browser', 'submitted_via_admin', 'submitted_via_discord'] as const;
+export type BallotSubmitType = typeof BALLOT_SUBMIT_TYPES[number];
 export type BallotActionType = BallotSubmitType;
 
 export interface NewBallotWithVoterID {
