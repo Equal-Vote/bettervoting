@@ -9,7 +9,7 @@ parent: BetterVoting Documentation
 
 Someone has sent you a link to vote. This page explains what happens next.
 
-**The short version:** open the link, fill in the ballot, press submit. It takes a couple of minutes and you don't need an account.
+**The short version:** open the link, fill in the ballot, press submit. It just takes a couple of minutes.
 
 ## Getting to your ballot
 
@@ -25,7 +25,7 @@ If your link doesn't work, or you never received one, contact whoever is running
 
 ## Filling in the ballot
 
-What you're asked to do depends on the method the organiser chose. The ballot tells you, and there's no way to accidentally pick the wrong style — you'll only ever see one.
+What you're asked to do depends on the method the organiser chose, just follow the ballot instructions.
 
 **Score the candidates 0 to 5** (STAR Voting). Give every candidate a score. 5 means you support them most, 0 means not at all. **You are not ranking them** — you can give two candidates the same score if you genuinely like them the same, and doing so does not waste your vote.
 
@@ -39,7 +39,7 @@ A few things you might notice, all of them normal:
 
 * **The candidates may be in a different order than on someone else's ballot.** Randomised order is on by default, so that being listed first isn't an advantage.
 * **You may have to confirm you've read the instructions** before the submit button becomes available.
-* **You can leave a candidate blank.** A blank is not a vote against them; it just isn't support for them.
+* **You can leave a candidate blank.** A blank is identical to giving a 0 or whatever the minimum support would be for that voting method.
 
 ## Submitting
 
