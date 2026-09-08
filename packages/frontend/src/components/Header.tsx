@@ -16,6 +16,14 @@ import NavMenu from './NavMenu';
 import { PrimaryButton } from './styles';
 import { useLocation } from 'react-router-dom'
 
+type NavItem = {
+    text: string;
+    href?: string;
+    target?: string;
+    onClick?: () => void;
+    items?: NavItem[];
+};
+
 export const createWizardNav = (heading: string, isLandingPage: boolean) => {
     return isLandingPage ?
         {
@@ -26,6 +34,18 @@ export const createWizardNav = (heading: string, isLandingPage: boolean) => {
         } : {
             text: heading,
             href: '/new_election',
+            target: '_self',
+        }
+};
+
+export const createFeatureListNav = (isLandingPage: boolean) => {
+    return isLandingPage ?
+        {
+            text: 'Feature List',
+            onClick: () => scrollToElement(document.querySelector(`.features`), { cancelOnUserInput: true }),
+        } : {
+            text: 'Feature List',
+            href: '/features',
             target: '_self',
         }
 };
@@ -41,15 +61,40 @@ const Header = () => {
     const [tempID, setTempID] = useCookie('temp_id', defaultTempId);
     useEffect(() => {
         if (tempID === '0') setTempID(makeID(ID_PREFIXES.VOTER, ID_LENGTHS.VOTER));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tempID]);
     const {t} = useSubstitutedTranslation();
     
-    const navItems = [
+    const navItems: NavItem[] = [
         {
             text: t('nav.about'),
-            href: '/about',
-            target: '_self',
+            items: [
+                {
+                    text: 'About BetterVoting',
+                    href: '/about',
+                    target: '_self',
+                },
+                {
+                    text: 'About The Equal Vote Coalition',
+                    href: 'http://equal.vote/',
+                    target: '_self',
+                },
+                {
+                    text: 'Why We Need Better Voting',
+                    href: 'https://www.equal.vote/voting_methods',
+                    target: '_self',
+                },
+                {
+                    text: 'Stories',
+                    href: 'https://starvoting.org/case_studies',
+                    target: '_self',
+                },
+                createFeatureListNav(isLandingPage),
+                {
+                    text: 'Documentation',
+                    href: 'https://docs.bettervoting.com',
+                    target: '_self',
+                },
+            ]
         },
         {
             text: 'Voting Methods',
@@ -82,11 +127,6 @@ const Header = () => {
             ]
         },
         {
-            text: t('nav.public_elections'),
-            href: '/browse',
-            target: '_self',
-        },
-        {
             text: 'Paper Ballots',
             items: [
                 createWizardNav('E-Voting w/ Paper Receipts', isLandingPage),
@@ -108,12 +148,27 @@ const Header = () => {
             ]
         },
         {
-            text: 'Stories' ,
-            href: 'https://starvoting.org/case_studies',
-            target: '_self',
+            text: 'Support Us',
+            items: [
+                {
+                    text: 'Volunteer',
+                    href: '/volunteer',
+                    target: '_self',
+                },
+                {
+                    text: 'Merch',
+                    href: 'https://bettervoting.myspreadshop.com',
+                    target: '_self',
+                },
+                {
+                    text: 'Donate',
+                    href: 'https://equal.vote/donate',
+                    target: '_self',
+                },
+            ]
         },
         createWizardNav('Create Election', isLandingPage),
-    ] as any[];
+    ];
 
     return (
         <AppBar className="navbar" position="sticky" sx={{ backgroundColor: /*"darkShade.main"*/"black", '@media print': {display: 'none', boxShadow: 'none'}}}>
@@ -215,13 +270,6 @@ const Header = () => {
                             </MenuItem>
                             <MenuItem component={Link} href='/vote_history'>
                                 {t('nav.past_elections')}
-                            </MenuItem>
-                            <MenuItem
-                                component={Link} 
-                                href='https://docs.bettervoting.com'
-                                target='_blank'
-                            >
-                                {t('nav.help')}
                             </MenuItem>
                             <MenuItem
                                 color='inherit'

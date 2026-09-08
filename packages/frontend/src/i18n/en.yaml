@@ -397,8 +397,6 @@ keyword:
 # Nav Bar
 nav:
   about: About Us
-  help: Help 
-  public_elections: Vote in a Poll
   new_election: Create Election
   greeting: Hello, {{name}}
   feedback: Feedback?
@@ -500,20 +498,23 @@ landing_page:
       text: Supports methods that yield multiple winners, including both proportional and basic multi-winner methods.
     - title: Multi-Race Elections
       text: Setup multi-race elections for when there are multiple issues or positions to vote on.
-    - title: Compare Methods
-      text: Allow voters to vote on one issue with multiple methods to compare the voter experience and winners; Just duplicate your race and select different methods. 
+    - title: Paper Ballots
+      text: Use [a template](https://docs.google.com/presentation/d/1va-XEsUy0VI0jCTAHrQ_f9HNKex3VK9cm7WfF6jhUYM/edit) to create your paper ballots. Those ballots can then be hand tallied or manually uploaded and tallied automatically. Upload CSV feature coming soon.
     - title: Secure Elections
       text: Offers a spectrum of security options including email verification, voter IDs, imported email lists, and direct voting links.
     - title: Accessible Polls
       text: Quick and easy options for creating and sharing a public poll online.
-    - title: Open Source
-      text: This project is shared [open source](https://github.com/Equal-Vote/bettervoting/) under a AGPL-3.0 license. Run your elections via BetterVoting or self host on your own server.
+    - title: Compare Methods
+      text: Allow voters to vote on one issue with multiple methods to compare the voter experience and winners; Just duplicate your race and select different methods. 
     - title: Educational Resources
       text: Find everything you need to learn about voting methods and choose the best option for you.
+    - title: Open Source
+      text: This project is shared [open source](https://github.com/Equal-Vote/bettervoting/) under a AGPL-3.0 license. Run your elections via BetterVoting or self host on your own server.
 
   # Featured Elections Section
   featured_elections:
-    title: Vote in a Featured Public Election
+    title: Vote in a BetterVoting Demo Election
+    button: Browse Public Elections and Polls
 
   # Sign Up Section
   sign_up:
@@ -707,6 +708,7 @@ tabulation_logs:
 
 disabled_msgs:
     ballot_updates_when_open: Only supported when election uses email list
+    is_public_when_voter_list: Only supported when anyone with the link can {{vote}}
 
 #######################################
 #### PRIORITY 4 : Info Bubbles ####
