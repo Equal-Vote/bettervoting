@@ -36,7 +36,8 @@
     "clean": "npx rimraf build node_modules ../node_modules",
     "build": "tsc && rsbuild build",
     "start": "rsbuild preview",
-    "lint": "eslint . --fix"
+    "lint": "eslint . --fix",
+    "test": "jest --config jest.config.cjs"
   },
   "browserslist": {
     "production": [
