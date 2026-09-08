@@ -21,8 +21,6 @@ You've submitted your ballot. This page answers the three things voters ask next
 
 If updates are allowed, you can change your vote as many times as you like while the election is open. Only your most recent ballot is counted — earlier ones are replaced, not added.
 
-If updates aren't allowed and you've made a mistake, contact the organiser. They can't edit your ballot, but they can tell you what your options are.
-
 {: .note }
 > Changing your vote needs the **link from your email receipt**. If you deleted the receipt, ask the organiser to send it again — they can look up your voting link.
 
@@ -32,7 +30,7 @@ If updates aren't allowed and you've made a mistake, contact the organiser. They
 
 **If you voted through a shared link without email**, there's no receipt to send — the confirmation screen you saw immediately after submitting is your confirmation.
 
-If you're unsure whether your ballot went through, don't submit a second time hoping it helps. Contact the organiser instead; in elections with a voter list they can see exactly who has voted and who hasn't.
+If you're unsure whether your ballot went through, you can open the voting link again. It'll indicate if a vote has already been cast from that link or device depending on the election security settings.
 
 ## When will I see results?
 
