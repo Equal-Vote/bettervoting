@@ -7,7 +7,7 @@ parent: BetterVoting Documentation
 
 # Electing More Than One Winner
 
-When a race has more than one seat, BetterVoting asks you a second question: **Basic** or **Proportional**. It is the most consequential choice in the product, and the one most often made by accident.
+When a race has more than one seat, BetterVoting asks you a second question: **Basic** or **Proportional**. The difference matters!
 
 **The one-sentence version:** Basic elects the strongest winners; Proportional elects a representative mix. They routinely produce completely different sets of winners from identical ballots.
 
@@ -44,8 +44,6 @@ Ask what the seats are *for*.
 * a steering committee meant to reflect the different groups in an organisation
 * any case where a group being persistently outvoted and getting no seats at all would be a failure
 
-The failure mode worth naming: **if you're filling seats meant to represent people and you pick Basic, you may be surprised by the result** — and the surprise arrives after the election, when it can't be changed.
-
 ## Which methods support which
 
 | | Basic | Proportional |
@@ -57,14 +55,3 @@ The failure mode worth naming: **if you're filling seats meant to represent peop
 | Choose One | ✓ | |
 
 Proportional representation has its own two methods rather than being a switch on the others: **Proportional STAR** if you want a scored ballot, **STV** if you want a ranked one. The ballot your voters fill in is the same as the single-winner version — only the counting changes.
-
-## A note on explaining it
-
-Proportional methods are harder to explain to voters than their single-winner counterparts, and that's the real cost of choosing one. It's worth writing a sentence or two in your election description saying what you're doing and why — something like *"three seats, counted proportionally, so that a group of roughly a third of members can expect a seat."*
-
-Voters rarely object to proportionality. They object to being surprised by a result they can't account for.
-
-## Related
-
-* [Before You Open Your Election](before_you_open.md) — the pre-flight checklist
-* [Ties](ties.md) — what happens when the last seat can't be separated
