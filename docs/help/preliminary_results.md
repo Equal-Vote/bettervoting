@@ -1,8 +1,9 @@
 ---
 layout: default
 title: Preliminary Results
-nav_order: 8
-parent: BetterVoting Documentation
+nav_order: 1
+parent: Counting and Results
+grand_parent: Running an Election
 ---
 
 # Preliminary Results

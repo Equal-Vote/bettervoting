@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+# --- Lint the files you're committing (staged files only, not the whole repo) ---
+npx lint-staged || exit 1

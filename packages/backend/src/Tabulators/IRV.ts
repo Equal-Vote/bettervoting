@@ -75,7 +75,11 @@ export function IRV_STV(candidates: candidate[], votes: rawVote[], nWinners = 1,
         quota = Math.floor(activeVotes.length/2 + 1)
     }
 
-    while (results.elected.length < nWinners) {
+    // Stop once every candidate has been eliminated. When no active votes remain
+    // nobody can reach the quota, so each round eliminates one more candidate until
+    // the pool is empty and there is nothing left to seat. STV never gets here: the
+    // branch below seats the survivors as soon as they can fill the remaining seats.
+    while (results.elected.length < nWinners && remainingCandidates.length > 0) {
 
         if (DEBUG) console.log("IRV Round");
 
