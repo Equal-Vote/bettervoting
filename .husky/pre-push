@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+
+# --- Full build + unit tests, the same commands CI runs (minus e2e) ---
+# E2E is deliberately left out: it spins up the full docker-compose stack, which is
+# too slow for every push, and CI already runs it on every PR.
+npm run build -ws || exit 1
+npm test || exit 1
