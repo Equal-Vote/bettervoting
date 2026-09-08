@@ -55,7 +55,7 @@ If you had the ballot page open as the election ended, filling it out doesn't re
 
 Elections restricted to a voter list ask you to authenticate before voting. What that looks like depends on how the organiser set it up:
 
-- **You got a unique voting link by email.** The link signs you in automatically — the election page will show *"Your unique voter id"* partly masked. Nothing to type.
+- **You got a unique voting link by email.** The link fills your voter id automatically — the election page will show *"Your unique voter id"* partly masked. Nothing to type.
 - **You got a voter ID directly from the organiser.** Enter it in the **Voter ID** field on the election page. It's hidden as you type, like a password.
 
 If you see `Invalid Voter ID`:
@@ -110,7 +110,7 @@ If the election publishes live tallies, you may also be able to watch the count 
 Some messages appear before you submit. These are checks, not rejections — your ballot is still yours to fix:
 
 - *"Do not skip rankings."* — on ranked ballots, skipping a rank doesn't help or hurt any candidate, but ranking in order states your preferences most clearly. Candidates you leave blank are ranked last.
-- *"Do not rank multiple candidates equally. (Ranking candidates equally can void your ballot.)"* — ranked methods need a strict order; give each candidate their own rank.
+- *"Do not rank multiple candidates equally. (Ranking candidates equally can void your ballot.)"* — Ranked Choice Voting in particular need a strict order; give each candidate their own rank.
 - **The stars or bubbles won't respond.** If the ballot asks you to confirm *"I have read the instructions"*, you must tick that box before you can mark the ballot.
 - **The Submit button stays greyed out** after you press it and the page says *"Submitting..."* — give it a moment; pressing again isn't needed. If it fails, the error appears at that point and nothing was recorded.
 
