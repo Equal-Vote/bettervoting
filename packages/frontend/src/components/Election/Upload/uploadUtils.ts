@@ -33,26 +33,19 @@ export interface UploadBatchResult {
     aborted: boolean;
 }
 
-export interface UploadBatchedOptions {
-    initialBatchSize?: number;
-    shrinkFactor?: number;
-    minBatchSize?: number;
-}
+const INITIAL_BATCH_SIZE = 700;
+const BATCH_SHRINK_FACTOR = 0.75;
+const MIN_BATCH_SIZE = 10;
 
 export async function uploadBallotsBatched(
     electionId: string,
     raceOrder: RaceCandidateOrder[],
     ballots: OrderedNewBallot[],
-    onProgress?: (uploaded: number, total: number) => void,
-    options?: UploadBatchedOptions
+    onProgress?: (uploaded: number, total: number) => void
 ): Promise<UploadBatchResult> {
-    const initialBatchSize = options?.initialBatchSize ?? 700;
-    const shrinkFactor = options?.shrinkFactor ?? 0.75;
-    const minBatchSize = options?.minBatchSize ?? 10;
-
-    let batchSize = initialBatchSize;
+    let batchSize = INITIAL_BATCH_SIZE;
     let nextIndex = 0;
-    let responses: unknown[] = [];
+    const responses: unknown[] = [];
 
     while (nextIndex < ballots.length) {
         onProgress?.(nextIndex, ballots.length);
@@ -75,14 +68,8 @@ export async function uploadBallotsBatched(
             });
 
             if (!uploadRes.ok) {
-                batchSize = Math.round(batchSize * shrinkFactor);
-                if (batchSize < minBatchSize) {
-                    const remaining = ballots.length - nextIndex;
-                    responses.push({
-                        success: false,
-                        voter_id: nextIndex,
-                        message: `Upload aborted: batch size floor reached with ${remaining} ballots remaining`,
-                    });
+                batchSize = Math.round(batchSize * BATCH_SHRINK_FACTOR);
+                if (batchSize < MIN_BATCH_SIZE) {
                     return { responses, aborted: true };
                 }
             }
@@ -90,7 +77,7 @@ export async function uploadBallotsBatched(
 
         nextIndex += batchSize;
         const res = await uploadRes.json();
-        responses = [...responses, ...res.responses];
+        responses.push(...res.responses);
     }
 
     return { responses, aborted: false };
