@@ -9,9 +9,6 @@ parent: BetterVoting Documentation
 
 Several settings change what the ballot looks like and how voters interact with it. Most of them live on the **Settings** page of your election's admin panel; write-in candidates are enabled per race in the race editor. This page explains what each option does, what the voter sees, and when you would want it.
 
-{: .note }
-> Ballot options can only be changed while your election is still a **draft**. Once you finalize, the ballot is locked so that every voter votes on the same ballot. (Results visibility is the exception — see [Preliminary Results](preliminary_results.md).)
-
 ## Quick reference
 
 | Setting | What it does | Default |
@@ -56,8 +53,6 @@ What the voter sees:
 {: .important }
 > Vote editing is only available for elections that invite voters by **email list**. It is not permitted on open-access elections, because updating a ballot requires knowing reliably which voter it belongs to.
 
-Enable this for lower-stakes polls where you want voters to be able to react to new information (a rescheduled event, a candidate dropping out). For high-stakes elections, most administrators leave it off so that a submitted ballot is final.
-
 ## Use Draggable Ballots for RCV
 
 This option only affects races using **Ranked Choice Voting (RCV)**. It replaces the standard ranking grid with a drag-and-drop interface.
@@ -69,7 +64,7 @@ This option only affects races using **Ranked Choice Voting (RCV)**. It replaces
 
 **On:** voters see two lists — *Available Candidates* on the left and *Your Rankings* on the right — and drag candidates across to build their ranking from the top down. The ranking is just the order of the right-hand list, so skipped ranks and duplicate ranks are impossible by construction. Voters can drag candidates back out or reorder them freely before submitting.
 
-The drag interface is friendlier for voters on a touchscreen and eliminates the two most common ranked-ballot mistakes. The bubble grid is closer to what official paper RCV ballots look like, which matters if you are mirroring a governmental election or planning a [hand count](hand_count.md).
+The drag interface is friendlier for voters on a touchscreen and eliminates the two most common ranked-ballot mistakes. The bubble grid is closer to what official paper RCV ballots look like.
 
 ## Set Number Of Rankings Allowed
 
@@ -83,7 +78,7 @@ Why limit rankings at all? With a large candidate field, a full ranking grid bec
 
 Write-ins are enabled **per race**, not per election: in the race editor, click **+ Add Write-in** under the candidate list while the election is a draft. A "Write-in" entry appears at the bottom of the candidate list to show voters will have the option.
 
-**What the voter sees:** below the candidate list, the ballot shows a *Write-in Candidates* box. The voter types a name, clicks **Add**, and the name appears as a new row on the ballot to be scored, ranked, or approved exactly like any listed candidate. A voter can add up to 5 write-ins, remove one they've added, and cannot add a name that duplicates an existing candidate.
+**What the voter sees:** below the candidate list, the ballot shows a *Write-in Candidates* box. The voter types a name, clicks **Add**, and the name appears as a new row on the ballot to be scored, ranked, or approved exactly like any listed candidate. 
 
 **How write-ins are counted:** write-in votes do **not** count automatically. After ballots come in, an administrator reviews the write-in names — click the pencil icon next to the race in the admin panel. The review table groups names that differ only in capitalization or surrounding spaces, shows how many ballots each name appeared on, and lets you:
 
@@ -92,25 +87,3 @@ Write-ins are enabled **per race**, not per election: in the race editor, click 
 - Leave it unapproved — for example, misspellings you've merged elsewhere, ineligible people, or joke entries.
 
 Ratings cast for write-ins that are not (or not yet) approved are excluded from the count, and the results page reports how many ratings were excluded. See [What does "write-in scores not counted" mean?](faq.md#write-in-scores-not-counted) for how to read that message.
-
-{: .note }
-> Approval is not a one-time deadline. You can review and approve write-ins after the election closes, and the results will include them once approved.
-
-## Ballot exhaustion: the skipped-rank rule
-
-This one applies only to RCV counting, and it exists mainly for faithfully reproducing real-world elections.
-
-In RCV, your ballot counts for your highest-ranked candidate still in the running; when that candidate is eliminated, it moves to your next ranking. A ballot becomes **exhausted** — stops counting — when it has no ranked candidates left in the race. Two ballot-marking mistakes can also exhaust a ballot early:
-
-- **Repeated skipped rankings.** Some jurisdictions' laws say that if a voter skips too many ranks in a row (for example, marks a 1st choice and a 4th choice but no 2nd or 3rd), the ballot stops counting when the count reaches the gap. Alaska and New York City, for example, void a ballot at a run of two or more consecutive skipped ranks.
-- **Duplicate rankings (overvotes).** When two candidates share one rank, the count cannot tell which of them the voter meant. On paper ballots from real-world elections uploaded to BetterVoting, such an overvote exhausts the ballot when the count reaches that rank. BetterVoting's own online ballot heads this off before submission instead: the bubble grid flags equal rankings with an error message, and the drag-and-drop ballot makes them impossible.
-
-**BetterVoting's default is forgiving:** skipped rankings never void a ballot — the count simply moves on to the voter's next ranked choice. The strict skipped-rank rule is applied to elections uploaded to the public archive of real-world RCV elections, where it is set to match each jurisdiction's law so the reproduced count matches the official one. It is not currently offered in the election settings screen.
-
-When a strict rule was in effect, the results page says so under voter errors: *"This jurisdiction voided ballots if they had N or more repeated skipped ranks."*
-
-## Related pages
-
-- [Security Options](security_options.md) — who can vote and how voters are verified
-- [Preliminary Results](preliminary_results.md) — controlling when voters see results
-- [Frequently Asked Questions](faq.md) — including write-in scores and "None of the Above"
