@@ -2,7 +2,8 @@
 layout: default
 title: Paper Ballots
 nav_order: 5
-parent: BetterVoting Documentation
+parent: Setting Up Your Election
+grand_parent: Running an Election
 ---
 
 {:toc}
@@ -45,7 +46,7 @@ Bloc STAR Voting elects majority preferred winners for multi-winner elections.
 
 **Proportional STAR Voting: Score - Then - Automatic - Runoffs.**
 
-Propositional STAR ensures that 1/x of voters can win 1 out of the X seats available.
+Proportional STAR ensures that 1/x of voters can win 1 out of the X seats available.
 
 * This election will elect 3 winners. Give your favorite five stars. Give your last choice zero or leave blank. Score other candidates as desired. Equal scores indicate equal support.
 * Winners in Proportional STAR are elected in rounds. Each round elects the candidate with the highest total score, then designates that candidate’s strongest supporters as represented. Subsequent rounds include all voters who are not yet fully represented.
@@ -76,7 +77,7 @@ A good practice is to include representatives from each candidate as observers, 
 
 ## Hand-count pro tips and independent observers:
 
-For hand-counts, for the scoring round we recommend at least four people: a caller who reads off the scores on each ballot, a tallier who records the scores on the tally sheets, and two observers, one making sure that each score read is correctly and one ensuring that the person tallying doesn't fall behind or make an error.
+For hand-counts, for the scoring round we recommend at least four people: a caller who reads off the scores on each ballot, a tallier who records the scores on the tally sheets, and two observers, one making sure that each score is read correctly and one ensuring that the person tallying doesn't fall behind or make an error.
 
 STAR Voting is summable, which means that any subset of ballots can be tallied independently and the totals can be added together. Hand counts can be run quickly if needed by breaking volunteers into 3 person teams and giving each team a stack of ballots. Having each team in a separate room or far enough apart to provide some sonic space is a good idea.
 
@@ -90,7 +91,7 @@ Credentialing voters involves confirming a few data points for identity verifica
 
 **Data points often used for credentialing**: name, date of birth, address, email, signature or password.
 
-**Proof of identity documentation often used for credentialing**: Photo ID, medical or insurance documents, a post marked piece of mail, a signature or password which was filed in advance.
+**Proof of identity documentation often used for credentialing**: Photo ID, medical or insurance documents, a postmarked piece of mail, a signature or password which was filed in advance.
 
 **Verifying data points**: If you have a photo ID of someone with their name on it, and the photo looks like them, you can confirm that the name on the ID is theirs.  People merely stating their address or email proves nothing, but if they repeat back to you a confirmation code you mailed them earlier, they have verified their address.
 
@@ -100,11 +101,11 @@ Credentialing voters involves confirming a few data points for identity verifica
 
 **In person registration followed by remote voting**: If your election won’t be held in person, registering your voters in person in advance is recommended when possible. After confirming identity (as described above), one option is to have voters sign a registration card so you can match it to a required signature with the ballot later. Another option is to give each voter a Voter ID code or have them set up a password which they will provide with their ballot. Once voters have been registered, you simply send a ballot to their registered physical address or email address at the time of your election. The linked chain of previously validated registration data with transmission of the ballot and its return maintains a valid credentialing process throughout. 
 
-**Remote registration and voting**: If you have a voter's name and email addresses confirmed in advance you can use an email instead of a physical address for credentialing. For example if a person sends you a photo of an insurance card with their name and date of birth over an email address which you have verified you can consider all those data points verified.
+**Remote registration and voting**: If you have a voter's name and email address confirmed in advance you can use an email instead of a physical address for credentialing. For example if a person sends you a photo of an insurance card with their name and date of birth over an email address which you have verified you can consider all those data points verified.
 
-**Remote registration without advance registration**: If none of the options above are possible remote credentialing for high level security becomes much more difficult. In this case no data points are linked in advance and so you'll need to verify a voter's addresses and then use their address to verify other data points.
+**Remote registration without advance registration**: If none of the options above are possible remote credentialing for high level security becomes much more difficult. In this case no data points are linked in advance and so you'll need to verify a voter's address and then use their address to verify other data points.
 
-For example, if a person sends you a photo of a piece of postmarked mail with their address and name, then those data points are confirmed and linked. We don't recommend requesting a photo of an ID unless you can protect your voters personal identifying information against identity theft. Digital images of proof of identity documents must be stored very securely and deleted as soon as possible.
+For example, if a person sends you a photo of a piece of postmarked mail with their address and name, then those data points are confirmed and linked. We don't recommend requesting a photo of an ID unless you can protect your voters' personal identifying information against identity theft. Digital images of proof of identity documents must be stored very securely and deleted as soon as possible.
 
 If you'd rather not request a lot of proof of identity documentation, an option may be to piggyback your election security on your state's voter registration process. Vote-by-Mail states like Oregon have voters show ID when they register to vote, and then confirm voters' addresses by the fact that the individual received their ballot. They then use the signature on the ballot to confirm that the correct person at that address voted.
 
@@ -112,7 +113,7 @@ For remote elections, voter identity can be confirmed by having voters input the
 
 ## On election security for elections without paper ballots:
 
-While electronic elections can also achieve a high level of election security, in practice, doing so fully requires taking extra risks, and securing against those additional risks can bring up other ethical dilemmas, barriers to access, and logistical hurdles. Whenever possible we strongly recommend using paper ballots or at least ensuring that every voter receive a hard copy receipt which documents their vote and that elections officials keep a hard copy receipt of each ballot as well. 
+While electronic elections can also achieve a high level of election security, in practice, doing so fully requires taking extra risks, and securing against those additional risks can bring up other ethical dilemmas, barriers to access, and logistical hurdles. Whenever possible we strongly recommend using paper ballots or at least ensuring that every voter receives a hard copy receipt which documents their vote and that elections officials keep a hard copy receipt of each ballot as well. 
 
 ## A note on Risk-Limiting-Audits and recounts:
 
@@ -124,7 +125,7 @@ Risk Limiting Audits for STAR Voting can be done using similar protocols used fo
 
 ## Gravic/Remark OMR for Governmental Elections:
 
-In the interest of providing estimates for STAR Voting implementation for jurisdictions where STAR Voting ballot initiatives are underway, we reached out to possible vendors to provide bids. For the city of Eugene, OR, which has a pupulation of 75k people, Gravic has provided a $21,530 [quote](https://www.starvoting.us/remark_quote) for using their [Remark OMR](https://remarksoftware.com/products/office-omr/) software. Lane County Elections (which runs elections for the City of Eugene,) currently uses 4 scanners and this quote is based upon maintaining that capacity. The quote includes four licenses at $4,030, a customer utility which would take the ballot data and calculate both STAR and binary election results for $15,000, as well as an optional $2,000-2,500 if the city would like Remark to draft the ballot design. If the city would like to design the ballots themselves Gravic would consult and then approve the final ballot design at no cost. In total, adopting Remark for Eugene or Lane County elections would represent $19,030 in fixed costs, plus certification. Adding in optional costs such as ballot design and software trainings, and 4 new scanners, Remark would still come in at under $22k.
+In the interest of providing estimates for STAR Voting implementation for jurisdictions where STAR Voting ballot initiatives are underway, we reached out to possible vendors to provide bids. For the city of Eugene, OR, which has a population of 75k people, Gravic has provided a $21,530 [quote](https://www.starvoting.us/remark_quote) for using their [Remark OMR](https://remarksoftware.com/products/office-omr/) software. Lane County Elections (which runs elections for the City of Eugene) currently uses 4 scanners and this quote is based upon maintaining that capacity. The quote includes four licenses at $4,030, a customer utility which would take the ballot data and calculate both STAR and binary election results for $15,000, as well as an optional $2,000-2,500 if the city would like Remark to draft the ballot design. If the city would like to design the ballots themselves Gravic would consult and then approve the final ballot design at no cost. In total, adopting Remark for Eugene or Lane County elections would represent $19,030 in fixed costs, plus certification. Adding in optional costs such as ballot design and software trainings, and 4 new scanners, Remark would still come in at under $22k.
 
 Remark was used in a full scale pilot by the Democratic Party of Oregon to tabulate the STAR Voting paper ballots for the Presidential Delegate Elections and was selected as a top option by the Election Integrity Caucus research committee because it met all criteria for best practices, including open source software, independence from the internet, and other election security and user-interface criteria. Remark is compatible with modern scanners and computers and does not require proprietary hardware. 
 

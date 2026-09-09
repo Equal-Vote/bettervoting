@@ -1,6 +1,7 @@
 import { Box, Typography } from '@mui/material'
 import FeaturedElection from './FeaturedElection'
 import { useSubstitutedTranslation } from '../util'
+import { PrimaryButton } from '../styles';
 
 const LandingPageFeaturedElections = ({ electionIds }: { electionIds: string[] }) => {
     const { t } = useSubstitutedTranslation();
@@ -29,6 +30,9 @@ const LandingPageFeaturedElections = ({ electionIds }: { electionIds: string[] }
             flexWrap: 'wrap',
         }}>
             {electionIds.map((electionId, i) => <Box key={i}><FeaturedElection key={i} electionId={electionId} /></Box>)}
+        </Box>
+        <Box sx={{mx: 'auto'}}>
+            <PrimaryButton href='/browse'>{t('landing_page.featured_elections.button')}</PrimaryButton>
         </Box>
     </Box>
 }
