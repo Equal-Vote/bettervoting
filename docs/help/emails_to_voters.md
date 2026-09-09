@@ -60,17 +60,6 @@ You can also email a single voter: open that voter's entry on the Voters tab and
 
 Before sending to real voters, use the **Test Email(s)** field at the top of the dialog. Enter one or more addresses (comma-separated — it starts pre-filled with your own) and select **Send Test**. The message arrives with `[Test Email]` added to the subject line so you can't confuse it with the real thing, and test sends are not recorded against any voter.
 
-### Timing warnings
-
-The dialog warns you before you send at an odd moment:
-
-- **Election not finalized yet** — you can still send, but the email opens with a prominent test-mode warning to the voter (see below).
-- **Start time in the future** — voters who click through can't cast a ballot yet.
-- **End time already passed** — voters can no longer cast a ballot.
-
-{: .warning }
-> **Emails sent before finalizing carry a test-mode banner, and test ballots don't survive.** Any ballot cast while the election is still a draft is deleted when you finalize. The banner tells voters this, and their receipts repeat it — but plan on your testers voting again after you finalize, and send a fresh blast so real voting happens on the finalized election.
-
 ## Ballot receipts
 
 When a voter submits a ballot, BetterVoting automatically emails them a receipt if it knows their address — from your email list, from their signed-in account, or from the optional receipt-email box on the ballot submission screen. The receipt:
@@ -98,12 +87,3 @@ Work through these in order:
 
 {: .warning }
 > A unique voting URL is that voter's ballot access — anyone holding it can vote as that voter. Deliver it privately, and remind the voter not to forward it.
-
-## What finalizing does — and doesn't — do
-
-For emails, finalizing your election does exactly two things:
-
-- **Deletes all test ballots** cast while the election was a draft, so testers must vote again
-- **Offers you a shortcut** to the Voters tab so you can send your invitation blast
-
-It does **not** send invitations, and no invitations are sent when the election's start time arrives. Treat "finalize, then send the invitation blast" as two steps of your launch checklist — both yours to do.
