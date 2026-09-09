@@ -1,5 +1,4 @@
 import { timeZones, TimeZone } from "./Util";
-import { ElectionState } from "./ElectionStates"
 import { getVoterAuthenticationMode } from "./VoterAuthenticationMode";
 import { BALLOT_SUBMIT_TYPES, BallotSubmitType } from "./Ballot";
 
@@ -20,9 +19,9 @@ export interface authentication {
 }
 const TermTypes = ['poll', 'election'] as const;
 export type TermType = typeof TermTypes[number];
-const VoterAcessArray = ['open', 'closed', 'registration'] as const;
+export const VoterAcessArray = ['open', 'closed', 'registration'] as const;
 export type VoterAccess = typeof VoterAcessArray[number];
-const InvitationTypes = ['email', 'address'] as const;
+export const InvitationTypes = ['email', 'address'] as const;
 export type InvitationType = typeof InvitationTypes[number];
 
 export const DEFAULT_ALLOWED_SUBMIT_TYPES: BallotSubmitType[] = ['submitted_via_browser', 'submitted_via_discord'];
@@ -46,7 +45,7 @@ export interface ElectionSettings {
     draggable_ballot?: boolean; // Use draggable interface for IRV ballots
     allowed_submit_types?: BallotSubmitType[]; // Which submission channels are allowed for this election
 }
-function settingsCompatiblityValidation(settings: ElectionSettings, electionState?: ElectionState): string {
+function settingsCompatiblityValidation(settings: ElectionSettings): string {
     let errorMsg = ''
     if (settings.ballot_updates) {
         if (settings.voter_access == 'open') {
@@ -59,7 +58,7 @@ function settingsCompatiblityValidation(settings: ElectionSettings, electionStat
     return errorMsg;
 }
 
-export function electionSettingsValidation(obj:ElectionSettings, electionState?: ElectionState): string | null {
+export function electionSettingsValidation(obj:ElectionSettings): string | null {
   if (!obj){
     return "ElectionSettings is null";
   }
@@ -116,7 +115,7 @@ export function electionSettingsValidation(obj:ElectionSettings, electionState?:
     }
   }
 
-  const compatibilityError = settingsCompatiblityValidation(obj, electionState);
+  const compatibilityError = settingsCompatiblityValidation(obj);
   if (compatibilityError) {
     return compatibilityError;
   }
