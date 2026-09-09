@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { ElectionSettings, electionSettingsValidation, DEFAULT_ALLOWED_SUBMIT_TYPES } from "./ElectionSettings";
+import { ElectionSettings, electionSettingsValidation } from "./ElectionSettings";
 
 describe("electionSettingsValidation — allowed_submit_types", () => {
     test("accepts undefined (no field set, defaults apply)", () => {
