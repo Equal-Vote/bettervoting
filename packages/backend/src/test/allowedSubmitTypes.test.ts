@@ -1,7 +1,7 @@
-require("dotenv").config();
+import 'dotenv/config';
 
 import { Election } from "@equal-vote/star-vote-shared/domain_model/Election";
-import { ElectionSettings, electionSettingsValidation, DEFAULT_ALLOWED_SUBMIT_TYPES } from "@equal-vote/star-vote-shared/domain_model/ElectionSettings";
+import { ElectionSettings } from "@equal-vote/star-vote-shared/domain_model/ElectionSettings";
 import { Race } from "@equal-vote/star-vote-shared/domain_model/Race";
 import testInputs from "./testInputs";
 import { TestHelper } from "./TestHelper";
@@ -13,13 +13,11 @@ afterEach(() => {
     th.afterEach();
 });
 
-// A simple open election with one STAR race and two candidates.
+// Based on testInputs.Election1, but opened and given a STAR race with two candidates.
 const makeElection = (allowed_submit_types?: string[]): Election => ({
-    election_id: "0",
+    ...testInputs.Election1,
     title: "Submit Types Test Election",
     state: "open",
-    frontend_url: "",
-    owner_id: "Alice1234",
     races: [
         {
             race_id: "race0",
@@ -44,57 +42,9 @@ const RACE_ORDER = [{ race_id: "race0", candidate_id_order: ["cand0", "cand1"] }
 // orderedVote = [aliceScore, bobScore, overvote_rank, has_duplicate_rank]
 const ORDERED_BALLOT = { orderedVotes: [[5, 0, null, null]] };
 
-describe("electionSettingsValidation — allowed_submit_types", () => {
-    test("accepts undefined (no field set, defaults apply)", () => {
-        const settings: ElectionSettings = { voter_access: "open", voter_authentication: {} };
-        expect(electionSettingsValidation(settings)).toBeNull();
-    });
-
-    test("accepts a non-empty array of valid types", () => {
-        const settings: ElectionSettings = {
-            voter_access: "open",
-            voter_authentication: {},
-            allowed_submit_types: ["submitted_via_admin"],
-        } as ElectionSettings;
-        expect(electionSettingsValidation(settings)).toBeNull();
-    });
-
-    test("accepts all three valid types", () => {
-        const settings: ElectionSettings = {
-            voter_access: "open",
-            voter_authentication: {},
-            allowed_submit_types: ["submitted_via_browser", "submitted_via_admin", "submitted_via_discord"],
-        } as ElectionSettings;
-        expect(electionSettingsValidation(settings)).toBeNull();
-    });
-
-    test("rejects an explicitly empty allowed_submit_types array", () => {
-        const settings: ElectionSettings = {
-            voter_access: "open",
-            voter_authentication: {},
-            allowed_submit_types: [],
-        } as ElectionSettings;
-        const err = electionSettingsValidation(settings);
-        expect(err).not.toBeNull();
-        expect(err).toContain("empty");
-    });
-
-    test("rejects an array containing an invalid type string", () => {
-        const settings = {
-            voter_access: "open",
-            voter_authentication: {},
-            allowed_submit_types: ["submitted_via_browser", "submitted_via_pigeon"],
-        } as any;
-        const err = electionSettingsValidation(settings);
-        expect(err).not.toBeNull();
-    });
-
-    test("DEFAULT_ALLOWED_SUBMIT_TYPES includes browser and discord, but not admin", () => {
-        expect(DEFAULT_ALLOWED_SUBMIT_TYPES).toContain("submitted_via_browser");
-        expect(DEFAULT_ALLOWED_SUBMIT_TYPES).toContain("submitted_via_discord");
-        expect(DEFAULT_ALLOWED_SUBMIT_TYPES).not.toContain("submitted_via_admin");
-    });
-});
+// electionSettingsValidation unit tests for allowed_submit_types live in
+// packages/shared/src/domain_model/ElectionSettings.test.ts, next to the
+// function they test.
 
 describe("allowed_submit_types enforcement — admin ballot upload", () => {
     test("admin ballot is accepted when allowed_submit_types includes submitted_via_admin", async () => {
@@ -172,23 +122,8 @@ describe("allowed_submit_types enforcement — admin ballot upload", () => {
     test("allowed_submit_types check and already-voted check compose without interfering", async () => {
         // Election that allows admin submissions with a closed voter roll.
         const closedElec: Election = {
-            election_id: "0",
+            ...makeElection(["submitted_via_browser", "submitted_via_admin"]),
             title: "Closed Admin Upload Election",
-            state: "open",
-            frontend_url: "",
-            owner_id: "Alice1234",
-            races: [
-                {
-                    race_id: "race0",
-                    title: "Best Candidate",
-                    num_winners: 1,
-                    voting_method: "STAR",
-                    candidates: [
-                        { candidate_id: "cand0", candidate_name: "Alice" },
-                        { candidate_id: "cand1", candidate_name: "Bob" },
-                    ],
-                },
-            ] as Race[],
             settings: {
                 voter_access: "closed",
                 voter_authentication: { voter_id: true },

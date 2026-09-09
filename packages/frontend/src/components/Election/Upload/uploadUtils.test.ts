@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { computeRaceOrder, encodeBallotRow } from './uploadUtils';
 import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { NewBallot, RaceCandidateOrder } from '@equal-vote/star-vote-shared/domain_model/Ballot';
@@ -115,6 +116,10 @@ describe('encodeBallotRow', () => {
         const race1Vote = result.orderedVotes[0];
         expect(race1Vote[0]).toBeNull();
         expect(race1Vote[1]).toBeNull();
+        const race2Vote = result.orderedVotes[1];
+        expect(race2Vote[0]).toBeNull();
+        expect(race2Vote[1]).toBeNull();
+        expect(race2Vote[2]).toBeNull();
     });
 
     it('preserves non-votes fields from the row', () => {
