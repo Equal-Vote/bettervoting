@@ -21,8 +21,6 @@ It's worth knowing which one you're in, because most "can I still do this?" ques
 | **Closed** | No | No |
 | **Archived** | No | No |
 
-The key thing that surprises people: **you can only edit an election while it's in draft**. Once you finalize, the ballot is locked — not just while voting is happening, but from that moment onward. So use draft time generously.
-
 ## Draft
 
 This is where an election starts, and it's the only state where you can change things. Add and remove candidates, rename races, pick a voting method, set your dates, build your voter list — all of it is freely editable here.
@@ -102,9 +100,6 @@ Check the state. If it says *finalized*, voting hasn't started — either the st
 
 **I finalized and my test votes disappeared.**
 That's expected — finalizing deletes them so the real count starts from zero.
-
-**Can I extend an election that's already running?**
-No. The dates are part of the election and are locked once you finalize.
 
 **I archived an election by mistake.**
 The results are still there and still viewable. But an archived election can't be reopened, so if you needed it running you'll need a new one.
