@@ -1,8 +1,9 @@
 ---
 layout: default
 title: Hand Count
-nav_order: 6
-parent: BetterVoting Documentation
+nav_order: 5
+parent: Counting and Results
+grand_parent: Running an Election
 ---
 
 Modern elections can sometimes feel like a black box between the voting machines, proprietary software, and for-profit elections vendors. For these reasons and more, many jurisdictions (and some entire countries) still opt to tally their elections the old fashioned way: hand counting the ballots. Even for those who do opt for automated election tallying, hand counted partial recounts and audits are are great way to cross check systems and ensure that everything is working as it should. 

@@ -94,7 +94,8 @@ export const formatPercent = (f: number): string => {
 export const MailTo = ({ children }: { children: string }) => {
   const { setSnack } = useSnackbar();
   // https://adamsilver.io/blog/the-trouble-with-mailto-email-links-and-what-to-do-instead/
-  return <span style={{ whiteSpace: 'nowrap' }}>
+  // NOTE: using nowrap on small devices can extend the copy button beyond the end fo the screen
+  return <Box component='span' sx={{ whiteSpace: {xs: 'normal', md: 'nowrap' }}}>
     <Link href={`mailto:${children}`} sx={{ color: 'var(--brand-pop)' }}>{children}</Link>
     <SecondaryButton
       onClick={() => {
@@ -108,7 +109,7 @@ export const MailTo = ({ children }: { children: string }) => {
       }}
       sx={{ minWidth: 0, ml: 1, px: 1, py: 0}}
     >Copy</SecondaryButton>
-  </span>
+  </Box>
 }
 
 interface RowButtonWithArrowProps {
