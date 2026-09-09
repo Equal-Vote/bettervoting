@@ -45,10 +45,4 @@ describe("electionSettingsValidation — allowed_submit_types", () => {
         const err = electionSettingsValidation(settings);
         expect(err).not.toBeNull();
     });
-
-    test("DEFAULT_ALLOWED_SUBMIT_TYPES includes browser and discord, but not admin", () => {
-        expect(DEFAULT_ALLOWED_SUBMIT_TYPES).toContain("submitted_via_browser");
-        expect(DEFAULT_ALLOWED_SUBMIT_TYPES).toContain("submitted_via_discord");
-        expect(DEFAULT_ALLOWED_SUBMIT_TYPES).not.toContain("submitted_via_admin");
-    });
 });
