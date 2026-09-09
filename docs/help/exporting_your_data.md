@@ -18,8 +18,6 @@ The download lives on the election's **results page** (`bettervoting.com/<electi
 - **Download CSV** — a spreadsheet-friendly table, one row per ballot.
 - **Download JSON** — a complete machine-readable archive: the election setup, every ballot, and the tabulated results in one file.
 
-The button first loads the ballots, then offers both formats. Files are named `Ballot Data - <election title>-<election id>` with a `.csv` or `.json` extension.
-
 ## Who can download, and when
 
 Ballot data follows the visibility of your results:
@@ -30,11 +28,6 @@ Ballot data follows the visibility of your results:
 | Results not public, election **closed** | The election's owner, admins, and auditors |
 | Results not public, election still open | No one — ballot data is locked until the election closes |
 
-The download button appears once results are public. The usual flow for a private election is: close the election, review, then make the results public — the download appears alongside them. Owners, admins, and users granted the **auditor** role can retrieve ballot data for a closed election even before the results are published.
-
-{: .note }
-> Ballot data is never available to the public while an election is open with hidden results. This prevents anyone from watching the running tally of an election that hasn't chosen to show one. See [Preliminary Results](preliminary_results.md) for what making results public during voting does and doesn't reveal.
-
 ## The CSV export
 
 The CSV is a cast vote record: **one row per ballot**, one column per candidate. The first columns identify the ballot; the rest hold that voter's marks.
@@ -44,10 +37,6 @@ The CSV is a cast vote record: **one row per ballot**, one column per candidate.
 | `ballot_id` | The ballot's unique ID — the same ID shown to the voter on their confirmation screen and email receipt |
 | `precinct` | The voter's precinct, if the voter roll assigned one; blank otherwise |
 | One column per candidate | The voter's mark for that candidate (see below) |
-| `overvote_rank` | Ranked Choice (RCV) and STV races only — the first rank position at which the ballot marked more candidates than allowed, or blank if it never did |
-| `has_duplicate_rank` | Ranked Choice and STV races only — `TRUE` if the ballot gave the same rank to more than one candidate, else `FALSE` |
-
-The two extra ranked-ballot columns mostly matter for elections imported from real-world paper cast vote records; they let an auditor reproduce exactly when each ballot exhausts.
 
 **What the number in a candidate column means depends on the voting method:**
 
@@ -90,16 +79,3 @@ Only **submitted** ballots are included. Partially saved, uncast ballots are not
 ## Voters can find their own ballot
 
 Each row carries a `ballot_id`, and each voter is sent their own ballot ID in their email receipt after voting (and in the email receipt, if enabled). That gives every voter a receipt-check: find your ID in the published file and confirm your ballot is recorded exactly as you cast it — while nobody else can tell which row is yours.
-
-## Auditing: re-count the election yourself
-
-This is the export's real purpose. Because the file is a complete cast vote record plus the rules of the election, **anyone with the file can re-run the count independently** and check that it produces the published winners:
-
-- **By hand.** For a modest number of ballots, a STAR election tallies with pencil and paper — see [Hand Count](hand_count.md) for the full procedure. The CSV, sorted and summed in a spreadsheet, is even quicker.
-- **By spreadsheet.** STAR's scoring round is a column sum; the runoff is a count of which finalist each row scored higher. Approval is a single sum per column.
-- **By software.** The JSON feeds any independent tabulator that implements the election's method. Because it includes the settings and the tie-break order, a correct implementation reproduces the result exactly — not just the winner, but the path to it.
-
-If your re-count matches the published results, you have verified the outcome without having to trust BetterVoting's own tabulation. If it doesn't match, you have something concrete to raise: a specific file, a specific rule, and a specific disagreement.
-
-{: .note }
-> Publishing the ballot file alongside your results is the strongest transparency step an election admin can take. Anyone — a losing candidate, a journalist, a curious voter — can check the count without needing any access you didn't already give them.
