@@ -1,4 +1,4 @@
-import { Ballot, NewBallot } from "@equal-vote/star-vote-shared/domain_model/Ballot";
+import { Ballot, NewBallot, OrderedNewBallot, RaceCandidateOrder } from "@equal-vote/star-vote-shared/domain_model/Ballot";
 import { Election } from "@equal-vote/star-vote-shared/domain_model/Election";
 import { Uid } from "@equal-vote/star-vote-shared/domain_model/Uid";
 import { VoterAuth } from "@equal-vote/star-vote-shared/domain_model/VoterAuth";
@@ -6,13 +6,12 @@ import makeApp from "../app";
 import Logger from "../Services/Logging/Logger";
 import { TestLoggerImpl } from "../Services/Logging/TestLoggerImpl";
 import ServiceLocator  from "../ServiceLocator"
-import { MockEventQueue } from "../Services/EventQueue/MockEventQueue";
 import { candidate, rawVote } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
-const request = require("supertest");
+import request, { Test as SupertestTest, Response as SupertestResponse } from "supertest";
 
 type ElectionResponse = {
     statusCode: number;
-    err: Object | null;
+    err: object | null;
     election: Election;
     precinctFilteredElection: Election;
     voterAuth: VoterAuth;
@@ -20,7 +19,7 @@ type ElectionResponse = {
 
 type BallotResponse = {
     statusCode: number;
-    err: Object | null;
+    err: object | null;
     election: Election;
     voterAuth: VoterAuth;
 };
@@ -38,8 +37,9 @@ export const mapMethodInputs = (names: string[], votes: (number | null)[][]): [c
 export class TestHelper {
     public expressApp;
     public logger: TestLoggerImpl;
-    public emailService: any;
-    public eventQueue:any;
+    public emailService: ReturnType<typeof ServiceLocator.emailService>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- tests swap in MockEventQueue, which exposes extra methods beyond IEventQueue
+    public eventQueue: any;
 
     private ctx = Logger.createContext("testHelper");
 
@@ -50,16 +50,16 @@ export class TestHelper {
         this.logger = new TestLoggerImpl().setup();
     }
 
-    getRequest(url: string, userToken: string | null, customToken: string| null = null, tempId: string|null=null) {
-        var r = request(this.expressApp)
+    getRequest(url: string, userToken: string | null, customToken: string| null = null, tempId: string|null=null): SupertestTest {
+        let r = request(this.expressApp)
             .get(url)
             .set("Accept", "application/json");
         r = this.addUserTokenVoterIdCookie(r, userToken, null, customToken, tempId);
         return r;
     }
 
-    postRequest(url: string, body: Object, userToken: string | null, customToken: string| null = null, tempId: string|null=null) {
-        var r = request(this.expressApp)
+    postRequest(url: string, body: object, userToken: string | null, customToken: string| null = null, tempId: string|null=null): SupertestTest {
+        let r = request(this.expressApp)
             .post(url)
             .set("Accept", "application/json");
         r = this.addUserTokenVoterIdCookie(r, userToken, null, customToken, tempId);
@@ -117,7 +117,7 @@ export class TestHelper {
         return this.electionResponse(res);
     }
 
-    private electionResponse(res: any): ElectionResponse {
+    private electionResponse(res: SupertestResponse): ElectionResponse {
         if (res.statusCode != 200) {
             return {
                 statusCode: res.statusCode,
@@ -155,7 +155,7 @@ export class TestHelper {
         electionId: Uid,
         ballot: Ballot | NewBallot,
         userToken: string | null
-    ): Promise<any> {
+    ): Promise<SupertestResponse> {
         return this.postRequest(
             `/API/Election/${electionId}/vote`,
             { ballot: ballot },
@@ -174,7 +174,7 @@ export class TestHelper {
             userToken,
             customToken
         );
-        var err = null;
+        let err = null;
         if (res.statusCode != 200) {
             err = res.body;
         }
@@ -192,14 +192,14 @@ export class TestHelper {
         voterId: string | null, 
         customToken: string| null = null
     ): Promise<BallotResponse> {
-        var req = request(this.expressApp)
+        let req: SupertestTest = request(this.expressApp)
             .post(`/API/Election/${electionId}/ballot`)
             .set("Accept", "application/json");
 
         req = this.addUserTokenVoterIdCookie(req, userToken, voterId, customToken, null);
 
         const res = await req.send({});
-        var err = null;
+        let err = null;
         if (res.statusCode != 200) {
             err = res.body;
         }
@@ -217,8 +217,8 @@ export class TestHelper {
         userToken: string | null,
         voterId: string | null,
         customToken: string| null = null
-    ): Promise<any> {
-        var r = request(this.expressApp)
+    ): Promise<SupertestResponse> {
+        let r = request(this.expressApp)
             .post(`/API/Election/${electionId}/vote`)
             .set("Accept", "application/json");
 
@@ -226,13 +226,27 @@ export class TestHelper {
         return r.send({ ballot: ballot });
     }
 
+    async uploadBallots(
+        electionId: Uid,
+        ballots: Array<{ ballot: OrderedNewBallot; voter_id: string }>,
+        raceOrder: RaceCandidateOrder[],
+        userToken: string | null
+    ): Promise<SupertestResponse> {
+        return this.postRequest(
+            `/API/Election/${electionId}/uploadBallots`,
+            { ballots, race_order: raceOrder },
+            userToken
+        );
+    }
+
     async submitElectionRoll(
         electionId: Uid,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- tests intentionally post partial/malformed rolls to exercise validation
         electionRoll: any[],
         userToken: string | null,
         customToken: string| null = null
-    ): Promise<any> {
-        var r = request(this.expressApp)
+    ): Promise<SupertestResponse> {
+        let r = request(this.expressApp)
             .post(`/API/Election/${electionId}/rolls`)
             .set("Accept", "application/json");
 
@@ -244,8 +258,8 @@ export class TestHelper {
         electionId: Uid,
         userToken: string | null,
         customToken: string| null = null
-    ): Promise<any> {
-        var r = request(this.expressApp)
+    ): Promise<SupertestResponse> {
+        let r = request(this.expressApp)
             .delete(`/API/Election/${electionId}/rolls`)
             .set("Accept", "application/json");
 
@@ -257,8 +271,8 @@ export class TestHelper {
         electionId: Uid,
         userToken: string | null,
         customToken: string| null = null
-    ): Promise<any> {
-        var r = request(this.expressApp)
+    ): Promise<SupertestResponse> {
+        let r = request(this.expressApp)
             .get(`/API/Election/${electionId}/rolls`)
             .set("Accept", "application/json");
 
@@ -267,13 +281,13 @@ export class TestHelper {
     }
 
     private addUserTokenVoterIdCookie(
-        req: any,
+        req: SupertestTest,
         userToken: string | null,
         voterId: string | null,
         customToken: string | null,
         tempId: string | null,
-    ): any {
-        var cookies = "";
+    ): SupertestTest {
+        let cookies = "";
         if (userToken != null) {
             cookies = "id_token=" + userToken;
         }

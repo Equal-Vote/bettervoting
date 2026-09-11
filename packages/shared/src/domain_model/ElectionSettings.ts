@@ -1,6 +1,6 @@
 import { timeZones, TimeZone } from "./Util";
-import { ElectionState } from "./ElectionStates"
 import { getVoterAuthenticationMode } from "./VoterAuthenticationMode";
+import { BALLOT_SUBMIT_TYPES, BallotSubmitType } from "./Ballot";
 
 export interface registration_field {
   field_name: string;
@@ -19,10 +19,12 @@ export interface authentication {
 }
 const TermTypes = ['poll', 'election'] as const;
 export type TermType = typeof TermTypes[number];
-const VoterAcessArray = ['open', 'closed', 'registration'] as const;
+export const VoterAcessArray = ['open', 'closed', 'registration'] as const;
 export type VoterAccess = typeof VoterAcessArray[number];
-const InvitationTypes = ['email', 'address'] as const;
+export const InvitationTypes = ['email', 'address'] as const;
 export type InvitationType = typeof InvitationTypes[number];
+
+export const DEFAULT_ALLOWED_SUBMIT_TYPES: BallotSubmitType[] = ['submitted_via_browser', 'submitted_via_discord'];
 
 export interface ElectionSettings {
     voter_access?:         VoterAccess;  //   Who is able to vote in election?
@@ -41,8 +43,9 @@ export interface ElectionSettings {
     contact_email?: string; // Public contact email for voters to reach out to
     exhaust_on_N_repeated_skipped_marks?: number; // number of skipped ranks before exhausting
     draggable_ballot?: boolean; // Use draggable interface for IRV ballots
+    allowed_submit_types?: BallotSubmitType[]; // Which submission channels are allowed for this election
 }
-function settingsCompatiblityValidation(settings: ElectionSettings, electionState?: ElectionState): string {
+function settingsCompatiblityValidation(settings: ElectionSettings): string {
     let errorMsg = ''
     if (settings.ballot_updates) {
         if (settings.voter_access == 'open') {
@@ -55,7 +58,7 @@ function settingsCompatiblityValidation(settings: ElectionSettings, electionStat
     return errorMsg;
 }
 
-export function electionSettingsValidation(obj:ElectionSettings, electionState?: ElectionState): string | null {
+export function electionSettingsValidation(obj:ElectionSettings): string | null {
   if (!obj){
     return "ElectionSettings is null";
   }
@@ -99,8 +102,20 @@ export function electionSettingsValidation(obj:ElectionSettings, electionState?:
   if (obj.draggable_ballot && typeof obj.draggable_ballot !== 'boolean'){
     return "Invalid Draggable Ballot";
   }
+  if (obj.allowed_submit_types !== undefined) {
+    if (!Array.isArray(obj.allowed_submit_types)) {
+      return "Invalid Allowed Submit Types";
+    }
+    if (obj.allowed_submit_types.length === 0) {
+      return "allowed_submit_types must not be empty";
+    }
+    const validTypes: readonly string[] = BALLOT_SUBMIT_TYPES;
+    if (!obj.allowed_submit_types.every((t: string) => validTypes.includes(t))) {
+      return "Invalid Allowed Submit Types value";
+    }
+  }
 
-  const compatibilityError = settingsCompatiblityValidation(obj, electionState);
+  const compatibilityError = settingsCompatiblityValidation(obj);
   if (compatibilityError) {
     return compatibilityError;
   }
