@@ -101,13 +101,13 @@ const electionPostAuthMiddleware = async (req: IElectionRequest, res: Response, 
           if((req.election.owner_id == req.user.sub && req.user.typ !== 'TEMP_ID') || tempUserAuth){
             req.user_auth.roles.push(roles.owner)
           }
-          if (req.user.email && req.election.admin_ids && req.election.admin_ids.includes(req.user.email)){
+          if (req.election.admin_ids && req.election.admin_ids.includes(req.user.email as string)){
             req.user_auth.roles.push(roles.admin)
           }
-          if (req.user.email && req.election.audit_ids && req.election.audit_ids.includes(req.user.email)){
+          if (req.election.audit_ids && req.election.audit_ids.includes(req.user.email as string)){
             req.user_auth.roles.push(roles.auditor)
           }
-          if (req.user.email && req.election.credential_ids && req.election.credential_ids.includes(req.user.email)){
+          if (req.election.credential_ids && req.election.credential_ids.includes(req.user.email as string)){
             req.user_auth.roles.push(roles.credentialer)
           }
         }

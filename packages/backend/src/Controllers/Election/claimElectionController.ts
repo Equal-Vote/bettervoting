@@ -16,13 +16,13 @@ const claimElection = async (req: IElectionRequest, res: Response, _next: NextFu
     expectPermission(req.user_auth.roles, permissions.canClaimElection)
 
     // check for no-op
-    if(req.election.owner_id == req.user?.sub){
+    if(req.election.owner_id == req.user!.sub){
         res.send()
         return;
     }
 
     // must be logged in
-    if(!req.user || req.user.typ != 'ID'){
+    if(req.user!.typ != 'ID'){
         throw new Unauthorized("User does not have permissions: must be logged in");
     }
 
@@ -34,7 +34,7 @@ const claimElection = async (req: IElectionRequest, res: Response, _next: NextFu
     // Claim doesn't expose the election to the client beforehand, so OCC uses the
     // server's freshly-loaded copy as the expected version.
     const expected_update_date = req.election.update_date as string;
-    req.election.owner_id = req.user.sub ?? null;
+    req.election.owner_id = req.user!.sub as string;
     await ElectionsModel.updateElection(req.election, req, `Transferring Ownership`, expected_update_date);
 
     res.send()
