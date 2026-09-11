@@ -25,7 +25,7 @@ jobs:
         # Full history, so the lint/secret-scan steps below can diff against a base commit.
         fetch-depth: 0
     - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v7
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
