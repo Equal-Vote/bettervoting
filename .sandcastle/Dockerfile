@@ -1,4 +1,4 @@
-FROM node:22-bookworm
+FROM node:26-bookworm
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
