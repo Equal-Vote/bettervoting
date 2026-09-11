@@ -48,6 +48,7 @@ const election: Election = {
     update_date: Date.now().toString(),
     head: true,
     ballot_source: 'live_election',
+    voter_limit: 100,
 };
 
 // 10 ballots — scores ordered as [Anchovy, Brussels, Carrot, Durian, Eggplant].

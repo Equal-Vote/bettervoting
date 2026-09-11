@@ -25,6 +25,7 @@ function buildElection(i: string, update_date: string, head: boolean): Election 
         update_date: update_date,
         head: head,
         ballot_source: 'live_election',
+        voter_limit: 100,
     }
 }
 

@@ -30,6 +30,7 @@ export interface Election {
     head:           boolean;// Head version of this object
     ballot_source:  'live_election' | 'prior_election';
     public_archive_id?: string;
+    voter_limit:    number; // max voters allowed on the roll, paid tier increments raise this
 }
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
 export type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
@@ -162,6 +163,9 @@ export function electionValidation(obj:Election): string | null {
   }
   if (obj.head && typeof obj.head !== 'boolean'){
     return "Invalid Head";
+  }
+  if (obj.voter_limit !== undefined && (typeof obj.voter_limit !== 'number' || !Number.isInteger(obj.voter_limit) || obj.voter_limit < 0)){
+    return "Invalid Voter Limit";
   }
 
   //TODO... etc
