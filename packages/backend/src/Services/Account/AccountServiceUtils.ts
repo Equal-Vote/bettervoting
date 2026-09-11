@@ -1,8 +1,9 @@
 import { IRequest } from "../../IRequest";
 import Logger from "../Logging/Logger";
+import { getErrorMessage } from '../../errorUtils';
 
 import { Unauthorized } from "@curveball/http-errors";
-const jwt = require("jsonwebtoken");
+import jwt from "jsonwebtoken";
 
 export default class AccountServiceUtils {
     static extractUserFromRequest = (
@@ -19,8 +20,8 @@ export default class AccountServiceUtils {
 
         try {
             return jwt.verify(token, key, { algorithms });
-        } catch (e: any) {
-            Logger.warn(req, "JWT Verify Error: ", e.message);
+        } catch (e: unknown) {
+            Logger.warn(req, "JWT Verify Error: ", getErrorMessage(e));
             throw new Unauthorized();
         }
     };

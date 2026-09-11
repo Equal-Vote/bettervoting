@@ -2,7 +2,9 @@ import { Election, getPrecinctFilteredElection, removeHiddenFields } from '@equa
 import ServiceLocator from '../../ServiceLocator';
 import Logger from '../../Services/Logging/Logger';
 import { responseErr } from '../../Util';
+import { getErrorMessage } from '../../errorUtils';
 import { IElectionRequest, IRequest } from '../../IRequest';
+import { Response, NextFunction } from 'express';
 import { roles } from "@equal-vote/star-vote-shared/domain_model/roles"
 import { getPermissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { getOrCreateElectionRoll, checkForMissingAuthenticationData, getVoterAuthorization } from "../Roll/voterRollUtils"
@@ -15,31 +17,34 @@ var ElectionsModel =  ServiceLocator.electionsDb();
 var accountService = ServiceLocator.accountService();
 const className="Elections.Controllers";
 
-const getElectionByID = async (req: any, res: any, next: any) => {
+const getElectionByID = async (req: IElectionRequest, res: Response, next: NextFunction) => {
     Logger.info(req, `${className}.getElectionByID ${req.params.id}`);
     if (!req.params.id){
         return next();
     }
     try {
         let election = await ElectionsModel.getElectionByID(req.params.id, req);
+        if (!election) {
+            throw new Error(`Election not found: ${req.params.id}`);
+        }
 
         req.election = election;
         return next();
-    } catch (err:any) {
+    } catch (err: unknown) {
         let failMsg = 'Election not found';
-        Logger.error(req, `${failMsg} electionId=${req.params.id}}`);
+        Logger.error(req, `${failMsg} electionId=${req.params.id}: ${getErrorMessage(err)}`);
         return responseErr(res, req, 400, failMsg);
     }
 }
 
-const electionExistsByID = async (req: any, res: any, next: any) => {
+const electionExistsByID = async (req: IRequest, res: Response, _next: NextFunction) => {
     // using _id so that router.param() doesn't apply to it
     Logger.info(req, `${className}.getElectionExistsByID ${req.params._id}`);
 
     res.json({ exists: await ElectionsModel.electionExistsByID(req.params._id, req) })
 }
 
-const electionSpecificAuth = async (req: IElectionRequest, res: any, next: any) => {
+const electionSpecificAuth = async (req: IElectionRequest, res: Response, next: NextFunction) => {
     if (!req.election){
         return next();
     }
@@ -60,7 +65,7 @@ const electionSpecificAuth = async (req: IElectionRequest, res: any, next: any) 
     return next();
 }
 
-const electionPostAuthMiddleware = async (req: IElectionRequest, res: any, next: any) => {
+const electionPostAuthMiddleware = async (req: IElectionRequest, res: Response, next: NextFunction) => {
     Logger.info(req, `${className}.electionPostAuthMiddleware ${req.params.id}`);
     try {
         // Update Election State
@@ -96,13 +101,13 @@ const electionPostAuthMiddleware = async (req: IElectionRequest, res: any, next:
           if((req.election.owner_id == req.user.sub && req.user.typ !== 'TEMP_ID') || tempUserAuth){
             req.user_auth.roles.push(roles.owner)
           }
-          if (req.election.admin_ids && req.election.admin_ids.includes(req.user.email)){
+          if (req.user.email && req.election.admin_ids && req.election.admin_ids.includes(req.user.email)){
             req.user_auth.roles.push(roles.admin)
           }
-          if (req.election.audit_ids && req.election.audit_ids.includes(req.user.email)){
+          if (req.user.email && req.election.audit_ids && req.election.audit_ids.includes(req.user.email)){
             req.user_auth.roles.push(roles.auditor)
           }
-          if (req.election.credential_ids && req.election.credential_ids.includes(req.user.email)){
+          if (req.user.email && req.election.credential_ids && req.election.credential_ids.includes(req.user.email)){
             req.user_auth.roles.push(roles.credentialer)
           }
         }
@@ -110,9 +115,9 @@ const electionPostAuthMiddleware = async (req: IElectionRequest, res: any, next:
         Logger.debug(req, `done with electionPostAuthMiddleware...`);
         Logger.debug(req,req.user_auth);
         return next();
-    } catch (err:any) {
+    } catch (err: unknown) {
         var failMsg = "Could not modify election";
-        Logger.error(req, `${failMsg} ${err.message}`);
+        Logger.error(req, `${failMsg} ${getErrorMessage(err)}`);
         return responseErr(res, req, 500, failMsg);
     }
 }
@@ -157,7 +162,7 @@ async function updateElectionStateIfNeeded(req:IRequest, election:Election):Prom
         try {
             election = await ElectionsModel.updateElection(election, req, stateChangeMsg, expected_update_date);
             Logger.info(req, stateChangeMsg);
-        } catch (err: any) {
+        } catch (err: unknown) {
             // Concurrent GETs can both decide to transition state. Whichever loses
             // the OCC race re-reads to get the version that the winner installed.
             if (err instanceof Conflict) {
@@ -171,7 +176,7 @@ async function updateElectionStateIfNeeded(req:IRequest, election:Election):Prom
     return election;
 }
 
-const returnElection = async (req: any, res: any, next: any) => {
+const returnElection = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     Logger.info(req, `${className}.returnElection ${req.params.id}`)
     var election = req.election;
     

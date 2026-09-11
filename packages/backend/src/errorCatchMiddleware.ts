@@ -1,15 +1,20 @@
 import Logger from "./Services/Logging/Logger"
-import { reqIdSuffix } from "./IRequest"
-export const errorCatch = async (err: any, req: any, res: any, next: any) => {
-    Logger.error(req, err.message);
-    var status = 500;
-    if (err.httpStatus) {
+import { IRequest, reqIdSuffix } from "./IRequest"
+import { Response, NextFunction } from 'express';
+import { HttpErrorBase } from "@curveball/http-errors";
+import { getErrorMessage } from './errorUtils';
+
+export const errorCatch = async (err: unknown, req: IRequest, res: Response, _next: NextFunction) => {
+    const message = getErrorMessage(err);
+    Logger.error(req, message);
+    let status = 500;
+    let msg = "Error";
+    if (err instanceof HttpErrorBase) {
         status = err.httpStatus;
-    }
-    var msg = "Error";
-    if (err.detail) {
-        msg = err.detail;
+        if (err.detail) {
+            msg = err.detail;
+        }
     }
     msg += reqIdSuffix(req);
-    return res.status(status).json({ error: msg });
+    res.status(status).json({ error: msg });
 }

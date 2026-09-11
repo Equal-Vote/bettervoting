@@ -2,20 +2,23 @@ import { ILoggingContext } from "../Logging/ILogger";
 import Logger from "../Logging/Logger";
 import { EventHandler, IEventQueue, JobInsert } from "./IEventQueue";
 import { QueueName } from "./QueueName";
-
-
+import PgBoss from 'pg-boss';
 
 export default class PGBossEventQueue implements IEventQueue {
 
+    // Untyped: pg-boss's installed API (send()/insert()/countStates()) has drifted from what
+    // this class assumes (e.g. debugInfo()'s countStates() call doesn't exist on the current
+    // types), pre-dating this pass. Typing it properly means reconciling that drift, which is
+    // out of scope here.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     _boss: any;
 
     constructor() {
     }
 
     public async init(pgConnection: object, ctx: ILoggingContext): Promise<PGBossEventQueue> {
-        const PgBoss = require('pg-boss');
         this._boss = new PgBoss(pgConnection);
-        this._boss.on('error', (error: any) => Logger.error(ctx, error));
+        this._boss.on('error', (error: unknown) => Logger.error(ctx, error));
 
         await this._boss.start();
         return this;

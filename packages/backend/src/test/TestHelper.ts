@@ -6,9 +6,10 @@ import makeApp from "../app";
 import Logger from "../Services/Logging/Logger";
 import { TestLoggerImpl } from "../Services/Logging/TestLoggerImpl";
 import ServiceLocator  from "../ServiceLocator"
-import { MockEventQueue } from "../Services/EventQueue/MockEventQueue";
 import { candidate, rawVote } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
-const request = require("supertest");
+import request, { Response as SupertestResponse, Test as SupertestTest } from "supertest";
+import EmailService from "../Services/Email/EmailService";
+import { MockEventQueue } from "../Services/EventQueue/MockEventQueue";
 
 type ElectionResponse = {
     statusCode: number;
@@ -38,14 +39,17 @@ export const mapMethodInputs = (names: string[], votes: (number | null)[][]): [c
 export class TestHelper {
     public expressApp;
     public logger: TestLoggerImpl;
-    public emailService: any;
-    public eventQueue:any;
+    public emailService: EmailService;
+    public eventQueue: Promise<MockEventQueue>;
 
     private ctx = Logger.createContext("testHelper");
 
     constructor() {
         this.emailService = ServiceLocator.emailService();
-        this.eventQueue = ServiceLocator.eventQueue();
+        // ServiceLocator is jest.mock()'d in tests (see setupTests.ts), and that mock's
+        // eventQueue() resolves to a MockEventQueue — narrower than the real module's
+        // declared Promise<IEventQueue>, which TS can't see through the mock swap.
+        this.eventQueue = ServiceLocator.eventQueue() as Promise<MockEventQueue>;
         this.expressApp = makeApp();
         this.logger = new TestLoggerImpl().setup();
     }
@@ -117,7 +121,7 @@ export class TestHelper {
         return this.electionResponse(res);
     }
 
-    private electionResponse(res: any): ElectionResponse {
+    private electionResponse(res: SupertestResponse): ElectionResponse {
         if (res.statusCode != 200) {
             return {
                 statusCode: res.statusCode,
@@ -155,7 +159,7 @@ export class TestHelper {
         electionId: Uid,
         ballot: Ballot | NewBallot,
         userToken: string | null
-    ): Promise<any> {
+    ): Promise<SupertestResponse> {
         return this.postRequest(
             `/API/Election/${electionId}/vote`,
             { ballot: ballot },
@@ -217,7 +221,7 @@ export class TestHelper {
         userToken: string | null,
         voterId: string | null,
         customToken: string| null = null
-    ): Promise<any> {
+    ): Promise<SupertestResponse> {
         var r = request(this.expressApp)
             .post(`/API/Election/${electionId}/vote`)
             .set("Accept", "application/json");
@@ -226,12 +230,25 @@ export class TestHelper {
         return r.send({ ballot: ballot });
     }
 
+    async uploadBallots(
+        electionId: Uid,
+        ballots: Array<{ ballot: unknown; voter_id: string }>,
+        raceOrder: unknown[],
+        userToken: string | null
+    ): Promise<SupertestResponse> {
+        return this.postRequest(
+            `/API/Election/${electionId}/uploadBallots`,
+            { ballots, race_order: raceOrder },
+            userToken
+        );
+    }
+
     async submitElectionRoll(
         electionId: Uid,
-        electionRoll: any[],
+        electionRoll: unknown[],
         userToken: string | null,
         customToken: string| null = null
-    ): Promise<any> {
+    ): Promise<SupertestResponse> {
         var r = request(this.expressApp)
             .post(`/API/Election/${electionId}/rolls`)
             .set("Accept", "application/json");
@@ -244,7 +261,7 @@ export class TestHelper {
         electionId: Uid,
         userToken: string | null,
         customToken: string| null = null
-    ): Promise<any> {
+    ): Promise<SupertestResponse> {
         var r = request(this.expressApp)
             .delete(`/API/Election/${electionId}/rolls`)
             .set("Accept", "application/json");
@@ -257,7 +274,7 @@ export class TestHelper {
         electionId: Uid,
         userToken: string | null,
         customToken: string| null = null
-    ): Promise<any> {
+    ): Promise<SupertestResponse> {
         var r = request(this.expressApp)
             .get(`/API/Election/${electionId}/rolls`)
             .set("Accept", "application/json");
@@ -267,12 +284,12 @@ export class TestHelper {
     }
 
     private addUserTokenVoterIdCookie(
-        req: any,
+        req: SupertestTest,
         userToken: string | null,
         voterId: string | null,
         customToken: string | null,
         tempId: string | null,
-    ): any {
+    ): SupertestTest {
         var cookies = "";
         if (userToken != null) {
             cookies = "id_token=" + userToken;

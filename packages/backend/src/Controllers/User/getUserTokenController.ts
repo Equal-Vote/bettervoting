@@ -3,7 +3,7 @@ import ServiceLocator from "../../ServiceLocator";
 
 const AccountService = ServiceLocator.accountService()
 
-const getUserToken = async (req: Request, res: Response, next: NextFunction) => {
+const getUserToken = async (req: Request, res: Response, _next: NextFunction) => {
     const data = await AccountService.getToken(req)
     res.json(data)
 }

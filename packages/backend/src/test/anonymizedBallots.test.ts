@@ -1,4 +1,4 @@
-require("dotenv").config();
+import 'dotenv/config';
 
 import { Election } from "@equal-vote/star-vote-shared/domain_model/Election";
 import { NewBallot } from "@equal-vote/star-vote-shared/domain_model/Ballot";
@@ -82,7 +82,7 @@ describe("Anonymized ballots endpoint", () => {
 
         // All submitted scores come back, regardless of response order
         const scorePairs = res.body.ballots
-            .map((b: any) => b.votes[0].scores.map((s: any) => s.score))
+            .map((b: {votes: {scores: {score: number}[]}[]}) => b.votes[0].scores.map((s) => s.score))
             .sort();
         expect(scorePairs).toEqual([[0, 5], [3, 2], [5, 0]].sort());
 

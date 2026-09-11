@@ -1,5 +1,5 @@
 import { TermType } from "@equal-vote/star-vote-shared/domain_model/ElectionSettings"
-import { Box, Typography, RadioGroup, FormControlLabel, capitalize, Radio, Divider } from "@mui/material"
+import { Box, Typography, RadioGroup, FormControlLabel, capitalize, Radio } from "@mui/material"
 import useElection from "~/components/ElectionContextProvider";
 import { Tip } from "~/components/styles"
 import { scrollToElement, TransitionBox } from "~/components/util";

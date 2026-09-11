@@ -13,7 +13,7 @@ describe("Tabulating a race nobody has voted in", () => {
     Object.keys(VotingMethods).forEach(method => {
         test(`${method} tabulates with no ballots`, () => {
             const [c, v] = mapMethodInputs(candidates, [])
-            const results = (VotingMethods as any)[method](c, v, 5, {})
+            const results = VotingMethods[method as keyof typeof VotingMethods](c, v, 5)
 
             expect(results).toBeDefined()
             expect(results.summaryData.nTallyVotes).toBe(0)

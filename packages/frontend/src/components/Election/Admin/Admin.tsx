@@ -25,7 +25,6 @@ const AdminPage = ({title, children}) => {
 
 const Admin = () => {
     const { id } = useParams();
-    const {election} = useElection();
     return (
         <Container>
             <Routes>

@@ -1,10 +1,10 @@
-import { Box, Divider, Paper, Typography } from "@mui/material";
+import { Box, Paper, Typography } from "@mui/material";
 import useElection from "../ElectionContextProvider";
 import type { ElectionState } from "@equal-vote/star-vote-shared/domain_model/Election"
 import { ReportProblemOutlined } from "@mui/icons-material";
 
-export default function ElectionStateWarning 
-        ({state, title, description, hideIcon=false, children}: {state?: ElectionState, title: string, description: string, hideIcon?: boolean, children?: any}) {
+export default function ElectionStateWarning
+        ({state, title, description, hideIcon=false, children}: {state?: ElectionState, title: string, description: string, hideIcon?: boolean, children?: React.ReactNode}) {
     
     const { t, election } = useElection();
     

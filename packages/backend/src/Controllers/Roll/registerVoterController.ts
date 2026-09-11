@@ -5,7 +5,7 @@ import { Response, NextFunction } from 'express';
 
 const className = "VoterRolls.Controllers";
 
-const registerVoter = async (req: IElectionRequest, res: Response, next: NextFunction) => {
+const registerVoter = async (req: IElectionRequest, _res: Response, _next: NextFunction) => {
     Logger.info(req, `${className}.registerVoter ${req.election?.election_id}`);
 
     // Reachable via POST /API/Election/:id/register, but no frontend code calls it

@@ -2,7 +2,7 @@ import { ILoggingContext } from '../Services/Logging/ILogger';
 import Logger from '../Services/Logging/Logger';
 import { logSafeHash } from '../Services/Logging/logSafeHash';
 import { IElectionRollStore } from './IElectionRollStore';
-import { Expression, Kysely, Transaction } from 'kysely'
+import { Kysely, Transaction } from 'kysely'
 import { Database } from './Database';
 import { ElectionRoll, NewElectionRoll } from '@equal-vote/star-vote-shared/domain_model/ElectionRoll';
 const tableName = 'electionRollDB';
@@ -67,11 +67,11 @@ export default class ElectionRollDB implements IElectionRollStore {
         return this._postgresClient
             .selectFrom(tableName)
             .where('election_id', '=', election_id)
-            .where(({ eb, or, fn }) => eb(fn('trim', ['voter_id']), '=', voter_id.trim()))
+            .where(({ eb, or: _or, fn }) => eb(fn('trim', ['voter_id']), '=', voter_id.trim()))
             .where('head', '=', true)
             .selectAll()
             .executeTakeFirstOrThrow()
-            .catch(((reason: any) => {
+            .catch(((reason: unknown) => {
                 Logger.debug(ctx, reason);
                 return null
             }))
@@ -85,7 +85,7 @@ export default class ElectionRollDB implements IElectionRollStore {
             .where('head', '=', true)
             .selectAll()
             .execute()
-            .catch(((reason: any) => {
+            .catch(((reason: unknown) => {
                 Logger.debug(ctx, reason);
                 return null
             }))
@@ -101,7 +101,7 @@ export default class ElectionRollDB implements IElectionRollStore {
             .where('head', '=', true)
             .selectAll()
             .execute()
-            .catch(((reason: any) => {
+            .catch(((reason: unknown) => {
                 Logger.debug(ctx, reason);
                 return null
             }))
@@ -117,7 +117,7 @@ export default class ElectionRollDB implements IElectionRollStore {
             .where('head', '=', true)
             .selectAll()
             .execute()
-            .catch(((reason: any) => {
+            .catch(((reason: unknown) => {
                 Logger.debug(ctx, reason);
                 return null
             }))
@@ -151,7 +151,7 @@ export default class ElectionRollDB implements IElectionRollStore {
                 if (rolls.length == 0) return null
                 return rolls
             })
-            .catch(((reason: any) => {
+            .catch(((reason: unknown) => {
                 Logger.debug(ctx, reason);
                 return null
             }))
@@ -191,7 +191,7 @@ export default class ElectionRollDB implements IElectionRollStore {
             } else {
                 return await this._postgresClient.transaction().execute(executeWork);
             }
-        } catch (reason: any) {
+        } catch (_reason: unknown) {
             Logger.debug(ctx, ".get null");
             return null;
         }
@@ -216,7 +216,7 @@ export default class ElectionRollDB implements IElectionRollStore {
         return archived.length
     }
 
-    delete(election_roll: ElectionRoll, ctx: ILoggingContext, reason: string): Promise<boolean> {
+    delete(election_roll: ElectionRoll, ctx: ILoggingContext, _reason: string): Promise<boolean> {
         Logger.debug(ctx, `${tableName}.delete`);
         var sqlString = `DELETE FROM ${this._tableName} WHERE election_id = $1 AND voter_id=$2`;
         Logger.debug(ctx, sqlString);

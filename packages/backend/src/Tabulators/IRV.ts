@@ -3,6 +3,10 @@ import { candidate, irvCandidate, irvResults, irvRoundResults, irvSummaryData, k
 import { getSummaryData, makeAbstentionTest, makeBoundsTest, sortCandidates } from "./Util";
 import { ElectionSettings } from "@equal-vote/star-vote-shared/domain_model/ElectionSettings";
 
+// require()'d rather than imported: fraction.js's type declarations don't match how this
+// file uses Fraction (mixing static/instance members), and require()'s implicit `any`
+// papers over that mismatch. Reworking the typing is out of scope for a lint pass.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const Fraction = require('fraction.js');
 
 const DEBUG = false;

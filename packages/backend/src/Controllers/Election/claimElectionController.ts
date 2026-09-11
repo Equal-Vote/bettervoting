@@ -2,7 +2,7 @@ import ServiceLocator from '../../ServiceLocator';
 import Logger from '../../Services/Logging/Logger';
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { expectPermission, hashString } from "../controllerUtils";
-import { BadRequest, Unauthorized } from "@curveball/http-errors";
+import { Unauthorized } from "@curveball/http-errors";
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
 
@@ -10,19 +10,19 @@ var ElectionsModel = ServiceLocator.electionsDb();
 
 const className = "election.Controllers";
 
-const claimElection = async (req: IElectionRequest, res: Response, next: NextFunction) => {
+const claimElection = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     Logger.info(req, `${className}.claimElection ${req.election.election_id}`);
     // temp_id will be verified against the election owner id to grant the owner role (even if we're logged in)
     expectPermission(req.user_auth.roles, permissions.canClaimElection)
 
     // check for no-op
-    if(req.election.owner_id == req.user.sub){
+    if(req.election.owner_id == req.user?.sub){
         res.send()
         return;
     }
 
     // must be logged in
-    if(req.user.typ != 'ID'){
+    if(!req.user || req.user.typ != 'ID'){
         throw new Unauthorized("User does not have permissions: must be logged in");
     }
 
@@ -34,7 +34,7 @@ const claimElection = async (req: IElectionRequest, res: Response, next: NextFun
     // Claim doesn't expose the election to the client beforehand, so OCC uses the
     // server's freshly-loaded copy as the expected version.
     const expected_update_date = req.election.update_date as string;
-    req.election.owner_id = req.user.sub;
+    req.election.owner_id = req.user.sub ?? null;
     await ElectionsModel.updateElection(req.election, req, `Transferring Ownership`, expected_update_date);
 
     res.send()

@@ -1,10 +1,10 @@
-import { Box, Link, Paper, Typography } from '@mui/material';
+import { Box, Link, Typography } from '@mui/material';
 import { Candidate } from '@equal-vote/star-vote-shared/domain_model/Candidate';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { CandidatePhoto } from '~/components/styles';
 interface CandidateLabelProps {
   candidate: Candidate;
-  gridArea: any;
+  gridArea: string | { xs?: string; sm?: string; md?: string; lg?: string; xl?: string };
 }
 export default function CandidateLabel({ candidate, gridArea }: CandidateLabelProps) {
   return (

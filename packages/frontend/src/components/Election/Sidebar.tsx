@@ -1,6 +1,6 @@
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import { Button, Divider, Grid } from '@mui/material';
+import { Button, Divider } from '@mui/material';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Paper } from '@mui/material';
 import useElection from '../ElectionContextProvider';
@@ -31,7 +31,7 @@ function useAdminPages() {
     ];
 }
 
-const ListItem = ({ text, link, icon, isActive }: { text:string, link: string, icon: any, isActive?: boolean }) => {
+const ListItem = ({ text, link, icon, isActive }: { text:string, link: string, icon: React.ReactNode, isActive?: boolean }) => {
     return (
         <Button
             component={Link}

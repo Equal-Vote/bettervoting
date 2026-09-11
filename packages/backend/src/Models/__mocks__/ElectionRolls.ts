@@ -1,7 +1,9 @@
-import { ElectionRoll, ElectionRollAction, ElectionRollState, NewElectionRoll } from '@equal-vote/star-vote-shared/domain_model/ElectionRoll';
+import { ElectionRoll, NewElectionRoll } from '@equal-vote/star-vote-shared/domain_model/ElectionRoll';
 import { ILoggingContext } from '../../Services/Logging/ILogger';
 import Logger from '../../Services/Logging/Logger';
 import { IElectionRollStore } from '../IElectionRollStore';
+import { Kysely, Transaction } from 'kysely';
+import { Database } from '../Database';
 
 export default class ElectionRollDB implements IElectionRollStore{
 
@@ -12,7 +14,7 @@ export default class ElectionRollDB implements IElectionRollStore{
         this._electionRolls = [];
     }
 
-    submitElectionRoll(electionRolls: NewElectionRoll[], ctx:ILoggingContext, reason:string, db?: any): Promise<ElectionRoll[]> {
+    submitElectionRoll(electionRolls: NewElectionRoll[], ctx:ILoggingContext, _reason:string, _db?: Kysely<Database> | Transaction<Database>): Promise<ElectionRoll[]> {
         const self = this;
         const inserted: ElectionRoll[] = [];
         electionRolls.forEach(function(roll){
@@ -35,7 +37,7 @@ export default class ElectionRollDB implements IElectionRollStore{
         return Promise.resolve(inserted);
     }
 
-    getRollsByElectionID(election_id: string, ctx:ILoggingContext): Promise<ElectionRoll[] | null> {
+    getRollsByElectionID(election_id: string, _ctx:ILoggingContext): Promise<ElectionRoll[] | null> {
         const electionRolls = this._electionRolls.filter(roll => roll.election_id===election_id && roll.head)
         if (!electionRolls){
             return Promise.resolve(null)
@@ -77,7 +79,7 @@ export default class ElectionRollDB implements IElectionRollStore{
         return Promise.resolve(res)
     }
 
-    update(voter_roll: NewElectionRoll, ctx: ILoggingContext, reason: string, db?: any): Promise<ElectionRoll | null> {
+    update(voter_roll: NewElectionRoll, ctx: ILoggingContext, _reason: string, _db?: Kysely<Database> | Transaction<Database>): Promise<ElectionRoll | null> {
         Logger.debug(ctx, `MockElectionRolls update ${JSON.stringify(voter_roll)}`);
         const index = this._electionRolls.findIndex(electionRoll => {
             var electionMatch = electionRoll.election_id===voter_roll.election_id;
@@ -97,7 +99,7 @@ export default class ElectionRollDB implements IElectionRollStore{
         return Promise.resolve(JSON.parse(JSON.stringify(sanitized)));
     }
 
-    archiveRollsByElectionID(election_id: string, ctx:ILoggingContext, reason:string, db?: any): Promise<number> {
+    archiveRollsByElectionID(election_id: string, ctx:ILoggingContext, _reason:string, _db?: Kysely<Database> | Transaction<Database>): Promise<number> {
         Logger.debug(ctx, `MockElectionRolls archiveRollsByElectionID ${election_id}`);
         let archived = 0;
         this._electionRolls.forEach(roll => {
@@ -109,7 +111,7 @@ export default class ElectionRollDB implements IElectionRollStore{
         return Promise.resolve(archived)
     }
 
-    delete(voter_roll: ElectionRoll, ctx:ILoggingContext,reason:string): Promise<boolean> {
+    delete(voter_roll: ElectionRoll, _ctx:ILoggingContext,_reason:string): Promise<boolean> {
         const ballot = this._electionRolls.find(electionRoll => electionRoll.election_id===voter_roll.election_id && electionRoll.voter_id===voter_roll.voter_id)
         if (!ballot){
             return Promise.resolve(false)

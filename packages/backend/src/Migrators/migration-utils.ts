@@ -1,6 +1,5 @@
 import * as path from 'path'
 import { promises as fs } from 'fs'
-import Logger from '../Services/Logging/Logger';
 import {
   Migrator,
   FileMigrationProvider,

@@ -189,7 +189,7 @@ export default function DraggableIRVBallotView() {
                           {...prov.dragHandleProps}
                           style={{
                             ...(prov.draggableProps.style as React.CSSProperties),
-                            width: snapshot.isDragging ? (prov.draggableProps.style as any)?.width : '100%'
+                            width: snapshot.isDragging ? (prov.draggableProps.style as React.CSSProperties)?.width : '100%'
                           }}
                           aria-roledescription="Draggable"
                           aria-labelledby={`cand-${c.candidate_id}`}
@@ -249,7 +249,7 @@ export default function DraggableIRVBallotView() {
                           {...prov.dragHandleProps}
                           style={{
                             ...(prov.draggableProps.style as React.CSSProperties),
-                            width: snapshot.isDragging ? (prov.draggableProps.style as any)?.width : '100%'
+                            width: snapshot.isDragging ? (prov.draggableProps.style as React.CSSProperties)?.width : '100%'
                           }}
                           role="option"
                           aria-roledescription="Draggable"

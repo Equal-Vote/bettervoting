@@ -1,7 +1,5 @@
 import { Election, PartialBy, getApprovedRaces } from "./Election";
-import { ElectionRoll } from "./ElectionRoll";
 import { Race } from "./Race";
-import { Score } from "./Score";
 import { Uid } from "./Uid";
 import { OrderedVote, Vote } from "./Vote";
 
@@ -29,7 +27,7 @@ export interface RaceCandidateOrder {
     candidate_id_order: Uid[];
 }
 
-export interface NewBallot extends PartialBy<Ballot,'ballot_id'|'create_date'|'update_date'|'head'> {}
+export type NewBallot = PartialBy<Ballot,'ballot_id'|'create_date'|'update_date'|'head'>;
 
 export interface OrderedNewBallot extends PartialBy<NewBallot,'votes'> {
     orderedVotes: OrderedVote[]
@@ -114,10 +112,9 @@ export function ballotValidation(election: Election, obj:NewBallot): string | nu
         })
 
         if (['RankedRobin', 'IRV', 'STV'].includes(race.voting_method)) {
-            const numCandidates = race.candidates.length;
             vote.scores.forEach(score => {
                 // Arend: Removing check against numCandidates, that's not necessarily true for public RCV elections
-                    if (score && score.score !== null && (/*score.score > numCandidates ||*/ (maxRankings && score.score > maxRankings) || score.score < 0)) {
+                    if (score && score.score !== null && ((maxRankings && score.score > maxRankings) || score.score < 0)) {
                         outOfBoundsError +=  `Race: ${race.title}, Score: ${score.score}; `;
                     }
                 })
