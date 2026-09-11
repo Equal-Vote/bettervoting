@@ -1,0 +1,92 @@
+# Dependabot version updates.
+#
+# Minor and patch bumps are grouped into a single PR per ecosystem to keep
+# review overhead low. Major bumps are deliberately left ungrouped so each one
+# gets its own PR and a real review.
+#
+# A cooldown holds brand-new releases for a few days, which blunts compromised-
+# release supply-chain attacks. Only semver ecosystems accept semver-*-days;
+# docker, docker-compose, github-actions, terraform and pip take default-days
+# alone and are rejected outright if given the semver keys.
+#
+# Docs: https://docs.github.com/code-security/dependabot/dependabot-version-updates
+version: 2
+
+updates:
+
+  - package-ecosystem: npm
+    directories:
+      - /
+      - /testing
+      - /.github/scripts
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 3
+    groups:
+      npm:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: bundler
+    directory: /docs
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 3
+    groups:
+      bundler:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: docker
+    directories:
+      - /
+      - /testing
+      - /.sandcastle
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    cooldown:
+      default-days: 7
+    groups:
+      docker:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: docker-compose
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    cooldown:
+      default-days: 7
+    groups:
+      docker-compose:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions:
+        update-types:
+          - minor
+          - patch
