@@ -53,7 +53,7 @@ jobs:
         LINT_DIFF_BASE: ${{ steps.lint-diff-base.outputs.base }}
     - name: Scan changed files for secrets
       if: env.GITLEAKS_LICENSE != '' # The token won't be available on PR's so skip step if it's not there
-      uses: gitleaks/gitleaks-action@v2
+      uses: gitleaks/gitleaks-action@v3
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
