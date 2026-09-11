@@ -60,7 +60,7 @@ services:
       always
 
   keycloak:
-    image: quay.io/keycloak/keycloak:24.0.1
+    image: quay.io/keycloak/keycloak:26.7.3
     volumes:
       - ./dev-realm.json:/opt/keycloak/data/import/realm.json
     command:
