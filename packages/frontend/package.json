@@ -15,7 +15,7 @@
     "crypto-browserify": "^3.12.1",
     "fast-levenshtein": "^3.0.0",
     "i18next": "^26.0.0",
-    "i18next-browser-languagedetector": "^7.2.0",
+    "i18next-browser-languagedetector": "^8.2.1",
     "jwt-decode": "^3.1.2",
     "luxon": "^3.3.0",
     "papaparse": "^5.5.1",
