@@ -32,7 +32,7 @@
     "dotenv": "^16.4.5",
     "express": "^4.22.1",
     "express-async-handler": "^1.2.0",
-    "fraction.js": "^4.3.7",
+    "fraction.js": "^5.3.4",
     "jsonwebtoken": "^9.0.0",
     "kysely": "^0.28.14",
     "luxon": "^3.3.0",
