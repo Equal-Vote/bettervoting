@@ -13,7 +13,7 @@ import { MockEventQueue } from "../Services/EventQueue/MockEventQueue";
 
 type ElectionResponse = {
     statusCode: number;
-    err: Object | null;
+    err: object | null;
     election: Election;
     precinctFilteredElection: Election;
     voterAuth: VoterAuth;
@@ -21,7 +21,7 @@ type ElectionResponse = {
 
 type BallotResponse = {
     statusCode: number;
-    err: Object | null;
+    err: object | null;
     election: Election;
     voterAuth: VoterAuth;
 };
@@ -55,15 +55,15 @@ export class TestHelper {
     }
 
     getRequest(url: string, userToken: string | null, customToken: string| null = null, tempId: string|null=null) {
-        var r = request(this.expressApp)
+        let r = request(this.expressApp)
             .get(url)
             .set("Accept", "application/json");
         r = this.addUserTokenVoterIdCookie(r, userToken, null, customToken, tempId);
         return r;
     }
 
-    postRequest(url: string, body: Object, userToken: string | null, customToken: string| null = null, tempId: string|null=null) {
-        var r = request(this.expressApp)
+    postRequest(url: string, body: object, userToken: string | null, customToken: string| null = null, tempId: string|null=null) {
+        let r = request(this.expressApp)
             .post(url)
             .set("Accept", "application/json");
         r = this.addUserTokenVoterIdCookie(r, userToken, null, customToken, tempId);
@@ -178,7 +178,7 @@ export class TestHelper {
             userToken,
             customToken
         );
-        var err = null;
+        let err = null;
         if (res.statusCode != 200) {
             err = res.body;
         }
@@ -196,14 +196,14 @@ export class TestHelper {
         voterId: string | null, 
         customToken: string| null = null
     ): Promise<BallotResponse> {
-        var req = request(this.expressApp)
+        let req = request(this.expressApp)
             .post(`/API/Election/${electionId}/ballot`)
             .set("Accept", "application/json");
 
         req = this.addUserTokenVoterIdCookie(req, userToken, voterId, customToken, null);
 
         const res = await req.send({});
-        var err = null;
+        let err = null;
         if (res.statusCode != 200) {
             err = res.body;
         }
@@ -222,25 +222,12 @@ export class TestHelper {
         voterId: string | null,
         customToken: string| null = null
     ): Promise<SupertestResponse> {
-        var r = request(this.expressApp)
+        let r = request(this.expressApp)
             .post(`/API/Election/${electionId}/vote`)
             .set("Accept", "application/json");
 
         r = this.addUserTokenVoterIdCookie(r, userToken, voterId, customToken, null);
         return r.send({ ballot: ballot });
-    }
-
-    async uploadBallots(
-        electionId: Uid,
-        ballots: Array<{ ballot: unknown; voter_id: string }>,
-        raceOrder: unknown[],
-        userToken: string | null
-    ): Promise<SupertestResponse> {
-        return this.postRequest(
-            `/API/Election/${electionId}/uploadBallots`,
-            { ballots, race_order: raceOrder },
-            userToken
-        );
     }
 
     async submitElectionRoll(
@@ -249,7 +236,7 @@ export class TestHelper {
         userToken: string | null,
         customToken: string| null = null
     ): Promise<SupertestResponse> {
-        var r = request(this.expressApp)
+        let r = request(this.expressApp)
             .post(`/API/Election/${electionId}/rolls`)
             .set("Accept", "application/json");
 
@@ -262,7 +249,7 @@ export class TestHelper {
         userToken: string | null,
         customToken: string| null = null
     ): Promise<SupertestResponse> {
-        var r = request(this.expressApp)
+        let r = request(this.expressApp)
             .delete(`/API/Election/${electionId}/rolls`)
             .set("Accept", "application/json");
 
@@ -275,7 +262,7 @@ export class TestHelper {
         userToken: string | null,
         customToken: string| null = null
     ): Promise<SupertestResponse> {
-        var r = request(this.expressApp)
+        let r = request(this.expressApp)
             .get(`/API/Election/${electionId}/rolls`)
             .set("Accept", "application/json");
 
@@ -290,7 +277,7 @@ export class TestHelper {
         customToken: string | null,
         tempId: string | null,
     ): SupertestTest {
-        var cookies = "";
+        let cookies = "";
         if (userToken != null) {
             cookies = "id_token=" + userToken;
         }
