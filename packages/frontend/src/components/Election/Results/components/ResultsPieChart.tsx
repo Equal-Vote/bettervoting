@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Cell, Legend, Pie, PieChart, ResponsiveContainer } from "recharts";
+import { Cell, Legend, Pie, PieChart, PieLabelRenderProps, ResponsiveContainer } from "recharts";
 import { CHART_COLORS, truncName } from "~/components/util";
 
 
@@ -22,11 +22,11 @@ const ResultsPieChart = ({ data, colorOffset = 0, star = false, runoff = false, 
     outerRadius,
     percent,
     index,
-  }: any) => {
+  }: PieLabelRenderProps) => {
     const RADIAN = Math.PI / 180;
-    const radius = innerRadius*.3 + outerRadius*.7; // bias toward the outside to give more space for the text
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+    const radius = Number(innerRadius)*.3 + Number(outerRadius)*.7; // bias toward the outside to give more space for the text
+    const x = Number(cx) + radius * Math.cos(-Number(midAngle) * RADIAN);
+    const y = Number(cy) + radius * Math.sin(-Number(midAngle) * RADIAN);
 
     return (
       <text
@@ -37,7 +37,7 @@ const ResultsPieChart = ({ data, colorOffset = 0, star = false, runoff = false, 
         textAnchor="middle"
         dominantBaseline="central"
       >
-        {rawNumbers? data[index].votes : `${(percent * 100).toFixed(0)}%`}
+        {rawNumbers? data[index].votes : `${(Number(percent) * 100).toFixed(0)}%`}
       </text>
     );
   };

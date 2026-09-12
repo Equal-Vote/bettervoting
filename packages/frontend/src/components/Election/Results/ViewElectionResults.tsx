@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import Results from './Results';
 import Box from '@mui/material/Box';
-import { Divider, Typography } from "@mui/material";
+import { Typography } from "@mui/material";
 import { useSubstitutedTranslation } from '../../util';
 import { useGetResults } from '../../../hooks/useAPI';
 import useElection from '../../ElectionContextProvider';
@@ -10,7 +10,6 @@ import ShareButton from '../ShareButton';
 import { BallotDataExport } from './BallotDataExport';
 import SupportBlurb from '../SupportBlurb';
 import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
-import ElectionStateWarning from '../ElectionStateWarning';
 import { AdminPageNavigation } from '../Sidebar';
 import useFeatureFlags from '../../FeatureFlagContextProvider';
 import { SecondaryButton } from '../../styles';

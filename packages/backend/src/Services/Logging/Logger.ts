@@ -3,19 +3,19 @@ import { LoggerImpl } from "./LoggerImpl";
 
 var _loggerInstance: ILogger;
 
-function debug(context?: ILoggingContext, message?: any, ...optionalParams: any[]): void {
+function debug(context?: ILoggingContext, message?: unknown, ...optionalParams: unknown[]): void {
   logger().debug(context, message, ...optionalParams);
 }
 
-function info(context?: ILoggingContext,message?: any, ...optionalParams: any[]): void {
+function info(context?: ILoggingContext,message?: unknown, ...optionalParams: unknown[]): void {
   logger().info(context, message, ...optionalParams);
 }
 
-function warn(context?: ILoggingContext,message?: any, ...optionalParams: any[]): void {
+function warn(context?: ILoggingContext,message?: unknown, ...optionalParams: unknown[]): void {
   logger().warn(context, message, ...optionalParams);
 }
 
-function error(context?: ILoggingContext, message?: any, ...optionalParams: any[]): void {
+function error(context?: ILoggingContext, message?: unknown, ...optionalParams: unknown[]): void {
   logger().error(context, message, ...optionalParams);
 }
 
@@ -23,7 +23,7 @@ function error(context?: ILoggingContext, message?: any, ...optionalParams: any[
 * Use to log about a state change (ie write to a DB) 
 * Shortcut for Logger.info with a prefix
 **/
-function state(context?: ILoggingContext, message?: any, ...optionalParams: any[]): void {
+function state(context?: ILoggingContext, message?: unknown, ...optionalParams: unknown[]): void {
   logger().info(context, "STATE: " + message, ...optionalParams);
 }
 

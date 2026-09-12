@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useSubstitutedTranslation } from '../../util';
-import { Box, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material"
+import { Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material"
 import { PrimaryButton, SecondaryButton } from '../../styles';
 import useElection from '../../ElectionContextProvider';
 

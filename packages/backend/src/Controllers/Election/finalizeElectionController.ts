@@ -13,7 +13,7 @@ var ElectionRollModel = ServiceLocator.electionRollDb();
 
 const className = "election.Controllers";
 
-const finalizeElection = async (req: IElectionRequest, res: Response, next: NextFunction) => {
+const finalizeElection = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     Logger.info(req, `${className}.finalize ${req.election.election_id}`);
     expectPermission(req.user_auth.roles, permissions.canEditElectionState)
 

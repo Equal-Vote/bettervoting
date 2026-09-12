@@ -3,6 +3,7 @@ import axios from 'axios';
 import qs from 'qs';
 import 'dotenv/config';
 import { InternalServerError } from "@curveball/http-errors";
+import { Request } from 'express';
 import { IRequest } from '../../IRequest';
 import AccountServiceUtils from './AccountServiceUtils';
 
@@ -49,8 +50,8 @@ export default class AccountService {
         }
     }
 
-    getToken = async (req: any) => {
-        var params: any = {
+    getToken = async (req: Request) => {
+        var params: Record<string, unknown> = {
             grant_type: req.query.grant_type,
             client_id: this.authConfig.clientId,
             redirect_uri: req.query.redirect_uri,
@@ -86,8 +87,8 @@ export default class AccountService {
             )
             Logger.debug(req, "success!");
             return response.data
-        } catch (err: any) {
-            Logger.error(req, 'Error while requesting a token', err.response.data);
+        } catch (err: unknown) {
+            Logger.error(req, 'Error while requesting a token', axios.isAxiosError(err) ? err.response?.data : err);
             throw new InternalServerError("Error requesting token");
         };
     }

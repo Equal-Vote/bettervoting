@@ -1,5 +1,4 @@
-require("dotenv").config();
-const request = require("supertest");
+import 'dotenv/config';
 
 import { Election, electionValidation } from "@equal-vote/star-vote-shared/domain_model/Election";
 import testInputs from "./testInputs";

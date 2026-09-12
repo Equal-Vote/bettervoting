@@ -6,7 +6,6 @@ import { logSafeHash } from '../Services/Logging/logSafeHash';
 import { BallotVotes, IBallotStore } from './IBallotStore';
 import { Kysely, sql, Transaction } from 'kysely';
 import { Database } from './Database';
-import { InternalServerError } from '@curveball/http-errors';
 
 const tableName = 'ballotDB';
 const electionRollTableName = 'electionRollDB';
@@ -99,7 +98,7 @@ export default class BallotsDB implements IBallotStore {
             .where('ballot_id', '=', ballot_id)
             .where('head', '=', true)
             .executeTakeFirstOrThrow()
-            .catch((reason: any) => {
+            .catch((reason: unknown) => {
                 Logger.debug(ctx, `${tableName}.get null`, reason);
                 return null;
             });

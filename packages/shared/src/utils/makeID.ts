@@ -35,7 +35,7 @@ export function isWriteInCandidate(candidateId: string): boolean {
 function generateRandomPart(length: number): string {
   const options = 'bcdfghjkmpqrtvwxy2346789';
   return [...Array(length)]
-    .map(_ => options.charAt(Math.floor(Math.random()*options.length)))
+    .map(() => options.charAt(Math.floor(Math.random()*options.length)))
     .join('');
 }
 

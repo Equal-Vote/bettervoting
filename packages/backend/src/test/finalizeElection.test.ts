@@ -1,5 +1,4 @@
-require("dotenv").config();
-const request = require("supertest");
+import 'dotenv/config';
 import { TestHelper } from "./TestHelper";
 import testInputs from "./testInputs";
 

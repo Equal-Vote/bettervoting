@@ -9,7 +9,7 @@ import { WriteInData } from "@equal-vote/star-vote-shared/domain_model/WriteIn";
 
 var BallotModel = ServiceLocator.ballotsDb();
 
-const getWriteInNamesController = async (req: IElectionRequest, res: Response, next: NextFunction) => {
+const getWriteInNamesController = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     var electionId = req.election.election_id;
     Logger.debug(req, "getWriteInNames: " + electionId);
 

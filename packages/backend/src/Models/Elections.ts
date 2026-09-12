@@ -8,6 +8,7 @@ import { sharedConfig } from '@equal-vote/star-vote-shared/config';
 import { IElectionStore } from './IElectionStore';
 import { Conflict, InternalServerError } from '@curveball/http-errors';
 import { BadRequest } from "@curveball/http-errors";
+import { hasErrorCode } from '../errorUtils';
 
 const tableName = 'electionDB';
 
@@ -16,8 +17,8 @@ interface IVoteCount{
     v: number;
 }
 
-const dneCatcher = (error: any) => {
-    if(error.code == '42P01'){
+const dneCatcher = (error: unknown) => {
+    if(hasErrorCode(error, '42P01')){
         throw new InternalServerError(`${error} \n\n----------------------\n\nTables weren't created. Perhaps you need to run the migrate command? Try running the following...\n\n  npm run build -w @equal-vote/star-vote-backend\n  npm run migrate:latest -w @equal-vote/star-vote-backend\n\n\n`)
     }
     throw error;
@@ -43,7 +44,7 @@ export default class ElectionsDB implements IElectionStore {
         return this._postgresClient.schema.dropTable(tableName).execute()
     }
 
-    createElection(election: Election, ctx: ILoggingContext, reason: string): Promise<Election> {
+    createElection(election: Election, ctx: ILoggingContext, _reason: string): Promise<Election> {
         Logger.debug(ctx, `${tableName}.createElection`, election);
         election.update_date = Date.now().toString()// Use now() because it doesn't change with time zone 
         election.head = true
@@ -105,7 +106,7 @@ export default class ElectionsDB implements IElectionStore {
             .execute()
 
         // // Filter for settings.voter_access = open
-        return openElections.filter((election: Election, index: any, array: any) => {
+        return openElections.filter((election: Election, _index: number, _array: Election[]) => {
             return election.settings.voter_access == 'open';
         });
     }
@@ -239,8 +240,8 @@ export default class ElectionsDB implements IElectionStore {
         let content;
         try {
             content = await fetch(`${sharedConfig.CLASSIC_DOMAIN}/${election_id}`, {signal: controller.signal})
-                .then((res:any) => res.text())
-                .catch((err:any) => {
+                .then((res: Response) => res.text())
+                .catch((err: unknown) => {
                     Logger.error(ctx, 'error pinging star.vote', err)
                     return errorMessage;
             })
@@ -267,7 +268,7 @@ export default class ElectionsDB implements IElectionStore {
         return elections
     }
 
-    delete(election_id: Uid, ctx: ILoggingContext, reason: string): Promise<boolean> {
+    delete(election_id: Uid, ctx: ILoggingContext, _reason: string): Promise<boolean> {
         Logger.debug(ctx, `${tableName}.delete ${election_id}`);
 
         const deletedElection = this._postgresClient
@@ -286,7 +287,7 @@ export default class ElectionsDB implements IElectionStore {
         )
     }
 
-    deleteAllElectionData(election_id: Uid, ctx: ILoggingContext, reason: string): Promise<void> {
+    deleteAllElectionData(election_id: Uid, ctx: ILoggingContext, _reason: string): Promise<void> {
         Logger.debug(ctx, `${tableName}.delete ${election_id}`);
 
         return this._postgresClient.transaction().execute(async (trx) => {

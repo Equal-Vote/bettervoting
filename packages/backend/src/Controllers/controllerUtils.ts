@@ -1,8 +1,7 @@
-import { IRequest, reqIdSuffix } from "../IRequest"
+import { IRequest } from "../IRequest"
 import { Election, electionValidation } from "@equal-vote/star-vote-shared/domain_model/Election";
 import Logger from "../Services/Logging/Logger"
 import { BadRequest, Unauthorized } from "@curveball/http-errors";
-import { Response } from 'express';
 import { roles } from "@equal-vote/star-vote-shared/domain_model/roles";
 import { permission } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { createHash, randomInt } from "crypto";
@@ -26,20 +25,7 @@ export async function expectValidElectionFromRequest(req:IRequest):Promise<Elect
     return inputElection;
 }
 
-export function catchAndRespondError(req:IRequest, res:Response, err:any):Response<any, Record<string, any>> {
-    var status = 500;
-    if (err.httpStatus) {
-        status = err.httpStatus;
-    }
-    var msg = "Error";
-    if (err.detail) {
-        msg = err.detail;
-    }
-    msg += reqIdSuffix(req);
-    return res.status(status).json({error:msg});
-}
-
-export function expectPermission(roles:roles[],permission:permission):any {
+export function expectPermission(roles:roles[],permission:permission): void {
         if (!roles.some( (role) => permission.includes(role))){
             throw new Unauthorized("Does not have permission")
       }

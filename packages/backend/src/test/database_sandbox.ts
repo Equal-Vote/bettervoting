@@ -1,4 +1,5 @@
-require('dotenv').config()
+/* eslint-disable @typescript-eslint/no-unused-vars -- manual scratch helpers, uncommented individually in RunTest() when needed */
+import 'dotenv/config';
 
 import servicelocator from '../ServiceLocator'
 import { Election } from '@equal-vote/star-vote-shared/domain_model/Election'
@@ -48,6 +49,7 @@ async function ResetDatabases() {
     await db.deleteFrom('electionRollDB').execute()
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- manual scratch helper; query is a Kysely query builder, whose generic type isn't worth pinning down here
 async function PrintQueryExpaination(query: any) {
     const explaination = await query.explain('json', sql`analyze`)
     console.info(JSON.stringify(explaination[0]['QUERY PLAN'], null, 4))
@@ -60,7 +62,7 @@ async function AddVoters(voter: ElectionRoll | ElectionRoll[]) {
     await db.insertInto('electionRollDB').values(voter).execute()
 }
 
-async function GetLatestAll(i: string) {
+async function GetLatestAll(_i: string) {
     const query = db
         .selectFrom("electionDB")
         .selectAll()

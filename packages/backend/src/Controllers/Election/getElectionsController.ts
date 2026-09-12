@@ -5,8 +5,6 @@ import { IElectionRequest, IRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
 import { Election, removeHiddenFields } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { Race, VotingMethod, MethodTextKey, methodValueToTextKey } from '@equal-vote/star-vote-shared/domain_model/Race';
-import { expectPermission } from '../controllerUtils';
-import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { sharedConfig } from '@equal-vote/star-vote-shared/config';
 
 
@@ -14,7 +12,7 @@ var ElectionsModel = ServiceLocator.electionsDb();
 var ElectionRollModel = ServiceLocator.electionRollDb();
 
 // TODO: We should probably split this up as the user will only need one of these filters
-const getElections = async (req: IElectionRequest, res: Response, next: NextFunction) => {
+const getElections = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     Logger.info(req, `getElections`);
     // var filter = (req.query.filter == undefined) ? "" : req.query.filter;
     const email = req.user?.email || ''
@@ -22,7 +20,7 @@ const getElections = async (req: IElectionRequest, res: Response, next: NextFunc
 
     /////////// ELECTIONS WE OWN ////////////////
     var elections_as_official = null;
-    if((email !== '' || id !== '') && req.user.typ != 'TEMP_ID'){ 
+    if((email !== '' || id !== '') && req.user?.typ != 'TEMP_ID'){
         elections_as_official = await ElectionsModel.getElections(id, email, req);
         if (!elections_as_official) {
             var msg = "Election does not exist";
@@ -69,7 +67,7 @@ const getElections = async (req: IElectionRequest, res: Response, next: NextFunc
     });
 }
 
-const queryElections = async (req: IElectionRequest, res: Response, next: NextFunction) => {
+const queryElections = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     Logger.info(req, `queryElections`);
 
     // TODO: https://github.com/Equal-Vote/bettervoting/issues/976
@@ -163,7 +161,7 @@ const innerGetGlobalElectionStats = async (req: IRequest): Promise<GlobalElectio
     return stats;
 }
 
-const getGlobalElectionStats = async (req: IRequest, res: Response, next: NextFunction) => {
+const getGlobalElectionStats = async (req: IRequest, res: Response, _next: NextFunction) => {
     res.json(innerGetGlobalElectionStats(req));
 }
 
