@@ -1,0 +1,119 @@
+# Dependabot version updates.
+#
+# Minor and patch bumps are grouped into a single PR per ecosystem to keep
+# review overhead low. Major bumps are deliberately left ungrouped so each one
+# gets its own PR and a real review.
+#
+# A cooldown holds brand-new releases for a few days, which blunts compromised-
+# release supply-chain attacks. Only semver ecosystems accept semver-*-days;
+# docker, docker-compose, github-actions, terraform and pip take default-days
+# alone and are rejected outright if given the semver keys.
+#
+# A group only covers security-advisory PRs if it sets
+# `applies-to: security-updates` -- a group without that key defaults to
+# version updates alone, which leaves advisories arriving one PR per advisory.
+# The *-security groups below bundle them per ecosystem. Those deliberately
+# include majors: declining a security fix because it is a major bump is not a
+# real option.
+#
+# Docs: https://docs.github.com/code-security/dependabot/dependabot-version-updates
+version: 2
+
+updates:
+
+  - package-ecosystem: npm
+    directories:
+      - /
+      - /testing
+      - /.github/scripts
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 3
+    groups:
+      npm:
+        update-types:
+          - minor
+          - patch
+      npm-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+
+  - package-ecosystem: bundler
+    directory: /docs
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 3
+    groups:
+      bundler:
+        update-types:
+          - minor
+          - patch
+      bundler-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+
+  - package-ecosystem: docker
+    directories:
+      - /
+      - /testing
+      - /.sandcastle
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    cooldown:
+      default-days: 7
+    groups:
+      docker:
+        update-types:
+          - minor
+          - patch
+      docker-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+
+  - package-ecosystem: docker-compose
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    cooldown:
+      default-days: 7
+    groups:
+      docker-compose:
+        update-types:
+          - minor
+          - patch
+      docker-compose-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions:
+        update-types:
+          - minor
+          - patch
+      github-actions-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
