@@ -1,0 +1,142 @@
+# Dependabot configuration.
+#
+# Policy (set deliberately -- please read before editing):
+#
+#   1. Routine version updates are minor/patch only. The `ignore` block drops
+#      semver-major bumps. The `version-update:` prefix scopes that ignore to
+#      VERSION updates only, so a security advisory whose only fix is a major
+#      bump still opens a PR. Never drop the `update-types:` key from that
+#      ignore entry -- a bare `dependency-name: "*"` would also silence
+#      security updates.
+#
+#   2. Everything lands in as few PRs as possible.
+#      `multi-ecosystem-groups` merges every ecosystem in this repo into ONE
+#      pull request per week.
+#
+#   3. Security advisories are grouped per ecosystem by the `*-security`
+#      groups below. A multi-ecosystem group covers VERSION
+#      updates only -- it has no `applies-to` key -- so without these,
+#      advisories would arrive one PR per advisory.
+#
+#   4. `open-pull-requests-limit` is deliberately ABSENT. Dependabot rejects the
+#      whole file if it appears on an update entry belonging to a
+#      multi-ecosystem group, and the published JSON schema does NOT catch
+#      that -- only Dependabot's own validator does. Setting it on the group
+#      instead is documented as correct but was never confirmed to parse, so
+#      it is left off: the group raises one PR regardless, and security PRs
+#      are exempt from the limit in any case.
+#
+#   5. Cooldown holds brand-new releases for a few days, which blunts
+#      compromised-release supply-chain attacks. Only semver ecosystems accept
+#      `semver-*-days`; docker, docker-compose, github-actions, terraform and
+#      pip take `default-days` alone and are REJECTED if given the semver keys.
+#
+# Docs: https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference
+version: 2
+
+multi-ecosystem-groups:
+  all-dependencies:
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+    labels:
+      - dependencies
+
+updates:
+  - package-ecosystem: npm
+    directories:
+      - /
+      - /testing
+      - /.github/scripts
+    multi-ecosystem-group: all-dependencies
+    patterns:
+      - "*"
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 3
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
+    groups:
+      npm-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+
+  - package-ecosystem: bundler
+    directory: /docs
+    multi-ecosystem-group: all-dependencies
+    patterns:
+      - "*"
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 3
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
+    groups:
+      bundler-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+
+  - package-ecosystem: docker
+    directories:
+      - /
+      - /testing
+      - /.sandcastle
+    multi-ecosystem-group: all-dependencies
+    patterns:
+      - "*"
+    cooldown:
+      default-days: 7
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
+    groups:
+      docker-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+
+  - package-ecosystem: docker-compose
+    directory: /
+    multi-ecosystem-group: all-dependencies
+    patterns:
+      - "*"
+    cooldown:
+      default-days: 7
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
+    groups:
+      docker-compose-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+
+  - package-ecosystem: github-actions
+    directory: /
+    multi-ecosystem-group: all-dependencies
+    patterns:
+      - "*"
+    cooldown:
+      default-days: 7
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
+    groups:
+      github-actions-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
