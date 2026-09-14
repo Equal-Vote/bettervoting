@@ -1,13 +1,12 @@
-import { useContext, useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react';
 import Box from '@mui/material/Box';
 import LandingPageFeatures from './LandingPage/LandingPageFeatures';
 import LandingPageSignUpBar from './LandingPage/LandingPageSignUpBar';
 import LandingPageTestimonials from './LandingPage/LandingPageTestimonials';
-import { Paper, Typography } from '@mui/material';
+import { Typography } from '@mui/material';
 import LandingPagePricing from './LandingPage/LandingPagePricing';
 import useFeatureFlags from './FeatureFlagContextProvider';
-import LandingPageStats from './LandingPage/LandingPageStats';
-import{useLocation} from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { openFeedback, scrollToElement, useSubstitutedTranslation } from './util';
 import Wizard from './ElectionForm/Wizard/Wizard';
 import LandingPageSupport from './LandingPage/LandingPageSupport';
@@ -84,7 +83,7 @@ const LandingPage = () => {
                 <Typography variant="h4" sx={{ color: 'lightShade.contrastText' }}> {t('landing_page.hero.title')} </Typography>
                 <LandingPageCarousel />
                 <Typography component="p" sx={{margin: 'auto', width: '80%', textAlign: 'center', mt: 4}}>
-                    <i>"BetterVoting is your one-stop, open-source tool for handling all your election needs. Whether it's informal polls or highly secure elections, electronic or paper, single-seat or multi-seat, we've got you covered!" <span className="nobr">- The BetterVoting Team</span></i>
+                    <i>&ldquot;BetterVoting is your one-stop, open-source tool for handling all your election needs. Whether it&apos;s informal polls or highly secure elections, electronic or paper ballots, single-seat or multi-seat, we&apos;ve got you covered!&rdquot; <span className="nobr">- The BetterVoting Team</span></i>
                 </Typography>
             </Box>
             {/*<LandingPageStats/> temporarily disabling, https://github.com/Equal-Vote/bettervoting/issues/1294*/}
