@@ -453,7 +453,10 @@ export default function Results({ race, results }: {race: Race, results: Electio
     const {i18n} = useSubstitutedTranslation();
 
     const votingMethodBase = race.voting_method
-    const methodKey = methodValueToTextKey[votingMethodBase];
+    // Bloc STAR is stored as plain STAR with more than one seat — the name is
+    // never written down anywhere, so the results page has to derive it (#1086).
+    const isBlocStar = votingMethodBase === 'STAR' && race.num_winners > 1;
+    const methodKey = isBlocStar ? 'star_bloc' : methodValueToTextKey[votingMethodBase];
     const learnLinkKey = `methods.${methodKey}.learn_link`;
     const votingMethod= t(`methods.${methodKey}.full_name`)
 
