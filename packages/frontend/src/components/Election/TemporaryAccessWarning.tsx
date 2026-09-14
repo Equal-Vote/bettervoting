@@ -14,7 +14,7 @@ export default () => {
     const {election, t} = useElection();
 
     const hoursSinceCreate = (new Date().getTime() - new Date(election.create_date).getTime()) / (1000 * 60 * 60)
-    const [claimKey, setClaimKey] = useCookie(`${election.election_id}_claim_key`, '')
+    const [claimKey] = useCookie(`${election.election_id}_claim_key`, '')
 
     if(election.owner_id != tempID || hoursSinceCreate > sharedConfig.TEMPORARY_ACCESS_HOURS || !claimKey) return <></>
 

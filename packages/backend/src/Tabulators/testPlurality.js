@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports -- standalone CJS script, run directly with `node` */
 const PluralityResults = require('./PluralityResults')
 
 const candidates = ['Alice','Bob','Carol','Dave']
@@ -11,4 +12,4 @@ const votes = [
 ]
 
 
-const results = PluralityResults(candidates,votes)
+PluralityResults(candidates,votes)

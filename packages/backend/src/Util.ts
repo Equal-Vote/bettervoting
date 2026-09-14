@@ -18,13 +18,13 @@ export function orDefault<T>(data: T | null, def:T):T {
     return data;
   }
 
-export function responseErr(res:Response, req:Request, code:number, errMessage:string, extraData?:any){
+export function responseErr(res:Response, req:Request, code:number, errMessage:string, extraData?:Record<string, unknown>): void {
   errMessage += reqIdSuffix(req);
   if (extraData == null){
     extraData = {};
   }
   extraData.error = errMessage;
-  return res.status(code).json(extraData);
+  res.status(code).json(extraData);
 }
 
 interface ImageKitLayer{
@@ -36,7 +36,7 @@ const formatImageKitURL = (layers: ImageKitLayer[]) : string => {
     ...layers.map(
       l => [
         l['type'],
-        ...[Object.entries(l).filter(([k, v]) => k != 'type').map(([k, v]) => `${k}-${encodeURIComponent(v)}`)],
+        ...[Object.entries(l).filter(([k, _v]) => k != 'type').map(([k, v]) => `${k}-${encodeURIComponent(v)}`)],
         ((l['type'] as string).startsWith('l')? 'l-end' : '')
       ].join(',')
     ).join(':'),
@@ -55,7 +55,7 @@ interface TagObject{
   [key: string]: string
 }
 let ElectionsModel =  ServiceLocator.electionsDb();
-export async function getMetaTags(req: any) : Promise<TagObject>  {
+export async function getMetaTags(req: Request) : Promise<TagObject>  {
   let parts = req.url.split('/');
   let election:Election|null;
 
@@ -66,7 +66,7 @@ export async function getMetaTags(req: any) : Promise<TagObject>  {
     const electionID = (parts[1] == 'Election' ? parts[2] : parts[1])
     try{
       election = await ElectionsModel.getElectionByID(electionID, req);
-    } catch (err:any) {
+    } catch (_err: unknown) {
       election = null;
     }
   }

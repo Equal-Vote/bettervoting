@@ -1,5 +1,7 @@
-require('dotenv').config();
+import 'dotenv/config';
 import express from 'express';
+import path from 'path';
+import fs from 'fs';
 import {electionsRouter, ballotRouter, rollRouter} from './Routes';
  
 // var debugRouter = require('./Routes/debug.routes')
@@ -7,7 +9,7 @@ import cors from 'cors';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import Logger from './Services/Logging/Logger';
-import {IRequest, iRequestMiddleware, reqIdSuffix} from './IRequest';
+import {iRequestMiddleware} from './IRequest';
 import { loggerMiddleware } from './Services/Logging/LoggerMiddleware';
 import { errorCatch } from './errorCatchMiddleware'
 import registerEvents from './Routes/registerEvents';
@@ -17,8 +19,8 @@ import swagger from './OpenApi/swagger.json';
 
 import { getUserToken, getUser } from './Controllers/User';
 import { sendGridWebhookController } from './Controllers/sendGridWebhookController';
-const asyncHandler = require('express-async-handler')
-require('./socketHandler')
+import asyncHandler from 'express-async-handler'
+import './socketHandler'
 
 export default function makeApp() {
     const app = express();
@@ -26,7 +28,7 @@ export default function makeApp() {
 
     // CORS (Cross-origin resource sharing), allows for the backend to receive calls from the front end, even though they have different urls/origins
     //      (at least that's my understanding)
-    const prodEndpoints : any = process.env.ALLOWED_URLS?.split(',') || 'https://bettervoting.com/';
+    const prodEndpoints: string[] | string = process.env.ALLOWED_URLS?.split(',') || 'https://bettervoting.com/';
     app.use(cors({
         origin: prodEndpoints,
         credentials: true, // allow the backend to receive cookies from the frontend
@@ -48,8 +50,7 @@ export default function makeApp() {
     app.use(cookieParser())
 
     const frontendPath = '../../../../packages/frontend/build/';
-    
-    const path = require('path');
+
     // SendGrid webhook must be registered before express.json() to preserve the raw body for signature verification
     app.post('/API/SendGridWebhook', express.raw({ type: 'application/json' }), sendGridWebhookController);
 
@@ -65,13 +66,12 @@ export default function makeApp() {
     // NOTE: I've removed express.static because it doesn't allow me to inject meta tags
     // https://stackoverflow.com/questions/51120214/how-to-modify-static-file-content-with-express-static
     app.get('*', (req, res) => {
-        const fs = require('fs');
-        fs.readFile(path.join(__dirname, frontendPath, req.url.split('?')[0]), 'utf8', (err:any, htmlData:string) => {
+        fs.readFile(path.join(__dirname, frontendPath, req.url.split('?')[0]), 'utf8', (err, _htmlData) => {
             if(err){
                 // if the request wants a webpage, then return index.html and inject meta tags
 
                 // https://blog.logrocket.com/adding-dynamic-meta-tags-react-app-without-ssr/
-                fs.readFile(path.join(__dirname, frontendPath, 'index.html'), 'utf8', async (err:any, htmlData:string) => {
+                fs.readFile(path.join(__dirname, frontendPath, 'index.html'), 'utf8', async (err, htmlData) => {
                     if(err){
                         console.error('Error during file reading', err);
                         return res.status(404).end();

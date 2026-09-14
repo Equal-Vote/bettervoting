@@ -1,7 +1,6 @@
 import sanitizeHtml from 'sanitize-html';
 
 const rLink = /\[([^\]]*?)\]\(([^)]*?)\)/;
-const rBold = /\*\*(.*?)\*\*/;
 
 export interface FormatMarkdownOptions {
   allowButtons?: boolean;

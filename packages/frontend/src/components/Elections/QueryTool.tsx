@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useGetElections, useQueryElections } from "../../hooks/useAPI";
+import { useQueryElections } from "../../hooks/useAPI";
 import { useNavigate } from 'react-router';
 import EnhancedTable from '../EnhancedTable';
-import {  Box, Button, Container, Input, Link, Typography } from '@mui/material';
+import {  Box, Button, Container, Input, Typography } from '@mui/material';
 import { DateTime } from 'luxon';
 import { dateToLocalLuxonDate } from '../ElectionForm/Details/useEditElectionDetails';
 

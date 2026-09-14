@@ -1,9 +1,9 @@
-import { candidate, pluralityCandidate, pluralityResults, pluralitySummaryData, plurlaityRoundResults, rawVote, roundResults } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
+import { candidate, pluralityCandidate, pluralityResults, pluralitySummaryData, plurlaityRoundResults, rawVote } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
 
 import { commaListFormatter, makeBoundsTest, makeAbstentionTest, runBlocTabulator, getSummaryData } from "./Util";
 import { ElectionSettings } from "@equal-vote/star-vote-shared/domain_model/ElectionSettings";
 
-export function Plurality(candidates: candidate[], votes: rawVote[], nWinners = 1, electionSettings?:ElectionSettings) {
+export function Plurality(candidates: candidate[], votes: rawVote[], nWinners = 1, _electionSettings?:ElectionSettings) {
   const {summaryData} = getSummaryData<pluralityCandidate, pluralitySummaryData>(
     // ordinal would be more correct, but for computing totalScores plurlaity uses cardinal rules
     candidates.map(c => ({...c, score: 0})),
@@ -33,7 +33,7 @@ export function Plurality(candidates: candidate[], votes: rawVote[], nWinners = 
   );
 }
 
-const singleWinnerPlurality = (remainingCandidates: pluralityCandidate[], summaryData: pluralitySummaryData): plurlaityRoundResults => {
+const singleWinnerPlurality = (remainingCandidates: pluralityCandidate[], _summaryData: pluralitySummaryData): plurlaityRoundResults => {
   let winner = remainingCandidates[0];
   let tiedCandidates = remainingCandidates.filter(c => c.score == winner.score);
 

@@ -16,10 +16,9 @@ import { Kysely, PostgresDialect } from 'kysely'
 import Cursor from 'pg-cursor';
 import { Database } from "./Models/Database";
 import { SerializeParametersPlugin } from "./Models/serialize-parameters/serialize-parameters-plugin";
+import { Pool } from 'pg';
 
-const { Pool } = require('pg');
-
-var _postgresClient: any;
+var _postgresClient: Pool;
 var _DB: Kysely<Database>
 var _appInitContext = Logger.createContext("appInit");
 var _ballotsDb: IBallotStore;
@@ -34,7 +33,7 @@ var _accountService: AccountService;
 var _globalData: GlobalData;
 
 
-function postgres(): any {
+function postgres(): Pool {
     if (_postgresClient == null) {
         var connectionConfig = pgConnectionObject();
         // We can't log this since it has sensitive information
@@ -71,7 +70,7 @@ function database(): Kysely<Database> {
     return _DB
 }
 
-function pgConnectionObject(): any {
+function pgConnectionObject(): { connectionString: string; ssl: { rejectUnauthorized: boolean } | false } {
     var connectionStr = pgConnectionString();
     var devDB = process.env.DEV_DATABASE;
     if (devDB === 'TRUE') {
@@ -157,6 +156,8 @@ function blobService(): BlobService {
             _blobService = new BlobService();
         } else {
             Logger.info({}, 'AZURE_STORAGE_CONNECTION_STRING is not set. Using mock BlobService (image uploads will be no-ops).');
+            // require lazily so production doesn't need to load the mock module
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
             const MockBlobService = require("./Services/Blob/__mocks__/BlobService").default;
             _blobService = new MockBlobService();
         }

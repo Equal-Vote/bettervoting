@@ -5,9 +5,9 @@ import { expectPermission } from "../controllerUtils";
 import { BadRequest, Unauthorized } from "@curveball/http-errors";
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
-import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { ElectionRoll, ElectionRollAction, ElectionRollResponse } from '@equal-vote/star-vote-shared/domain_model/ElectionRoll';
 import { logSafeHash } from '../../Services/Logging/logSafeHash';
+import { getErrorMessage } from '../../errorUtils';
 
 const ElectionRollModel = ServiceLocator.electionRollDb();
 const EmailEventsModel = ServiceLocator.emailEventsDb();
@@ -25,6 +25,7 @@ const redactString = (value: string, voterId: string | undefined, shouldRedact: 
 // Note: ElectionRoll history entries can have nested structures and the email_data field is typed as 'any'.
 // This function uses a defensive approach to handle multiple data types (arrays, objects, strings),
 // strips out email_data entirely, and redacts voter IDs from action_type and actor fields.
+/* eslint-disable @typescript-eslint/no-explicit-any -- defensive handling of genuinely unpredictable third-party/legacy shapes, see comments above and below */
 const sanitizeHistory = (
     history: ElectionRoll['history'],
     voterId: string | undefined,
@@ -102,8 +103,9 @@ const sanitizeEmailMetadata = (
     }
     return Object.keys(sanitized).length > 0 ? sanitized : undefined;
 }
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
-const getRollsByElectionID = async (req: IElectionRequest, res: Response, next: NextFunction) => {
+const getRollsByElectionID = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     expectPermission(req.user_auth.roles, permissions.canViewElectionRoll)
     if(req.election.settings.voter_access === 'open'){
         throw new Unauthorized("Can't view voter roll for open elections")
@@ -133,8 +135,8 @@ const getRollsByElectionID = async (req: IElectionRequest, res: Response, next: 
                 details: event.details,
             });
         }
-    } catch (err: any) {
-        Logger.warn(req, `Could not fetch email events: ${err.message}`);
+    } catch (err: unknown) {
+        Logger.warn(req, `Could not fetch email events: ${getErrorMessage(err)}`);
     }
 
     // Scrub ballot_id to prevent linking voters to ballots
@@ -162,7 +164,7 @@ const getRollsByElectionID = async (req: IElectionRequest, res: Response, next: 
     res.json({ election: req.election, electionRoll: scrubbedRoll });
 }
 
-const getByVoterID = async (req: IElectionRequest, res: Response, next: NextFunction) => {
+const getByVoterID = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     Logger.info(req, `${className}.getByVoterID ${req.election.election_id} ${logSafeHash(req.params.voter_id)}`)
     const electionRollEntry = await ElectionRollModel.getByVoterID(req.election.election_id, req.params.voter_id, req)
     if (!electionRollEntry) {
@@ -181,7 +183,7 @@ const getByVoterID = async (req: IElectionRequest, res: Response, next: NextFunc
         email_data: redactVoterIds ? sanitizeEmailMetadata(electionRollEntry.email_data, electionRollEntry.voter_id, redactVoterIds) : electionRollEntry.email_data
     };
     if (redactVoterIds) {
-        delete (scrubbedEntry as any).voter_id;
+        delete (scrubbedEntry as Partial<ElectionRoll>).voter_id;
     }
 
     res.json({ electionRollEntry: scrubbedEntry })

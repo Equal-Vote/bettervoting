@@ -2,8 +2,8 @@ import { candidate, starResults, roundResults, starSummaryData, starCandidate, r
 import { getSummaryData, makeAbstentionTest, makeBoundsTest, runBlocTabulator, sortCandidates } from "./Util";
 import { ElectionSettings } from "@equal-vote/star-vote-shared/domain_model/ElectionSettings";
 
-export function Star(candidates: candidate[], votes: rawVote[], nWinners = 1, electionSettings?:ElectionSettings) {
-  const {tallyVotes, summaryData} = getSummaryData<starCandidate, starSummaryData>(
+export function Star(candidates: candidate[], votes: rawVote[], nWinners = 1, _electionSettings?:ElectionSettings) {
+  const {tallyVotes: _tallyVotes, summaryData} = getSummaryData<starCandidate, starSummaryData>(
 		candidates.map(c => ({...c, score: 0, fiveStarCount: 0})),
 		votes,
     'cardinal',

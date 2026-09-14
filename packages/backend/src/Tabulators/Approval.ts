@@ -3,7 +3,7 @@ import { approvalResults, approvalCandidate, approvalSummaryData, candidate, raw
 import { commaListFormatter, makeBoundsTest, makeAbstentionTest, runBlocTabulator, getSummaryData } from "./Util";
 import { ElectionSettings } from "@equal-vote/star-vote-shared/domain_model/ElectionSettings";
 
-export function Approval(candidates: candidate[], votes: rawVote[], nWinners = 1, electionSettings?:ElectionSettings) {
+export function Approval(candidates: candidate[], votes: rawVote[], nWinners = 1, _electionSettings?:ElectionSettings) {
   const {summaryData} = getSummaryData<approvalCandidate, approvalSummaryData>(
 		candidates.map(c => ({...c, score: 0})),
     votes,
@@ -31,7 +31,7 @@ export function Approval(candidates: candidate[], votes: rawVote[], nWinners = 1
 	)
 }
 
-const singleWinnerApproval = (remainingCandidates: approvalCandidate[], summaryData: approvalSummaryData): approvalRoundResults => {
+const singleWinnerApproval = (remainingCandidates: approvalCandidate[], _summaryData: approvalSummaryData): approvalRoundResults => {
 
   let winner = remainingCandidates[0];
   let tiedCandidates = remainingCandidates.filter(c => c.score == winner.score);

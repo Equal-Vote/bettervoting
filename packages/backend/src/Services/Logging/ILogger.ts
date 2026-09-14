@@ -8,8 +8,8 @@ export interface ICustomContext {
   };
 
 export interface ILogger {
-    debug(context?:ILoggingContext, message?: any, ...optionalParams: any[]):void;
-    info(context?:ILoggingContext, message?: any, ...optionalParams: any[]):void;
-    warn(context?:ILoggingContext, message?: any, ...optionalParams: any[]):void;
-    error(context?:ILoggingContext, message?: any, ...optionalParams: any[]):void;
+    debug(context?:ILoggingContext, message?: unknown, ...optionalParams: unknown[]):void;
+    info(context?:ILoggingContext, message?: unknown, ...optionalParams: unknown[]):void;
+    warn(context?:ILoggingContext, message?: unknown, ...optionalParams: unknown[]):void;
+    error(context?:ILoggingContext, message?: unknown, ...optionalParams: unknown[]):void;
 }

@@ -5,7 +5,7 @@ import Widget from '../components/Widget';
 
 // NOTE: we're not using filterRandomFromLogs at the moment, but we'll add the functionality back later
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const STARResultDetailedStepsWidget = ({ results, rounds, t, filterRandomFromLogs}: {results: starResults, rounds: number, t: (key: string, v?: object) => any, filterRandomFromLogs: boolean }) => {
+const STARResultDetailedStepsWidget = ({ results, rounds, t}: {results: starResults, rounds: number, t: (key: string, v?: object) => any, filterRandomFromLogs: boolean }) => {
 
     // make log groups
     const topLogs = [

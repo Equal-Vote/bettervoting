@@ -1,5 +1,6 @@
 import { Kysely, sql } from 'kysely'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Kysely's documented migration pattern: migrations must stay decoupled from the current (evolving) Database schema type
 export async function up(db: Kysely<any>): Promise<void> {
     await db.schema.createIndex('electionDB_unique_head')
         .on('electionDB')
@@ -23,6 +24,7 @@ export async function up(db: Kysely<any>): Promise<void> {
         .execute()
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Kysely's documented migration pattern: migrations must stay decoupled from the current (evolving) Database schema type
 export async function down(db: Kysely<any>): Promise<void> {
     await db.schema.dropIndex('electionRollDB_unique_head').execute()
     await db.schema.dropIndex('ballotDB_unique_head').execute()

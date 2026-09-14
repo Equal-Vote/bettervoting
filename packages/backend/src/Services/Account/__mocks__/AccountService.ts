@@ -1,8 +1,8 @@
 import { IRequest } from '../../../IRequest';
 import Logger from "../../Logging/Logger";
 import AccountServiceUtils from "../AccountServiceUtils";
-
-var jwt = require('jsonwebtoken');
+import jwt from 'jsonwebtoken';
+import { Request } from 'express';
 
 export default class AccountService {
 
@@ -13,7 +13,7 @@ export default class AccountService {
     constructor() {
     }
 
-    getToken = async (req: any) => {
+    getToken = async (_req: Request) => {
         return {}
     }
 

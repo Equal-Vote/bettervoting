@@ -1,6 +1,4 @@
-require('dotenv').config();
-const request = require('supertest');
-import { ElectionRoll, ElectionRollState } from '@equal-vote/star-vote-shared/domain_model/ElectionRoll';
+import 'dotenv/config';
 import { MockEventQueue } from '../Services/EventQueue/MockEventQueue';
 import { TestHelper } from './TestHelper';
 import testInputs from './testInputs';

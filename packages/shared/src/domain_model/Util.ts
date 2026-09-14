@@ -2,12 +2,17 @@ export const checkForDuplicates = (inputArray: string[]): boolean => {
     return new Set(inputArray).size !== inputArray.length;
   }
 //from https://emailregex.com/
+// eslint-disable-next-line no-control-regex -- RFC 5322 quoted-string local parts legitimately allow these control characters
 export const emailRegex = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
 
 
+// GenericObject/getEntry are a generic lookup helper meant to accept arbitrary typed arrays
+// (Candidate[], Score[], etc.) without an index signature of their own, so `any` is load-bearing here.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type GenericObject = {[key: string | number]: any};
 // NOTE: there's a couple of weird cases where passing the key as a function is necessary, but we may be able to remove this later
-export const getEntry = <ItemType extends GenericObject,>(arr: ItemType[], id: any, key: string | number | Function ='id'): ItemType => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const getEntry = <ItemType extends GenericObject,>(arr: ItemType[], id: any, key: string | number | ((item: ItemType) => unknown) ='id'): ItemType => {
   let match = arr.find(a => (typeof key === 'function')? key(a) == id : a[key] == id)
   if(match === undefined){
     throw new Error("Couldn't find match in array!")

@@ -1,4 +1,4 @@
-require("dotenv").config();
+import 'dotenv/config';
 import { TestHelper } from "./TestHelper";
 import testInputs from "./testInputs";
 

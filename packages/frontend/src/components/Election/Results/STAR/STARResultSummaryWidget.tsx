@@ -9,7 +9,6 @@ import WidgetContainer from '../components/WidgetContainer';
 import Widget from '../components/Widget';
 import ResultsBarChart from '../components/ResultsBarChart';
 import ResultsPieChart from '../components/ResultsPieChart';
-import { getEntry } from '@equal-vote/star-vote-shared/domain_model/Util';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const STARResultSummaryWidget = ({ results, roundIndex, t }: {results: starResults, roundIndex: number, t: (key: string, v?: object) => any }) => {

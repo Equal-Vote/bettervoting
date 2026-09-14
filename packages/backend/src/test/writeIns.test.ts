@@ -1,4 +1,4 @@
-require("dotenv").config();
+import 'dotenv/config';
 
 import { Election } from "@equal-vote/star-vote-shared/domain_model/Election";
 import { NewBallot } from "@equal-vote/star-vote-shared/domain_model/Ballot";
@@ -141,12 +141,12 @@ describe("Write-In Candidates", () => {
     });
 
     test("Reject ballot with too many write-ins (>10)", async () => {
-        const scores = [
+        const scores: { candidate_id: string, score: number, write_in_name?: string }[] = [
             { candidate_id: '0', score: 1 },
             { candidate_id: '1', score: 1 },
         ];
         for (let i = 0; i < 11; i++) {
-            scores.push({ candidate_id: `cwi-WriteIn${i}`, score: 1, write_in_name: `WriteIn${i}` } as any);
+            scores.push({ candidate_id: `cwi-WriteIn${i}`, score: 1, write_in_name: `WriteIn${i}` });
         }
         const ballot: NewBallot = {
             election_id: election.election_id,
@@ -216,7 +216,7 @@ describe("Write-In Candidates", () => {
         expect(res.statusCode).toBe(200);
         expect(res.body.write_in_data).toBeTruthy();
 
-        const raceData = res.body.write_in_data.find((d: any) => d.race_id === 'race0');
+        const raceData = res.body.write_in_data.find((d: {race_id: string}) => d.race_id === 'race0');
         expect(raceData).toBeTruthy();
         // We submitted 'Charlie' in 2 ballots, 'Dana' in 1 ballot
         expect(raceData.names['Charlie']).toBe(2);
@@ -241,7 +241,7 @@ describe("Write-In Candidates", () => {
         expect(res.statusCode).toBe(200);
         expect(res.body.election).toBeTruthy();
 
-        const race = res.body.election.races.find((r: any) => r.race_id === 'race0');
+        const race = res.body.election.races.find((r: {race_id: string}) => r.race_id === 'race0');
         expect(race.write_in_candidates).toHaveLength(2);
         expect(race.write_in_candidates[0].candidate_name).toBe('Charlie');
         expect(race.write_in_candidates[0].approved).toBe(true);
@@ -261,7 +261,7 @@ describe("Write-In Candidates", () => {
 
         const raceResult = res.body.results[0];
         // Approved write-in 'Charlie' should appear as a candidate
-        const candidateNames = raceResult.summaryData.candidates.map((c: any) => c.name);
+        const candidateNames = raceResult.summaryData.candidates.map((c: {name: string}) => c.name);
         expect(candidateNames).toContain('Alice');
         expect(candidateNames).toContain('Bob');
         expect(candidateNames).toContain('Charlie');
@@ -301,7 +301,7 @@ describe("Write-In Candidates", () => {
         );
         expect(res.statusCode).toBe(200);
 
-        const candidateNames = res.body.results[0].summaryData.candidates.map((c: any) => c.name);
+        const candidateNames = res.body.results[0].summaryData.candidates.map((c: {name: string}) => c.name);
         expect(candidateNames).toContain('Alice');
         expect(candidateNames).toContain('Bob');
         expect(candidateNames).not.toContain('Charlie');
@@ -332,7 +332,7 @@ describe("Zero-ballot paths", () => {
         );
         expect(res.statusCode).toBe(200);
         expect(res.body.write_in_data).toBeTruthy();
-        const raceData = res.body.write_in_data.find((d: any) => d.race_id === 'race0');
+        const raceData = res.body.write_in_data.find((d: {race_id: string}) => d.race_id === 'race0');
         expect(raceData).toBeTruthy();
         expect(raceData.names).toEqual({});
         th.testComplete();

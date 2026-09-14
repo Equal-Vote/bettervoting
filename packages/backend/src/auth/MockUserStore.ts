@@ -1,7 +1,6 @@
 import { Email } from "@equal-vote/star-vote-shared/domain_model/Email";
 import { Uid } from "@equal-vote/star-vote-shared/domain_model/Uid";
 import { UserModel } from "./data_model/UserModel";
-import { IUserStore } from "./IUserStore";
 
 
 

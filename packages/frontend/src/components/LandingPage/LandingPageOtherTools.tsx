@@ -1,6 +1,5 @@
-import { Box, Card, CardActionArea, CardContent, Paper, Typography } from '@mui/material'
+import { Box, Card, CardActionArea, CardContent, Typography } from '@mui/material'
 import { useSubstitutedTranslation } from '../util'
-import { useNavigate } from 'react-router';
 
 export default function(){
     const { t } = useSubstitutedTranslation();
@@ -30,7 +29,7 @@ export default function(){
                 justifyContent: 'center',
                 flexWrap: 'wrap',
             }}>
-                {items.map((item, i) =>
+                {items.map((item) =>
                     <Card className='otherTool' key={item.url} onClick={() => window.location.href = item.url} elevation={8} sx={{
                         width: '100%',
                         maxWidth: '20rem',

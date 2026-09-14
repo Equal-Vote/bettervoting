@@ -3,7 +3,6 @@ import WidgetContainer from '../components/WidgetContainer';
 import Widget from '../components/Widget';
 import ResultsTable from '../components/ResultsTable';
 import useRace from '~/components/RaceContextProvider';
-import { getEntry } from '@equal-vote/star-vote-shared/domain_model/Util';
 import { formatPercent } from '~/components/util';
 
 type candidateTableEntry = {

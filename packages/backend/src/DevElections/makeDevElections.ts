@@ -1,5 +1,6 @@
 import * as path from 'path'
-require('dotenv').config({ path: path.resolve(__dirname, '../../.env') })
+import dotenv from 'dotenv'
+dotenv.config({ path: path.resolve(__dirname, '../../.env') })
 
 import servicelocator from '../ServiceLocator'
 import { DevElectionDefinition, validateDefinition } from './types'

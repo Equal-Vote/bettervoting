@@ -1,6 +1,7 @@
-require("dotenv").config();
+import 'dotenv/config';
 import crypto from 'crypto';
-const request = require("supertest");
+import request from "supertest";
+import express from 'express';
 import makeApp from "../app";
 import ServiceLocator from "../ServiceLocator";
 import EmailEventsDB from "../Models/__mocks__/EmailEvents";
@@ -11,12 +12,11 @@ import EmailEventsDB from "../Models/__mocks__/EmailEvents";
 const testKeyPair = crypto.generateKeyPairSync('ec', { namedCurve: 'prime256v1' });
 
 const originalCreatePublicKey = crypto.createPublicKey;
-jest.spyOn(crypto, 'createPublicKey').mockImplementation((...args: any[]) => {
-    const arg = args[0];
-    if (arg && typeof arg === 'object' && arg.format === 'der' && arg.type === 'spki') {
+jest.spyOn(crypto, 'createPublicKey').mockImplementation((key) => {
+    if (key && typeof key === 'object' && 'format' in key && key.format === 'der' && 'type' in key && key.type === 'spki') {
         return testKeyPair.publicKey;
     }
-    return originalCreatePublicKey.apply(crypto, args as any);
+    return originalCreatePublicKey(key);
 });
 
 function signPayload(timestamp: string, body: string): string {
@@ -25,7 +25,7 @@ function signPayload(timestamp: string, body: string): string {
     return sign.sign(testKeyPair.privateKey, 'base64');
 }
 
-function webhookPost(app: any, body: string, timestamp: string, signature: string) {
+function webhookPost(app: express.Express, body: string, timestamp: string, signature: string) {
     return request(app)
         .post("/API/SendGridWebhook")
         .set("Content-Type", "application/json")
@@ -103,9 +103,9 @@ describe("SendGrid Webhook", () => {
         expect(inserted.event_type).toBe("delivered");
         expect(inserted.event_timestamp).toBe(new Date(1000 * 1000).toISOString());
         // email should NOT be in details (PII)
-        expect((inserted.details as any)?.email).toBeUndefined();
+        expect(inserted.details?.email).toBeUndefined();
         // response should be in details
-        expect((inserted.details as any)?.response).toBe("250 OK");
+        expect(inserted.details?.response).toBe("250 OK");
     });
 
     test("skips event when no sent row exists", async () => {

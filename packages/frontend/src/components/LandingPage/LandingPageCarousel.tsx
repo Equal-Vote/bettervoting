@@ -1,7 +1,6 @@
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
-import { useContext, useEffect, useRef, useState } from 'react'
-import useAuthSession from '../AuthSessionContextProvider'
+import { useEffect, useRef, useState } from 'react'
 import { PrimaryButton } from '../styles'
 import { BallotContext, IBallotContext } from '../Election/Voting/VotePage'
 import StarBallotView from '../Election/Voting/StarBallotView'

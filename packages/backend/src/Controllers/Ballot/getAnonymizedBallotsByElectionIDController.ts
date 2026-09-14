@@ -8,6 +8,7 @@ import { Response, NextFunction } from 'express';
 import { AnonymizedBallot, Ballot } from "@equal-vote/star-vote-shared/domain_model/Ballot";
 import { Readable } from 'stream';
 import { pipeline } from 'stream/promises';
+import { hasErrorCode } from '../../errorUtils';
 
 
 const BallotModel = ServiceLocator.ballotsDb();
@@ -35,7 +36,7 @@ async function* anonymizedBallotJsonChunks(ballots: AsyncIterable<Ballot>): Asyn
     yield buffer + ']}';
 }
 
-export const getAnonymizedBallotsByElectionID = async (req: IElectionRequest, res: Response, next: NextFunction) => {
+export const getAnonymizedBallotsByElectionID = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     var electionId = req.election.election_id;
     Logger.debug(req, "getAnonymizedBallotsByElectionID: " + electionId);
     const election = req.election;
@@ -59,8 +60,8 @@ export const getAnonymizedBallotsByElectionID = async (req: IElectionRequest, re
         // pipeline propagates backpressure (a slow client throttles the cursor)
         // and tears down the cursor if the client disconnects mid-stream.
         await pipeline(Readable.from(anonymizedBallotJsonChunks(ballots)), res);
-    } catch (err: any) {
-        if (err?.code === 'ERR_STREAM_PREMATURE_CLOSE') {
+    } catch (err: unknown) {
+        if (hasErrorCode(err, 'ERR_STREAM_PREMATURE_CLOSE')) {
             Logger.info(req, `getAnonymizedBallotsByElectionID: client disconnected mid-stream`);
             return;
         }

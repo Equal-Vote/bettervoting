@@ -32,7 +32,7 @@ const innerDeleteAllBallotsForElectionID = async (req: IElectionRequest) => {
     return success
 }
 
-const deleteAllBallotsForElectionID = async (req: IElectionRequest, res: Response, next: NextFunction) => {
+const deleteAllBallotsForElectionID = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     res.json({ success: innerDeleteAllBallotsForElectionID(req) })
 }
 

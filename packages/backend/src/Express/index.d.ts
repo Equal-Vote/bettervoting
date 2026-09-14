@@ -1,6 +1,7 @@
 import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { roles } from '@equal-vote/star-vote-shared/domain_model/roles';
-import { permission, permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
+import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
+import { IUser } from '../IRequest';
 
 type p = keyof typeof permissions
 export {}
@@ -12,13 +13,15 @@ declare global {
             contextId?: string;
             logPrefix?: string;
             election: Election;
-            user?: any;
+            user?: IUser;
             user_auth: {
                 roles: roles[];
                 permissions: p[]
             }
             authorized_voter?: boolean;
             has_voted?: boolean;
+            // multer has no type declarations installed (@types/multer); revisit if that's added
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             file: any
         }
     }
