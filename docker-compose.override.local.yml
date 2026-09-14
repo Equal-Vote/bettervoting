@@ -1,0 +1,7 @@
+services:
+  keycloak:
+    ports:
+      - "8081:8080"
+  my-db:
+    ports:
+      - "5433:5432"
