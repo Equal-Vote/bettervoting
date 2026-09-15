@@ -86,6 +86,20 @@ export function hashString(inputString: string) {
     return createHash('sha256').update(inputString).digest('hex')
 }
 
+// Resolves the number of rankings a voter may use on a ranked ballot.
+// Mirrors the semantics the server validates against (shared/src/domain_model/Ballot.ts
+// rejects scores above election.settings.max_rankings): the election's max_rankings
+// setting capped at REACT_APP_MAX_BALLOT_RANKS (default 8), falling back to
+// REACT_APP_DEFAULT_BALLOT_RANKS (default 6) when the setting is unset.
+export const getMaxRankings = (maxRankingsSetting?: number): number => {
+  const MAX_BALLOT_RANKS = Number(process.env.REACT_APP_MAX_BALLOT_RANKS) ? Number(process.env.REACT_APP_MAX_BALLOT_RANKS) : 8;
+  const DEFAULT_BALLOT_RANKS = Number(process.env.REACT_APP_DEFAULT_BALLOT_RANKS) ? Number(process.env.REACT_APP_DEFAULT_BALLOT_RANKS) : 6;
+  if (maxRankingsSetting) {
+    return Math.min(maxRankingsSetting, MAX_BALLOT_RANKS);
+  }
+  return DEFAULT_BALLOT_RANKS;
+}
+
 export const formatPercent = (f: number): string => {
   if(0 < f && f < .01) return '<1%';
   return `${Math.round(100*f)}%`
