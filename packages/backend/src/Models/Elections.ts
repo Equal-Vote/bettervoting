@@ -4,7 +4,7 @@ import { ILoggingContext } from '../Services/Logging/ILogger';
 import Logger from '../Services/Logging/Logger';
 import { Kysely, sql } from 'kysely'
 import { Election, electionValidation } from '@equal-vote/star-vote-shared/domain_model/Election';
-import { sharedConfig } from '@equal-vote/star-vote-shared/config';
+import { sharedConfig, pricingConfig } from '@equal-vote/star-vote-shared/config';
 import { IElectionStore } from './IElectionStore';
 import { Conflict, InternalServerError } from '@curveball/http-errors';
 import { BadRequest } from "@curveball/http-errors";
@@ -45,9 +45,10 @@ export default class ElectionsDB implements IElectionStore {
 
     createElection(election: Election, ctx: ILoggingContext, reason: string): Promise<Election> {
         Logger.debug(ctx, `${tableName}.createElection`, election);
-        election.update_date = Date.now().toString()// Use now() because it doesn't change with time zone 
+        election.update_date = Date.now().toString()// Use now() because it doesn't change with time zone
         election.head = true
         election.create_date = new Date().toISOString()
+        election.voter_limit = pricingConfig.FREE_TIER_LIMIT
 
         const newElection = this._postgresClient
             .insertInto(tableName)

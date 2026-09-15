@@ -32,8 +32,8 @@
       "default": "./dist/index.js"
     },
     "./config": {
-      "types": "./dist/types/config/SharedConfig.d.ts",
-      "default": "./dist/config/SharedConfig.js"
+      "types": "./dist/types/config/index.d.ts",
+      "default": "./dist/config/index.js"
     },
     "./domain_model": {
       "types": "./dist/types/domain_model/index.d.ts",
