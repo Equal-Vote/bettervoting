@@ -72,12 +72,17 @@ const SendEmailDialog = ({open, onClose, onSubmit, targetedEmail=undefined, elec
         }))
     }
 
+    // The backend re-queries the roll when it sends, so this count has to be of
+    // the same thing it will find. The roll is refetched when the dialog is
+    // opened; before that fix the button could offer to send to voters who had
+    // already voted since the page was loaded (#1287).
     const getVoterCount = () => {
         if(!electionRoll) return 0;
         if(audience == 'single') return 1;
         if(audience == 'all') return electionRoll.length;
         if(audience == 'has_voted') return electionRoll.filter(roll => roll.submitted).length
         if(audience == 'has_not_voted') return electionRoll.filter(roll => !roll.submitted).length
+        return 0;
     }
 
     const warning: string = (() => {
@@ -174,7 +179,7 @@ const SendEmailDialog = ({open, onClose, onSubmit, targetedEmail=undefined, elec
                 </Alert>}
                 <Box sx={{ display: "flex", flexDirection: "row-reverse", gap: 2 }}>
                     <PrimaryButton
-                        disabled={!templateChosen}
+                        disabled={!templateChosen || getVoterCount() === 0}
                         onClick={() => {
                             setTemplateChosen(false)
                             onSubmit({
