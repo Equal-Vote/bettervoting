@@ -46,6 +46,9 @@ interface HeadCell {
   filterGroups?: {
     [key: string]: boolean
   };
+  // Extra raw fields this column's search box should also match, beyond its own
+  // value. Lets one box cover an identifier that isn't displayed in the column.
+  searchKeys?: string[];
   formatter?: (value: string, row?: string, t?: (key: string, options?: object) => string) => ReactNode;
 }
 
@@ -174,8 +177,9 @@ const headCellPool = {
     id: 'title',
     numeric: false,
     disablePadding: false,
-    label: 'Election Title',
+    label: 'Election Title or ID',
     filterType: 'search',
+    searchKeys: ['election_id'],
     formatter: (title, election) => <>{title}&nbsp;<a href={`/${election.election_id}`}>🔗</a></>
   },
   roles: {
@@ -387,7 +391,11 @@ function filterData<T>(array: readonly T[], headCells: HeadCell[], filters: any[
         let item = row[col.id];
         // if it's not a string, assume it's a ReactNode and strip away the noise
         if(typeof item !== 'string') item = row[col.id].props.children[0]
-        return item.toLowerCase().includes(filters[colInd].toLowerCase())
+        const query = filters[colInd].toLowerCase()
+        if (item.toLowerCase().includes(query)) return true
+        // also match any raw fields the column opted into (e.g. election_id)
+        return (col.searchKeys ?? []).some(key =>
+          String(row['raw']?.[key] ?? '').toLowerCase().includes(query))
       }
       if (col.filterType === 'groups') {
         return filters[colInd][row[col.id]]
