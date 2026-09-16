@@ -11,7 +11,7 @@ const LandingPageSupport = () => {
             clip: 'unset',
             width: '100%',
             p: { xs: 2},
-            mb: '2rem', // matching the gap from the root flex box
+            mb: '0rem', // matching the gap from the root flex box
         }}>
             <Box sx={{
                 width: '100%',

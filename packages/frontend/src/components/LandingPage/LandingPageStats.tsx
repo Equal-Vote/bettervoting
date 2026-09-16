@@ -12,6 +12,7 @@ import { io } from 'socket.io-client';
 
 // https://stackoverflow.com/questions/25778414/what-port-does-the-socketio-client-listen-to-by-default
 // https://stackoverflow.com/questions/69450485/receiving-error-xhr-poll-error-socket-io-client-react
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const socket = io(process.env.REACT_APP_BACKEND_URL, {
     transports: ['websocket']
 });
@@ -25,6 +26,7 @@ const LandingPageStats = () => {
 
     const containerRef = useRef(null);
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [visible, setVisible] = useState(false)
 
     //useEffect(() => {
