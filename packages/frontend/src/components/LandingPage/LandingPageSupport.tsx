@@ -24,14 +24,14 @@ const LandingPageSupport = () => {
             }}>
                 <Typography variant='h6' sx={{textAlign: {xs: 'center', md: 'left'}}}>Help support the project!</Typography>
                 {/*I just copied styled button but removed the full width*/ }
+                <PrimaryButton href='https://equal.vote/donate'>
+                    Donate
+                </PrimaryButton>
                 <PrimaryButton href='/volunteer'>
                     Volunteer
                 </PrimaryButton>
                 <PrimaryButton href='https://bettervoting.myspreadshop.com'>
                     Merch
-                </PrimaryButton>
-                <PrimaryButton href='https://equal.vote/donate'>
-                    Donate
                 </PrimaryButton>
             </Box>
         </Box>
