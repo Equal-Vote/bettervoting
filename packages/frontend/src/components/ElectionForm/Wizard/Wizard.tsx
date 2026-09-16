@@ -53,7 +53,7 @@ export const makeDefaultElection = () => {
             random_candidate_order: true,
             require_instruction_confirmation: false,
             draggable_ballot: false,
-            term_type: undefined,
+            term_type: 'election',
         }
     } as NewElection
 };
@@ -108,7 +108,7 @@ const Wizard = () => {
     const navigate = useNavigate()
     const { makeRequest: postElection } = usePostElection()
     const [election, setElection] = useState<NewElection>(makeDefaultElection())
-    const [multiRace, setMultiRace] = useState(undefined);
+    const [multiRace, setMultiRace] = useState(false);
 
     const confirm = useConfirm();
 

@@ -508,8 +508,6 @@ landing_page:
       text: Allow voters to vote on one issue with multiple methods to compare the voter experience and winners; Just duplicate your race and select different methods. 
     - title: Educational Resources
       text: Find everything you need to learn about voting methods and choose the best option for you.
-    - title: Open Source
-      text: This project is shared [open source](https://github.com/Equal-Vote/bettervoting/) under a AGPL-3.0 license. Run your elections via BetterVoting or self host on your own server.
 
   # Featured Elections Section
   featured_elections:

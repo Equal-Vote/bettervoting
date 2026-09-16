@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import Box from '@mui/material/Box';
 import LandingPageFeatures from './LandingPage/LandingPageFeatures';
-import LandingPageSignUpBar from './LandingPage/LandingPageSignUpBar';
 import LandingPageTestimonials from './LandingPage/LandingPageTestimonials';
 import { Typography } from '@mui/material';
 import LandingPagePricing from './LandingPage/LandingPagePricing';
@@ -13,6 +12,8 @@ import LandingPageSupport from './LandingPage/LandingPageSupport';
 import LandingPageCarousel from './LandingPage/LandingPageCarousel';
 import LandingPageFeaturedElections from './LandingPage/LandingPageFeaturedElections';
 import LandingPageOtherTools from './LandingPage/LandingPageOtherTools';
+import LandingPageOpenSource from './LandingPage/LandingPageOpenSource';
+import LandingPageStats from './LandingPage/LandingPageStats';
 
 const LandingPage = () => {
 
@@ -83,16 +84,15 @@ const LandingPage = () => {
                 <Typography variant="h4" sx={{ color: 'lightShade.contrastText' }}> {t('landing_page.hero.title')} </Typography>
                 <LandingPageCarousel />
                 <Typography component="p" sx={{margin: 'auto', width: '80%', textAlign: 'center', mt: 4}}>
-                    <i>&ldquot;BetterVoting is your one-stop, open-source tool for handling all your election needs. Whether it&apos;s informal polls or highly secure elections, electronic or paper ballots, single-seat or multi-seat, we&apos;ve got you covered!&rdquot; <span className="nobr">- The BetterVoting Team</span></i>
+                    <i>&ldquo;BetterVoting is your one-stop, open-source tool for handling all your election needs. Whether it&apos;s informal polls or highly secure elections, electronic or paper ballots, single-seat or multi-seat, we&apos;ve got you covered!&rdquo; <span className="nobr">- The BetterVoting Team</span></i>
                 </Typography>
             </Box>
-            {/*<LandingPageStats/> temporarily disabling, https://github.com/Equal-Vote/bettervoting/issues/1294*/}
-            {/* putting the anchor on the Wizard component scrolls too far */}
+            <LandingPageStats/>
             <div id='wizard'></div>
             <Wizard/>
             {featuredElectionIds.length > 0 && <LandingPageFeaturedElections electionIds={featuredElectionIds}/>}
             <LandingPageFeatures/>
-            <LandingPageSignUpBar />
+            <LandingPageOpenSource/>
             {flags.isSet('ELECTION_TESTIMONIALS') && <LandingPageTestimonials/>}
             <LandingPagePricing />
             <LandingPageSupport />

@@ -151,6 +151,11 @@ const Header = () => {
             text: 'Support Us',
             items: [
                 {
+                    text: 'Donate',
+                    href: 'https://equal.vote/donate',
+                    target: '_self',
+                },
+                {
                     text: 'Volunteer',
                     href: '/volunteer',
                     target: '_self',
@@ -158,11 +163,6 @@ const Header = () => {
                 {
                     text: 'Merch',
                     href: 'https://bettervoting.myspreadshop.com',
-                    target: '_self',
-                },
-                {
-                    text: 'Donate',
-                    href: 'https://equal.vote/donate',
                     target: '_self',
                 },
             ]
