@@ -3,13 +3,11 @@ import Logger from '../../Services/Logging/Logger';
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { expectPermission, expectUpdateDate } from "../controllerUtils";
 import { BadRequest } from "@curveball/http-errors";
-import { ElectionRoll } from '@equal-vote/star-vote-shared/domain_model/ElectionRoll';
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
 import { innerDeleteAllBallotsForElectionID } from '../Ballot';
 
 var ElectionsModel = ServiceLocator.electionsDb();
-var ElectionRollModel = ServiceLocator.electionRollDb();
 
 const className = "election.Controllers";
 
@@ -23,16 +21,12 @@ const finalizeElection = async (req: IElectionRequest, res: Response, next: Next
         throw new BadRequest(msg)
     }
 
-    const electionId = req.election.election_id;
-    let electionRoll: ElectionRoll[] | null = null
-    if (req.election.settings.voter_access === 'closed' && req.election.settings.invitation === 'email') {
-        electionRoll = await ElectionRollModel.getRollsByElectionID(electionId, req);
-        if (!electionRoll) {
-            const msg = `Election roll for ${electionId} not found`;
-            Logger.info(req, msg);
-            throw new BadRequest(msg)
-        }
-    }
+    // NOTE: this used to fetch the entire election roll here and null-check it. The
+    // result was never read, and getRollsByElectionID resolves to [] rather than null
+    // for an empty roll, so the guard could never fire -- it was a full-table read that
+    // did nothing. If the intent was "don't finalize an email election with no voters",
+    // that wants an explicit count(*) check and is a deliberate behaviour change, so
+    // it's left out here rather than smuggled in.
 
     var failMsg = "Failed to update Election";
     // Use a finalized copy for the OC-protected update; leave req.election in draft state
