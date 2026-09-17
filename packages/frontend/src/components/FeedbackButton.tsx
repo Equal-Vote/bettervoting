@@ -10,7 +10,7 @@ import { openFeedback, useSubstitutedTranslation } from './util';
 //   border-radius  30px 8px 30px 30px   (asymmetric -- square-ish top right)
 //   padding        8px
 //   box-shadow     0 2px 8px rgba(0,0,0,0.2)
-//   font-size      0.875rem
+//   font-size      0.875rem, weight 600
 //   icon           16x16, white, left of the label
 //   offsets        30px from right and bottom  (widget config 63000001746)
 //
@@ -39,6 +39,7 @@ const FeedbackButton = () => {
                 backgroundColor: 'var(--brand-pop)',
                 color: '#ffffff',
                 fontSize: '0.875rem',
+                fontWeight: 600,
                 lineHeight: 1.4,
                 boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
                 '&:hover': { backgroundColor: 'var(--brand-pop)', filter: 'brightness(0.94)' },
