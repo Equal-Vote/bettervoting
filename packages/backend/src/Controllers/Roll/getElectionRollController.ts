@@ -119,37 +119,17 @@ const getRollsByElectionID = async (req: IElectionRequest, res: Response, next: 
         throw new BadRequest(msg)
     }
 
-    // Fetch email events for this election (best-effort, don't fail if table doesn't exist)
-    let emailEventsByVoter: Record<string, { event_type: string; event_timestamp: string; details?: Record<string, unknown> }[]> = {};
-    try {
-        const allEvents = await EmailEventsModel.getByElectionId(electionId, req);
-        for (const event of allEvents) {
-            if (!emailEventsByVoter[event.voter_id]) {
-                emailEventsByVoter[event.voter_id] = [];
-            }
-            emailEventsByVoter[event.voter_id].push({
-                event_type: event.event_type,
-                event_timestamp: event.event_timestamp,
-                details: event.details,
-            });
-        }
-    } catch (err: any) {
-        Logger.warn(req, `Could not fetch email events: ${err.message}`);
-    }
-
     // Scrub ballot_id to prevent linking voters to ballots
     const redactVoterIds = req.election.settings.invitation === 'email';
     const scrubbedRoll = electionRoll.map((roll) => {
         const sanitizedHistory = sanitizeHistory(roll.history, roll.voter_id, redactVoterIds);
         const sanitizedEmailData = redactVoterIds ? sanitizeEmailMetadata(roll.email_data, roll.voter_id, redactVoterIds) : roll.email_data;
-        const voterEvents = emailEventsByVoter[roll.voter_id] ?? [];
         const base: Partial<ElectionRollResponse> = {
             ...roll,
             ballot_id: undefined,
             ip_hash: undefined,
             history: sanitizedHistory,
             email_data: sanitizedEmailData,
-            email_events: voterEvents,
         };
         if (redactVoterIds) {
             delete base.voter_id;
@@ -187,7 +167,35 @@ const getByVoterID = async (req: IElectionRequest, res: Response, next: NextFunc
     res.json({ electionRollEntry: scrubbedEntry })
 }
 
+// Email delivery events for one voter, looked up by email. The voter list no longer
+// carries email_events for every roll: on a large election that was ~9 event objects
+// per voter, all built in memory at once, and it exhausted the heap. The dialog
+// fetches them here for the one voter it is showing instead.
+//
+// Keyed on email rather than voter_id because email-invitation elections redact
+// voter_id from the list -- it is ballot access -- while the admin already sees the
+// email. The response strips voter_id so nothing new is disclosed.
+const getEmailEventsByEmail = async (req: IElectionRequest, res: Response, next: NextFunction) => {
+    Logger.info(req, `${className}.getEmailEventsByEmail ${req.election.election_id}`);
+    expectPermission(req.user_auth.roles, permissions.canViewElectionRoll)
+
+    const email = req.body?.email;
+    if (typeof email !== 'string' || email.trim() === '') {
+        throw new BadRequest('email is required');
+    }
+
+    const events = await EmailEventsModel.getByElectionIdAndEmail(req.election.election_id, email.trim(), req);
+    res.json({
+        email_events: events.map(e => ({
+            event_type: e.event_type,
+            event_timestamp: e.event_timestamp,
+            details: e.details,
+        })),
+    });
+}
+
 export {
     getRollsByElectionID,
+    getEmailEventsByEmail,
     getByVoterID
 }

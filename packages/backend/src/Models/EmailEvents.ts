@@ -53,4 +53,23 @@ export default class EmailEventsDB {
             .executeTakeFirst();
         return result ?? null;
     }
+
+    // Events for a single voter, resolved by email address. The admin voter list
+    // redacts voter_id on email-invitation elections, so the dialog only holds the
+    // email; resolving it here keeps voter_id (which is ballot access) server-side.
+    // Case-insensitive to match how the rest of the roll code compares emails.
+    async getByElectionIdAndEmail(election_id: string, email: string, ctx: ILoggingContext): Promise<EmailEvent[]> {
+        Logger.debug(ctx, `${tableName}.getByElectionIdAndEmail ${election_id}`);
+        return this._postgresClient
+            .selectFrom(tableName)
+            .innerJoin('electionRollDB', (join) => join
+                .onRef('electionRollDB.election_id', '=', `${tableName}.election_id`)
+                .onRef('electionRollDB.voter_id', '=', `${tableName}.voter_id`))
+            .where(`${tableName}.election_id`, '=', election_id)
+            .where('electionRollDB.head', '=', true)
+            .where(({ eb, fn }) => eb(fn('lower', ['electionRollDB.email']), '=', email.toLowerCase()))
+            .selectAll(tableName)
+            .orderBy(`${tableName}.event_timestamp`, 'asc')
+            .execute();
+    }
 }

@@ -1,11 +1,11 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Grid from "@mui/material/Grid";
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { Box, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import PermissionHandler from "../../PermissionHandler";
-import { useApproveRoll, useFlagRoll, useInvalidateRoll, useRevealVoterId, useSendEmails, useUnflagRoll } from "../../../hooks/useAPI";
+import { useApproveRoll, useFlagRoll, useGetEmailEvents, useInvalidateRoll, useRevealVoterId, useSendEmails, useUnflagRoll } from "../../../hooks/useAPI";
 import { getLocalTimeZoneShort } from "../../util";
 import useElection from "../../ElectionContextProvider";
 import useFeatureFlags from "../../FeatureFlagContextProvider";
@@ -32,6 +32,15 @@ const EditElectionRoll = ({ roll, fetchRolls }:Props) => {
     const invalidate = useInvalidateRoll(election.election_id)
     const sendEmails = useSendEmails(election.election_id)
     const revealVoterId = useRevealVoterId(election.election_id)
+    // The voter list no longer carries every voter's email events (it didn't scale);
+    // fetch them for just this voter when the dialog shows.
+    const emailEvents = useGetEmailEvents(election.election_id)
+    useEffect(() => {
+        if (election.settings.invitation === 'email' && roll.email) {
+            emailEvents.makeRequest({ email: roll.email })
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [roll.email])
     const { setSnack } = useSnackbar();
 
     // Reveal flow is required when voter IDs are redacted (email list elections)
@@ -269,8 +278,8 @@ const EditElectionRoll = ({ roll, fetchRolls }:Props) => {
                             </PermissionHandler>
                         </Grid>}
                 </>}
-                {election.settings.invitation === 'email' && roll.email_events &&
-                    <EmailEventsList events={roll.email_events} />
+                {election.settings.invitation === 'email' && emailEvents.data?.email_events &&
+                    <EmailEventsList events={emailEvents.data.email_events} />
                 }
                 {roll?.history &&
                     <TableContainer component={Paper}>

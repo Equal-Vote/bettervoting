@@ -4,6 +4,7 @@ import {
     registerVoter,
     getRollsByElectionID,
     getByVoterID,
+    getEmailEventsByEmail,
     editElectionRoll,
     approveElectionRoll,
     flagElectionRoll,
@@ -121,6 +122,42 @@ rollRouter.get('/Election/:id/rolls', asyncHandler(getRollsByElectionID))
  *         description: Roll not found 
 */
 rollRouter.get('/Election/:id/rolls/:voter_id', asyncHandler(getByVoterID))
+
+/**
+ * @swagger
+ * /Election/{id}/rolls/emailEvents:
+ *   post:
+ *     summary: Email delivery events for one voter, looked up by email
+ *     description: >
+ *       Returns the SendGrid delivery events for a single voter. The voter list does
+ *       not carry events per roll (too large on big elections); the admin dialog calls
+ *       this for the one voter it displays. Keyed on email because email-invitation
+ *       elections redact voter_id from the list.
+ *     tags: [Rolls]
+ *     security:
+ *       - ApiKeyAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Events for the voter, oldest first
+ *       400:
+ *         description: email missing
+ */
+rollRouter.post('/Election/:id/rolls/emailEvents', asyncHandler(getEmailEventsByEmail))
 
 /** 
  * @swagger

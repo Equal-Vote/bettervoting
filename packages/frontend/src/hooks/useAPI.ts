@@ -96,6 +96,11 @@ export const useGetRolls = (electionID: string | undefined) => {
     return useFetch<undefined, { election: Election, electionRoll: ElectionRoll[] }>(`/API/Election/${electionID}/rolls`, 'get')
 }
 
+export const useGetEmailEvents = (election_id: string) => {
+    return useFetch<{ email: string }, { email_events: { event_type: string; event_timestamp: string; details?: Record<string, unknown> }[] }>(
+        `/API/Election/${election_id}/rolls/emailEvents`, 'post')
+}
+
 export const useRevealVoterId = (election_id: string) => {
     return useFetch<{ email: string }, { voter_id: string, email: string, warning: string }>(`/API/Election/${election_id}/rolls/revealVoterId`, 'post')
 }
