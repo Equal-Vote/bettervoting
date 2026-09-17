@@ -20,6 +20,7 @@ import ComposeContextProviders from './components/ComposeContextProviders'
 import './i18n/i18n'
 import UploadElections from './components/UploadElections'
 import Redirect from './components/Redirect'
+import FeedbackButton from './components/FeedbackButton'
 import { FEEDBACK_URL } from './components/util'
 import PublicArchive from './components/Elections/PublicArchive'
 import NameMatchingTester from './components/NameMatchingTester'
@@ -94,6 +95,7 @@ const App = () => {
             </Routes>
           </Box>
           <Footer />
+          <FeedbackButton />
         </Box>
       </ComposeContextProviders>
     </Router>
