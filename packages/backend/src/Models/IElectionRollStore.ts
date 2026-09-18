@@ -15,6 +15,12 @@ export interface IElectionRollStore {
         ctx: ILoggingContext,
         db?: Kysely<Database> | Transaction<Database>
     ) => Promise<ElectionRoll[] | null>;
+    getByElectionIdAndEmail: (
+        election_id: string,
+        email: string,
+        ctx: ILoggingContext,
+        db?: Kysely<Database> | Transaction<Database>
+    ) => Promise<ElectionRoll | null>;
     getByVoterID: (
         election_id: string,
         voter_id: string,

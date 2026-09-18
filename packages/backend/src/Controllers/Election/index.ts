@@ -13,5 +13,6 @@ export * from './sendInvitesController';
 export * from './setOpenStateController';
 export * from './setPublicResultsController';
 export * from './sendEmailController';
+export * from './sendVoterIdController';
 export * from './claimElectionController';
 export * from './setWriteInResultsController'
