@@ -8,12 +8,15 @@ import { QueueName } from "./QueueName";
 export default class PGBossEventQueue implements IEventQueue {
 
     _boss: any;
+    _pgConnection: object | undefined;
+    _pool: any;
 
     constructor() {
     }
 
     public async init(pgConnection: object, ctx: ILoggingContext): Promise<PGBossEventQueue> {
         const PgBoss = require('pg-boss');
+        this._pgConnection = pgConnection;
         this._boss = new PgBoss(pgConnection);
         this._boss.on('error', (error: any) => Logger.error(ctx, error));
 
@@ -42,6 +45,21 @@ export default class PGBossEventQueue implements IEventQueue {
         }))
         const jobs = await this._boss.insert(Jobs);
         return jobs;
+    }
+
+    public async countUnstarted(queue: QueueName, electionId: string): Promise<number> {
+        // pg-boss exposes per-queue totals only; a per-election count needs its own
+        // query. pgboss.job.data is jsonb, so this is an indexed name lookup plus a
+        // filter over that queue's pending rows.
+        if (!this._pool) {
+            const { Pool } = require('pg');
+            this._pool = new Pool(this._pgConnection);
+        }
+        const r = await this._pool.query(
+            `SELECT count(*)::int AS n FROM pgboss.job
+              WHERE name = $1 AND state IN ('created', 'retry') AND data->>'election_id' = $2`,
+            [queue, electionId]);
+        return r.rows[0]?.n ?? 0;
     }
 
     public subscribe(queue: QueueName, handler: EventHandler): void {

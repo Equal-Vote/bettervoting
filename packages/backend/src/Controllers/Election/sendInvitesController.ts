@@ -1,5 +1,5 @@
 import ServiceLocator from '../../ServiceLocator';
-import { emailSendSpacingMs, describeSendPlan } from '../../Services/Email/sendPacing';
+import { emailSendSpacingMs, describeSendPlan, assertNoSendInFlight } from '../../Services/Email/sendPacing';
 import Logger from '../../Services/Logging/Logger';
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { expectPermission } from "../controllerUtils";
@@ -24,6 +24,7 @@ const SendInviteEventQueue = "sendInviteEvent";
 
 export type SendInviteEvent = {
     requestId: Uid,
+    election_id: string, // top-level so the in-flight guard can count jobs per election
     election: Election,
     url: string,
     electionRoll: ElectionRoll,
@@ -61,6 +62,7 @@ const sendInvitationsController = async (req: IElectionRequest, res: Response, n
         throw new BadRequest('All email invites have already been sent')
     }
 
+    await assertNoSendInFlight(await EventQueue, election.election_id);
     await sendBatchEmailInvites(req, electionRollFiltered, election)
 
     res.json({})
@@ -74,6 +76,7 @@ async function sendBatchEmailInvites(req: any, electionRoll: ElectionRoll[], ele
         Jobs.push(
             {
                 requestId: reqId,
+                election_id: election.election_id,
                 election: election,
                 url: url,
                 electionRoll: roll,

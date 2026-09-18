@@ -53,6 +53,10 @@ export class MockEventQueue implements IEventQueue {
         return j;
     }
 
+    public async countUnstarted(queue:QueueName, electionId:string):Promise<number> {
+        return this._pendingJobs.filter(j => j.queue === queue && (j.data as any)?.election_id === electionId).length;
+    }
+
     private async triggerJobs(){
         if (this._working){
             return;

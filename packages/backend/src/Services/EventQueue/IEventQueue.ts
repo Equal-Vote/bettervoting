@@ -30,6 +30,9 @@ export interface IEventQueue {
     subscribe(queue:QueueName, handler:EventHandler):void;
     publish(queue:QueueName, data:object):Promise<string>;
     publishBatch(queue:QueueName, data:object[], opts?:PublishBatchOptions):Promise<object>;
+    // Jobs on `queue` for this election that have not started yet (created or awaiting
+    // retry). Jobs must carry a top-level `election_id` in their data to be counted.
+    countUnstarted(queue:QueueName, electionId:string):Promise<number>;
     clearStorage():Promise<void>;
     debugInfo():Promise<string>;
 };

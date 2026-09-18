@@ -1,5 +1,5 @@
 import ServiceLocator from '../../ServiceLocator';
-import { emailSendSpacingMs, describeSendPlan } from '../../Services/Email/sendPacing';
+import { emailSendSpacingMs, describeSendPlan, assertNoSendInFlight } from '../../Services/Email/sendPacing';
 import Logger from '../../Services/Logging/Logger';
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { expectPermission } from "../controllerUtils";
@@ -131,6 +131,8 @@ const sendEmailsController = async (req: IElectionRequest, res: Response, next: 
                 throw new BadRequest(msg)
             }
         }
+        await assertNoSendInFlight(await EventQueue, req.election.election_id);
+
         // Update email campaign count in election db
         const expected_update_date = election.update_date as string;
         election.settings.email_campaign_count = election.settings.email_campaign_count ? election.settings.email_campaign_count + 1 : 1
