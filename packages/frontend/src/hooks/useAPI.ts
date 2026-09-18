@@ -92,6 +92,16 @@ export const useSendInvite = (election_id: string, voter_id: string | undefined)
     )
 }
 
+// Public. The server answers the same way whether or not the address is on the roll,
+// so the success message must not imply either.
+export const useRequestVoterId = (election_id: string | undefined) => {
+    return useFetch<{ email: string }, object>(
+        `/API/Election/${election_id}/requestVoterId`,
+        'post',
+        "If that address is on the voter list, we've emailed your voter ID. Check your inbox and spam folder.",
+    )
+}
+
 export const useGetRolls = (electionID: string | undefined) => {
     return useFetch<undefined, { election: Election, electionRoll: ElectionRoll[] }>(`/API/Election/${electionID}/rolls`, 'get')
 }

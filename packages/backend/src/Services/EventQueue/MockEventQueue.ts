@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { ILoggingContext } from "../Logging/ILogger";
-import { EventHandler, IEventQueue, JobInsert } from "./IEventQueue";
+import { EventHandler, IEventQueue, JobInsert, PublishOptions } from "./IEventQueue";
 import { QueueName } from "./QueueName";
 
 type Job = {
@@ -17,6 +17,8 @@ export class MockEventQueue implements IEventQueue {
     private _pendingJobs:Array<Job> = [];
     private _working:boolean = false;
     private _paused:boolean = false;
+    // throttleKey -> time slot of the last accepted job, mirroring pg-boss singletonSeconds
+    private _throttleSlots:Map<string, number> = new Map();
 
 
     constructor(){
@@ -29,7 +31,13 @@ export class MockEventQueue implements IEventQueue {
         this._handlers.set(queue, handler);
     }
 
-    public async publish(queue:QueueName, data:object):Promise<string> {
+    public async publish(queue:QueueName, data:object, opts:PublishOptions = {}):Promise<string | null> {
+        if (opts.throttleKey && opts.throttleSeconds) {
+            const slot = Math.floor(Date.now() / (opts.throttleSeconds * 1000));
+            const k = `${queue}:${opts.throttleKey}`;
+            if (this._throttleSlots.get(k) === slot) return null;
+            this._throttleSlots.set(k, slot);
+        }
         var j = {
             queue: queue,
             data: data,
@@ -100,6 +108,7 @@ export class MockEventQueue implements IEventQueue {
 
     public async clearStorage():Promise<void> {
         this._pendingJobs = [];
+        this._throttleSlots.clear();
     }
 
     public async debugInfo():Promise<string> {

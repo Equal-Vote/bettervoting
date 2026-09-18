@@ -1,6 +1,6 @@
 import { ILoggingContext } from "../Logging/ILogger";
 import Logger from "../Logging/Logger";
-import { EventHandler, IEventQueue, JobInsert } from "./IEventQueue";
+import { EventHandler, IEventQueue, JobInsert, PublishOptions } from "./IEventQueue";
 import { QueueName } from "./QueueName";
 
 
@@ -21,8 +21,12 @@ export default class PGBossEventQueue implements IEventQueue {
         return this;
     }
 
-    public async publish(queue: QueueName, data: object): Promise<string> {
-        const job = await this._boss.send(queue, data, { retryLimit: 3, expireInSeconds: 60 });
+    public async publish(queue: QueueName, data: object, opts: PublishOptions = {}): Promise<string | null> {
+        const throttle = opts.throttleKey && opts.throttleSeconds
+            ? { singletonKey: opts.throttleKey, singletonSeconds: opts.throttleSeconds }
+            : {};
+        // pg-boss returns null (no throw) when the singleton slot is already taken.
+        const job = await this._boss.send(queue, data, { retryLimit: 3, expireInSeconds: 60, ...throttle });
         return job;
     }
     

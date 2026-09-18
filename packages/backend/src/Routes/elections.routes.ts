@@ -20,6 +20,7 @@ import {
     getSandboxResults,
     sendInvitationController,
     sendInvitationsController,
+    requestVoterIdController,
     setOpenState,
     setPublicResults,
     sendEmailsController,
@@ -670,6 +671,45 @@ electionsRouter.post('/Election/:id/setOpenState', asyncHandler(setOpenState))
  *       404:
  *         description: Election not found */
 electionsRouter.post('/Election/:id/sendInvites', asyncHandler(sendInvitationsController))
+
+/**
+ * @swagger
+ * /Election/{id}/requestVoterId:
+ *   post:
+ *     summary: Email a voter their voter ID (bv-managed-id elections only)
+ *     description: |
+ *       Public. Queues a transactional, link-free email containing the voter ID
+ *       for this address, if the address is on the election's roll. The response
+ *       is identical whether or not the address is on the roll, and the request
+ *       path performs no roll lookup. At most one email per address per election
+ *       is sent in any five-minute window. Elections that do not use bv-managed
+ *       ids respond 404.
+ *     tags: [Elections]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The election ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Request accepted (says nothing about whether the address is on the roll)
+ *       400:
+ *         description: Malformed email address
+ *       404:
+ *         description: Election not found, or election does not use bv-managed ids
+ */
+electionsRouter.post('/Election/:id/requestVoterId', asyncHandler(requestVoterIdController))
 
 /** 
  * @swagger

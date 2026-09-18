@@ -61,6 +61,22 @@ export default class ElectionRollDB implements IElectionRollStore {
             .execute()
     }
 
+    // Head roll for an email in one election. Case-insensitive so a voter's typed address
+    // matches however the admin entered it. Ordered so a duplicated address is deterministic.
+    getByElectionIdAndEmail(election_id: string, email: string, ctx: ILoggingContext): Promise<ElectionRoll | null> {
+        Logger.debug(ctx, `${tableName}.getByElectionIdAndEmail election:${election_id}`);
+        return this._postgresClient
+            .selectFrom(tableName)
+            .where('election_id', '=', election_id)
+            .where(({ eb, fn }) => eb(fn('lower', ['email']), '=', email.toLowerCase()))
+            .where('head', '=', true)
+            .orderBy('voter_id', 'asc')
+            .selectAll()
+            .executeTakeFirst()
+            .then((row) => row ?? null)
+            .catch(((reason: any) => { Logger.debug(ctx, reason); return null }))
+    }
+
     getByVoterID(election_id: string, voter_id: string, ctx: ILoggingContext): Promise<ElectionRoll | null> {
         Logger.debug(ctx, `${tableName}.getByVoterID election:${election_id}, voter:${logSafeHash(voter_id)}`);
 
