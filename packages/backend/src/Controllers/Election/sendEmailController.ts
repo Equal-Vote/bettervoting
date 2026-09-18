@@ -1,4 +1,5 @@
 import ServiceLocator from '../../ServiceLocator';
+import { emailSendSpacingMs, describeSendPlan } from '../../Services/Email/sendPacing';
 import Logger from '../../Services/Logging/Logger';
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { expectPermission } from "../controllerUtils";
@@ -157,8 +158,9 @@ const sendEmailsController = async (req: IElectionRequest, res: Response, next: 
     })
 
     var failMsg = "Failed to send invitations";
+    Logger.info(req, `${className}.sendEmails enqueuing ${describeSendPlan(Jobs.length)}`);
     try {
-        await (await EventQueue).publishBatch(SendEmailEventQueue, Jobs);
+        await (await EventQueue).publishBatch(SendEmailEventQueue, Jobs, { spacingMs: emailSendSpacingMs() });
     } catch (err: any) {
         const msg = `Could not send invitations`;
         Logger.error(req, `${msg}: ${err.message}`);

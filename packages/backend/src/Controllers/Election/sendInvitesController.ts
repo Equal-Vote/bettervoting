@@ -1,4 +1,5 @@
 import ServiceLocator from '../../ServiceLocator';
+import { emailSendSpacingMs, describeSendPlan } from '../../Services/Email/sendPacing';
 import Logger from '../../Services/Logging/Logger';
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { expectPermission } from "../controllerUtils";
@@ -82,9 +83,9 @@ async function sendBatchEmailInvites(req: any, electionRoll: ElectionRoll[], ele
     })
 
     var failMsg = "Failed to send invitations";
-    Logger.info(req, `${className}.sendInvitations`, { election_id: election.election_id });
+    Logger.info(req, `${className}.sendInvitations enqueuing ${describeSendPlan(Jobs.length)}`, { election_id: election.election_id });
     try {
-        await (await EventQueue).publishBatch(SendInviteEventQueue, Jobs);
+        await (await EventQueue).publishBatch(SendInviteEventQueue, Jobs, { spacingMs: emailSendSpacingMs() });
     } catch (err: any) {
         const msg = `Could not send invitations`;
         Logger.error(req, `${msg}: ${err.message}`);
