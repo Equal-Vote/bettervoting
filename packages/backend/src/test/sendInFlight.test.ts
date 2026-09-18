@@ -39,6 +39,10 @@ describe("Send in-flight guard", () => {
         q.pause();
         const r = await send();
         expect(r.statusCode).toBe(200);
+        // the response is a plan, not a confirmation: nothing has been sent yet
+        expect(r.body.queued).toBe(testInputs.EmailRoll.length);
+        expect(r.body.ratePerMinute).toBeGreaterThan(0);
+        expect(r.body.etaMinutes).toBeGreaterThanOrEqual(0);
         th.testComplete();
     });
 

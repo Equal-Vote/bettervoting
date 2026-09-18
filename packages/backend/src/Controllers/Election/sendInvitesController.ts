@@ -1,5 +1,5 @@
 import ServiceLocator from '../../ServiceLocator';
-import { emailSendSpacingMs, describeSendPlan, assertNoSendInFlight } from '../../Services/Email/sendPacing';
+import { emailSendSpacingMs, describeSendPlan, assertNoSendInFlight, sendPlan } from '../../Services/Email/sendPacing';
 import Logger from '../../Services/Logging/Logger';
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { expectPermission } from "../controllerUtils";
@@ -63,12 +63,12 @@ const sendInvitationsController = async (req: IElectionRequest, res: Response, n
     }
 
     await assertNoSendInFlight(await EventQueue, election.election_id);
-    await sendBatchEmailInvites(req, electionRollFiltered, election)
+    const plan = await sendBatchEmailInvites(req, electionRollFiltered, election)
 
-    res.json({})
+    res.json(plan)
 }
 
-async function sendBatchEmailInvites(req: any, electionRoll: ElectionRoll[], election: Election) {
+async function sendBatchEmailInvites(req: any, electionRoll: ElectionRoll[], election: Election): Promise<ReturnType<typeof sendPlan>> {
     const Jobs: SendInviteEvent[] = []
     const reqId = req.contextId ? req.contextId : randomUUID();
     const url = ServiceLocator.globalData().mainUrl;
@@ -94,6 +94,7 @@ async function sendBatchEmailInvites(req: any, electionRoll: ElectionRoll[], ele
         Logger.error(req, `${msg}: ${err.message}`);
         throw new InternalServerError(failMsg)
     }
+    return sendPlan(Jobs.length)
 }
 
 const sendInvitationController = async (req: any, res: any, next: any) => {

@@ -1,5 +1,5 @@
 import ServiceLocator from '../../ServiceLocator';
-import { emailSendSpacingMs, describeSendPlan, assertNoSendInFlight } from '../../Services/Email/sendPacing';
+import { emailSendSpacingMs, describeSendPlan, assertNoSendInFlight, sendPlan } from '../../Services/Email/sendPacing';
 import Logger from '../../Services/Logging/Logger';
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { expectPermission } from "../controllerUtils";
@@ -169,7 +169,7 @@ const sendEmailsController = async (req: IElectionRequest, res: Response, next: 
         throw new InternalServerError(failMsg)
     }
 
-    res.json({})
+    res.json(sendPlan(Jobs.length))
 }
 
 async function handleSendEmailEvent(job: { id: string; data: email_request_event; }): Promise<void> {

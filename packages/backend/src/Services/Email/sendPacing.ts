@@ -24,6 +24,13 @@ export function emailSendSpacingMs(): number {
     return 60_000 / emailSendRatePerMinute();
 }
 
+// Returned to the caller so the UI can say what actually happened: nothing has
+// been *sent* when the request returns -- it has been scheduled.
+export function sendPlan(count: number): { queued: number; ratePerMinute: number; etaMinutes: number } {
+    const rate = emailSendRatePerMinute();
+    return { queued: count, ratePerMinute: rate, etaMinutes: Math.round((count / rate) * 10) / 10 };
+}
+
 // For logging the plan when a batch is enqueued.
 export function describeSendPlan(count: number): string {
     const rate = emailSendRatePerMinute();
