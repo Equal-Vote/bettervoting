@@ -5,7 +5,7 @@ import Container from '@mui/material/Container';
 import { Box, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import PermissionHandler from "../../PermissionHandler";
-import { useApproveRoll, useFlagRoll, useGetEmailEvents, useInvalidateRoll, useRevealVoterId, useSendEmails, useUnflagRoll } from "../../../hooks/useAPI";
+import { useApproveRoll, useFlagRoll, useLookupVoter, useInvalidateRoll, useRevealVoterId, useSendEmails, useUnflagRoll } from "../../../hooks/useAPI";
 import { getLocalTimeZoneShort } from "../../util";
 import useElection from "../../ElectionContextProvider";
 import useFeatureFlags from "../../FeatureFlagContextProvider";
@@ -32,15 +32,15 @@ const EditElectionRoll = ({ roll, fetchRolls }:Props) => {
     const invalidate = useInvalidateRoll(election.election_id)
     const sendEmails = useSendEmails(election.election_id)
     const revealVoterId = useRevealVoterId(election.election_id)
-    // The voter list no longer carries every voter's email events (it didn't scale);
-    // fetch them for just this voter when the dialog shows.
-    const emailEvents = useGetEmailEvents(election.election_id)
+    // The voter list no longer carries every voter's email events (it didn't scale).
+    // Look this one voter up when the dialog shows, by whichever id we hold: the
+    // list redacts voter_id on email-invitation elections, so there we use email.
+    const lookup = useLookupVoter(election.election_id)
     useEffect(() => {
-        if (election.settings.invitation === 'email' && roll.email) {
-            emailEvents.makeRequest({ email: roll.email })
-        }
+        if (roll.voter_id) lookup.makeRequest({ voter_id: roll.voter_id })
+        else if (roll.email) lookup.makeRequest({ email: roll.email })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [roll.email])
+    }, [roll.voter_id, roll.email])
     const { setSnack } = useSnackbar();
 
     // Reveal flow is required when voter IDs are redacted (email list elections)
@@ -278,8 +278,8 @@ const EditElectionRoll = ({ roll, fetchRolls }:Props) => {
                             </PermissionHandler>
                         </Grid>}
                 </>}
-                {election.settings.invitation === 'email' && emailEvents.data?.email_events &&
-                    <EmailEventsList events={emailEvents.data.email_events} />
+                {election.settings.invitation === 'email' && lookup.data?.electionRollEntry?.email_events &&
+                    <EmailEventsList events={lookup.data.electionRollEntry.email_events} />
                 }
                 {roll?.history &&
                     <TableContainer component={Paper}>

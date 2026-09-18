@@ -4,7 +4,7 @@ import {
     registerVoter,
     getRollsByElectionID,
     getByVoterID,
-    getEmailEventsByEmail,
+    lookupVoter,
     editElectionRoll,
     approveElectionRoll,
     flagElectionRoll,
@@ -125,14 +125,15 @@ rollRouter.get('/Election/:id/rolls/:voter_id', asyncHandler(getByVoterID))
 
 /**
  * @swagger
- * /Election/{id}/rolls/emailEvents:
+ * /Election/{id}/rolls/lookup:
  *   post:
- *     summary: Email delivery events for one voter, looked up by email
+ *     summary: Everything about one voter, by voter_id or email
  *     description: >
- *       Returns the SendGrid delivery events for a single voter. The voter list does
- *       not carry events per roll (too large on big elections); the admin dialog calls
- *       this for the one voter it displays. Keyed on email because email-invitation
- *       elections redact voter_id from the list.
+ *       Returns the sanitized roll entry (history, invite marker) plus the voter's
+ *       email delivery events. Accepts either voter_id or email: email-invitation
+ *       elections redact voter_id from the voter list, so callers there only hold
+ *       the email. Email matching is case-insensitive. The voter list itself does
+ *       not carry per-voter email events (too large on big elections); use this.
  *     tags: [Rolls]
  *     security:
  *       - ApiKeyAuth: []
@@ -149,15 +150,17 @@ rollRouter.get('/Election/:id/rolls/:voter_id', asyncHandler(getByVoterID))
  *           schema:
  *             type: object
  *             properties:
+ *               voter_id:
+ *                 type: string
  *               email:
  *                 type: string
  *     responses:
  *       200:
- *         description: Events for the voter, oldest first
+ *         description: The voter's roll entry with email_events attached
  *       400:
- *         description: email missing
+ *         description: Neither identifier supplied, or voter not found
  */
-rollRouter.post('/Election/:id/rolls/emailEvents', asyncHandler(getEmailEventsByEmail))
+rollRouter.post('/Election/:id/rolls/lookup', asyncHandler(lookupVoter))
 
 /** 
  * @swagger

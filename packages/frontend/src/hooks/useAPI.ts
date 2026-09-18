@@ -1,6 +1,6 @@
 import { Election, NewElection } from "@equal-vote/star-vote-shared/domain_model/Election";
 import { VoterAuth } from '@equal-vote/star-vote-shared/domain_model/VoterAuth';
-import { ElectionRoll } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll";
+import { ElectionRoll, ElectionRollResponse } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll";
 import useFetch from "./useFetch";
 import { VotingMethod } from "@equal-vote/star-vote-shared/domain_model/Race";
 import { ElectionResults } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
@@ -96,9 +96,9 @@ export const useGetRolls = (electionID: string | undefined) => {
     return useFetch<undefined, { election: Election, electionRoll: ElectionRoll[] }>(`/API/Election/${electionID}/rolls`, 'get')
 }
 
-export const useGetEmailEvents = (election_id: string) => {
-    return useFetch<{ email: string }, { email_events: { event_type: string; event_timestamp: string; details?: Record<string, unknown> }[] }>(
-        `/API/Election/${election_id}/rolls/emailEvents`, 'post')
+export const useLookupVoter = (election_id: string) => {
+    return useFetch<{ voter_id?: string, email?: string }, { electionRollEntry: ElectionRollResponse }>(
+        `/API/Election/${election_id}/rolls/lookup`, 'post')
 }
 
 export const useRevealVoterId = (election_id: string) => {

@@ -54,22 +54,15 @@ export default class EmailEventsDB {
         return result ?? null;
     }
 
-    // Events for a single voter, resolved by email address. The admin voter list
-    // redacts voter_id on email-invitation elections, so the dialog only holds the
-    // email; resolving it here keeps voter_id (which is ballot access) server-side.
-    // Case-insensitive to match how the rest of the roll code compares emails.
-    async getByElectionIdAndEmail(election_id: string, email: string, ctx: ILoggingContext): Promise<EmailEvent[]> {
-        Logger.debug(ctx, `${tableName}.getByElectionIdAndEmail ${election_id}`);
+    // Full event history for one voter -- the per-voter lookup, not the list.
+    async getByElectionIdAndVoterId(election_id: string, voter_id: string, ctx: ILoggingContext): Promise<EmailEvent[]> {
+        Logger.debug(ctx, `${tableName}.getByElectionIdAndVoterId ${election_id}`);
         return this._postgresClient
             .selectFrom(tableName)
-            .innerJoin('electionRollDB', (join) => join
-                .onRef('electionRollDB.election_id', '=', `${tableName}.election_id`)
-                .onRef('electionRollDB.voter_id', '=', `${tableName}.voter_id`))
-            .where(`${tableName}.election_id`, '=', election_id)
-            .where('electionRollDB.head', '=', true)
-            .where(({ eb, fn }) => eb(fn('lower', ['electionRollDB.email']), '=', email.toLowerCase()))
-            .selectAll(tableName)
-            .orderBy(`${tableName}.event_timestamp`, 'asc')
+            .where('election_id', '=', election_id)
+            .where('voter_id', '=', voter_id)
+            .selectAll()
+            .orderBy('event_timestamp', 'asc')
             .execute();
     }
 }
