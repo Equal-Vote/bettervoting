@@ -12,7 +12,7 @@
     "prepare": "husky || true # https://typicode.github.io/husky/how-to.html#ci-server-and-docker",
     "clean": "npx rimraf node_modules",
     "clean:ws": "npm run clean -ws && npm run clean",
-    "test": "cd packages/backend && npm install && npm test",
+    "test": "npm test -ws --if-present",
     "makedevelections": "tsx ./packages/backend/src/DevElections/makeDevElections.ts",
     "start": "./replace.sh && node ./packages/backend/build/src/Migrators/migrate-to-latest.js && node ./packages/backend/build/src/index.js",
     "heroku-postbuild": "cd packages/frontend && npm install && npm run build && cd ../backend && npm install && npm run-script build",
