@@ -163,23 +163,23 @@ const EditElectionRoll = ({ roll, fetchRolls }:Props) => {
                     </Typography>
                 </Grid>
 
-                {election.settings.invitation === 'email' && roll.email &&
+                {roll.email &&
                     <>
-                        {roll && !(roll.email_data && roll.email_data.inviteResponse) &&
+                        {requiresRevealFlow && roll && !(roll.email_data && roll.email_data.inviteResponse) &&
                             <Grid size={{ sm: 12 }}>
                                 <Typography align='left' gutterBottom variant="h6" component="h6">
                                     {`Email invite status: Invite not sent`}
                                 </Typography>
                             </Grid>
                         }
-                        {roll && (roll.email_data && roll.email_data.inviteResponse) && (roll.email_data.inviteResponse.length > 0 && roll.email_data.inviteResponse[0].statusCode < 400) &&
+                        {requiresRevealFlow && roll && (roll.email_data && roll.email_data.inviteResponse) && (roll.email_data.inviteResponse.length > 0 && roll.email_data.inviteResponse[0].statusCode < 400) &&
                             <Grid size={{ sm: 12 }}>
                                 <Typography align='left' gutterBottom variant="h6" component="h6">
                                     {`Email invite status: Success`}
                                 </Typography>
                             </Grid>
                         }
-                        {roll && (roll.email_data && roll.email_data.inviteResponse) && !(roll.email_data.inviteResponse.length > 0 && roll.email_data.inviteResponse[0].statusCode < 400) &&
+                        {requiresRevealFlow && roll && (roll.email_data && roll.email_data.inviteResponse) && !(roll.email_data.inviteResponse.length > 0 && roll.email_data.inviteResponse[0].statusCode < 400) &&
                             <Grid size={{ sm: 12 }}>
                                 <Typography align='left' gutterBottom variant="h6" component="h6">
                                     {`Email invite status: Failed`}
@@ -269,7 +269,7 @@ const EditElectionRoll = ({ roll, fetchRolls }:Props) => {
                             </PermissionHandler>
                         </Grid>}
                 </>}
-                {election.settings.invitation === 'email' && roll.email_events &&
+                {roll.email_events &&
                     <EmailEventsList events={roll.email_events} />
                 }
                 {roll?.history &&
