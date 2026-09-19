@@ -21,13 +21,6 @@ const finalizeElection = async (req: IElectionRequest, res: Response, next: Next
         throw new BadRequest(msg)
     }
 
-    // NOTE: this used to fetch the entire election roll here and null-check it. The
-    // result was never read, and getRollsByElectionID resolves to [] rather than null
-    // for an empty roll, so the guard could never fire -- it was a full-table read that
-    // did nothing. If the intent was "don't finalize an email election with no voters",
-    // that wants an explicit count(*) check and is a deliberate behaviour change, so
-    // it's left out here rather than smuggled in.
-
     var failMsg = "Failed to update Election";
     // Use a finalized copy for the OC-protected update; leave req.election in draft state
     // so the subsequent ballot-deletion's draft-state guard still passes.
