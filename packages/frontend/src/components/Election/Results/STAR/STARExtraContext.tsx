@@ -1,10 +1,12 @@
 import { starResults } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
 import { Paper, Typography } from "@mui/material";
-import { useTranslation } from "react-i18next";
+import { useSubstitutedTranslation } from "~/components/util";
 
 
 const STARExtraContext = ({ results, roundIndex }: {results: starResults, roundIndex: number}) => {
-    const { t } = useTranslation();
+    // useSubstitutedTranslation, not the bare react-i18next hook: it is what
+    // turns [text](url) in the locale file into an actual link.
+    const { t } = useSubstitutedTranslation();
     const width = 'auto';
     const winner = results.roundResults[roundIndex].winners[0];
     const runnerUp = results.roundResults[roundIndex].runner_up[0];
