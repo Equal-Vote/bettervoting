@@ -1,8 +1,8 @@
 import React, { useContext, useMemo, useState } from 'react';
-import { Box, Paper, Typography, FormGroup, FormControlLabel, Checkbox } from '@mui/material';
+import { Alert, Box, Paper, Typography, FormGroup, FormControlLabel, Checkbox } from '@mui/material';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { BallotContext } from './VotePage';
-import { useSubstitutedTranslation } from '~/components/util';
+import { getMaxRankings, useSubstitutedTranslation } from '~/components/util';
 import useElection from '../../ElectionContextProvider';
 import { BallotCandidate } from './VotePage';
 import { FormattedDescription } from '~/components/FormattedDescription';
@@ -56,6 +56,20 @@ export default function DraggableIRVBallotView() {
 
   const rankedIds = useMemo(() => rankedCandidates.map(c => c.candidate_id.toString()), [rankedCandidates]);
 
+  // The ranking limit the server validates against (shared/src/domain_model/Ballot.ts
+  // rejects scores above max_rankings) — resolved exactly like the classic ranked
+  // ballot resolves its number of rank columns, and never more than the number of
+  // candidates on this ballot.
+  const maxRankings = useMemo(
+    () => Math.min(getMaxRankings(ballotContext.maxRankings), ballotContext.candidates.length),
+    [ballotContext.maxRankings, ballotContext.candidates.length]
+  );
+
+  // Set when a drop was refused because the ranking limit was reached; the alert
+  // hides itself again once the voter removes a candidate from their rankings.
+  const [limitHit, setLimitHit] = useState(false);
+  const showLimitAlert = limitHit && rankedCandidates.length >= maxRankings;
+
   // Track display order of unranked candidates independently so reordering is preserved
   const [unrankedOrder, setUnrankedOrder] = useState<string[]>(() =>
     ballotContext.candidates
@@ -82,6 +96,15 @@ export default function DraggableIRVBallotView() {
     const from = source.droppableId;
     const to = destination.droppableId;
     const id = draggableId;
+
+    // Refuse a drop that would rank more candidates than the election allows —
+    // the server would reject the ballot (Ballot.ts caps scores at max_rankings).
+    // Reordering within the ranked list stays allowed.
+    if (to === 'ranked' && from !== 'ranked' && rankedIds.length >= maxRankings) {
+      setLimitHit(true);
+      return;
+    }
+    setLimitHit(false);
 
     // update unranked order
     setUnrankedOrder(prev => {
@@ -224,6 +247,9 @@ export default function DraggableIRVBallotView() {
           <Box sx={{ minWidth: 0 }}>
             <Typography variant="h6" gutterBottom>
               {t('ballot.yourRankings', 'Your Rankings')}
+              <Typography component="span" variant="body2" sx={{ color: 'text.secondary', ml: 1 }}>
+                {t('ballot.rankings_used', { n: rankedCandidates.length, max: maxRankings })}
+              </Typography>
             </Typography>
             <Droppable droppableId="ranked">
               {(provided, snapshot) => (
@@ -292,6 +318,11 @@ export default function DraggableIRVBallotView() {
                 </Paper>
               )}
             </Droppable>
+            {showLimitAlert && (
+              <Alert severity="warning" sx={{ mt: 1 }}>
+                {t('ballot.max_rankings_reached', { max: maxRankings })}
+              </Alert>
+            )}
           </Box>
         </Box>
       </Box>
