@@ -165,30 +165,6 @@ const EditElectionRoll = ({ roll, fetchRolls }:Props) => {
 
                 {roll.email &&
                     <>
-                        {requiresRevealFlow && roll && !(roll.email_data && roll.email_data.inviteResponse) &&
-                            <Grid size={{ sm: 12 }}>
-                                <Typography align='left' gutterBottom variant="h6" component="h6">
-                                    {`Email invite status: Invite not sent`}
-                                </Typography>
-                            </Grid>
-                        }
-                        {requiresRevealFlow && roll && (roll.email_data && roll.email_data.inviteResponse) && (roll.email_data.inviteResponse.length > 0 && roll.email_data.inviteResponse[0].statusCode < 400) &&
-                            <Grid size={{ sm: 12 }}>
-                                <Typography align='left' gutterBottom variant="h6" component="h6">
-                                    {`Email invite status: Success`}
-                                </Typography>
-                            </Grid>
-                        }
-                        {requiresRevealFlow && roll && (roll.email_data && roll.email_data.inviteResponse) && !(roll.email_data.inviteResponse.length > 0 && roll.email_data.inviteResponse[0].statusCode < 400) &&
-                            <Grid size={{ sm: 12 }}>
-                                <Typography align='left' gutterBottom variant="h6" component="h6">
-                                    {`Email invite status: Failed`}
-                                </Typography>
-                                <Typography align='left' gutterBottom component="p">
-                                    {`Debug Info: ${JSON.stringify(roll.email_data.inviteResponse)}`}
-                                </Typography>
-                            </Grid>
-                        }
                         <Grid size={{ sm: 4 }} sx={{py:1}}>
                             <PermissionHandler permissions={permissions} requiredPermission={'canSendEmails'}>
                                 <SecondaryButton onClick={() => { setDialogOpen(true) }} > Draft Email </SecondaryButton>
