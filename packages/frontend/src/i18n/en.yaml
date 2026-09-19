@@ -233,6 +233,7 @@ results:
   election_title: |
     {{capital_election}} Name:
     {{title}}
+  created_date: '{{capital_election}} created {{listed_datetime, datetime}}'
   race_title: '{{capital_race}} {{n}}: {{title}}'
   single_candidate_result: '{{name}} is the only {{candidate}}, and wins by default'
   loading_election: Loading {{capital_election}}...
