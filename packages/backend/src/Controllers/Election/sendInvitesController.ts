@@ -131,22 +131,28 @@ async function handleSendInviteEvent(job: { id: string; data: SendInviteEvent; }
     await sendInvitation(ctx, event.election, electionRoll, event.sender, event.url)
 }
 
-async function sendInvitation(ctx: any, election:Election, electionRoll: ElectionRoll, sender: string, url: string) {
-    const invites = Invites(election, [electionRoll], url)
-    const emailResponse = await EmailService.sendEmails(invites)
+// Records an email-send response onto the roll's email_data.inviteResponse — the field the
+// admin UI reads to render the per-voter "Email invite status" (EnhancedTable's invite_status
+// column and EditElectionRoll). Shared by the legacy sendInvite(s) endpoints and the
+// email-blast path (sendEmailController) so both report status the same way.
+// Returns whether the send succeeded (statusCode < 400).
+export function recordInviteResponse(electionRoll: ElectionRoll, emailResponse: any): boolean {
     if (!electionRoll.email_data) {
         electionRoll.email_data = {}
     }
     //Should have an array of one response in which case grab the first, but could have an error message
-    let emailSuccess = false
-    if (emailResponse.length > 0) {
+    if (emailResponse && emailResponse.length > 0) {
         electionRoll.email_data.inviteResponse = emailResponse[0]
-        if (emailResponse[0][0].statusCode < 400) {
-            emailSuccess = true
-        }
-    } else {
-        electionRoll.email_data.inviteResponse = emailResponse
+        return emailResponse[0][0].statusCode < 400
     }
+    electionRoll.email_data.inviteResponse = emailResponse
+    return false
+}
+
+async function sendInvitation(ctx: any, election:Election, electionRoll: ElectionRoll, sender: string, url: string) {
+    const invites = Invites(election, [electionRoll], url)
+    const emailResponse = await EmailService.sendEmails(invites)
+    const emailSuccess = recordInviteResponse(electionRoll, emailResponse)
     // Record the sent event in the email events table
     const xMessageId = emailResponse?.[0]?.[0]?.headers?.['x-message-id'];
     if (xMessageId) {

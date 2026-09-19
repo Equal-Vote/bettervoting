@@ -56,15 +56,18 @@ const ViewElectionRolls = () => {
         subject,
         body,
         target,
+        template,
     } : {
         subject: string,
         body: string,
-        target: 'all' | 'has_voted' | 'has_not_voted' | 'single'
+        target: 'all' | 'has_voted' | 'has_not_voted' | 'single',
+        template?: 'invite' | 'blank'
     }) => {
         setDialogOpen(false);
         sendEmails.makeRequest({
             target: target,
             email: { subject, body },
+            template: template,
         })
     }
 
