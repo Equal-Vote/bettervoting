@@ -223,11 +223,16 @@ async function handleSendEmailEvent(job: { id: string; data: email_request_event
 
     if(event.test_email) return; // skip the database updates if it's a test email
 
+    // The SendGrid response is deliberately NOT stored here. Its only informative
+    // fields are x-message-id and statusCode, both already recorded in emailEventsDB
+    // just above; the remaining ~660 bytes are HTTP boilerplate (CORS, HSTS, Date).
+    // sanitizeHistory strips email_data before any client sees it, so nothing read it.
+    // electionRollDB is copy-on-write (~4.6 versions/roll), so each payload was stored
+    // several times over -- 96% of history bytes on a large emailed election.
     const historyUpdate: ElectionRollAction = {
         action_type: event.message_id,
         actor: event.sender,
         timestamp: Date.now(),
-        email_data: emailResponse,
     }
 
     if (electionRoll.history == null) {
