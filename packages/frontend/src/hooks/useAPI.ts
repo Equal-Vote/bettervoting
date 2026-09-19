@@ -69,18 +69,29 @@ export const useEditElection = (election_id: string | undefined) => {
 }
 
 export const useSendInvites = (electionID: string | undefined) => {
-    return useFetch<undefined, object>(
+    return useFetch<undefined, SendPlan>(
         `/API/Election/${electionID}/sendInvites`,
         'post',
-        'Email Invites Sent!',
+        describeQueuedSend,
     )
 }
 
+// A send request returns a plan, not a confirmation: the emails are scheduled
+// and released at the configured rate, so "Emails Sent!" would be false and
+// would invite a retry. Say what was queued and how long it will take.
+export type SendPlan = { queued: number, ratePerMinute: number, etaMinutes: number }
+export const describeQueuedSend = (plan: SendPlan): string => {
+    const n = plan.queued.toLocaleString();
+    const m = plan.etaMinutes;
+    const eta = m < 1 ? 'under a minute' : m < 90 ? `about ${Math.ceil(m)} minutes` : `about ${(m / 60).toFixed(1)} hours`;
+    return `Queued ${n} ${plan.queued === 1 ? 'email' : 'emails'} — sending over ${eta}`;
+}
+
 export const useSendEmails = (electionID: string | undefined) => {
-    return useFetch<email_request_data, object>(
+    return useFetch<email_request_data, SendPlan>(
         `/API/Election/${electionID}/sendEmails`,
         'post',
-        'Emails Sent!',
+        describeQueuedSend,
     )
 }
 
