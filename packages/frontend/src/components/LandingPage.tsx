@@ -6,7 +6,7 @@ import { Typography } from '@mui/material';
 import LandingPagePricing from './LandingPage/LandingPagePricing';
 import useFeatureFlags from './FeatureFlagContextProvider';
 import { useLocation } from 'react-router-dom';
-import { openFeedback, scrollToElement, useSubstitutedTranslation } from './util';
+import { scrollToElement, useSubstitutedTranslation } from './util';
 import Wizard from './ElectionForm/Wizard/Wizard';
 import LandingPageSupport from './LandingPage/LandingPageSupport';
 import LandingPageCarousel from './LandingPage/LandingPageCarousel';
@@ -19,12 +19,6 @@ const LandingPage = () => {
 
     const checkUrl = useLocation();
     useEffect(() =>{
-        if(checkUrl.pathname === "/feedback")
-        {
-            openFeedback();
-        }
-
-
         let className = '';
         if(checkUrl.pathname === "/new_election") className='.wizard';
         if(checkUrl.pathname === "/features") className='.features';

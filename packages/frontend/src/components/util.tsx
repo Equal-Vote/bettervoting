@@ -312,14 +312,16 @@ export const truncName = (name, maxSize) => {
   return name.slice(0, maxSize - 3).concat("...");
 };
 
+// Fider instance for feature requests and feedback. Overridable so non-prod
+// deployments can point somewhere else.
+export const FEEDBACK_URL =
+  process.env.REACT_APP_FEEDBACK_URL || 'https://feedback.prod.equal.vote';
+
+// Opens feedback in a new tab so someone part-way through building an election
+// doesn't lose their place. Fider is a separate app with its own sign-in, so
+// there's nothing to embed -- this is a link-out by design.
 export const openFeedback = () => {
-  // simulate clicking the feedback button
-  const launcherFrame = document.getElementById("launcher-frame");
-  const button =
-    (launcherFrame as HTMLIFrameElement).contentWindow.document.getElementsByClassName(
-      "launcher-button"
-    )[0];
-  (button as HTMLButtonElement).click();
+  window.open(FEEDBACK_URL, '_blank', 'noopener,noreferrer');
 };
 
 export function scrollToElement(e, opts: { behavior?: ScrollBehavior; delay?: number; cancelOnUserInput?: boolean } = {}) {

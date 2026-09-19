@@ -471,13 +471,6 @@ code {
     0px 3px 14px 2px rgba(var(--brand-ltblue-comma), 0.24);
 }
 
-/* hide feedback button on mobile and print*/
-@media(max-width: 900px){
-  #launcher-frame{
-    display: none;
-  }
-}
-
 .startingOptionArrow{
   min-width: 2em; /* font size (1em) + max padding left (1em), making width too small will shrink the arrow when it animates */
   padding-left: 0px;
@@ -486,12 +479,6 @@ code {
 .startingOption:hover .startingOptionArrow{
   padding-left: 1em;
   margin-right: 0;
-}
-
-@media print{
-  #launcher-frame{
-    display: none;
-  }
 }
 
 @page {
