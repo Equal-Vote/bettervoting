@@ -38,6 +38,9 @@ export interface ElectionRollAction {
     action_type:string;
     actor:Uid;
     timestamp:number;
+    // DEPRECATED: no longer written. Historical rows still carry the raw SendGrid
+    // response here; sanitizeHistory strips it before any client sees it. Delivery
+    // data lives in emailEventsDB. Kept on the type so existing rows still parse.
     email_data?: any;
 }
 function electionRollActionValidation(obj:ElectionRollAction): string | null {
