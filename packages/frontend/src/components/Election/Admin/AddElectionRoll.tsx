@@ -271,12 +271,6 @@ const AddElectionRoll = ({ onClose, onUploadingChange }: { onClose: () => void, 
                             Submit
                         </PrimaryButton>
                     </Grid>
-                    {progress && <Grid sx={{ m: 1 }}>
-                        <LinearProgress variant='determinate' value={progress.total ? 100 * progress.uploaded / progress.total : 0} />
-                        <Typography align='center' component="p">
-                            {`Uploading ${progress.uploaded}/${progress.total} voters...`}
-                        </Typography>
-                    </Grid>}
                     <Grid sx={{ my: 1 }}>
                         <Divider />
                     </Grid>
@@ -311,6 +305,12 @@ const AddElectionRoll = ({ onClose, onUploadingChange }: { onClose: () => void, 
                             </SecondaryButton>
                         </Box>
                     </Grid>
+                    {progress && <Grid sx={{ m: 1 }}>
+                        <LinearProgress variant='determinate' value={progress.total ? 100 * progress.uploaded / progress.total : 0} />
+                        <Typography align='center' component="p">
+                            {`Uploading ${progress.uploaded}/${progress.total} voters...`}
+                        </Typography>
+                    </Grid>}
                 </Grid>
             </Container >
 
