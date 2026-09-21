@@ -1,4 +1,4 @@
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
 import Typography from '@mui/material/Typography';
@@ -6,182 +6,177 @@ import Divider from '@mui/material/Divider';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import { Checkbox, FormGroup, FormControlLabel } from '@mui/material';
-import { usePostRolls } from "../../../hooks/useAPI";
+import Papa from "papaparse";
+import LinearProgress from "@mui/material/LinearProgress";
+import { useGetRolls } from "../../../hooks/useAPI";
 import useElection from "../../ElectionContextProvider";
 import useSnackbar from "../../SnackbarContext";
 import useFeatureFlags from "../../FeatureFlagContextProvider";
 import { sharedConfig } from '@equal-vote/star-vote-shared/config';
 import { PrimaryButton, SecondaryButton } from "~/components/styles";
 import useConfirm from '../../ConfirmationDialogProvider';
+import { findRollConflicts, uploadRollsBatched, RollInput } from './rollUploadUtils';
 
 
-const AddElectionRoll = ({ onClose }: { onClose: () => void }) => {
+const AddElectionRoll = ({ onClose, onUploadingChange }: { onClose: () => void, onUploadingChange?: (uploading: boolean) => void }) => {
     const { setSnack } = useSnackbar()
     const flags = useFeatureFlags();
     const { election } = useElection()
     const [voterIDList, setVoterIDList] = useState('')
-    const postRoll = usePostRolls(election.election_id)
-    const fileReader = new FileReader()
+    const getRolls = useGetRolls(election.election_id)
     const [enableVoterID, setEnableVoterID] = useState(election.settings.voter_authentication.voter_id && election.settings.invitation !== 'email')
     const emailListOnly = election.settings.invitation === 'email'
     const [enableEmail, setEnableEmail] = useState(emailListOnly)
     const [enablePrecinct, setEnablePrecinct] = useState(false)
+    const [busy, setBusy] = useState(false)
+    const [progress, setProgress] = useState<{ uploaded: number, total: number } | null>(null)
     const inputRef = useRef(null)
     const confirm = useConfirm();
-    type RollInput = {
-        voter_id?: string;
-        email?: string;
-        precinct?: string;
-        state?: string;
-    };
+
+    useEffect(() => { onUploadingChange?.(busy) }, [busy])
 
     const allowedColumns = [];
     if(enableVoterID) allowedColumns.push('voter_id')
     if(enableEmail) allowedColumns.push('email')
     if(enablePrecinct) allowedColumns.push('precinct')
 
-    const submitRolls = async (rolls) => {
+    const showError = (message: string) => setSnack({
+        message,
+        severity: "error",
+        open: true,
+        autoHideDuration: null
+    })
 
-        const newRolls = await postRoll.makeRequest({ electionRoll: rolls })
-        if (!newRolls) {
-            throw Error("Error submitting rolls");
+    // Shared by the text field and the csv upload
+    // 1. fetch the current roll so we can find conflicts (voters that are already on the list, or that repeat within this upload)
+    // 2. confirm with the admin (always for csv files, otherwise only when there are conflicts to skip)
+    // 3. upload in batches
+    const submitRolls = async (rolls: RollInput[], alwaysConfirm: boolean) => {
+        setBusy(true)
+        try {
+            const existing = await getRolls.makeRequest()
+            if (!existing) return // useFetch already reported the error
+
+            const conflicts = findRollConflicts(existing.electionRoll, rolls)
+            const skippedCount = conflicts.existingCount + conflicts.fileCount
+            const uploadCount = conflicts.rolls.length
+
+            if (uploadCount === 0) {
+                showError(rolls.length === 0 ? 'No voters found to upload' : 'All of these voters are already on your voter list')
+                return
+            }
+
+            if (election.settings.voter_access == 'closed') {
+                const overrides = sharedConfig.ELECTION_VOTER_LIMIT_OVERRIDES as { [key: string]: number };
+                const voterLimit = overrides[election.election_id] ?? sharedConfig.FREE_TIER_PRIVATE_VOTER_LIMIT;
+                if (existing.electionRoll.length + uploadCount > voterLimit) {
+                    showError(`Request Denied: this election is limited to ${voterLimit} voters (${existing.electionRoll.length} already added, ${uploadCount} new)`)
+                    return
+                }
+            }
+
+            if (skippedCount > 0 || alwaysConfirm) {
+                const skipDetails = [
+                    conflicts.existingCount > 0 && `${conflicts.existingCount} already on your voter list`,
+                    conflicts.fileCount > 0 && `${conflicts.fileCount} repeated within your upload`,
+                ].filter(Boolean).join(' and ')
+                const confirmed = await confirm({
+                    title: skippedCount > 0 ? 'Some voters will be skipped' : `Upload ${uploadCount} voters?`,
+                    message: skippedCount > 0
+                        ? `${skipDetails} will be skipped because they have a conflicting voter ID or email. Continue uploading the remaining ${uploadCount} voters?`
+                        : `${uploadCount} voters will be added to your voter list.`,
+                    submit: `Upload ${uploadCount} voters`,
+                    cancel: 'Cancel',
+                })
+                if (!confirmed) return
+            }
+
+            setProgress({ uploaded: 0, total: uploadCount })
+            const result = await uploadRollsBatched(
+                election.election_id,
+                conflicts.rolls,
+                (uploaded, total) => setProgress({ uploaded, total })
+            )
+
+            if (result.aborted) {
+                showError(`Upload stopped after adding ${result.uploaded} of ${uploadCount} voters: ${result.errorMessage}. Refresh the page and re-upload the same list to continue, voters that were already added will be skipped.`)
+                return
+            }
+            setSnack({
+                message: `Added ${uploadCount} voters`,
+                severity: 'success',
+                open: true,
+                autoHideDuration: 6000,
+            })
+            onClose()
+        } finally {
+            setBusy(false)
+            setProgress(null)
         }
-        onClose()
     }
 
     const onSubmit = async (e) => {
         e.preventDefault()
-        try {
-            const rows = voterIDList.split('\n').filter(row => row.trim())
-            const rolls = []
-            const expectedCounts = Number(enableVoterID) + Number(enableEmail) + Number(enablePrecinct)
-            rows.forEach((row) => {
-                const csvSplit = row.split(',')
-                if (csvSplit.length !== expectedCounts) {
-                    const err = `Incorrect number of columns: ${row}`
-                    setSnack({
-                        message: err,
-                        severity: "error",
-                        open: true,
-                        autoHideDuration: null
-                    })
-                    throw err;
-                }
-                let count = 0
-                const roll = {
-                    state: 'approved',
-                    voter_id: undefined,
-                    email: undefined,
-                    precinct: undefined,
-                }
-                if (enableVoterID && !emailListOnly){
-                    roll.voter_id = csvSplit[count]
-                    count += 1
-                }
-                if (enableEmail){
-                    roll.email = csvSplit[count]
-                    count += 1
-                }
-                if (enablePrecinct){
-                    roll.precinct = csvSplit[count]
-                    count += 1
-                }
-                rolls.push(roll)
-            })
-
-            const dupesExist = duplicatesExist(rolls)
-            if (!dupesExist) {
-                submitRolls(rolls)
-                return;
-            }
-
-            const dialogTitle = 'You entered duplicate emails, which is not supported. Would you like us to remove duplicates?'
-            const confirmed = await confirm({ title: dialogTitle, message: '', submit: 'Yes', cancel: 'No' });
-            if (confirmed) {
-                const newRolls = removeDuplicates(rolls)
-                submitRolls(newRolls);
-            }
-        } catch (error) {
-            console.error(error)
+        const parsed = Papa.parse<string[]>(voterIDList, { skipEmptyLines: 'greedy' })
+        if (parsed.errors.length > 0) {
+            showError(`Unable to read voter data: ${parsed.errors[0].message}`)
+            return
         }
+
+        const expectedCounts = Number(enableVoterID) + Number(enableEmail) + Number(enablePrecinct)
+        const rolls: RollInput[] = []
+        for (const row of parsed.data) {
+            if (row.length !== expectedCounts) {
+                showError(`Incorrect number of columns: ${row.join(',')}`)
+                return
+            }
+            let count = 0
+            const roll: RollInput = { state: 'approved' }
+            if (enableVoterID && !emailListOnly) roll.voter_id = row[count++].trim()
+            if (enableEmail) roll.email = row[count++].trim()
+            if (enablePrecinct) roll.precinct = row[count++].trim()
+            rolls.push(roll)
+        }
+
+        await submitRolls(rolls, false)
     }
 
     const handleLoadCsv = (e) => {
         e.preventDefault()
+        const file = e.target.files[0]
+        e.target.value = '' // so that picking the same file again still triggers onChange
+        if (!file) return
+
+        const fileReader = new FileReader()
         fileReader.onload = async function (event) {
-            let text = event.target.result;
+            const text = event.target.result;
             if (typeof text !== "string") {
-                alert('Invalid data type')
+                showError('Invalid data type')
                 return
             }
-            text = text.replaceAll(/\r\n|\r/g, '\n'); //make line break characters consistent
-            const csvHeader = text.slice(0, text.indexOf("\n")).split(",");
-            const areHeadersValid = csvHeader.every(val => ['voter_id', 'email', 'precinct'].includes(val))
-            if (!areHeadersValid) {
-                alert('Invalid headers')
+            const parsed = Papa.parse<Record<string, string>>(text, {
+                header: true,
+                skipEmptyLines: 'greedy',
+                transformHeader: (h) => h.trim(),
+            })
+            const headers = parsed.meta.fields ?? []
+            if (headers.length === 0 || !headers.every(val => ['voter_id', 'email', 'precinct'].includes(val))) {
+                showError('Invalid headers')
                 return
             }
-            const csvRows = text.slice(text.indexOf("\n") + 1).split("\n").filter(row => row.trim());
-            const rolls = csvRows.map(i => {
-                const values = i.split(",");
-                const obj = csvHeader.reduce((object, header, index) => {
-                    object[header] = values[index];
-                    return object;
-                }, { state: 'approved' } as Record<string, string>);
-                return obj;
-            }).filter(roll => {
+            const rolls: RollInput[] = parsed.data
+                .map(row => ({
+                    state: 'approved',
+                    voter_id: row.voter_id?.trim(),
+                    email: row.email?.trim(),
+                    precinct: row.precinct?.trim(),
+                }))
                 // Filter out rolls where all fields are empty
-                return roll.voter_id?.trim() || roll.email?.trim() || roll.precinct?.trim();
-            });
+                .filter(roll => roll.voter_id || roll.email || roll.precinct)
 
-            const dupesExist = duplicatesExist(rolls)
-
-            if (!dupesExist) {
-                submitRolls(rolls)
-                return;
-            }
-
-
-
-            const dialogTitle = 'You entered duplicate emails, which is not supported. Would you like us to remove duplicates?'
-            const confirmed = await confirm({ title: dialogTitle, message: '', submit: 'Yes', cancel: 'No' });
-            if (confirmed) {
-                const newRolls = removeDuplicates(rolls)
-                submitRolls(newRolls);
-            }
-
-
+            await submitRolls(rolls, true)
         };
-        fileReader.readAsText(e.target.files[0]);
-    }
-
-    function removeDuplicates(checkRolls: RollInput[]): RollInput[] {
-        const seen = new Set<string>();
-        const uniqueRolls: RollInput[] = [];
-
-        for (const roll of checkRolls) {
-            const email = (roll.email || "").trim().toLowerCase();
-            if (!seen.has(email)) {
-                seen.add(email);
-                uniqueRolls.push(roll);
-            }
-        }
-
-        return uniqueRolls;
-    }
-
-    function duplicatesExist(pendingRolls: RollInput[]): boolean {
-        const seen = new Set<string>();
-        for (const roll of pendingRolls) {
-            const email = (roll.email || "").trim().toLowerCase();
-            if(email === "") continue;
-            if (seen.has(email)) return true;
-            if (!seen.has(email)) {
-                seen.add(email);
-            }
-        }
-
-        return false;
+        fileReader.readAsText(file);
     }
 
 
@@ -272,10 +267,16 @@ const AddElectionRoll = ({ onClose }: { onClose: () => void }) => {
                         <PrimaryButton
                             fullWidth
                             type='submit'
-                            disabled={postRoll.isPending} >
+                            disabled={busy} >
                             Submit
                         </PrimaryButton>
                     </Grid>
+                    {progress && <Grid sx={{ m: 1 }}>
+                        <LinearProgress variant='determinate' value={progress.total ? 100 * progress.uploaded / progress.total : 0} />
+                        <Typography align='center' component="p">
+                            {`Uploading ${progress.uploaded}/${progress.total} voters...`}
+                        </Typography>
+                    </Grid>}
                     <Grid sx={{ my: 1 }}>
                         <Divider />
                     </Grid>
@@ -302,6 +303,7 @@ const AddElectionRoll = ({ onClose }: { onClose: () => void }) => {
                                 ref={inputRef} />
                             <SecondaryButton
                                 fullWidth
+                                disabled={busy}
                                 onClick={() => inputRef.current.click()} >
                                 <Typography variant="h6" component="h6">
                                     Select File

@@ -27,6 +27,9 @@ const ViewElectionRolls = () => {
     }, [])
     const [inspectingVoter, setInspectingVoter] = useState(false)
     const [addRollPage, setAddRollPage] = useState(false)
+    const [uploadingRolls, setUploadingRolls] = useState(false)
+    // refetch on close since an upload may have partially succeeded
+    const closeAddRoll = () => { setAddRollPage(false); fetchRolls(); }
     const [editedRoll, setEditedRoll] = useState<ElectionRollResponse|null>(null)
     const flags = useFeatureFlags();
     const navigate = useNavigate();
@@ -210,16 +213,16 @@ const ViewElectionRolls = () => {
                 </Dialog>
                 <Dialog
                     open={addRollPage}
-                    onClose={() => setAddRollPage(false)}
+                    onClose={() => { if (!uploadingRolls) closeAddRoll() }}
                     fullWidth
                     maxWidth='md'
                 >
                     <DialogTitle sx={{m: 0}}>Adding Voters</DialogTitle>
                     <DialogContent>
-                        <AddElectionRoll onClose={() => { setAddRollPage(false); fetchRolls(); }}/>
+                        <AddElectionRoll onClose={closeAddRoll} onUploadingChange={setUploadingRolls}/>
                     </DialogContent>
                     <DialogActions>
-                        <PrimaryButton onClick={() => setAddRollPage(false)}>
+                        <PrimaryButton disabled={uploadingRolls} onClick={closeAddRoll}>
                             {t('keyword.close')}
                         </PrimaryButton>
                     </DialogActions>
