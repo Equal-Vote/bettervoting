@@ -1,9 +1,13 @@
 import { Election, PartialBy, getApprovedRaces } from "./Election";
-import { ElectionRoll } from "./ElectionRoll";
 import { Race } from "./Race";
-import { Score } from "./Score";
 import { Uid } from "./Uid";
 import { OrderedVote, Vote } from "./Vote";
+
+export const BALLOT_SUBMIT_TYPES = ['submitted_via_browser', 'submitted_via_admin', 'submitted_via_discord'] as const;
+export type BallotSubmitType = typeof BALLOT_SUBMIT_TYPES[number];
+// BallotActionType currently mirrors BallotSubmitType 1:1 because submitting is the only ballot action we track.
+// Once other action types exist (e.g. edits, retractions), this should become its own union that includes them.
+export type BallotActionType = BallotSubmitType;
 
 export interface NewBallotWithVoterID {
     voter_id: string;
@@ -29,7 +33,7 @@ export interface RaceCandidateOrder {
     candidate_id_order: Uid[];
 }
 
-export interface NewBallot extends PartialBy<Ballot,'ballot_id'|'create_date'|'update_date'|'head'> {}
+export type NewBallot = PartialBy<Ballot,'ballot_id'|'create_date'|'update_date'|'head'|'election_id'|'status'|'date_submitted'>;
 
 export interface OrderedNewBallot extends PartialBy<NewBallot,'votes'> {
     orderedVotes: OrderedVote[]
@@ -43,7 +47,7 @@ export interface AnonymizedBallot {
 }
 
 export interface BallotAction {
-    action_type:string;
+    action_type: BallotActionType;
     actor:Uid;
     timestamp:number;
 }
@@ -114,10 +118,9 @@ export function ballotValidation(election: Election, obj:NewBallot): string | nu
         })
 
         if (['RankedRobin', 'IRV', 'STV'].includes(race.voting_method)) {
-            const numCandidates = race.candidates.length;
             vote.scores.forEach(score => {
                 // Arend: Removing check against numCandidates, that's not necessarily true for public RCV elections
-                    if (score && score.score !== null && (/*score.score > numCandidates ||*/ (maxRankings && score.score > maxRankings) || score.score < 0)) {
+                    if (score && score.score !== null && ((maxRankings && score.score > maxRankings) || score.score < 0)) {
                         outOfBoundsError +=  `Race: ${race.title}, Score: ${score.score}; `;
                     }
                 })

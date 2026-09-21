@@ -4,7 +4,7 @@ import { ElectionState, validElectionStates } from "./ElectionStates";
 import { Race } from "./Race";
 import { Uid } from "./Uid";
 import { raceValidation } from "./Race";
-import { checkForDuplicates, emailRegex } from "./Util";
+import { checkForDuplicates } from "./Util";
 
 export { ElectionState }
 
@@ -34,7 +34,7 @@ export interface Election {
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
 export type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 
-export interface NewElection extends PartialBy<Election,'election_id'|'create_date'|'update_date'|'head'> {}
+export type NewElection = PartialBy<Election,'election_id'|'create_date'|'update_date'|'head'>;
 
 export function electionValidation(obj:Election): string | null {
   if (!obj){
@@ -108,7 +108,7 @@ export function electionValidation(obj:Election): string | null {
     }
     let raceErrors = ''
     obj.races.forEach(race => {
-      let raceError = raceValidation(race)
+      const raceError = raceValidation(race)
       if (raceError){
         raceErrors += `race_id: ${race.race_id}: ${raceError} `
       }
@@ -123,7 +123,7 @@ export function electionValidation(obj:Election): string | null {
   if (!obj.settings){
     return "Invalid Election Settings";
   } else {
-    const settingsError = electionSettingsValidation(obj.settings, obj.state);
+    const settingsError = electionSettingsValidation(obj.settings);
     if (settingsError){
       return settingsError;
     }
