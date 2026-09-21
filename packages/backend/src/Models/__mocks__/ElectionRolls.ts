@@ -45,11 +45,16 @@ export default class ElectionRollDB implements IElectionRollStore{
     }
 
     getByElectionIdAndEmail(election_id: string, email: string, ctx:ILoggingContext): Promise<ElectionRoll | null> {
+        Logger.debug(ctx, `MockElectionRolls getByElectionIdAndEmail ${election_id}`);
         const roll = this._electionRolls
             .filter(r => r.election_id==election_id && r.head && r.email?.toLowerCase()===email.toLowerCase())
             .sort((a, b) => (a.voter_id ?? '').localeCompare(b.voter_id ?? ''))[0]
-        if (!roll) return Promise.resolve(null)
-        return Promise.resolve(JSON.parse(JSON.stringify(roll)))
+
+        if (!roll){
+            return Promise.resolve(null)
+        }
+        const res:ElectionRoll = JSON.parse(JSON.stringify(roll));
+        return Promise.resolve(res)
     }
 
     getByVoterID(election_id: string,voter_id:string, ctx:ILoggingContext): Promise<ElectionRoll | null> {

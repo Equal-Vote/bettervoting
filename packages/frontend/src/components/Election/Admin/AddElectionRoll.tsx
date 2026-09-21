@@ -174,6 +174,7 @@ const AddElectionRoll = ({ onClose }: { onClose: () => void }) => {
         const seen = new Set<string>();
         for (const roll of pendingRolls) {
             const email = (roll.email || "").trim().toLowerCase();
+            if(email === "") continue;
             if (seen.has(email)) return true;
             if (!seen.has(email)) {
                 seen.add(email);

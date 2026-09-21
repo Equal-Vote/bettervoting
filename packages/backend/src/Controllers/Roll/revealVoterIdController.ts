@@ -43,15 +43,10 @@ const revealVoterIdByEmail = async (req: IElectionRequest, res: Response, next: 
     // PROMINENT LOGGING - This action should be highly visible in logs
     Logger.error(req, `BREAK GLASS ACTION - ${className}.revealVoterIdByEmail - Election: ${electionId}, Email: ${logSafeHash(email)}, Actor: ${logSafeHash(actor)}`);
 
-    const electionRoll = await ElectionRollModel.getRollsByElectionID(electionId, req);
-    if (!electionRoll) {
-        const msg = `Election roll for ${electionId} not found`;
-        Logger.info(req, msg);
-        throw new BadRequest(msg);
-    }
-
-    // Find the roll entry by email
-    const rollEntry = electionRoll.find(roll => roll.email?.toLowerCase() === email.toLowerCase());
+    // Look the voter up directly rather than fetching the whole roll and scanning it
+    // in memory -- this is a single-voter lookup, and on a large election the full
+    // fetch was tens of MB to find one row.
+    const rollEntry = await ElectionRollModel.getByElectionIdAndEmail(electionId, email, req);
     if (!rollEntry) {
         const msg = `No voter found with email ${logSafeHash(email)}`;
         Logger.info(req, msg);

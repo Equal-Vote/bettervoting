@@ -172,32 +172,8 @@ const EditElectionRoll = ({ roll, fetchRolls }:Props) => {
                     </Typography>
                 </Grid>
 
-                {election.settings.invitation === 'email' && roll.email &&
+                {roll.email &&
                     <>
-                        {roll && !(roll.email_data && roll.email_data.inviteResponse) &&
-                            <Grid size={{ sm: 12 }}>
-                                <Typography align='left' gutterBottom variant="h6" component="h6">
-                                    {`Email invite status: Invite not sent`}
-                                </Typography>
-                            </Grid>
-                        }
-                        {roll && (roll.email_data && roll.email_data.inviteResponse) && (roll.email_data.inviteResponse.length > 0 && roll.email_data.inviteResponse[0].statusCode < 400) &&
-                            <Grid size={{ sm: 12 }}>
-                                <Typography align='left' gutterBottom variant="h6" component="h6">
-                                    {`Email invite status: Success`}
-                                </Typography>
-                            </Grid>
-                        }
-                        {roll && (roll.email_data && roll.email_data.inviteResponse) && !(roll.email_data.inviteResponse.length > 0 && roll.email_data.inviteResponse[0].statusCode < 400) &&
-                            <Grid size={{ sm: 12 }}>
-                                <Typography align='left' gutterBottom variant="h6" component="h6">
-                                    {`Email invite status: Failed`}
-                                </Typography>
-                                <Typography align='left' gutterBottom component="p">
-                                    {`Debug Info: ${JSON.stringify(roll.email_data.inviteResponse)}`}
-                                </Typography>
-                            </Grid>
-                        }
                         <Grid size={{ sm: 4 }} sx={{py:1}}>
                             <PermissionHandler permissions={permissions} requiredPermission={'canSendEmails'}>
                                 <SecondaryButton onClick={() => { setDialogOpen(true) }} > Draft Email </SecondaryButton>
@@ -278,7 +254,7 @@ const EditElectionRoll = ({ roll, fetchRolls }:Props) => {
                             </PermissionHandler>
                         </Grid>}
                 </>}
-                {election.settings.invitation === 'email' && lookup.data?.electionRollEntry?.email_events &&
+                {lookup.data?.electionRollEntry?.email_events &&
                     <EmailEventsList events={lookup.data.electionRollEntry.email_events} />
                 }
                 {roll?.history &&

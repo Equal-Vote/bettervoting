@@ -76,21 +76,27 @@ export default class ElectionRollDB implements IElectionRollStore {
                 return null
             }))
     }
-    // Case-insensitive lookup of one voter within one election. election_id leads
-    // electionRollDB_pkey so this scans only that election's rows. Ordered so a legacy
-    // duplicate email resolves to the same voter every time rather than at random.
+    // Case-insensitive lookup of a single voter within one election. The election_id
+    // predicate is the leading column of electionRollDB_pkey, so this scans only that
+    // election's rows rather than shipping the whole roll to the caller.
     getByElectionIdAndEmail(election_id: string, email: string, ctx: ILoggingContext): Promise<ElectionRoll | null> {
         Logger.debug(ctx, `${tableName}.getByElectionIdAndEmail election:${election_id}`);
+
         return this._postgresClient
             .selectFrom(tableName)
             .where('election_id', '=', election_id)
             .where(({ eb, fn }) => eb(fn('lower', ['email']), '=', email.toLowerCase()))
             .where('head', '=', true)
+            // Duplicate emails on one roll shouldn't exist, but order so that a legacy
+            // duplicate resolves to the same voter every time instead of at random.
             .orderBy('voter_id', 'asc')
             .selectAll()
             .executeTakeFirst()
             .then((row) => row ?? null)
-            .catch(((reason: any) => { Logger.debug(ctx, reason); return null }))
+            .catch(((reason: any) => {
+                Logger.debug(ctx, reason);
+                return null
+            }))
     }
 
     getByEmail(email: string, ctx: ILoggingContext): Promise<ElectionRoll[] | null> {
