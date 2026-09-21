@@ -1,4 +1,5 @@
 import ServiceLocator from '../../ServiceLocator';
+import { emailSendSpacingMs, describeSendPlan, assertNoSendInFlight, sendPlan } from '../../Services/Email/sendPacing';
 import Logger from '../../Services/Logging/Logger';
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { expectPermission } from "../controllerUtils";
@@ -138,6 +139,9 @@ const sendEmailsController = async (req: IElectionRequest, res: Response, next: 
                 throw new BadRequest(msg)
             }
         }
+
+        await assertNoSendInFlight(await EventQueue, req.election.election_id);
+
         // Admin-managed voter rolls can have entries with no email on file; skip them
         // rather than attempting to send to an empty recipient.
         electionRoll = electionRoll.filter(roll => roll.email)
@@ -146,6 +150,7 @@ const sendEmailsController = async (req: IElectionRequest, res: Response, next: 
             Logger.info(req, msg);
             throw new BadRequest(msg)
         }
+
         // Update email campaign count in election db
         const expected_update_date = election.update_date as string;
         election.settings.email_campaign_count = election.settings.email_campaign_count ? election.settings.email_campaign_count + 1 : 1
@@ -173,15 +178,16 @@ const sendEmailsController = async (req: IElectionRequest, res: Response, next: 
     })
 
     var failMsg = "Failed to send invitations";
+    Logger.info(req, `${className}.sendEmails enqueuing ${describeSendPlan(Jobs.length)}`);
     try {
-        await (await EventQueue).publishBatch(SendEmailEventQueue, Jobs);
+        await (await EventQueue).publishBatch(SendEmailEventQueue, Jobs, { spacingMs: emailSendSpacingMs() });
     } catch (err: any) {
         const msg = `Could not send invitations`;
         Logger.error(req, `${msg}: ${err.message}`);
         throw new InternalServerError(failMsg)
     }
 
-    res.json({})
+    res.json(sendPlan(Jobs.length))
 }
 
 async function handleSendEmailEvent(job: { id: string; data: email_request_event; }): Promise<void> {

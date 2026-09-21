@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { ILoggingContext } from "../Logging/ILogger";
-import { EventHandler, IEventQueue, JobInsert } from "./IEventQueue";
+import { EventHandler, IEventQueue, JobInsert, PublishBatchOptions } from "./IEventQueue";
 import { QueueName } from "./QueueName";
 
 type Job = {
@@ -40,7 +40,9 @@ export class MockEventQueue implements IEventQueue {
         return j.id;
     }
 
-    public async publishBatch(queue:QueueName, data:object[]):Promise<object> {
+    // spacingMs is accepted for signature parity but ignored: the mock runs jobs
+    // immediately so tests don't have to wait out a schedule.
+    public async publishBatch(queue:QueueName, data:object[], _opts?:PublishBatchOptions):Promise<object> {
         var j = data.map(d => ({
             queue: queue,
             data: d,
@@ -49,6 +51,10 @@ export class MockEventQueue implements IEventQueue {
         this._pendingJobs.push(...j);
         this.triggerJobs();
         return j;
+    }
+
+    public async countUnstarted(queue:QueueName, electionId:string):Promise<number> {
+        return this._pendingJobs.filter(j => j.queue === queue && (j.data as any)?.election_id === electionId).length;
     }
 
     private async triggerJobs(){
