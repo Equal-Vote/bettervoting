@@ -71,7 +71,10 @@ const sendEmailsController = async (req: IElectionRequest, res: Response, next: 
     const email_request: email_request_data = req.body
 
     let electionRoll: ElectionRoll[] | null = null
-    if (!(req.election.settings.voter_access === 'closed' && req.election.settings.invitation === 'email')) {
+    // Email blasts are available to any closed-access election, regardless of whether
+    // voter IDs are BetterVoting-managed or admin-managed — voters without an email on
+    // their roll entry are simply skipped when the recipient list is built below.
+    if (req.election.settings.voter_access !== 'closed') {
         const msg = `Emails not enabled`;
         Logger.info(req, msg);
         throw new BadRequest(msg)
@@ -104,6 +107,11 @@ const sendEmailsController = async (req: IElectionRequest, res: Response, next: 
             Logger.info(req, msg);
             throw new BadRequest(msg)
         }
+        if (!electionRollResponse.email) {
+            const msg = `Voter does not have an email on file`;
+            Logger.info(req, msg);
+            throw new BadRequest(msg)
+        }
         electionRoll = [electionRollResponse]
         message_id = `dm_${email_request.voter_id ?? email_request.recipient_email}_${0}` //TODO: retreive count of previous dms
     } else if(email_request.target == 'test'){
@@ -131,7 +139,17 @@ const sendEmailsController = async (req: IElectionRequest, res: Response, next: 
                 throw new BadRequest(msg)
             }
         }
+
         await assertNoSendInFlight(await EventQueue, req.election.election_id);
+
+        // Admin-managed voter rolls can have entries with no email on file; skip them
+        // rather than attempting to send to an empty recipient.
+        electionRoll = electionRoll.filter(roll => roll.email)
+        if (electionRoll.length == 0) {
+            const msg = `None of the targeted voters have an email on file`;
+            Logger.info(req, msg);
+            throw new BadRequest(msg)
+        }
 
         // Update email campaign count in election db
         const expected_update_date = election.update_date as string;
@@ -227,11 +245,16 @@ async function handleSendEmailEvent(job: { id: string; data: email_request_event
 
     if(event.test_email) return; // skip the database updates if it's a test email
 
+    // The SendGrid response is deliberately NOT stored here. Its only informative
+    // fields are x-message-id and statusCode, both already recorded in emailEventsDB
+    // just above; the remaining ~660 bytes are HTTP boilerplate (CORS, HSTS, Date).
+    // sanitizeHistory strips email_data before any client sees it, so nothing read it.
+    // electionRollDB is copy-on-write (~4.6 versions/roll), so each payload was stored
+    // several times over -- 96% of history bytes on a large emailed election.
     const historyUpdate: ElectionRollAction = {
         action_type: event.message_id,
         actor: event.sender,
         timestamp: Date.now(),
-        email_data: emailResponse,
     }
 
     if (electionRoll.history == null) {

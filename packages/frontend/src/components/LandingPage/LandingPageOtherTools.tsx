@@ -37,9 +37,17 @@ export default function(){
                         display: 'flex',
                         flexDirection: 'column',
                         flexShrink: '0',
+                        backgroundColor: 'lightShade.main',
                     }}>
-                        <CardActionArea sx={{p: { xs: 2, md: 2 }, backgroundColor: 'lightShade.main'}}>
-                            <CardContent>
+                        <CardActionArea sx={{
+                            p: { xs: 2, md: 2 },
+                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'stretch',
+                            justifyContent: 'flex-start',
+                        }}>
+                            <CardContent sx={{ height: '100%', width: '100%' }}>
                                 <Box sx={{ pb: 1, display: "flex", flexDirection: "row", gap: 1 }}>
                                     <Box
                                         component="img"

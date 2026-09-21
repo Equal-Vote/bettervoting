@@ -4,6 +4,7 @@ import {
     registerVoter,
     getRollsByElectionID,
     getByVoterID,
+    lookupVoter,
     editElectionRoll,
     approveElectionRoll,
     flagElectionRoll,
@@ -121,6 +122,45 @@ rollRouter.get('/Election/:id/rolls', asyncHandler(getRollsByElectionID))
  *         description: Roll not found 
 */
 rollRouter.get('/Election/:id/rolls/:voter_id', asyncHandler(getByVoterID))
+
+/**
+ * @swagger
+ * /Election/{id}/rolls/lookup:
+ *   post:
+ *     summary: Everything about one voter, by voter_id or email
+ *     description: >
+ *       Returns the sanitized roll entry (history, invite marker) plus the voter's
+ *       email delivery events. Accepts either voter_id or email: email-invitation
+ *       elections redact voter_id from the voter list, so callers there only hold
+ *       the email. Email matching is case-insensitive. The voter list itself does
+ *       not carry per-voter email events (too large on big elections); use this.
+ *     tags: [Rolls]
+ *     security:
+ *       - ApiKeyAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               voter_id:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: The voter's roll entry with email_events attached
+ *       400:
+ *         description: Neither identifier supplied, or voter not found
+ */
+rollRouter.post('/Election/:id/rolls/lookup', asyncHandler(lookupVoter))
 
 /** 
  * @swagger

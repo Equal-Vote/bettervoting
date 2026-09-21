@@ -119,37 +119,17 @@ const getRollsByElectionID = async (req: IElectionRequest, res: Response, next: 
         throw new BadRequest(msg)
     }
 
-    // Fetch email events for this election (best-effort, don't fail if table doesn't exist)
-    let emailEventsByVoter: Record<string, { event_type: string; event_timestamp: string; details?: Record<string, unknown> }[]> = {};
-    try {
-        const allEvents = await EmailEventsModel.getByElectionId(electionId, req);
-        for (const event of allEvents) {
-            if (!emailEventsByVoter[event.voter_id]) {
-                emailEventsByVoter[event.voter_id] = [];
-            }
-            emailEventsByVoter[event.voter_id].push({
-                event_type: event.event_type,
-                event_timestamp: event.event_timestamp,
-                details: event.details,
-            });
-        }
-    } catch (err: any) {
-        Logger.warn(req, `Could not fetch email events: ${err.message}`);
-    }
-
     // Scrub ballot_id to prevent linking voters to ballots
     const redactVoterIds = req.election.settings.invitation === 'email';
     const scrubbedRoll = electionRoll.map((roll) => {
         const sanitizedHistory = sanitizeHistory(roll.history, roll.voter_id, redactVoterIds);
         const sanitizedEmailData = redactVoterIds ? sanitizeEmailMetadata(roll.email_data, roll.voter_id, redactVoterIds) : roll.email_data;
-        const voterEvents = emailEventsByVoter[roll.voter_id] ?? [];
         const base: Partial<ElectionRollResponse> = {
             ...roll,
             ballot_id: undefined,
             ip_hash: undefined,
             history: sanitizedHistory,
             email_data: sanitizedEmailData,
-            email_events: voterEvents,
         };
         if (redactVoterIds) {
             delete base.voter_id;
@@ -162,32 +142,81 @@ const getRollsByElectionID = async (req: IElectionRequest, res: Response, next: 
     res.json({ election: req.election, electionRoll: scrubbedRoll });
 }
 
+// Everything the admin may see about one voter: the sanitized roll (history,
+// invite marker) plus their email delivery events. Shared by the by-id GET and the
+// by-id-or-email lookup so both return the same shape.
+//
+// The voter list deliberately does NOT carry email_events per roll -- on a large
+// election that is ~9 event objects per voter built in memory at once, and it
+// exhausted the heap. Per-voter detail lives here instead.
+async function describeVoter(req: IElectionRequest, roll: ElectionRoll, opts: { includeEmailEvents: boolean }): Promise<ElectionRollResponse> {
+    const redactVoterIds = req.election.settings.invitation === 'email';
+
+    // Email events are admin detail. GET /rolls/:voter_id is voter-facing (VotePage
+    // uses it) and has no permission check, so it must not start returning them --
+    // only the canViewElectionRoll-gated lookup does.
+    let emailEvents: ElectionRollResponse['email_events'] | undefined = undefined;
+    if (opts.includeEmailEvents) try {
+        const events = await EmailEventsModel.getByElectionIdAndVoterId(req.election.election_id, roll.voter_id, req);
+        emailEvents = events.map(e => ({ event_type: e.event_type, event_timestamp: e.event_timestamp, details: e.details }));
+    } catch (err: any) {
+        Logger.warn(req, `Could not fetch email events: ${err.message}`);
+    }
+
+    // Scrub ballot_id to prevent linking voters to ballots
+    const scrubbed: ElectionRollResponse = {
+        ...roll,
+        ballot_id: undefined,
+        ip_hash: undefined,
+        history: sanitizeHistory(roll.history, roll.voter_id, redactVoterIds),
+        email_data: redactVoterIds ? sanitizeEmailMetadata(roll.email_data, roll.voter_id, redactVoterIds) : roll.email_data,
+        ...(emailEvents !== undefined ? { email_events: emailEvents } : {}),
+    };
+    if (redactVoterIds) {
+        // voter_id is ballot access on email-invitation elections; never return it here.
+        delete (scrubbed as any).voter_id;
+    }
+    return scrubbed;
+}
+
 const getByVoterID = async (req: IElectionRequest, res: Response, next: NextFunction) => {
     Logger.info(req, `${className}.getByVoterID ${req.election.election_id} ${logSafeHash(req.params.voter_id)}`)
-    const electionRollEntry = await ElectionRollModel.getByVoterID(req.election.election_id, req.params.voter_id, req)
-    if (!electionRollEntry) {
+    const roll = await ElectionRollModel.getByVoterID(req.election.election_id, req.params.voter_id, req)
+    if (!roll) {
         const msg = "Voter Roll not found";
         Logger.info(req, msg);
         throw new BadRequest(msg)
     }
+    res.json({ electionRollEntry: await describeVoter(req, roll, { includeEmailEvents: false }) })
+}
 
-    // Scrub ballot_id to prevent linking voters to ballots
-    const redactVoterIds = req.election.settings.invitation === 'email';
-    const scrubbedEntry: ElectionRoll = {
-        ...electionRollEntry,
-        ballot_id: undefined,
-        ip_hash: undefined,
-        history: sanitizeHistory(electionRollEntry.history, electionRollEntry.voter_id, redactVoterIds),
-        email_data: redactVoterIds ? sanitizeEmailMetadata(electionRollEntry.email_data, electionRollEntry.voter_id, redactVoterIds) : electionRollEntry.email_data
-    };
-    if (redactVoterIds) {
-        delete (scrubbedEntry as any).voter_id;
+// General "tell me about this voter" lookup, keyed on whichever identifier the
+// caller has. Email-invitation elections redact voter_id from the list (it is
+// ballot access), so the admin dialog only holds the email; other elections hold
+// the voter_id. Email matching is case-insensitive, like the reveal path.
+const lookupVoter = async (req: IElectionRequest, res: Response, next: NextFunction) => {
+    Logger.info(req, `${className}.lookupVoter ${req.election.election_id}`);
+    expectPermission(req.user_auth.roles, permissions.canViewElectionRoll)
+
+    const voter_id = typeof req.body?.voter_id === 'string' ? req.body.voter_id.trim() : '';
+    const email    = typeof req.body?.email    === 'string' ? req.body.email.trim()    : '';
+    if (!voter_id && !email) {
+        throw new BadRequest('voter_id or email is required');
     }
 
-    res.json({ electionRollEntry: scrubbedEntry })
+    const roll = voter_id
+        ? await ElectionRollModel.getByVoterID(req.election.election_id, voter_id, req)
+        : await ElectionRollModel.getByElectionIdAndEmail(req.election.election_id, email, req);
+    if (!roll) {
+        const msg = "Voter Roll not found";
+        Logger.info(req, msg);
+        throw new BadRequest(msg)
+    }
+    res.json({ electionRollEntry: await describeVoter(req, roll, { includeEmailEvents: true }) })
 }
 
 export {
     getRollsByElectionID,
-    getByVoterID
+    getByVoterID,
+    lookupVoter
 }

@@ -40,7 +40,11 @@ const ViewElectionRolls = () => {
     let mode: VoterAuthenticationMode | null;
     try { mode = getVoterAuthenticationMode(election.settings); } catch { mode = null; }
     const voterAccess: 'open' | 'closed' = mode?.startsWith('closed') ? 'closed' : 'open';
-    const usesEmail = mode === 'closed_bv_managed_ids';
+    // BV-managed elections auto-generate voter_id and redact it from the admin view,
+    // matching voters by email instead. Admin-managed elections still let the admin
+    // collect emails per-voter and send email blasts — they just aren't required to.
+    const redactsVoterIds = mode === 'closed_bv_managed_ids';
+    const canSendEmailBlast = voterAccess === 'closed';
     const writeMode = (m: Parameters<typeof setVoterAuthenticationMode>[1]) =>
         updateElection(e => { e.settings = setVoterAuthenticationMode(e.settings, m); });
 
@@ -88,7 +92,7 @@ const ViewElectionRolls = () => {
 
     if (flags.isSet('PRECINCTS')) headKeys.push('precinct');
 
-    if(!usesEmail) headKeys.unshift('voter_id')
+    if(!redactsVoterIds) headKeys.unshift('voter_id')
 
     const electionRollData = React.useMemo(
         () => data?.electionRoll ? [...data.electionRoll] : [],
@@ -148,7 +152,7 @@ const ViewElectionRolls = () => {
 
                                 writeMode(email ? 'closed_bv_managed_ids' : 'closed_admin_managed_ids');
                             }}
-                            checked={usesEmail === email}
+                            checked={redactsVoterIds === email}
                         />
                     )}
                 </RadioGroup>
@@ -166,7 +170,7 @@ const ViewElectionRolls = () => {
                                 }} > Add Voters </SecondaryButton>
                             </PermissionHandler>
                         }
-                        {usesEmail &&
+                        {canSendEmailBlast &&
                             <SecondaryButton onClick={() => setDialogOpen(true)} sx={{ml: 2}}>Draft Email Blast</SecondaryButton>
                         }
                         {canClearRolls &&
@@ -221,7 +225,7 @@ const ViewElectionRolls = () => {
                     </DialogActions>
                 </Dialog>
 
-                <SendEmailDialog electionRoll={data?.electionRoll} open={dialogOpen} onClose={() => setDialogOpen(false)} onSubmit={onSendEmails}/>
+                <SendEmailDialog electionRoll={data?.electionRoll?.filter(roll => roll.email)} open={dialogOpen} onClose={() => setDialogOpen(false)} onSubmit={onSendEmails}/>
             </>}
             <AdminPageNavigation />
         </>
