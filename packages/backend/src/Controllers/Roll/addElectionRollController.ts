@@ -46,6 +46,16 @@ const addElectionRoll = async (req: IElectionRequest & { body: { electionRoll: E
     const seenVoterIds = new Set<string>();
     for (const rollInput of req.body.electionRoll) {
         if (!rollInput.voter_id) continue;
+        // Voter cookies currently use btoa/atob, which only support Latin-1.
+        // Exclude controls even when btoa can encode them.
+        if (/[^\x20-\x7e\xa0-\xff]/.test(rollInput.voter_id)) {
+            throw new BadRequest('Voter IDs must use Latin-1 characters and cannot contain control characters');
+        }
+        // Browsers resolve dot-only path segments; React Router decodes literal
+        // %2F a second time. Neither can round-trip through our /id/:voter_id route.
+        if (rollInput.voter_id === '.' || rollInput.voter_id === '..' || /%2f/i.test(rollInput.voter_id)) {
+            throw new BadRequest('Voter IDs cannot be "." or "..", or contain "%2F"');
+        }
         if (seenVoterIds.has(rollInput.voter_id)) {
             throw new BadRequest('Some submitted voters have duplicate voter IDs');
         }

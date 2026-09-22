@@ -78,3 +78,17 @@ test('still rejects supplied IDs for email invitations', async () => {
         .rejects.toThrow('Cannot create voters with voter_id');
     expect(submit).not.toHaveBeenCalled();
 });
+
+test.each(['你好', 'voter😀', 'a\u0100b', 'a\u0000b', 'a\nb', 'a\tb', 'a\u007fb', 'a\u0085b', '.', ' .. ', 'a%2Fb', 'a%2fb'])(
+    'rejects ID %p that cannot safely round-trip through authentication', async voter_id => {
+        await expect(addElectionRoll(request([{ voter_id }]), res, jest.fn())).rejects.toThrow('Voter IDs');
+        expect(submit).not.toHaveBeenCalled();
+    },
+);
+
+test.each(['Alice?#', 'a/b\\c', '100%real', 'a%23b', 'a"&<>b', 'José', 'a.b'])(
+    'preserves supported punctuation and Latin-1 in ID %p', async voter_id => {
+        await addElectionRoll(request([{ voter_id }]), res, jest.fn());
+        expect(submit.mock.calls[0][0][0].voter_id).toBe(voter_id);
+    },
+);

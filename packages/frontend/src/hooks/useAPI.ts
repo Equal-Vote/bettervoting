@@ -97,7 +97,7 @@ export const useSendEmails = (electionID: string | undefined) => {
 
 export const useSendInvite = (election_id: string, voter_id: string | undefined) => {
     return useFetch<undefined, object>(
-        `/API/Election/${election_id}/sendInvite/${voter_id}`,
+        `/API/Election/${election_id}/sendInvite/${encodeURIComponent(voter_id ?? '')}`,
         'post',
         'Email Invitation Sent!',
     )
@@ -117,7 +117,7 @@ export const useRevealVoterId = (election_id: string) => {
 }
 
 export const useGetRoll = (electionId: string, voterId) => {
-    return useFetch<undefined, {electionRollEntry: ElectionRoll} >(`/API/Election/${electionId}/rolls/${voterId}`, 'get')
+    return useFetch<undefined, {electionRollEntry: ElectionRoll} >(`/API/Election/${electionId}/rolls/${encodeURIComponent(voterId)}`, 'get')
 }
 
 export const usePutElectionRoles = (election_id: string) => {
