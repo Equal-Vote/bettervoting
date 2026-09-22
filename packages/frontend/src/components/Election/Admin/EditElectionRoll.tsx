@@ -119,7 +119,7 @@ const EditElectionRoll = ({ roll, fetchRolls }:Props) => {
             return;
         }
 
-        navigator.clipboard.writeText(`${window.location.origin}/${election.election_id}/id/${roll.voter_id}`);
+        navigator.clipboard.writeText(`${window.location.origin}/${election.election_id}/id/${encodeURIComponent(roll.voter_id)}`);
         setSnack({
             message: 'Unique URL Copied!',
             severity: 'success',
@@ -133,7 +133,7 @@ const EditElectionRoll = ({ roll, fetchRolls }:Props) => {
         const result = await revealVoterId.makeRequest({ email: roll.email });
         if (result && result.voter_id) {
             setRevealedVoterId(result.voter_id);
-            navigator.clipboard.writeText(window.location.origin+'/'+election.election_id+'/id/'+result.voter_id);
+            navigator.clipboard.writeText(window.location.origin+'/'+election.election_id+'/id/'+encodeURIComponent(result.voter_id));
             setSnack({
                 message: 'Voter ID revealed and URL copied. Action has been logged.',
                 severity: 'warning',
@@ -210,7 +210,7 @@ const EditElectionRoll = ({ roll, fetchRolls }:Props) => {
                                         <IconButton
                                             size="small"
                                             onClick={() => {
-                                                navigator.clipboard.writeText(`${window.location.origin}/${election.election_id}/id/${revealedVoterId}`);
+                                                navigator.clipboard.writeText(`${window.location.origin}/${election.election_id}/id/${encodeURIComponent(revealedVoterId)}`);
                                                 setSnack({
                                                     message: 'Voting URL copied to clipboard',
                                                     severity: 'success',

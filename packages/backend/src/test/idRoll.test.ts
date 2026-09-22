@@ -78,4 +78,20 @@ describe("ID Roll", () => {
         expect(response.statusCode).toBe(401)
         th.testComplete();
     })
+    test.each(['Alice?#', 'a/b\\c', '100%real', 'a%23b', 'a"&<>b'])("Imported ID %p survives API URL encoding and authentication", async voterId => {
+        const added = await th.submitElectionRoll(ID, [{ voter_id: voterId }], testInputs.user1token);
+        expect(added.statusCode).toBe(200);
+
+        const roll = await th.getRequest(
+            `/API/Election/${ID}/rolls/${encodeURIComponent(voterId)}`,
+            testInputs.user1token,
+        );
+        expect(roll.statusCode).toBe(200);
+        expect(roll.body.electionRollEntry.voter_id).toBe(voterId);
+
+        const auth = await th.requestBallotWithId(ID, null, voterId);
+        expect(auth.statusCode).toBe(200);
+        expect(auth.voterAuth.authorized_voter).toBe(true);
+        th.testComplete();
+    });
 })
