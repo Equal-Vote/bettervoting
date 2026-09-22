@@ -10,6 +10,7 @@ export const sharedConfig = {
         't7dyvf': 400, // Thijs Kleinpaste, Bike farm #2
         'g8jf8t': 200, // Python Steering Election
         'vwqgm6': 600, // AMPFA Union Poll
+        '79p6yw': 30000, // Arend 25k test
     },
     TEMPORARY_ACCESS_HOURS: 10,
     CLASSIC_DOMAIN: 'https://classic.star.vote',
