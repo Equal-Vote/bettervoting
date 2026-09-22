@@ -157,7 +157,6 @@ const AddElectionRoll = ({ onClose, onUploadingChange }: { onClose: () => void, 
                 return
             }
             const parsed = Papa.parse<Record<string, string>>(text, {
-            const parsed = Papa.parse<Record<string, string>>(text, {
                 header: true,
                 skipEmptyLines: 'greedy',
                 transformHeader: (h) => h.trim(),
