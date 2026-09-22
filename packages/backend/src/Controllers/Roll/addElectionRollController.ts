@@ -1,4 +1,4 @@
-import { ElectionRoll, ElectionRollState, NewElectionRoll } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll";
+import { ElectionRollState, NewElectionRoll } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll";
 import ServiceLocator from "../../ServiceLocator";
 import Logger from "../../Services/Logging/Logger";
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
@@ -24,6 +24,12 @@ const addElectionRoll = async (req: IElectionRequest & { body: { electionRoll: E
     expectPermission(req.user_auth.roles, permissions.canAddToElectionRoll)
     Logger.info(req, `${className}.addElectionRoll ${req.election.election_id}`);
 
+    // Match voter lookup semantics before filtering, duplicate checks, and storage.
+    req.body.electionRoll = req.body.electionRoll.map((rollInput: ElectionRollInput) => ({
+        ...rollInput,
+        voter_id: rollInput.voter_id?.trim(),
+    }));
+
     // Filter out empty roll entries (where all fields are empty)
     req.body.electionRoll = req.body.electionRoll.filter((rollInput: ElectionRollInput) => {
         return rollInput.voter_id?.trim() || rollInput.email?.trim() || rollInput.precinct?.trim();
@@ -37,6 +43,15 @@ const addElectionRoll = async (req: IElectionRequest & { body: { electionRoll: E
         }
     }
 
+    const seenVoterIds = new Set<string>();
+    for (const rollInput of req.body.electionRoll) {
+        if (!rollInput.voter_id) continue;
+        if (seenVoterIds.has(rollInput.voter_id)) {
+            throw new BadRequest('Some submitted voters have duplicate voter IDs');
+        }
+        seenVoterIds.add(rollInput.voter_id);
+    }
+
     const history = [{
         action_type: "added",
         actor: req.user.email,
@@ -47,7 +62,7 @@ const addElectionRoll = async (req: IElectionRequest & { body: { electionRoll: E
     }
     
     // Generate all IDs in parallel first
-    const idPromises: Promise<string>[] = req.body.electionRoll.map((rollInput: ElectionRollInput) =>
+    const idPromises: (string | Promise<string>)[] = req.body.electionRoll.map((rollInput: ElectionRollInput) =>
         rollInput.voter_id || makeUniqueID(
             ID_PREFIXES.VOTER,
             ID_LENGTHS.VOTER,
@@ -72,10 +87,10 @@ const addElectionRoll = async (req: IElectionRequest & { body: { electionRoll: E
 
     if (existingRolls) {
         // Check if rolls already exist
-        const duplicateRolls = req.body.electionRoll.filter((roll: ElectionRoll) => {
+        const duplicateRolls = req.body.electionRoll.filter((roll: ElectionRollInput) => {
             return existingRolls.some(existingRoll => {
                 if (existingRoll.email && roll.email && existingRoll.email === roll.email) return true
-                if (existingRoll.voter_id && roll.voter_id && existingRoll.voter_id === roll.voter_id) return true
+                if (existingRoll.voter_id && roll.voter_id && existingRoll.voter_id.trim() === roll.voter_id) return true
                 return false
             })
         })
