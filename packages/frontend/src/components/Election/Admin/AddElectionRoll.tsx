@@ -157,11 +157,16 @@ const AddElectionRoll = ({ onClose, onUploadingChange }: { onClose: () => void, 
                 return
             }
             const parsed = Papa.parse<Record<string, string>>(text, {
+            const parsed = Papa.parse<Record<string, string>>(text, {
                 header: true,
                 skipEmptyLines: 'greedy',
                 transformHeader: (h) => h.trim(),
-                delimiter: ',',
             })
+            const parseErrors = parsed.errors.filter(error => error.type !== 'Delimiter')
+            if (parseErrors.length > 0) {
+                showError(`Unable to read voter data: ${parseErrors[0].message}`)
+                return
+            }
             const headers = parsed.meta.fields ?? []
             if (headers.length === 0 || !headers.every(val => ['voter_id', 'email', 'precinct'].includes(val))) {
                 showError('Invalid headers')
