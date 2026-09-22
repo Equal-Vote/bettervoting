@@ -64,9 +64,9 @@ export interface UploadRollsResult {
     errorMessage?: string;
 }
 
-// Only failures that a smaller batch could plausibly fix are retried (413 = body too large, 5xx = server trouble, or a network error)
+// Only failures that a smaller batch could plausibly fix are retried (413 = body too large)
 // Anything else (voter limit, permissions, duplicates, etc.) aborts right away, since retrying can't help
-const isRetryableStatus = (status: number) => status === 413 || status >= 500;
+const isRetryableStatus = (status: number) => status === 413;
 
 export async function uploadRollsBatched(
     electionId: string,
