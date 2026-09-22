@@ -1,4 +1,4 @@
-import { ElectionRoll, ElectionRollState, NewElectionRoll } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll";
+import { ElectionRollState, NewElectionRoll } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll";
 import ServiceLocator from "../../ServiceLocator";
 import Logger from "../../Services/Logging/Logger";
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
@@ -72,20 +72,23 @@ const addElectionRoll = async (req: IElectionRequest & { body: { electionRoll: E
 
     if (existingRolls) {
         // Check if rolls already exist
-        const duplicateRolls = req.body.electionRoll.filter((roll: ElectionRoll) => {
-            return existingRolls.some(existingRoll => {
-                if (existingRoll.email && roll.email && existingRoll.email === roll.email) return true
-                if (existingRoll.voter_id && roll.voter_id && existingRoll.voter_id === roll.voter_id) return true
-                return false
-            })
+        // Emails are matched case-insensitively (the voter lookup at login is too), voter ids are trimmed
+        const normalizeEmail = (email?: string) => (email ?? '').trim().toLowerCase();
+        const normalizeVoterId = (voterId?: string) => (voterId ?? '').trim();
+        const existingEmails = new Set(existingRolls.map(r => normalizeEmail(r.email)).filter(e => e));
+        const existingVoterIds = new Set(existingRolls.map(r => normalizeVoterId(r.voter_id)).filter(id => id));
+        const duplicateRolls = req.body.electionRoll.filter((roll: ElectionRollInput) => {
+            const email = normalizeEmail(roll.email);
+            const voterId = normalizeVoterId(roll.voter_id);
+            return (email !== '' && existingEmails.has(email)) || (voterId !== '' && existingVoterIds.has(voterId));
         })
         if (duplicateRolls.length > 0) {
             throw new BadRequest(`Some submitted voters already exist (${duplicateRolls.length} duplicates found)`)
         }
 
         // Check for roll limit
-        let overrides = sharedConfig.ELECTION_VOTER_LIMIT_OVERRIDES as { [key: string]: number};
-        let voterLimit = overrides[req.election.election_id] ?? sharedConfig.FREE_TIER_PRIVATE_VOTER_LIMIT;
+        const overrides = sharedConfig.ELECTION_VOTER_LIMIT_OVERRIDES as { [key: string]: number};
+        const voterLimit = overrides[req.election.election_id] ?? sharedConfig.FREE_TIER_PRIVATE_VOTER_LIMIT;
         if(req.election.settings.voter_access == 'closed' && existingRolls.length + req.body.electionRoll.length > voterLimit){
             throw new BadRequest(`Request Denied: this election is limited to ${voterLimit} voters`);
         }
