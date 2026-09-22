@@ -16,6 +16,7 @@ import { PrimaryButton, SecondaryButton } from "~/components/styles";
 import ElectionAuthForm from "~/components/ElectionForm/Details/ElectionAuthForm";
 import useConfirm from "~/components/ConfirmationDialogProvider";
 import { AdminPageNavigation } from '../Sidebar';
+import HeadToHeadChart from "../../../components/Election/Results/components/HeadToHeadChart";
 
 const ViewElectionRolls = () => {
     const { election, permissions, t, updateElection } = useElection()
@@ -112,6 +113,7 @@ const ViewElectionRolls = () => {
         await fetchRolls();
     }
 
+    const submittedCount = electionRollData.filter(voter => voter.submitted === true).length;
     return (
         <>
             <Box>
@@ -160,6 +162,20 @@ const ViewElectionRolls = () => {
                     )}
                 </RadioGroup>
             </Box>}
+
+            <HeadToHeadChart
+                leftOnly={true}
+                leftName={'Voted'}
+                rightName={''}
+                leftVotes={submittedCount}
+                rightVotes={0}
+                total={electionRollData.length}
+                equalContent={{
+                    title: 'Election Votes',
+                    description: 'Percentage of voters who have cast a vote'
+                }}
+            />
+
             {voterAccess == 'open' && <ElectionAuthForm />}
             {voterAccess == 'closed' && <>
                 {!inspectingVoter && !addRollPage &&
