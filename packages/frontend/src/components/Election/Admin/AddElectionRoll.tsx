@@ -117,7 +117,9 @@ const AddElectionRoll = ({ onClose, onUploadingChange }: { onClose: () => void, 
 
     const onSubmit = async (e) => {
         e.preventDefault()
-        const parsed = Papa.parse<string[]>(voterIDList, { skipEmptyLines: 'greedy' })
+        // delimiter is fixed at ',' rather than auto-detected: with a single enabled column (e.g. voter ID only)
+        // there's no comma to detect, and PapaParse's auto-detection reports that as a (non-fatal) error
+        const parsed = Papa.parse<string[]>(voterIDList, { skipEmptyLines: 'greedy', delimiter: ',' })
         if (parsed.errors.length > 0) {
             showError(`Unable to read voter data: ${parsed.errors[0].message}`)
             return
@@ -158,6 +160,7 @@ const AddElectionRoll = ({ onClose, onUploadingChange }: { onClose: () => void, 
                 header: true,
                 skipEmptyLines: 'greedy',
                 transformHeader: (h) => h.trim(),
+                delimiter: ',',
             })
             const headers = parsed.meta.fields ?? []
             if (headers.length === 0 || !headers.every(val => ['voter_id', 'email', 'precinct'].includes(val))) {
