@@ -35,7 +35,6 @@ function STARResultsViewer({ filterRandomFromLogs }: {filterRandomFromLogs: bool
   const rounds = race.num_winners;
   const roundIndexes = Array.from({length: rounds}, () => i++);
   const flags = useFeatureFlags();
-  const candidates = results.summaryData.candidates;
 
   results = results as starResults;
 
@@ -247,7 +246,8 @@ function ApprovalResultsViewer() {
   </ResultsViewer>
 }
 
-function ResultsViewer({ methodKey, children }:{methodKey: string, children:ReactNode}) {
+// methodKey is accepted so every viewer names its method at the call site, but nothing reads it yet
+function ResultsViewer({ children }:{methodKey: string, children:ReactNode}) {
 
   return (
     <Box className="resultViewer">
