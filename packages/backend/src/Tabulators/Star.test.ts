@@ -97,7 +97,7 @@ describe("STAR Tests", () => {
         expect(results.tieBreakType).toBe('random');
     })
     
-    test("Test valid/invalid/under/bullet vote counts", () => {
+    test("Valid, invalid, under and bullet vote counts", () => {
         const candidates = ['Allison', 'Bill', 'Carmen']
         const votes = [
             [5, 5, 5],
@@ -325,7 +325,7 @@ describe("STAR Score Round Tests", () => {
         expect(roundResults.tieBreakType).toBe('random');
         //runner up doesn't matter here, but need test that random selection occurred
         //
-    }),
+    })
     test("Two way score tie for second, don't advance candidate not in score tie", () => {
         // Tie for second finalist, last place candidate has lowest score and head to head wins but highest five star count
         // This is to test a bug that was found that was advancing the five star winners even if they weren't in the score tiebreaker
@@ -344,5 +344,44 @@ describe("STAR Score Round Tests", () => {
         expect(roundResults.winners.length).toBe(1);
         expect(roundResults.winners[0].name).toBe('Allison');
         expect(roundResults.runner_up[0].name).toBe('Carmen');
+    })
+})
+
+describe("Bloc STAR Tests", () => {
+    test("Two seats: per-seat finalists and the full pairwise matrix (bettervoting.com/k7pfqt)", () => {
+        // 7 ballots, 4 candidates, 2 seats. Anika beats everyone head-to-head but is third
+        // by score, so she misses the seat-1 runoff and only wins once Dev is removed.
+        const candidates = ['Anika', 'Bo', 'Cora', 'Dev']
+        const votes = [
+            [4, 2, 3, 2],
+            [1, 5, 5, 5],
+            [4, 3, 0, 3],
+            [5, 4, 0, 3],
+            [4, 2, 2, 3],
+            [1, 1, 4, 3],
+            [2, 5, 1, 5]]
+        const results = Star(...mapMethodInputs(candidates, votes), 2)
+
+        expect(results.elected.map(c => c.name)).toEqual(['Dev', 'Anika'])
+        // seat 1: Dev 24 and Bo 22 advance; Dev is preferred 2 to 1, 4 voters show equal support
+        expect(results.roundResults[0].winners[0].name).toBe('Dev')
+        expect(results.roundResults[0].runner_up[0].name).toBe('Bo')
+        // seat 2: Dev is removed; Bo 22 and Anika 21 advance; Anika is preferred 4 to 2
+        expect(results.roundResults[1].winners[0].name).toBe('Anika')
+        expect(results.roundResults[1].runner_up[0].name).toBe('Bo')
+        expect(results.roundResults.map(r => r.tieBreakType)).toEqual(['none', 'none'])
+
+        // The pairwise matrix covers every pair, including Cora, who never reaches a runoff.
+        // The results page's Head-to-Head and per-seat Equal Support widgets rely on this.
+        const byName = Object.fromEntries(results.summaryData.candidates.map(c => [c.name, c]))
+        const preferred = (a: string, b: string) => byName[a].votesPreferredOver[byName[b].id]
+        expect([preferred('Anika', 'Bo'), preferred('Bo', 'Anika')]).toEqual([4, 2])
+        expect([preferred('Anika', 'Cora'), preferred('Cora', 'Anika')]).toEqual([5, 2])
+        expect([preferred('Anika', 'Dev'), preferred('Dev', 'Anika')]).toEqual([4, 3])
+        expect([preferred('Dev', 'Bo'), preferred('Bo', 'Dev')]).toEqual([2, 1])
+        expect(results.summaryData.nTallyVotes - preferred('Dev', 'Bo') - preferred('Bo', 'Dev')).toBe(4)
+
+        // winners come first, in seat order, which the results page relies on
+        expect(results.summaryData.candidates.slice(0, 2).map(c => c.name)).toEqual(['Dev', 'Anika'])
     })
 })
