@@ -43,25 +43,21 @@ function STARResultsViewer({ filterRandomFromLogs }: {filterRandomFromLogs: bool
     <WinnerResultPages numWinners={rounds}>
       {roundIndexes.map((i) => <STARResultSummaryWidget key={`STAR-widget-${i}`} results={results} roundIndex={i} t={t}/>)}
     </WinnerResultPages>
-    {rounds == 1 &&
-      <DetailExpander>
-        <STARDetailedResults/>
-        <DetailExpander level={1}>
-          <STARResultDetailedStepsWidget results={results} rounds={rounds} t={t} filterRandomFromLogs={filterRandomFromLogs}/>
-          <STAREqualPreferencesWidget frontRunners={[results.roundResults[0].winners[0], results.roundResults[0].runner_up[0]] as [starCandidate, starCandidate]}/>
-          <HeadToHeadWidget/>
-          <VoterProfileWidget topScore={5}/>
-          {flags.isSet('ALL_STATS') && <ScoreRangeWidget/>}
-          {flags.isSet('ALL_STATS') && <ColumnDistributionWidget/>}
-          {flags.isSet('ALL_STATS') && <NameRecognitionWidget/>}
-        </DetailExpander>
-      </DetailExpander>
-    }
-    {rounds > 1 &&
-      <DetailExpander>
+    <DetailExpander>
+      {/* The score/runoff tables only know about one runoff pair, so they stay single-winner (#1674 keeps them out of scope). */}
+      {rounds == 1 && <STARDetailedResults/>}
+      {/* Stats for Nerds. Each widget must be one direct child in menu order: the level-1 expander
+          builds its dropdown from the registered children but indexes the raw children array. */}
+      <DetailExpander level={1}>
         <STARResultDetailedStepsWidget results={results} rounds={rounds} t={t} filterRandomFromLogs={filterRandomFromLogs}/>
+        <STAREqualPreferencesWidget frontRunners={[results.roundResults[0].winners[0], results.roundResults[0].runner_up[0]] as [starCandidate, starCandidate]}/>
+        <HeadToHeadWidget/>
+        <VoterProfileWidget topScore={5}/>
+        {flags.isSet('ALL_STATS') && <ScoreRangeWidget/>}
+        {flags.isSet('ALL_STATS') && <ColumnDistributionWidget/>}
+        {flags.isSet('ALL_STATS') && <NameRecognitionWidget/>}
       </DetailExpander>
-    }
+    </DetailExpander>
   </ResultsViewer>
 }
 
