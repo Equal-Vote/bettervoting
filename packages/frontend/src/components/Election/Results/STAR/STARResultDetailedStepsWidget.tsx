@@ -44,7 +44,7 @@ const STARResultDetailedStepsWidget = ({ results, rounds, t, filterRandomFromLog
             </Paper> }
             {results.roundResults.map((round, r) => (
                 <Box key={r}>
-                    {rounds > 1 && <Typography variant="h4">{`Winner ${r + 1}`}</Typography>}
+                    {rounds > 1 && <Typography variant="h4">{t('results.star.seat_heading', {n: r + 1})}</Typography>}
                     <ul style={{listStyleType: 'none'}}>
                         {roundLogGroups[r].map((group, i) => <li key={i} style={{textAlign: 'left'}}>
                             {group.length == 1 && group[0]}

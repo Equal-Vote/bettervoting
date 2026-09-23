@@ -50,7 +50,7 @@ function STARResultsViewer({ filterRandomFromLogs }: {filterRandomFromLogs: bool
           builds its dropdown from the registered children but indexes the raw children array. */}
       <DetailExpander level={1}>
         <STARResultDetailedStepsWidget results={results} rounds={rounds} t={t} filterRandomFromLogs={filterRandomFromLogs}/>
-        <STAREqualPreferencesWidget frontRunners={[results.roundResults[0].winners[0], results.roundResults[0].runner_up[0]] as [starCandidate, starCandidate]}/>
+        <STAREqualPreferencesWidget/>
         <HeadToHeadWidget/>
         <VoterProfileWidget topScore={5}/>
         {flags.isSet('ALL_STATS') && <ScoreRangeWidget/>}
