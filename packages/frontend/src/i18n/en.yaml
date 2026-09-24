@@ -322,6 +322,8 @@ results:
       - To understand how the tie was broken, we recommend [learning more about Star Voting's Official Tiebreaker Protocol](https://starvoting.org/ties) and then following the steps below to see how they were resolved for this election.
     equal_preferences_title: Distribution of Equal Support
     equal_preferences: Equal Support
+    equal_preferences_pair: '{{winner}} vs {{runner_up}}'
+    seat_heading: Winner {{n}}
     score_higher_than_runoff_title: Why is the top scoring candidate different from the winner?
     score_higher_than_runoff_text: |
       The top-scoring candidate often matches the runoff winner, but not always.
