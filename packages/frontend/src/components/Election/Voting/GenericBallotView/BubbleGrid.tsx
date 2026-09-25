@@ -6,6 +6,8 @@ import { BallotCandidate, IBallotContext } from '../VotePage';
 
 interface BubbleGridProps {
   ballotContext: IBallotContext;
+  candidate?: BallotCandidate;
+  candidateIndex?: number;
   columnValues: number[];
   columns: string[];
   numHeaderRows: number;
@@ -33,6 +35,11 @@ const SEMANTIC_BY_METHOD: Record<VotingMethod, BubbleSemantic> = {
 // transient duplicate ranks or move the lone vote, so for those we move focus only and require
 // Space/Enter to commit.
 const SELECT_ON_MOVE_METHODS = new Set(['STAR', 'STAR_PR']);
+
+// Methods whose bubbles form one roving radio group per candidate row: their rows are
+// interleaved with candidate names in the DOM so Tab reaches candidate name then row.
+export const isRowInterleaveMethod = (method: VotingMethod): boolean =>
+  SEMANTIC_BY_METHOD[method] === 'radio-per-row';
 
 const gridAreaFor = (makeArea: BubbleGridProps['makeArea'], numHeaderRows: number, candidateIndex: number, columnIndex: number) =>
   // numHeaderRows offsets for the header rows, +1 for 0-indexed candidateIndex, +1 for the gutter row,
@@ -62,6 +69,7 @@ interface BubbleButtonProps {
   role: 'radio' | 'checkbox';
   ariaChecked?: boolean;
   tabIndex?: number;
+  disabled?: boolean;
   className: string;
   gridArea: string;
   onClick: () => void;
@@ -72,7 +80,7 @@ interface BubbleButtonProps {
 }
 
 const BubbleButton = React.forwardRef<HTMLButtonElement, BubbleButtonProps>(function BubbleButton(
-  { ariaLabel, role, ariaChecked, tabIndex, className, gridArea, onClick, onKeyDown, label, fontSX },
+  { ariaLabel, role, ariaChecked, tabIndex, disabled, className, gridArea, onClick, onKeyDown, label, fontSX },
   ref,
 ) {
   return (
@@ -83,6 +91,7 @@ const BubbleButton = React.forwardRef<HTMLButtonElement, BubbleButtonProps>(func
       aria-label={ariaLabel}
       aria-checked={!!ariaChecked}
       tabIndex={tabIndex}
+      disabled={disabled}
       className={className}
       style={{ gridArea }}
       onClick={onClick}
@@ -103,6 +112,7 @@ interface RadioRowGroupProps {
   selectedScore: number | null;
   rankScoreVote: 'Score' | 'Rank' | 'Vote';
   selectOnMove: boolean;
+  disabled: boolean;
   onCommit: (candidateIndex: number, columnValue: number) => void;
   classNameFor: (candidateIndex: number, columnValue: number) => string;
   makeArea: BubbleGridProps['makeArea'];
@@ -118,6 +128,7 @@ function RadioRowGroup({
   selectedScore,
   rankScoreVote,
   selectOnMove,
+  disabled,
   onCommit,
   classNameFor,
   makeArea,
@@ -140,12 +151,13 @@ function RadioRowGroup({
       if (target === null) return;
       e.preventDefault();
       setActiveIndex(target);
-      refs.current[target]?.focus();
-      if (selectOnMove) {
+      // focusVisible keeps the ring on script-driven focus (Chromium suppresses it).
+      refs.current[target]?.focus({ focusVisible: true } as FocusOptions);
+      if (selectOnMove && columnValues[target] !== selectedScore) {
         onCommit(candidateIndex, columnValues[target]);
       }
     },
-    [columnValues, selectOnMove, onCommit, candidateIndex],
+    [columnValues, selectedScore, selectOnMove, onCommit, candidateIndex],
   );
 
   return (
@@ -162,6 +174,7 @@ function RadioRowGroup({
           ariaChecked={candidate.score === columnValue}
           ariaLabel={`${rankScoreVote} ${candidate.candidate_name} ${columnValue}`}
           tabIndex={columnIndex === activeIndex ? 0 : -1}
+          disabled={disabled}
           className={classNameFor(candidateIndex, columnValue)}
           gridArea={gridAreaFor(makeArea, numHeaderRows, candidateIndex, columnIndex)}
           onClick={() => {
@@ -183,6 +196,7 @@ interface RadioGridGroupProps {
   columnLabel: string;
   rankScoreVote: 'Score' | 'Rank' | 'Vote';
   raceTitle: string;
+  disabled: boolean;
   onCommit: (candidateIndex: number, columnValue: number) => void;
   classNameFor: (candidateIndex: number, columnValue: number) => string;
   makeArea: BubbleGridProps['makeArea'];
@@ -196,6 +210,7 @@ function RadioGridGroup({
   columnLabel,
   rankScoreVote,
   raceTitle,
+  disabled,
   onCommit,
   classNameFor,
   makeArea,
@@ -235,6 +250,7 @@ function RadioGridGroup({
           ariaChecked={candidate.score === columnValue}
           ariaLabel={`${rankScoreVote} ${candidate.candidate_name}`}
           tabIndex={candidateIndex === activeIndex ? 0 : -1}
+          disabled={disabled}
           className={classNameFor(candidateIndex, columnValue)}
           gridArea={gridAreaFor(makeArea, numHeaderRows, candidateIndex, 0)}
           onClick={() => {
@@ -250,7 +266,7 @@ function RadioGridGroup({
   );
 }
 
-const BubbleGrid: React.FC<BubbleGridProps> = ({ ballotContext, columnValues, columns, numHeaderRows, onClick, makeArea, fontSX }) => {
+const BubbleGrid: React.FC<BubbleGridProps> = ({ ballotContext, candidate, candidateIndex, columnValues, columns, numHeaderRows, onClick, makeArea, fontSX }) => {
   const { candidates, instructionsRead, alertBubbles } = ballotContext;
   const votingMethod = ballotContext.race.voting_method;
   const rankScoreVote: 'Score' | 'Rank' | 'Vote' =
@@ -275,6 +291,27 @@ const BubbleGrid: React.FC<BubbleGridProps> = ({ ballotContext, columnValues, co
 
   if (semantic === 'radio-per-row') {
     const selectOnMove = SELECT_ON_MOVE_METHODS.has(votingMethod);
+    if (candidate && candidateIndex !== undefined) {
+      // Called once per candidate so GenericBallotGrid can interleave each row's
+      // bubbles right after its candidate name (Tab order follows DOM order).
+      return (
+        <RadioRowGroup
+          candidate={candidate}
+          candidateIndex={candidateIndex}
+          columnValues={columnValues}
+          columns={columns}
+          selectedScore={candidate.score ?? null}
+          rankScoreVote={rankScoreVote}
+          selectOnMove={selectOnMove}
+          disabled={!instructionsRead}
+          onCommit={onClick}
+          classNameFor={classNameFor}
+          makeArea={makeArea}
+          numHeaderRows={numHeaderRows}
+          fontSX={fontSX}
+        />
+      );
+    }
     return (
       <>
         {candidates.map((candidate, candidateIndex) => (
@@ -287,6 +324,7 @@ const BubbleGrid: React.FC<BubbleGridProps> = ({ ballotContext, columnValues, co
             selectedScore={candidate.score ?? null}
             rankScoreVote={rankScoreVote}
             selectOnMove={selectOnMove}
+            disabled={!instructionsRead}
             onCommit={onClick}
             classNameFor={classNameFor}
             makeArea={makeArea}
@@ -306,6 +344,7 @@ const BubbleGrid: React.FC<BubbleGridProps> = ({ ballotContext, columnValues, co
         columnLabel={columns.length === 1 ? ' ' : String(columnValues[0])}
         rankScoreVote={rankScoreVote}
         raceTitle={ballotContext.race.title}
+        disabled={!instructionsRead}
         onCommit={onClick}
         classNameFor={classNameFor}
         makeArea={makeArea}
@@ -328,6 +367,7 @@ const BubbleGrid: React.FC<BubbleGridProps> = ({ ballotContext, columnValues, co
               role="checkbox"
               ariaChecked={isSelected}
               ariaLabel={`${rankScoreVote} ${candidate.candidate_name} ${rankScoreVote !== 'Vote' ? columnValue : ''}`}
+              disabled={!instructionsRead}
               className={classNameFor(candidateIndex, columnValue)}
               gridArea={gridAreaFor(makeArea, numHeaderRows, candidateIndex, columnIndex)}
               onClick={() => onClick(candidateIndex, columnValue)}

@@ -1,11 +1,11 @@
 
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import BubbleGrid from "./BubbleGrid";
+import BubbleGrid, { isRowInterleaveMethod } from "./BubbleGrid";
 import useSnackbar from '~/components/SnackbarContext';
 import { IBallotContext } from '../VotePage';
 import CandidateLabel from './CandidateLabel';
-import { useMemo } from 'react';
+import { Fragment, useMemo } from 'react';
 import ColumnHeadings from './ColumnHeadings';
 
 interface GenericBallotGridProps {
@@ -30,6 +30,7 @@ export default function GenericBallotGrid({
 
 }: GenericBallotGridProps) {
     const numHeaderRows = Number(leftTitle != '') + Number(columns.length > 1);
+    const interleaveRows = isRowInterleaveMethod(ballotContext.race.voting_method);
     const { setSnack } = useSnackbar();
     const dividerHeight = '2px';  //  Note that we can't use gap here
     const makeArea = (row, column, width = 1, height = 1) => {
@@ -155,25 +156,41 @@ export default function GenericBallotGrid({
 
             {/* Candidates */}
             {ballotContext.candidates.map((candidate, candidateIndex) =>
-                <CandidateLabel
-                    key={candidateIndex}
-                    //make area is 1 indexed, so we add 1 to candidateIndex, 
-                    //and 1 to numHeaderRows to account for the divider between the header and the candidates
-                    //and multiply by 2 to account for each candidate having a name and a divider
-                    candidate={candidate} gridArea={{
-                        xs: makeArea(numHeaderRows + 1 + 3 * candidateIndex + 1, 1, 2 + columns.length),
-                        sm: makeArea(numHeaderRows + 1 + 3 * candidateIndex + 2, 1),
-                    }}/>
+                <Fragment key={candidateIndex}>
+                    <CandidateLabel
+                        //make area is 1 indexed, so we add 1 to candidateIndex,
+                        //and 1 to numHeaderRows to account for the divider between the header and the candidates
+                        //and multiply by 2 to account for each candidate having a name and a divider
+                        candidate={candidate} gridArea={{
+                            xs: makeArea(numHeaderRows + 1 + 3 * candidateIndex + 1, 1, 2 + columns.length),
+                            sm: makeArea(numHeaderRows + 1 + 3 * candidateIndex + 2, 1),
+                        }}/>
+                    {interleaveRows && (
+                        <BubbleGrid
+                            ballotContext={ballotContext}
+                            candidate={candidate}
+                            candidateIndex={candidateIndex}
+                            columnValues={columnValues}
+                            columns={columns}
+                            numHeaderRows={numHeaderRows}
+                            onClick={onClick}
+                            makeArea={makeArea}
+                            fontSX={fontSX}
+                        />
+                    )}
+                </Fragment>
             )}
-            <BubbleGrid
-                ballotContext={ballotContext}
-                columnValues={columnValues}
-                columns={columns}
-                numHeaderRows={numHeaderRows}
-                onClick={onClick}
-                makeArea={makeArea}
-                fontSX={fontSX}
-            />
+            {!interleaveRows && (
+                <BubbleGrid
+                    ballotContext={ballotContext}
+                    columnValues={columnValues}
+                    columns={columns}
+                    numHeaderRows={numHeaderRows}
+                    onClick={onClick}
+                    makeArea={makeArea}
+                    fontSX={fontSX}
+                />
+            )}
         </Box>
     </Box>
 }
