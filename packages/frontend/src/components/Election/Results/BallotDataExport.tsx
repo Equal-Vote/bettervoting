@@ -3,9 +3,11 @@ import { ElectionResults } from '@equal-vote/star-vote-shared/domain_model/ITabu
 import MenuItem from "@mui/material/MenuItem";
 import BorderAll from '@mui/icons-material/BorderAll';
 import DataObject from '@mui/icons-material/DataObject';
+import Compress from '@mui/icons-material/Compress';
 import { MenuButton } from '~/components/MenuButton';
 import useAnonymizedBallots from '~/components/AnonymizedBallotsContextProvider';
 import { Box } from '@mui/material';
+import { buildElectionExport } from '@equal-vote/star-vote-shared/utils/exportFormat';
 
 interface Props {
     election: Election;
@@ -84,12 +86,26 @@ export const BallotDataExport = ({ election, results }: Props) => {
         );
     };
 
+    // The existing export: the raw in-memory objects, unchanged. Anything already
+    // parsing this file keeps working byte-for-byte.
     const downloadJson = () => {
         const ballotObject = { Election: election, Ballots: ballots, ...(results && { Results: results }) };
         triggerDownload(
             JSON.stringify(ballotObject, null, 2),
             'application/json',
             `Ballot Data - ${limit(election.title, 50)}-${election.election_id}.json`,
+        );
+    };
+
+    // The compact export (format_version 2): same data, without the tabulator's
+    // internal shape — see packages/shared/src/utils/exportFormat.ts. Offered
+    // alongside the original rather than replacing it, so no existing consumer
+    // breaks. Making it the default later is a one-line change here.
+    const downloadJsonV2 = () => {
+        triggerDownload(
+            JSON.stringify(buildElectionExport(election, ballots, results), null, 2),
+            'application/json',
+            `Ballot Data - ${limit(election.title, 50)}-${election.election_id}.v2.json`,
         );
     };
 
@@ -108,6 +124,10 @@ export const BallotDataExport = ({ election, results }: Props) => {
                         <MenuItem key="json" onClick={downloadJson}>
                             <DataObject sx={{ marginRight: 1 }} />
                             Download JSON
+                        </MenuItem>,
+                        <MenuItem key="json-v2" onClick={downloadJsonV2}>
+                            <Compress sx={{ marginRight: 1 }} />
+                            Download JSON (compact)
                         </MenuItem>,
                     ]}
                 </MenuButton>
