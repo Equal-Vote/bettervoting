@@ -522,7 +522,7 @@ export default function EnhancedTable(props: EnhancedTableProps) {
   const [dense] = useState(true);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const headCells: HeadCell[] = props.headKeys.map(key => headCellPool[key] as HeadCell);
-  const { t } = useSubstitutedTranslation();
+  const { t, i18n } = useSubstitutedTranslation();
   const [filters, setFilters] = useState([])
 
   if (filters.length != headCells.length) {
@@ -596,6 +596,25 @@ export default function EnhancedTable(props: EnhancedTableProps) {
     [order, orderBy, page, rowsPerPage, filteredRows],
   );
 
+  // skipProcessing keeps user-typed search text from being parsed as link/bold/tip markup
+  const plainT = (key: string, v: object) => t(key, { ...v, skipProcessing: true });
+
+  // Describes each filter that's actually narrowing the table, so an empty result can say why it's empty
+  const orFormatter = new Intl.ListFormat(i18n.language, { type: 'disjunction' });
+  const activeFilters = headCells.flatMap((col, colInd) => {
+    const filter = filters[colInd];
+    if (col.filterType === 'search' && filter) {
+      return [plainT('table.search_filter', { label: col.label, value: filter })];
+    }
+    if (col.filterType === 'groups' && filter) {
+      const selected = Object.keys(filter).filter(group => filter[group]);
+      if (selected.length === Object.keys(filter).length) return [];
+      if (selected.length === 0) return [plainT('table.group_filter_empty', { label: col.label })];
+      return [plainT('table.group_filter', { label: col.label, value: orFormatter.format(selected) })];
+    }
+    return [];
+  });
+
 
   return (
     <Container>
@@ -622,7 +641,9 @@ export default function EnhancedTable(props: EnhancedTableProps) {
                   <TableRow>
                     <TableCell colSpan={headCells.length} align="center" sx={{ py: 4 }}>
                       <Typography variant="body1" color="text.secondary">
-                        {props.emptyContent}
+                        {props.data?.length > 0 && activeFilters.length > 0
+                          ? plainT('table.no_filter_matches', { filters: activeFilters })
+                          : props.emptyContent}
                       </Typography>
                     </TableCell>
                   </TableRow>
