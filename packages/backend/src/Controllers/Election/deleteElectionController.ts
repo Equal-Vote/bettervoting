@@ -1,8 +1,6 @@
 import ServiceLocator from '../../ServiceLocator';
 import Logger from '../../Services/Logging/Logger';
-import { responseErr } from '../../Util';
-import { IRequest } from '../../IRequest';
-import { hasPermission, permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
+import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { expectPermission } from "../controllerUtils";
 import { BadRequest } from "@curveball/http-errors";
 import { IElectionRequest } from "../../IRequest";
@@ -11,11 +9,10 @@ import { Response, NextFunction } from 'express';
 var ElectionsModel = ServiceLocator.electionsDb();
 const className = "Elections.Controllers";
 
-const deleteElection = async (req: IElectionRequest, res: Response, next: NextFunction) => {
+const deleteElection = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     expectPermission(req.user_auth.roles, permissions.canDeleteElection)
     const electionId = req.election.election_id;
     Logger.info(req, `${className}.deleteElection ${electionId}`)
-    var failMsg = "Election not deleted";
     const success = await ElectionsModel.delete(electionId, req, `User manually deleting election`);
     if (!success) {
         var msg = "Nothing to delete";

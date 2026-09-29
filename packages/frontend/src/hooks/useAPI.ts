@@ -6,7 +6,6 @@ import { VotingMethod } from "@equal-vote/star-vote-shared/domain_model/Race";
 import { ElectionResults } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
 import { Ballot, NewBallot, AnonymizedBallot, NewBallotWithVoterID, BallotSubmitStatus } from "@equal-vote/star-vote-shared/domain_model/Ballot";
 import { email_request_data } from "@equal-vote/star-vote-backend/src/Controllers/Election/sendEmailController"
-import { NumberObject } from "~/components/util";
 import { WriteInCandidate, WriteInData } from "@equal-vote/star-vote-shared/domain_model/WriteIn";
 
 export const useGetElection = (electionID: string | undefined) => {

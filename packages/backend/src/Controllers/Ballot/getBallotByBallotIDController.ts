@@ -1,13 +1,12 @@
 import ServiceLocator from "../../ServiceLocator";
 import Logger from "../../Services/Logging/Logger";
 import { BadRequest } from "@curveball/http-errors";
-import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
 
 const BallotModel = ServiceLocator.ballotsDb();
 
-const getBallotByBallotID = async (req: IElectionRequest, res: Response, next: NextFunction) => {
+const getBallotByBallotID = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     var electionId = req.election.election_id;
     var ballot_id = req.params.ballot_id
     if (!ballot_id) {

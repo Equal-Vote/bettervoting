@@ -1,9 +1,11 @@
+import { Pool } from 'pg';
+
 export class DemoPGStore {
 
-    _postgresClient;
+    _postgresClient: Pool;
     _tableName:string;
 
-    constructor(client:any, tableName:string) {
+    constructor(client:Pool, tableName:string) {
         this._postgresClient = client;
         this._tableName = tableName;
     }
@@ -14,12 +16,12 @@ export class DemoPGStore {
         CREATE TABLE IF NOT EXISTS ${this._tableName} (
             id SERIAL PRIMARY KEY,
             key VARCHAR UNIQUE,
-            val VARCHAR 
+            val VARCHAR
           );
         `;
         console.info(query);
         var p =  this._postgresClient.query(query);
-        return p.then((_: any) => {
+        return p.then(() => {
             return this;
           });
     }
@@ -37,7 +39,7 @@ export class DemoPGStore {
             text: sqlString,
             values: [key, value]
         });
-        return p.then((res: any) => {
+        return p.then((res) => {
             console.info("set response rows: " + JSON.stringify(res));
             return value;
           });
@@ -53,7 +55,7 @@ export class DemoPGStore {
             text: sqlString,
             values: [key]
         });
-        return p.then((response: any) => {
+        return p.then((response) => {
             var rows = response.rows;
             if (rows.length == 0){
                 console.info(".get null");
@@ -73,7 +75,7 @@ export class DemoPGStore {
             text: sqlString,
             values: [key]
         });
-        return p.then((response: any) => {
+        return p.then((response) => {
             if (response.rowCount == 1){
                 return true;
             }

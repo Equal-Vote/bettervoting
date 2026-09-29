@@ -1,17 +1,12 @@
-import { Dispatch, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useState } from "react"
 
 import { scrollToElement } from '../../util';
-import useElection, { IElectionContext } from '../../ElectionContextProvider';
+import useElection from '../../ElectionContextProvider';
 import { Race as iRace } from '@equal-vote/star-vote-shared/domain_model/Race';
 import structuredClone from '@ungap/structured-clone';
-import useConfirm from '../../ConfirmationDialogProvider';
-import { Election as IElection } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { makeID, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
 import { Candidate } from '@equal-vote/star-vote-shared/domain_model/Candidate';
-import { useDeleteAllBallots } from '~/hooks/useAPI';
-import useSnackbar from '~/components/SnackbarContext';
-import { Election, NewElection } from '@equal-vote/star-vote-shared/domain_model/Election';
 
 export interface RaceErrors {
     raceTitle?: string,

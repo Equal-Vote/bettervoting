@@ -1,5 +1,6 @@
 import express from 'express';
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
+import http from 'http';
 
 import { innerGetGlobalElectionStats } from './Controllers/Election';
 
@@ -7,8 +8,8 @@ import { innerGetGlobalElectionStats } from './Controllers/Election';
 export let io: Server|null = null;
 
 export const setupSockets = (app: express.Application) => {
-    const server = require('http').createServer(app)
-    
+    const server = http.createServer(app)
+
 
     io = new Server(server, {
         cors: {
@@ -16,7 +17,7 @@ export const setupSockets = (app: express.Application) => {
         }
     })
 
-    io.on('connection', (socket: any) => {
+    io.on('connection', (socket: Socket) => {
         socket.on('join_landing_page', async () => {
             socket.join('landing_page');
             socket.emit('updated_stats', await innerGetGlobalElectionStats(app.locals.req));

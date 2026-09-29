@@ -1,12 +1,10 @@
 import {
   ColumnUpdateNode,
   OperationNodeTransformer,
-  OperatorNode,
   PrimitiveValueListNode,
   ValueListNode,
   ValueNode,
   ValuesNode,
-  OperationNode
 } from 'kysely'
 import {
   Caster,
@@ -63,7 +61,7 @@ export class SerializeParametersTransformer extends OperationNodeTransformer {
           return listNodeItem
         }
 
-        const { value, ...item } = listNodeItem as ValueNode
+        const { value } = listNodeItem as ValueNode
 
         const serializedValue = this.#serializer(value)
 
@@ -91,7 +89,7 @@ export class SerializeParametersTransformer extends OperationNodeTransformer {
       return super.transformColumnUpdate(node)
     }
 
-    const { value, ...item } = valueNode as ValueNode
+    const { value } = valueNode as ValueNode
 
     const serializedValue = this.#serializer(value)
 

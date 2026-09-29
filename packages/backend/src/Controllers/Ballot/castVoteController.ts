@@ -1,12 +1,10 @@
 import { Election } from "@equal-vote/star-vote-shared/domain_model/Election";
-import { ElectionRoll } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll";
 import { Ballot, ballotValidation, NewBallot, OrderedNewBallot, RaceCandidateOrder } from '@equal-vote/star-vote-shared/domain_model/Ballot';
 import ServiceLocator from "../../ServiceLocator";
 import Logger from "../../Services/Logging/Logger";
 import { BadRequest, Conflict, InternalServerError, Unauthorized } from "@curveball/http-errors";
 import { ILoggingContext } from "../../Services/Logging/ILogger";
 import { randomUUID } from "crypto";
-import { Uid } from "@equal-vote/star-vote-shared/domain_model/Uid";
 import { Receipt } from "../../Services/Email/EmailTemplates"
 import { getOrCreateElectionRoll, checkForMissingAuthenticationData, getVoterAuthorization } from "../Roll/voterRollUtils"
 import { innerGetGlobalElectionStats } from "../Election";
@@ -18,6 +16,7 @@ import { expectPermission } from "../controllerUtils";
 import { permissions } from "@equal-vote/star-vote-shared/domain_model/permissions";
 import { OrderedVoteFormatError, orderedVotesToVotes } from "@equal-vote/star-vote-shared/domain_model/OrderedVoteCodec";
 import { makeUniqueID, ID_LENGTHS, ID_PREFIXES } from "@equal-vote/star-vote-shared/utils/makeID";
+import { getErrorMessage } from '../../errorUtils';
 
 const ElectionsModel = ServiceLocator.electionsDb();
 const BallotModel = ServiceLocator.ballotsDb();
@@ -75,7 +74,7 @@ async function makeBallotEvent(req: IElectionRequest, targetElection: Election, 
     if (targetElection.settings.ballot_updates && targetElection.state !== 'draft') {
         try {
             updatableBallot = await BallotModel.getBallotByVoterID(roll!.voter_id, inputBallot.election_id, req);
-        } catch(e: any) {
+        } catch(e: unknown) {
             const msg = "Error searching for prior ballot";
             Logger.error(req, msg, e);
             throw new InternalServerError(msg);
@@ -129,12 +128,12 @@ const mapOrderedNewBallot = (ballot: OrderedNewBallot, raceOrder: RaceCandidateO
             ...subBallot,
             votes: orderedVotesToVotes(orderedVotes, raceOrder)
         }
-    } catch (err: any) {
+    } catch (err: unknown) {
         if (err instanceof OrderedVoteFormatError) throw new BadRequest(err.message);
         throw err;
     }
 }
-async function uploadBallotsController(req: IElectionRequest, res: Response, next: NextFunction) {
+async function uploadBallotsController(req: IElectionRequest, res: Response, _next: NextFunction) {
     Logger.info(req, "Upload Ballots Controller");
 
     expectPermission(req.user_auth.roles, permissions.canUploadBallots);
@@ -184,19 +183,20 @@ async function uploadBallotsController(req: IElectionRequest, res: Response, nex
                 `Admin submits a ballot for prior election`
             )
         } else {
-            const validEvents = events.filter((event: any) => !('error' in event)) as CastVoteEvent[];
+            const validEvents = events.filter((event) => !('error' in event)) as CastVoteEvent[];
             const successfullySavedEvents: CastVoteEvent[] = [];
             for (const event of validEvents) {
                 const ctx = Logger.createContext(event.requestId);
                 try {
                     await ServiceLocator.castVoteStore().submitBallotEvent(event, ctx);
                     successfullySavedEvents.push(event);
-                } catch (e: any) {
-                    Logger.error(req, `Could not upload ballot for ${event.roll?.voter_id || event.inputBallot.user_id || 'unknown'}: ${e.message}`);
+                } catch (e: unknown) {
+                    const message = getErrorMessage(e);
+                    Logger.error(req, `Could not upload ballot for ${event.roll?.voter_id || event.inputBallot.user_id || 'unknown'}: ${message}`);
                     const index = events.indexOf(event);
                     if (index !== -1) {
                         output[index].success = false;
-                        output[index].message = e.message;
+                        output[index].message = message;
                     }
                 }
             }
@@ -204,9 +204,9 @@ async function uploadBallotsController(req: IElectionRequest, res: Response, nex
                 await (await EventQueue).publishBatch(castVoteEventQueue, successfullySavedEvents);
             }
         }
-    }catch(err: any){
+    }catch(err: unknown){
         const msg = `Could not upload ballots`;
-        Logger.error(req, `${msg}: ${err.message}`);
+        Logger.error(req, `${msg}: ${getErrorMessage(err)}`);
         throw new InternalServerError(msg)
     }
 
@@ -218,7 +218,7 @@ async function uploadBallotsController(req: IElectionRequest, res: Response, nex
     Logger.debug(req, "CastVoteController done, saved event to store");
 };
 
-async function castVoteController(req: IElectionRequest, res: Response, next: NextFunction) {
+async function castVoteController(req: IElectionRequest, res: Response, _next: NextFunction) {
     Logger.info(req, "Cast Vote Controller");
 
     const targetElection = req.election;
@@ -240,13 +240,14 @@ async function castVoteController(req: IElectionRequest, res: Response, next: Ne
     const ctx = Logger.createContext(event.requestId);
     try {
         await ServiceLocator.castVoteStore().submitBallotEvent(event, ctx);
-    } catch (e: any) {
-        if (e.message === "ALREADY_VOTED") {
+    } catch (e: unknown) {
+        const message = getErrorMessage(e);
+        if (message === "ALREADY_VOTED") {
             Logger.info(req, "Ballot Rejected. User has already voted.");
             throw new BadRequest("User has already voted");
         }
-        if (e.message === "CONCURRENT_BALLOT_UPDATE_DETECTED" || e.message === "CONCURRENT_ROLL_EDIT_DETECTED") {
-            Logger.info(req, `Ballot Rejected: ${e.message}`);
+        if (message === "CONCURRENT_BALLOT_UPDATE_DETECTED" || message === "CONCURRENT_ROLL_EDIT_DETECTED") {
+            Logger.info(req, `Ballot Rejected: ${message}`);
             throw new Conflict("Concurrent edit detected, please retry.");
         }
         throw e;
@@ -287,7 +288,7 @@ async function handleCastVoteEvent(job: { id: string; data: CastVoteEvent; }):Pr
     }
 }
 
-function assertVoterMayVote(voterAuthorization:any, election: Election, ctx:ILoggingContext ): void{
+function assertVoterMayVote(voterAuthorization: ReturnType<typeof getVoterAuthorization>, election: Election, ctx:ILoggingContext ): void{
     Logger.debug(ctx, "assert voter may vote");
     if (voterAuthorization.authorized_voter === false){
         throw new Unauthorized("User not authorized to vote");

@@ -13,6 +13,7 @@ import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
 import { Imsg } from '../../Services/Email/IEmail';
 import { logSafeHash } from '../../Services/Logging/logSafeHash';
+import { getErrorMessage } from '../../errorUtils';
 
 var ElectionRollModel = ServiceLocator.electionRollDb();
 var ElectionModel = ServiceLocator.electionsDb();
@@ -61,7 +62,7 @@ const makeTestRoll = (election_id: string, email: string) => <ElectionRoll>{
     head: true
 }
 
-const sendEmailsController = async (req: IElectionRequest, res: Response, next: NextFunction) => {
+const sendEmailsController = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     Logger.info(req, `${className}.sendEmails ${req.election.election_id}`);
     expectPermission(req.user_auth.roles, permissions.canSendEmails)
 
@@ -169,7 +170,7 @@ const sendEmailsController = async (req: IElectionRequest, res: Response, next: 
                 election: undefined,
                 url: url,
                 voter_id: roll.voter_id,
-                sender: req.user.email,
+                sender: req.user?.email ?? '',
                 email: email_request.email,
                 message_id: message_id,
                 test_email: email_request.target == 'test' ? (roll.email ?? '') : ''
@@ -183,7 +184,7 @@ const sendEmailsController = async (req: IElectionRequest, res: Response, next: 
         await (await EventQueue).publishBatch(SendEmailEventQueue, Jobs, { spacingMs: emailSendSpacingMs() });
     } catch (err: any) {
         const msg = `Could not send invitations`;
-        Logger.error(req, `${msg}: ${err.message}`);
+        Logger.error(req, `${msg}: ${getErrorMessage(err)}`);
         throw new InternalServerError(failMsg)
     }
 
@@ -238,8 +239,8 @@ async function handleSendEmailEvent(job: { id: string; data: email_request_event
                 event_timestamp: new Date().toISOString(),
                 details: { status_code: emailResponse?.[0]?.[0]?.statusCode },
             }, ctx);
-        } catch (err: any) {
-            Logger.error(ctx, `Could not insert email event: ${err.message}`);
+        } catch (err: unknown) {
+            Logger.error(ctx, `Could not insert email event: ${getErrorMessage(err)}`);
         }
     }
 
@@ -267,9 +268,9 @@ async function handleSendEmailEvent(job: { id: string; data: email_request_event
         if (!updatedElectionRoll) {
             throw new InternalServerError()
         }
-    } catch (err: any) {
+    } catch (err: unknown) {
         const msg = `Could not update election roll`;
-        Logger.error(ctx, `${msg}: ${err.message}`);
+        Logger.error(ctx, `${msg}: ${getErrorMessage(err)}`);
         throw new InternalServerError(msg)
     }
 }
