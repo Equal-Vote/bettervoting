@@ -1,4 +1,4 @@
-require('dotenv').config()
+import 'dotenv/config'
 import { createMigrator, handleMigration } from "./migration-utils"
 
 async function migrateUp() {

@@ -1,5 +1,4 @@
 import { timeZones, TimeZone } from "./Util";
-import { ElectionState } from "./ElectionStates"
 import { getVoterAuthenticationMode } from "./VoterAuthenticationMode";
 
 export interface registration_field {
@@ -19,10 +18,8 @@ export interface authentication {
 }
 const TermTypes = ['poll', 'election'] as const;
 export type TermType = typeof TermTypes[number];
-const VoterAcessArray = ['open', 'closed', 'registration'] as const;
-export type VoterAccess = typeof VoterAcessArray[number];
-const InvitationTypes = ['email', 'address'] as const;
-export type InvitationType = typeof InvitationTypes[number];
+export type VoterAccess = 'open' | 'closed' | 'registration';
+export type InvitationType = 'email' | 'address';
 
 export interface ElectionSettings {
     voter_access?:         VoterAccess;  //   Who is able to vote in election?
@@ -42,7 +39,7 @@ export interface ElectionSettings {
     exhaust_on_N_repeated_skipped_marks?: number; // number of skipped ranks before exhausting
     draggable_ballot?: boolean; // Use draggable interface for IRV ballots
 }
-function settingsCompatiblityValidation(settings: ElectionSettings, electionState?: ElectionState): string {
+function settingsCompatiblityValidation(settings: ElectionSettings): string {
     let errorMsg = ''
     if (settings.ballot_updates) {
         if (settings.voter_access == 'open') {
@@ -55,7 +52,7 @@ function settingsCompatiblityValidation(settings: ElectionSettings, electionStat
     return errorMsg;
 }
 
-export function electionSettingsValidation(obj:ElectionSettings, electionState?: ElectionState): string | null {
+export function electionSettingsValidation(obj:ElectionSettings): string | null {
   if (!obj){
     return "ElectionSettings is null";
   }
@@ -100,7 +97,7 @@ export function electionSettingsValidation(obj:ElectionSettings, electionState?:
     return "Invalid Draggable Ballot";
   }
 
-  const compatibilityError = settingsCompatiblityValidation(obj, electionState);
+  const compatibilityError = settingsCompatiblityValidation(obj);
   if (compatibilityError) {
     return compatibilityError;
   }

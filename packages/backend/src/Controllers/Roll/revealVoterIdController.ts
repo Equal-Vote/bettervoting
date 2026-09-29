@@ -22,7 +22,7 @@ const className = "VoterRolls.Controllers";
  * This should only be used in emergency situations where an admin needs
  * to send a unique voting URL to a voter.
  */
-const revealVoterIdByEmail = async (req: IElectionRequest, res: Response, next: NextFunction) => {
+const revealVoterIdByEmail = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     const electionId = req.election.election_id;
     const email = req.body.email;
 

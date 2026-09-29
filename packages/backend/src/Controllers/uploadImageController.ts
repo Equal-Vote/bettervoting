@@ -3,8 +3,9 @@ import Logger from '../Services/Logging/Logger';
 import { randomUUID } from "crypto";
 import { Request, Response, NextFunction } from 'express';
 import ServiceLocator from "../ServiceLocator";
-
-const multer = require("multer");
+import multer from "multer";
+import { getErrorMessage } from '../errorUtils';
+/* eslint-disable @typescript-eslint/no-explicit-any -- multer has no type declarations installed (@types/multer); revisit if that's added */
 
 const storage = multer.memoryStorage();
 
@@ -31,7 +32,7 @@ interface ImageRequest extends Request {
 }
 
 // TODO: add multer file and S3 types
-const uploadImageController = async (req: ImageRequest, res: Response, next: NextFunction) => {
+const uploadImageController = async (req: ImageRequest, res: Response, _next: NextFunction) => {
     const file = req.file
     const blobName = `${randomUUID()}.jpg`;
     try {
@@ -45,8 +46,8 @@ const uploadImageController = async (req: ImageRequest, res: Response, next: Nex
 
       Logger.info(req, `File uploaded successfully. ${photo_filename}`);
       res.json({ photo_filename });
-    } catch (e: any) {
-      throw new InternalServerError(e);
+    } catch (e: unknown) {
+      throw new InternalServerError(getErrorMessage(e));
     }
 }
 

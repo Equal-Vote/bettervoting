@@ -1,5 +1,6 @@
 import { Kysely } from 'kysely'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Kysely's documented migration pattern: migrations must stay decoupled from the current (evolving) Database schema type
 export async function up(db: Kysely<any>): Promise<void> {
     //Updating Election Rolls, adds new columns, default values, and changes primary key to set of election id, voter id, and update date
     await db.schema.alterTable('electionRollDB')
@@ -95,6 +96,7 @@ export async function up(db: Kysely<any>): Promise<void> {
         .execute()
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Kysely's documented migration pattern: migrations must stay decoupled from the current (evolving) Database schema type
 export async function down(db: Kysely<any>): Promise<void> {
     // Election Rolls
     await db.schema.alterTable('electionRollDB')

@@ -79,7 +79,7 @@ export class MockEventQueue implements IEventQueue {
         try {
             console.info("MEQ: Processing job: " + JSON.stringify(j));
             await this.doJob(j);
-        } catch (e:any) {
+        } catch (_e: unknown) {
             console.info("MEQ: Exception handling job: " + JSON.stringify(j));
         }
         this._working = false;

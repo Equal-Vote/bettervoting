@@ -1,7 +1,5 @@
-import { electionValidation } from '@equal-vote/star-vote-shared/domain_model/Election';
 import ServiceLocator from '../../ServiceLocator';
 import Logger from '../../Services/Logging/Logger';
-import { responseErr } from '../../Util';
 import { expectPermission, expectUpdateDate } from "../controllerUtils";
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { BadRequest } from "@curveball/http-errors";
@@ -11,9 +9,8 @@ import { Response, NextFunction } from 'express';
 var ElectionsModel = ServiceLocator.electionsDb();
 
 
-const editElectionRoles = async (req: IElectionRequest, res: Response, next: NextFunction) => {
+const editElectionRoles = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
 
-    const inputElection = req.body.Election;
     Logger.info(req, `editElectionRoles: ${req.election.election_id}`)
     expectPermission(req.user_auth.roles, permissions.canEditElectionRoles)
     // TODO: should this only be allowed in draft??

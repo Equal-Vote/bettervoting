@@ -217,7 +217,7 @@ export const buildHistory = (
     return { finalizedAtMs, events };
 };
 
-const getElectionHistory = async (req: IElectionRequest, res: Response, next: NextFunction) => {
+const getElectionHistory = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     const electionId = req.election.election_id;
     Logger.info(req, `${className}.getElectionHistory ${electionId}`);
 

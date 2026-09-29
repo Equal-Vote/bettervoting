@@ -12,6 +12,8 @@ import { randomUUID } from "crypto";
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
 import { logSafeHash } from '../../Services/Logging/logSafeHash';
+import { ILoggingContext } from '../../Services/Logging/ILogger';
+import { getErrorMessage } from '../../errorUtils';
 
 var ElectionRollModel = ServiceLocator.electionRollDb();
 var EmailService = ServiceLocator.emailService();
@@ -31,7 +33,7 @@ export type SendInviteEvent = {
     sender: string,
 }
 
-const sendInvitationsController = async (req: IElectionRequest, res: Response, next: NextFunction) => {
+const sendInvitationsController = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     Logger.info(req, `${className}.sendInvitations ${req.election.election_id}`);
     expectPermission(req.user_auth.roles, permissions.canSendEmails)
 
@@ -80,7 +82,7 @@ async function sendBatchEmailInvites(req: any, electionRoll: ElectionRoll[], ele
                 election: election,
                 url: url,
                 electionRoll: roll,
-                sender: req.user.email
+                sender: req.user?.email ?? ''
             }
         )
     })
@@ -91,13 +93,13 @@ async function sendBatchEmailInvites(req: any, electionRoll: ElectionRoll[], ele
         await (await EventQueue).publishBatch(SendInviteEventQueue, Jobs, { spacingMs: emailSendSpacingMs() });
     } catch (err: any) {
         const msg = `Could not send invitations`;
-        Logger.error(req, `${msg}: ${err.message}`);
+        Logger.error(req, `${msg}: ${getErrorMessage(err)}`);
         throw new InternalServerError(failMsg)
     }
     return sendPlan(Jobs.length)
 }
 
-const sendInvitationController = async (req: any, res: any, next: any) => {
+const sendInvitationController = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     Logger.info(req, `${className}.sendInvite ${req.election.election_id} ${logSafeHash(req.params.voter_id)}`);
     expectPermission(req.user_auth.roles, permissions.canSendEmails)
 
@@ -119,9 +121,9 @@ const sendInvitationController = async (req: any, res: any, next: any) => {
         throw new InternalServerError('Could not find voter');
     }
 
-    const updatedElectionRoll = await sendInvitation(req, election, electionRoll, req.user.email, url)
+    const updatedElectionRoll = await sendInvitation(req, election, electionRoll, req.user?.email ?? '', url)
 
-    return res.status('200').json({electionRoll: updatedElectionRoll})
+    res.status(200).json({electionRoll: updatedElectionRoll})
 }
 
 async function handleSendInviteEvent(job: { id: string; data: SendInviteEvent; }): Promise<void> {
@@ -136,7 +138,7 @@ async function handleSendInviteEvent(job: { id: string; data: SendInviteEvent; }
     await sendInvitation(ctx, event.election, electionRoll, event.sender, event.url)
 }
 
-async function sendInvitation(ctx: any, election:Election, electionRoll: ElectionRoll, sender: string, url: string) {
+async function sendInvitation(ctx: ILoggingContext, election:Election, electionRoll: ElectionRoll, sender: string, url: string) {
     const invites = Invites(election, [electionRoll], url)
     const emailResponse = await EmailService.sendEmails(invites)
     if (!electionRoll.email_data) {
@@ -164,8 +166,8 @@ async function sendInvitation(ctx: any, election:Election, electionRoll: Electio
                 event_timestamp: new Date().toISOString(),
                 details: { status_code: emailResponse?.[0]?.[0]?.statusCode },
             }, ctx);
-        } catch (err: any) {
-            Logger.error(ctx, `Could not insert email event: ${err.message}`);
+        } catch (err: unknown) {
+            Logger.error(ctx, `Could not insert email event: ${getErrorMessage(err)}`);
         }
     }
 
@@ -184,9 +186,9 @@ async function sendInvitation(ctx: any, election:Election, electionRoll: Electio
         } else {
             throw new InternalServerError()
         }
-    } catch (err: any) {
+    } catch (err: unknown) {
         const msg = `Could not update election roll`;
-        Logger.error(ctx, `${msg}: ${err.message}`);
+        Logger.error(ctx, `${msg}: ${getErrorMessage(err)}`);
         throw new InternalServerError(msg)
     }
 }

@@ -1,4 +1,3 @@
-import { randomUUID } from "crypto";
 import { ILoggingContext } from "./ILogger";
 
 
@@ -20,27 +19,27 @@ export class LoggerImpl {
     constructor() {
     }
 
-    debug(context?:ILoggingContext,  message?: any, ...optionalParams: any[]):void{
+    debug(context?:ILoggingContext,  message?: unknown, ...optionalParams: unknown[]):void{
         if (!shouldLog('debug')) return;
         this.log(context, "", message, ...optionalParams);
     }
 
-    info(context?:ILoggingContext,  message?: any, ...optionalParams: any[]):void{
+    info(context?:ILoggingContext,  message?: unknown, ...optionalParams: unknown[]):void{
         if (!shouldLog('info')) return;
         this.log(context, "", message, ...optionalParams);
     }
 
-    warn(context?:ILoggingContext,  message?: any, ...optionalParams: any[]):void{
+    warn(context?:ILoggingContext,  message?: unknown, ...optionalParams: unknown[]):void{
         if (!shouldLog('warn')) return;
         this.log(context, "WARN ", message, ...optionalParams);
     }
 
-    error(context?:ILoggingContext,  message?: any, ...optionalParams: any[]):void{
+    error(context?:ILoggingContext,  message?: unknown, ...optionalParams: unknown[]):void{
         if (!shouldLog('error')) return;
         this.log(context, "ERROR", message, ...optionalParams);
     }
 
-    log(context?:ILoggingContext, levelStr?:string,  message?: any, ...optionalParams: any[]):void { 
+    log(context?:ILoggingContext, levelStr?:string,  message?: unknown, ...optionalParams: unknown[]):void { 
         var msg = "";
         var lvlStr = "";
         var ctxStr = "";
