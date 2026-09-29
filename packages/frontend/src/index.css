@@ -315,6 +315,17 @@ code {
   cursor: pointer;
 }
 
+/* A <button> does not inherit .ballot's color — it takes the UA stylesheet's
+   ButtonText. That is black on desktop and Android, which is why nobody set a
+   colour here, but on iOS WebKit it resolves to the system tint and the score
+   digits came out blue (#1272) — including inside filled bubbles, where the
+   digit is meant to disappear against the black fill. Stating the colour makes
+   every platform render what desktop already did. */
+.circle,
+.oval {
+  color: var(--brand-black);
+}
+
 .circle.filled,
 .oval.filled {
   background-color: black;
