@@ -4,6 +4,7 @@ import { ILoggingContext } from '../../Services/Logging/ILogger';
 import Logger from '../../Services/Logging/Logger';
 import { IElectionStore } from '../IElectionStore';
 import { Conflict } from '@curveball/http-errors';
+import { pricingConfig } from '@equal-vote/star-vote-shared/config';
 
 export default class ElectionsDB implements IElectionStore {
 
@@ -16,6 +17,7 @@ export default class ElectionsDB implements IElectionStore {
         Logger.debug(ctx, "Election Mock Creates Election: ", election);
         var copy = JSON.parse(JSON.stringify(election));
         copy.update_date = Date.now().toString();
+        copy.voter_limit = pricingConfig.FREE_TIER_LIMIT;
         this.elections.push(copy);
         var res = JSON.parse(JSON.stringify(copy));
         return Promise.resolve(res);

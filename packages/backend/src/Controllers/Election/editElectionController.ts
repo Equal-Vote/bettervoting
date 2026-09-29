@@ -32,6 +32,10 @@ const editElection = async (req: IElectionRequest, res: Response, _next: NextFun
     Logger.debug(req, `election ID = ${inputElection}`);
     var failMsg = `Failed to update election`;
 
+    // voter_limit is server-managed: it only changes through a voter-limit purchase,
+    // so discard whatever the client submitted and keep the stored value.
+    inputElection.voter_limit = req.election.voter_limit;
+
     const expected_update_date = expectUpdateDate(req);
     const updatedElection = await ElectionsModel.updateElection(inputElection, req, `User editing draft Election`, expected_update_date);
     if (!updatedElection) {

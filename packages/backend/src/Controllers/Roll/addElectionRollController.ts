@@ -6,6 +6,7 @@ import { expectPermission } from "../controllerUtils";
 import { BadRequest } from "@curveball/http-errors";
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
+import { VoterLimitPaymentRequired } from "../../VoterLimitPaymentRequired";
 import { sharedConfig } from "@equal-vote/star-vote-shared/config";
 import { makeUniqueID, ID_LENGTHS, ID_PREFIXES } from "@equal-vote/star-vote-shared/utils/makeID";
 
@@ -87,10 +88,11 @@ const addElectionRoll = async (req: IElectionRequest & { body: { electionRoll: E
         }
 
         // Check for roll limit
-        const overrides = sharedConfig.ELECTION_VOTER_LIMIT_OVERRIDES as { [key: string]: number};
-        const voterLimit = overrides[req.election.election_id] ?? sharedConfig.FREE_TIER_PRIVATE_VOTER_LIMIT;
-        if(req.election.settings.voter_access == 'closed' && existingRolls.length + req.body.electionRoll.length > voterLimit){
-            throw new BadRequest(`Request Denied: this election is limited to ${voterLimit} voters`);
+        const overrides = sharedConfig.ELECTION_VOTER_LIMIT_OVERRIDES as Record<string, number>;
+        const voterLimit = overrides[req.election.election_id] ?? req.election.voter_limit;
+        const requestedVoterCount = existingRolls.length + req.body.electionRoll.length;
+        if(req.election.settings.voter_access == 'closed' && requestedVoterCount > voterLimit){
+            throw new VoterLimitPaymentRequired(voterLimit, requestedVoterCount);
         }
     }
 
