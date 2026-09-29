@@ -7,7 +7,9 @@ import Logger from "../Services/Logging/Logger";
 import { TestLoggerImpl } from "../Services/Logging/TestLoggerImpl";
 import ServiceLocator  from "../ServiceLocator"
 import { candidate, rawVote } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
-import request, { Test as SupertestTest, Response as SupertestResponse } from "supertest";
+import request, { Response as SupertestResponse, Test as SupertestTest } from "supertest";
+import EmailService from "../Services/Email/EmailService";
+import { MockEventQueue } from "../Services/EventQueue/MockEventQueue";
 
 type ElectionResponse = {
     statusCode: number;
@@ -37,20 +39,22 @@ export const mapMethodInputs = (names: string[], votes: (number | null)[][]): [c
 export class TestHelper {
     public expressApp;
     public logger: TestLoggerImpl;
-    public emailService: ReturnType<typeof ServiceLocator.emailService>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- tests swap in MockEventQueue, which exposes extra methods beyond IEventQueue
-    public eventQueue: any;
+    public emailService: EmailService;
+    public eventQueue: Promise<MockEventQueue>;
 
     private ctx = Logger.createContext("testHelper");
 
     constructor() {
         this.emailService = ServiceLocator.emailService();
-        this.eventQueue = ServiceLocator.eventQueue();
+        // ServiceLocator is jest.mock()'d in tests (see setupTests.ts), and that mock's
+        // eventQueue() resolves to a MockEventQueue — narrower than the real module's
+        // declared Promise<IEventQueue>, which TS can't see through the mock swap.
+        this.eventQueue = ServiceLocator.eventQueue() as Promise<MockEventQueue>;
         this.expressApp = makeApp();
         this.logger = new TestLoggerImpl().setup();
     }
 
-    getRequest(url: string, userToken: string | null, customToken: string| null = null, tempId: string|null=null): SupertestTest {
+    getRequest(url: string, userToken: string | null, customToken: string| null = null, tempId: string|null=null) {
         let r = request(this.expressApp)
             .get(url)
             .set("Accept", "application/json");
@@ -58,7 +62,7 @@ export class TestHelper {
         return r;
     }
 
-    postRequest(url: string, body: object, userToken: string | null, customToken: string| null = null, tempId: string|null=null): SupertestTest {
+    postRequest(url: string, body: object, userToken: string | null, customToken: string| null = null, tempId: string|null=null) {
         let r = request(this.expressApp)
             .post(url)
             .set("Accept", "application/json");
@@ -192,7 +196,7 @@ export class TestHelper {
         voterId: string | null, 
         customToken: string| null = null
     ): Promise<BallotResponse> {
-        let req: SupertestTest = request(this.expressApp)
+        let req = request(this.expressApp)
             .post(`/API/Election/${electionId}/ballot`)
             .set("Accept", "application/json");
 
@@ -241,8 +245,7 @@ export class TestHelper {
 
     async submitElectionRoll(
         electionId: Uid,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- tests intentionally post partial/malformed rolls to exercise validation
-        electionRoll: any[],
+        electionRoll: unknown[],
         userToken: string | null,
         customToken: string| null = null
     ): Promise<SupertestResponse> {

@@ -1,6 +1,9 @@
 import { Election } from "@equal-vote/star-vote-shared/domain_model/Election";
+
 import { Ballot, BallotSubmitType, ballotValidation, NewBallot, OrderedNewBallot, RaceCandidateOrder } from '@equal-vote/star-vote-shared/domain_model/Ballot';
+import { Ballot, ballotValidation, NewBallot, OrderedNewBallot, RaceCandidateOrder } from '@equal-vote/star-vote-shared/domain_model/Ballot';
 import { DEFAULT_ALLOWED_SUBMIT_TYPES } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
+
 import ServiceLocator from "../../ServiceLocator";
 import Logger from "../../Services/Logging/Logger";
 import { BadRequest, Conflict, InternalServerError, Unauthorized } from "@curveball/http-errors";
@@ -17,6 +20,7 @@ import { expectPermission } from "../controllerUtils";
 import { permissions } from "@equal-vote/star-vote-shared/domain_model/permissions";
 import { OrderedVoteFormatError, orderedVotesToVotes } from "@equal-vote/star-vote-shared/domain_model/OrderedVoteCodec";
 import { makeUniqueID, ID_LENGTHS, ID_PREFIXES } from "@equal-vote/star-vote-shared/utils/makeID";
+import { getErrorMessage } from '../../errorUtils';
 
 const ElectionsModel = ServiceLocator.electionsDb();
 const BallotModel = ServiceLocator.ballotsDb();
@@ -135,7 +139,8 @@ const mapOrderedNewBallot = (ballot: OrderedNewBallot, raceOrder: RaceCandidateO
         throw err;
     }
 }
-async function uploadBallotsController(req: IElectionRequest, res: Response) {
+
+async function uploadBallotsController(req: IElectionRequest, res: Response, _next: NextFunction) {
     Logger.info(req, "Upload Ballots Controller");
 
     expectPermission(req.user_auth.roles, permissions.canUploadBallots);
@@ -193,7 +198,7 @@ async function uploadBallotsController(req: IElectionRequest, res: Response) {
                     await ServiceLocator.castVoteStore().submitBallotEvent(event, ctx);
                     successfullySavedEvents.push(event);
                 } catch (e: unknown) {
-                    const message = e instanceof Error ? e.message : String(e);
+                    const message = getErrorMessage(e);
                     Logger.error(req, `Could not upload ballot for ${event.roll?.voter_id || event.inputBallot.user_id || 'unknown'}: ${message}`);
                     const index = events.indexOf(event);
                     if (index !== -1) {
@@ -208,7 +213,7 @@ async function uploadBallotsController(req: IElectionRequest, res: Response) {
         }
     }catch(err: unknown){
         const msg = `Could not upload ballots`;
-        Logger.error(req, `${msg}: ${err instanceof Error ? err.message : String(err)}`);
+        Logger.error(req, `${msg}: ${getErrorMessage(err)}`);
         throw new InternalServerError(msg)
     }
 
@@ -220,7 +225,7 @@ async function uploadBallotsController(req: IElectionRequest, res: Response) {
     Logger.debug(req, "CastVoteController done, saved event to store");
 };
 
-async function castVoteController(req: IElectionRequest, res: Response) {
+async function castVoteController(req: IElectionRequest, res: Response, _next: NextFunction) {
     Logger.info(req, "Cast Vote Controller");
 
     const targetElection = req.election;
@@ -243,7 +248,7 @@ async function castVoteController(req: IElectionRequest, res: Response) {
     try {
         await ServiceLocator.castVoteStore().submitBallotEvent(event, ctx);
     } catch (e: unknown) {
-        const message = e instanceof Error ? e.message : String(e);
+        const message = getErrorMessage(e);
         if (message === "ALREADY_VOTED") {
             Logger.info(req, "Ballot Rejected. User has already voted.");
             throw new BadRequest("User has already voted");

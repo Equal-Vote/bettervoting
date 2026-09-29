@@ -31,7 +31,7 @@ const LandingPageFeaturedElections = ({ electionIds }: { electionIds: string[] }
         }}>
             {electionIds.map((electionId, i) => <Box key={i}><FeaturedElection key={i} electionId={electionId} /></Box>)}
         </Box>
-        <Box sx={{mx: 'auto'}}>
+        <Box sx={{mx: 'auto', mb: 2}}>
             <PrimaryButton href='/browse'>{t('landing_page.featured_elections.button')}</PrimaryButton>
         </Box>
     </Box>

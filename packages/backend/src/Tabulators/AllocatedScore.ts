@@ -1,5 +1,9 @@
-import { candidate, allocatedScoreResults, allocatedScoreSummaryData, rawVote, allocatedScoreCandidate, vote } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
+import { candidate, allocatedScoreResults, allocatedScoreSummaryData, rawVote, allocatedScoreCandidate } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
 
+// require()'d rather than imported: fraction.js's type declarations don't match how this
+// file uses Fraction (mixing static/instance members), and require()'s implicit `any`
+// papers over that mismatch. Reworking the typing is out of scope for a lint pass.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const Fraction = require('fraction.js');
 import { getSummaryData, makeAbstentionTest, makeBoundsTest, sortCandidates } from "./Util";
 import { ElectionSettings } from "@equal-vote/star-vote-shared/domain_model/ElectionSettings";
@@ -14,7 +18,7 @@ type ballotFrac = typeof Fraction[]
 
 const MAX_SCORE = 5;
 
-export function AllocatedScore(candidates: candidate[], votes: rawVote[], nWinners = 3, electionSettings?:ElectionSettings) {
+export function AllocatedScore(candidates: candidate[], votes: rawVote[], nWinners = 3, _electionSettings?:ElectionSettings) {
     const {summaryData: initialSummaryData, tallyVotes} =
     getSummaryData<allocatedScoreCandidate, Omit<allocatedScoreSummaryData,'splitPoints' | 'spentAboves' | 'weight_on_splits' | 'weightedScoresByRound'>>(
 		candidates.map(c => ({...c, score: 0})),
@@ -98,7 +102,7 @@ export function AllocatedScore(candidates: candidate[], votes: rawVote[], nWinne
         }
         results.tied.push(...maxAndTies.ties);
         // Set all scores for winner to zero
-        scoresNorm.forEach((ballot, b) => {
+        scoresNorm.forEach((ballot, _b) => {
             ballot[w] = new Fraction(0)
         })
         remainingCandidates = remainingCandidates.filter(c => c != summaryData.candidates[w])
@@ -130,7 +134,7 @@ export function AllocatedScore(candidates: candidate[], votes: rawVote[], nWinne
         summaryData.splitPoints.push(split_point.valueOf());
 
         let spent_above = new Fraction(0);
-        cand_df.forEach((c, i) => {
+        cand_df.forEach((c, _i) => {
             if (c.weighted_score.compare(split_point) > 0) {
                 spent_above = spent_above.add(c.ballot_weight);
             }
@@ -249,7 +253,7 @@ function updateBallotWeights(
 
 function findWeightOnSplit(cand_df: winner_scores[], split_point: typeof Fraction) {
     let weight_on_split = new Fraction(0);
-    cand_df.forEach((c, i) => {
+    cand_df.forEach((c, _i) => {
         if (c.weighted_score.equals(split_point)) {
             weight_on_split = weight_on_split.add(c.ballot_weight);
         }

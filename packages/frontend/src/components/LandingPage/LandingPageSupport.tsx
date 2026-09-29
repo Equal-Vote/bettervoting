@@ -11,7 +11,7 @@ const LandingPageSupport = () => {
             clip: 'unset',
             width: '100%',
             p: { xs: 2},
-            mb: '2rem', // matching the gap from the root flex box
+            mb: '0rem', // matching the gap from the root flex box
         }}>
             <Box sx={{
                 width: '100%',
@@ -24,14 +24,14 @@ const LandingPageSupport = () => {
             }}>
                 <Typography variant='h6' sx={{textAlign: {xs: 'center', md: 'left'}}}>Help support the project!</Typography>
                 {/*I just copied styled button but removed the full width*/ }
+                <PrimaryButton href='https://equal.vote/donate'>
+                    Donate
+                </PrimaryButton>
                 <PrimaryButton href='/volunteer'>
                     Volunteer
                 </PrimaryButton>
                 <PrimaryButton href='https://bettervoting.myspreadshop.com'>
                     Merch
-                </PrimaryButton>
-                <PrimaryButton href='https://equal.vote/donate'>
-                    Donate
                 </PrimaryButton>
             </Box>
         </Box>

@@ -1,17 +1,18 @@
-require("dotenv").config();
-const request = require("supertest");
+import 'dotenv/config';
 
-import { Election, electionValidation } from "@equal-vote/star-vote-shared/domain_model/Election";
 import testInputs from "./testInputs";
 import { TestHelper } from "./TestHelper";
 import ServiceLocator from "../ServiceLocator";
+import MockAccountService from "../Services/Account/__mocks__/AccountService";
 
-var jwt = require('jsonwebtoken')
-const crypto = require('crypto');
+import jwt from "jsonwebtoken";
+import crypto from "crypto";
 
 
 const th = new TestHelper();
-const accountService = ServiceLocator.accountService() as any;
+// ServiceLocator is jest.mock()'d (see setupTests.ts), so accountService() actually
+// returns the mock AccountService, which has a `verify` toggle the real class lacks.
+const accountService = ServiceLocator.accountService() as unknown as MockAccountService;
 accountService.verify = true;
 
 afterEach(() => {

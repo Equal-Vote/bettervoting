@@ -1,5 +1,5 @@
-require("dotenv").config();
-const request = require("supertest");
+import 'dotenv/config';
+import request from "supertest";
 import makeApp from "../app";
 import { MockEventQueue } from "../Services/EventQueue/MockEventQueue";
 import { TestHelper } from "./TestHelper";

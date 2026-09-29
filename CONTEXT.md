@@ -18,3 +18,10 @@ _Avoid_: "admin ballots" (implies the admin voted, not that the admin uploaded s
 
 **Ballot Source** (existing concept, distinct from Submission Channel):
 Refers to the origin election when a ballot is carried over from a prior election (e.g. `prior_election` sourced ballots used to seed a new election with historical data). Ballot Source governs ballot provenance across elections; Submission Channel governs how a ballot entered a single election. The two concepts are orthogonal — an admin-uploaded ballot is always `submitted_via_admin` regardless of its source election.
+**Voter Roll**:
+The list of voters an election admin has registered for an election. Each entry is identified by a voter ID, an email, or both. The admin UI calls it the "voter list" and the code calls its entries "election roll" rows; they are the same thing.
+_Avoid_: Electorate, voter database
+
+**Roll Conflict**:
+An entry being added to a Voter Roll that matches an existing entry, or another entry in the same upload, by voter ID or by email. Emails match regardless of letter case. Conflicting entries are never added twice and never overwrite the existing entry; the admin is told about them and confirms before the rest are added.
+_Avoid_: Duplicate (too loose about which entry wins), collision

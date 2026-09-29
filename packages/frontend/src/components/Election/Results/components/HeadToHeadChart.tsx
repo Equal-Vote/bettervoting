@@ -4,8 +4,8 @@ import { Tip } from "~/components/styles";
 import { CHART_COLORS } from "~/components/util";
 
 const HeadToHeadChart = (
-    {leftName, rightName, leftVotes, rightVotes, total, equalContent} :
-    {leftName: string, rightName: string, leftVotes: number, rightVotes: number, total: number, equalContent?: {title: string, description: string | {name: string, count: number}[]}}
+    {leftOnly, leftName, rightName, leftVotes, rightVotes, total, equalContent} :
+    { leftOnly?: boolean, leftName: string, rightName: string, leftVotes: number, rightVotes: number, total: number, equalContent?: {title: string, description: string | {name: string, count: number}[]}}
 ) => {
     const {race} = useRace();
     const leftValue = leftVotes / total;
@@ -37,7 +37,7 @@ const HeadToHeadChart = (
     return <Box sx={{mx:4, width: '100%', maxWidth: '540px', margin: 'auto'}}>
         <Box sx={{ mb: 1, display: "flex", flexDirection: "row", justifyContent: "space-between", gap: 2 }}>
             <Typography sx={{textAlign: 'left', fontWeight: 'bold'}}>{leftName}</Typography>
-            <Typography sx={{textAlign: 'right', fontWeight: 'bold'}}>{rightName}</Typography>
+            {!leftOnly && <Typography sx={{textAlign: 'right', fontWeight: 'bold'}}>{rightName}</Typography>}
         </Box>
         <Box sx={{ height: "38px", display: "flex", flexDirection: "row" }}>
             {leftValue > 0 &&
@@ -51,9 +51,9 @@ const HeadToHeadChart = (
                         title: equalContent.title,
                         description: Array.isArray(equalContent.description) ? formatEqualPreference(equalContent.description) : equalContent.description
                     }}>
-                        <Box sx={{ backgroundColor:'var(--brand-gray-1)', pt: 1, width: midPercent }}>
-                            {(midValue < .1 || midValue+leftValue < .2 || midValue+rightValue < .2)? '' : midPercent}
-                        </Box>
+                    <Box sx={{ backgroundColor: 'var(--brand-gray-1)', pt: 1, width: midPercent }}>
+                        {!leftOnly && ((midValue < .1 || midValue + leftValue < .2 || midValue + rightValue < .2) ? '' : midPercent)}
+                    </Box>
                     </Tip>
                 }
                 {!equalContent &&

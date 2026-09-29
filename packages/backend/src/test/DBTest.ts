@@ -1,8 +1,7 @@
-import { parse } from "path/posix";
-import { assertNotNull, orDefault } from "../Util";
+import { orDefault } from "../Util";
 import { DemoPGStore } from "./DemoPGStore";
 
-const { Pool } = require('pg');
+import { Pool } from "pg";
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
@@ -16,7 +15,7 @@ export async function testDBCounter(): Promise<string> {
     var myKey = "testDBCounter";
 
     var demodb = new DemoPGStore(pool, "demopgstore");
-    return demodb.init().then((_:any) => {
+    return demodb.init().then(() => {
         return demodb.get(myKey);
     }).then((num:string | null) => {    
         return parseInt(orDefault(num, "0"));

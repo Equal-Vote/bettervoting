@@ -1,9 +1,9 @@
 
-import { Ballot, NewBallot } from '@equal-vote/star-vote-shared/domain_model/Ballot';
+import { NewBallot } from '@equal-vote/star-vote-shared/domain_model/Ballot';
 import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { ElectionSettings } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
 import { Race } from '@equal-vote/star-vote-shared/domain_model/Race';
-var jwt = require('jsonwebtoken')
+import jwt from "jsonwebtoken";
 
 
 export default {
