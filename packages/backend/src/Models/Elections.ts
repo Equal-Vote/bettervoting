@@ -224,7 +224,7 @@ export default class ElectionsDB implements IElectionStore {
         // A: I feel weird about calling classic.star.vote that frequently, so I'm only doing it when the id doesn't exist on our DB
 
         // Check New DB
-        let newElections = await this._postgresClient
+        const newElections = await this._postgresClient
             .selectFrom(tableName)
             .where('election_id', '=', election_id)
             .where('head', '=', true)
