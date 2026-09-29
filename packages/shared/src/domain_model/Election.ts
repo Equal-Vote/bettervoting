@@ -109,7 +109,7 @@ export function electionValidation(obj:Election): string | null {
     }
     let raceErrors = ''
     obj.races.forEach(race => {
-      let raceError = raceValidation(race)
+      const raceError = raceValidation(race)
       if (raceError){
         raceErrors += `race_id: ${race.race_id}: ${raceError} `
       }
