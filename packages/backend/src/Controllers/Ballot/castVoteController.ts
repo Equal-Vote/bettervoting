@@ -1,5 +1,5 @@
 import { Election } from "@equal-vote/star-vote-shared/domain_model/Election";
-import { Ballot, ballotValidation, NewBallot, OrderedNewBallot, RaceCandidateOrder } from '@equal-vote/star-vote-shared/domain_model/Ballot';
+import { Ballot, ballotValidation, NewBallot, OrderedNewBallot, RaceCandidateOrder, BallotSubmitType } from '@equal-vote/star-vote-shared/domain_model/Ballot';
 import { DEFAULT_ALLOWED_SUBMIT_TYPES } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
 
 import ServiceLocator from "../../ServiceLocator";
