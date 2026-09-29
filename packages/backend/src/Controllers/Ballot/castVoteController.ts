@@ -1,5 +1,7 @@
 import { Election } from "@equal-vote/star-vote-shared/domain_model/Election";
-import { Ballot, ballotValidation, NewBallot, OrderedNewBallot, RaceCandidateOrder } from '@equal-vote/star-vote-shared/domain_model/Ballot';
+import { Ballot, ballotValidation, NewBallot, OrderedNewBallot, RaceCandidateOrder, BallotSubmitType } from '@equal-vote/star-vote-shared/domain_model/Ballot';
+import { DEFAULT_ALLOWED_SUBMIT_TYPES } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
+
 import ServiceLocator from "../../ServiceLocator";
 import Logger from "../../Services/Logging/Logger";
 import { BadRequest, Conflict, InternalServerError, Unauthorized } from "@curveball/http-errors";
@@ -26,9 +28,6 @@ const EmailService = ServiceLocator.emailService();
 const AccountService = ServiceLocator.accountService();
 
 
-// NOTE: discord isn't implemented yet, but that's the plan for the future
-type BallotSubmitType = 'submitted_via_browser' | 'submitted_via_admin' | 'submitted_via_discord';
-
 const castVoteEventQueue = "castVoteEvent";
 
 async function makeBallotEvent(req: IElectionRequest, targetElection: Election, inputBallot: NewBallot, submitType: BallotSubmitType, voter_id?: string, adminUsername?: string){
@@ -38,6 +37,11 @@ async function makeBallotEvent(req: IElectionRequest, targetElection: Election, 
     // TODO: we may be able to shortcut further for elections that don't require authentication
     //       ^ that could be huge when creating elections from a set of ballots
     if(targetElection.state !== 'draft' && req.election.ballot_source !== 'prior_election') {
+        const allowedTypes = targetElection.settings.allowed_submit_types ?? DEFAULT_ALLOWED_SUBMIT_TYPES;
+        if (!allowedTypes.includes(submitType)) {
+            throw new BadRequest(`Ballot submission type '${submitType}' is not allowed for this election`);
+        }
+
         const missingAuthData = checkForMissingAuthenticationData(req, targetElection, req, voter_id)
         if (missingAuthData !== null) {
             throw new Unauthorized(missingAuthData);
@@ -133,6 +137,7 @@ const mapOrderedNewBallot = (ballot: OrderedNewBallot, raceOrder: RaceCandidateO
         throw err;
     }
 }
+
 async function uploadBallotsController(req: IElectionRequest, res: Response, _next: NextFunction) {
     Logger.info(req, "Upload Ballots Controller");
 
@@ -147,7 +152,7 @@ async function uploadBallotsController(req: IElectionRequest, res: Response, _ne
         throw new BadRequest(errMsg);
     }
  
-    let events = await Promise.all(
+    const events = await Promise.all(
         req.body.ballots.map(({ballot, voter_id} : {ballot: OrderedNewBallot, voter_id: string}) =>
             makeBallotEvent(
                 req,
@@ -165,7 +170,7 @@ async function uploadBallotsController(req: IElectionRequest, res: Response, _ne
         )
     );
 
-    let output = events.map((event, i) => ({
+    const output = events.map((event, i) => ({
         voter_id: req.body.ballots[i].voter_id,
         success: !('error' in event),
         message: ('error' in event)? event.error : 'Success'
@@ -233,7 +238,7 @@ async function castVoteController(req: IElectionRequest, res: Response, _next: N
         throw new BadRequest("Election is not open");
     }
 
-    let event = await makeBallotEvent(req, targetElection, req.body.ballot, 'submitted_via_browser')
+    const event = await makeBallotEvent(req, targetElection, req.body.ballot, 'submitted_via_browser')
 
     event.userEmail = event.roll?.email ?? AccountService.extractUserFromRequest(req)?.email ?? req.body.receiptEmail;
 

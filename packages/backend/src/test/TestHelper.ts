@@ -1,4 +1,4 @@
-import { Ballot, NewBallot } from "@equal-vote/star-vote-shared/domain_model/Ballot";
+import { Ballot, NewBallot, OrderedNewBallot, RaceCandidateOrder } from "@equal-vote/star-vote-shared/domain_model/Ballot";
 import { Election } from "@equal-vote/star-vote-shared/domain_model/Election";
 import { Uid } from "@equal-vote/star-vote-shared/domain_model/Uid";
 import { VoterAuth } from "@equal-vote/star-vote-shared/domain_model/VoterAuth";
@@ -228,6 +228,19 @@ export class TestHelper {
 
         r = this.addUserTokenVoterIdCookie(r, userToken, voterId, customToken, null);
         return r.send({ ballot: ballot });
+    }
+
+    async uploadBallots(
+        electionId: Uid,
+        ballots: Array<{ ballot: OrderedNewBallot; voter_id: string }>,
+        raceOrder: RaceCandidateOrder[],
+        userToken: string | null
+    ): Promise<SupertestResponse> {
+        return this.postRequest(
+            `/API/Election/${electionId}/uploadBallots`,
+            { ballots, race_order: raceOrder },
+            userToken
+        );
     }
 
     async submitElectionRoll(
