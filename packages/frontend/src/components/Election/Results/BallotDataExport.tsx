@@ -46,9 +46,18 @@ export const BallotDataExport = ({ election, results }: Props) => {
                     label: election.races.length == 1 ? c.candidate_name : `${race.title}!!${c.candidate_name}`,
                     key: `${race.race_id}-${c.candidate_id}`,
                 })),
+                // Race-prefixed like the candidate columns above: with multiple races,
+                // unprefixed labels collide and the keys would make every race's column
+                // show the last ranked race's values.
                 ...((race.voting_method == 'IRV' || race.voting_method == 'STV') ? [
-                    { label: 'overvote_rank', key: 'overvote_rank' },
-                    { label: 'has_duplicate_rank', key: 'has_duplicate_rank' },
+                    {
+                        label: election.races.length == 1 ? 'overvote_rank' : `${race.title}!!overvote_rank`,
+                        key: `${race.race_id}-overvote_rank`,
+                    },
+                    {
+                        label: election.races.length == 1 ? 'has_duplicate_rank' : `${race.title}!!has_duplicate_rank`,
+                        key: `${race.race_id}-has_duplicate_rank`,
+                    },
                 ] : []),
             ]),
         ].flat();
@@ -66,8 +75,8 @@ export const BallotDataExport = ({ election, results }: Props) => {
                 });
                 const race = election.races.find((r) => r.race_id == vote.race_id);
                 if (race && (race.voting_method == 'IRV' || race.voting_method == 'STV')) {
-                    row['overvote_rank'] = vote.overvote_rank ?? '';
-                    row['has_duplicate_rank'] = vote.has_duplicate_rank ? 'TRUE' : 'FALSE';
+                    row[`${vote.race_id}-overvote_rank`] = vote.overvote_rank ?? '';
+                    row[`${vote.race_id}-has_duplicate_rank`] = vote.has_duplicate_rank ? 'TRUE' : 'FALSE';
                 }
             });
             return row;
