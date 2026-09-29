@@ -11,7 +11,7 @@ import { Receipt } from "../../Services/Email/EmailTemplates"
 import { getOrCreateElectionRoll, checkForMissingAuthenticationData, getVoterAuthorization } from "../Roll/voterRollUtils"
 import { innerGetGlobalElectionStats } from "../Election";
 import { IElectionRequest } from "../../IRequest";
-import { Response } from 'express';
+import { Response, NextFunction } from 'express';
 import { io } from "../../socketHandler";
 import { Server } from "socket.io";
 import { expectPermission } from "../controllerUtils";
