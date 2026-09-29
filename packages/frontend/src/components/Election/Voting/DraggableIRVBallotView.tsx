@@ -143,6 +143,7 @@ export default function DraggableIRVBallotView() {
                       <Checkbox
                         disabled={ballotContext.instructionsRead}
                         checked={ballotContext.instructionsRead}
+                        tabIndex={0}
                         onChange={() => ballotContext.setInstructionsRead()}
                       />
                     }

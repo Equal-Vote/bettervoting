@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
-import path from 'path';
 import fs from 'fs';
+import path from 'path';
 import {electionsRouter, ballotRouter, rollRouter} from './Routes';
  
 // var debugRouter = require('./Routes/debug.routes')
@@ -19,8 +19,8 @@ import swagger from './OpenApi/swagger.json';
 
 import { getUserToken, getUser } from './Controllers/User';
 import { sendGridWebhookController } from './Controllers/sendGridWebhookController';
-import asyncHandler from 'express-async-handler'
-import './socketHandler'
+import asyncHandler from 'express-async-handler';
+import './socketHandler';
 
 export default function makeApp() {
     const app = express();
@@ -28,7 +28,7 @@ export default function makeApp() {
 
     // CORS (Cross-origin resource sharing), allows for the backend to receive calls from the front end, even though they have different urls/origins
     //      (at least that's my understanding)
-    const prodEndpoints: string[] | string = process.env.ALLOWED_URLS?.split(',') || 'https://bettervoting.com/';
+    const prodEndpoints: string | string[] = process.env.ALLOWED_URLS?.split(',') || 'https://bettervoting.com/';
     app.use(cors({
         origin: prodEndpoints,
         credentials: true, // allow the backend to receive cookies from the frontend
@@ -54,7 +54,8 @@ export default function makeApp() {
     // SendGrid webhook must be registered before express.json() to preserve the raw body for signature verification
     app.post('/API/SendGridWebhook', express.raw({ type: 'application/json' }), sendGridWebhookController);
 
-    app.use(express.json());
+    // 500kb (up from the 100kb default) so bulk uploads of voters/ballots fit in a reasonably sized batch
+    app.use(express.json({ limit: '500kb' }));
     //Routes
     app.use('/API', getUser, electionsRouter)
     app.use('/API', getUser, ballotRouter)
@@ -66,7 +67,7 @@ export default function makeApp() {
     // NOTE: I've removed express.static because it doesn't allow me to inject meta tags
     // https://stackoverflow.com/questions/51120214/how-to-modify-static-file-content-with-express-static
     app.get('*', (req, res) => {
-        fs.readFile(path.join(__dirname, frontendPath, req.url.split('?')[0]), 'utf8', (err, _htmlData) => {
+        fs.readFile(path.join(__dirname, frontendPath, req.url.split('?')[0]), 'utf8', (err) => {
             if(err){
                 // if the request wants a webpage, then return index.html and inject meta tags
 

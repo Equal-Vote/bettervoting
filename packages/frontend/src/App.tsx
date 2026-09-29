@@ -20,6 +20,8 @@ import ComposeContextProviders from './components/ComposeContextProviders'
 import './i18n/i18n'
 import UploadElections from './components/UploadElections'
 import Redirect from './components/Redirect'
+import FeedbackButton from './components/FeedbackButton'
+import { FEEDBACK_URL } from './components/util'
 import PublicArchive from './components/Elections/PublicArchive'
 import NameMatchingTester from './components/NameMatchingTester'
 import StyleGuide from './components/StyleGuide'
@@ -47,12 +49,13 @@ const App = () => {
             }}>
             <Routes>
               <Route path='/' element={<LandingPage />} />
-              {/*creating a new route for feedback page while still loading the landing page*/}
               <Route path='/new_election' element={<LandingPage />} /> 
                 <Route path='/new-election' element={<Redirect href='/new_election'/>} /> 
                 <Route path='/newelection' element={<Redirect href='/new_election'/>} /> 
               <Route path='/features' element={<LandingPage />} /> 
-              <Route path='/feedback' element={<LandingPage />} />   
+              {/* Feedback lives in Fider, a separate app. Direct navigation redirects
+                  in place; the nav menu opens it in a new tab via openFeedback(). */}
+              <Route path='/feedback' element={<Redirect href={FEEDBACK_URL}/>} />
               <Route path='/about' element={<About />} />
               <Route path='/invitations' element={<ElectionInvitations />} />
               <Route path='/manage' element={<ElectionsYouManage />} />
@@ -92,6 +95,7 @@ const App = () => {
             </Routes>
           </Box>
           <Footer />
+          <FeedbackButton />
         </Box>
       </ComposeContextProviders>
     </Router>

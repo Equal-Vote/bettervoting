@@ -1,4 +1,5 @@
 import ServiceLocator from '../../ServiceLocator';
+import { emailSendSpacingMs, describeSendPlan, assertNoSendInFlight, sendPlan } from '../../Services/Email/sendPacing';
 import Logger from '../../Services/Logging/Logger';
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { expectPermission } from "../controllerUtils";
@@ -25,6 +26,7 @@ const SendInviteEventQueue = "sendInviteEvent";
 
 export type SendInviteEvent = {
     requestId: Uid,
+    election_id: string, // top-level so the in-flight guard can count jobs per election
     election: Election,
     url: string,
     electionRoll: ElectionRoll,
@@ -62,12 +64,13 @@ const sendInvitationsController = async (req: IElectionRequest, res: Response, _
         throw new BadRequest('All email invites have already been sent')
     }
 
-    await sendBatchEmailInvites(req, electionRollFiltered, election)
+    await assertNoSendInFlight(await EventQueue, election.election_id);
+    const plan = await sendBatchEmailInvites(req, electionRollFiltered, election)
 
-    res.json({})
+    res.json(plan)
 }
 
-async function sendBatchEmailInvites(req: IElectionRequest, electionRoll: ElectionRoll[], election: Election) {
+async function sendBatchEmailInvites(req: any, electionRoll: ElectionRoll[], election: Election): Promise<ReturnType<typeof sendPlan>> {
     const Jobs: SendInviteEvent[] = []
     const reqId = req.contextId ? req.contextId : randomUUID();
     const url = ServiceLocator.globalData().mainUrl;
@@ -75,6 +78,7 @@ async function sendBatchEmailInvites(req: IElectionRequest, electionRoll: Electi
         Jobs.push(
             {
                 requestId: reqId,
+                election_id: election.election_id,
                 election: election,
                 url: url,
                 electionRoll: roll,
@@ -84,14 +88,15 @@ async function sendBatchEmailInvites(req: IElectionRequest, electionRoll: Electi
     })
 
     var failMsg = "Failed to send invitations";
-    Logger.info(req, `${className}.sendInvitations`, { election_id: election.election_id });
+    Logger.info(req, `${className}.sendInvitations enqueuing ${describeSendPlan(Jobs.length)}`, { election_id: election.election_id });
     try {
-        await (await EventQueue).publishBatch(SendInviteEventQueue, Jobs);
-    } catch (err: unknown) {
+        await (await EventQueue).publishBatch(SendInviteEventQueue, Jobs, { spacingMs: emailSendSpacingMs() });
+    } catch (err: any) {
         const msg = `Could not send invitations`;
         Logger.error(req, `${msg}: ${getErrorMessage(err)}`);
         throw new InternalServerError(failMsg)
     }
+    return sendPlan(Jobs.length)
 }
 
 const sendInvitationController = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
