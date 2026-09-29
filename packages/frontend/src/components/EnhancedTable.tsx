@@ -376,6 +376,16 @@ function stableSort<T>(array: readonly T[], comparator: (a: T, b: T) => number) 
 
 // type filterTypes = 'search' | 'groups' | null
 
+// The visible text of a formatted cell, whatever shape the formatter returned.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const nodeText = (node: any): string => {
+  if (node === null || node === undefined || typeof node === 'boolean') return '';
+  if (typeof node === 'string') return node;
+  if (typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(nodeText).join('');
+  return nodeText(node.props?.children);
+};
+
 function filterData<T>(array: readonly T[], headCells: HeadCell[], filters: any[]) {
   // when tweaking the headKeys the filters and headCells can sometimes be temporarily mismatched
   if (headCells.length != filters.length) return array;
@@ -384,9 +394,11 @@ function filterData<T>(array: readonly T[], headCells: HeadCell[], filters: any[
       if (!col.filterType) return true
       if (col.filterType === 'search') {
         if (filters[colInd] == '') return true
-        let item = row[col.id];
-        // if it's not a string, assume it's a ReactNode and strip away the noise
-        if(typeof item !== 'string') item = row[col.id].props.children[0]
+        // A formatted cell is a ReactNode, so read the text out of it. Taking
+        // .props.children[0] only worked for a formatter whose children are an
+        // array: where the single child is the string itself, [0] is its first
+        // *character*, and the column's search box then matches nothing but "x".
+        const item = nodeText(row[col.id]);
         return item.toLowerCase().includes(filters[colInd].toLowerCase())
       }
       if (col.filterType === 'groups') {
