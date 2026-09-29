@@ -12,15 +12,15 @@ export default class EmailEventsDB {
         this._events.push({ ...event, id: this._nextId++ });
     }
 
-    async getByElectionAndVoter(election_id: string, voter_id: string, ctx: ILoggingContext): Promise<EmailEvent[]> {
+    async getByElectionAndVoter(election_id: string, voter_id: string, _ctx: ILoggingContext): Promise<EmailEvent[]> {
         return this._events.filter(e => e.election_id === election_id && e.voter_id === voter_id);
     }
 
-    async getByElectionId(election_id: string, ctx: ILoggingContext): Promise<EmailEvent[]> {
+    async getByElectionId(election_id: string, _ctx: ILoggingContext): Promise<EmailEvent[]> {
         return this._events.filter(e => e.election_id === election_id);
     }
 
-    async getByMessageId(message_id: string, ctx: ILoggingContext): Promise<EmailEvent | null> {
+    async getByMessageId(message_id: string, _ctx: ILoggingContext): Promise<EmailEvent | null> {
         return this._events.find(e => e.message_id === message_id && e.event_type === 'sent') ?? null;
     }
 }

@@ -3,10 +3,9 @@ import Logger from '../../Services/Logging/Logger';
 const className = "Elections.Controllers";
 import { VotingMethods } from '../../Tabulators/VotingMethodSelecter'
 import { Request, Response, NextFunction } from 'express';
-import { STV } from '../../Tabulators/IRV';
 import { VotingMethod } from '@equal-vote/star-vote-shared/domain_model/Race';
 
-const getSandboxResults = async (req: Request, res: Response, next: NextFunction) => {
+const getSandboxResults = async (req: Request, res: Response, _next: NextFunction) => {
     Logger.info(req, `${className}.getSandboxResults`);
 
     const candidateNames = req.body.candidates;

@@ -1,4 +1,4 @@
-require('dotenv').config();
+import 'dotenv/config';
 
 import makeApp from './app';
 import { setupSockets } from './socketHandler';

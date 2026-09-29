@@ -53,4 +53,16 @@ export default class EmailEventsDB {
             .executeTakeFirst();
         return result ?? null;
     }
+
+    // Full event history for one voter -- the per-voter lookup, not the list.
+    async getByElectionIdAndVoterId(election_id: string, voter_id: string, ctx: ILoggingContext): Promise<EmailEvent[]> {
+        Logger.debug(ctx, `${tableName}.getByElectionIdAndVoterId ${election_id}`);
+        return this._postgresClient
+            .selectFrom(tableName)
+            .where('election_id', '=', election_id)
+            .where('voter_id', '=', voter_id)
+            .selectAll()
+            .orderBy('event_timestamp', 'asc')
+            .execute();
+    }
 }

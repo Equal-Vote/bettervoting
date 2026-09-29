@@ -1,3 +1,5 @@
+import type { TransferProgressEvent } from '@azure/core-rest-pipeline';
+
 export default class BlobService {
   public uploaded: { containerName: string; blobName: string; contentType?: string; buffer: Buffer }[];
 
@@ -10,7 +12,7 @@ export default class BlobService {
     blobName: string,
     buffer: Buffer,
     contentType?: string,
-    onProgress?: (progress: any) => void,
+    _onProgress?: (progress: TransferProgressEvent) => void,
   ) => {
     this.uploaded.push({ containerName, blobName, contentType, buffer });
     return `https://mock.blob/${containerName}/${blobName}`;

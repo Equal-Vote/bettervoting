@@ -1,4 +1,4 @@
-let blobServiceClient: any = null;
+import type { TransferProgressEvent } from '@azure/core-rest-pipeline';
 
 export default class BlobService {
     client;
@@ -9,6 +9,7 @@ export default class BlobService {
             throw new Error('AZURE_STORAGE_CONNECTION_STRING is not set. Set it in your environment or use the mock BlobService in tests.');
         }
         // require lazily to avoid loading the azure sdk during build/generate steps
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const { BlobServiceClient } = require('@azure/storage-blob');
         this.client = BlobServiceClient.fromConnectionString(connectionString);
     }
@@ -18,7 +19,7 @@ export default class BlobService {
         blobName: string,
         buffer: Buffer,
         contentType?: string,
-        onProgress?: (progress: any) => void,
+        onProgress?: (progress: TransferProgressEvent) => void,
     ): Promise<string> => {
         if(!this.client) throw new Error("Couldn't upload to blob, client wasn't initialized since AZURE_STORAGE_CONNECTION_STRING wasn't properly set")
 

@@ -1,7 +1,6 @@
 import { Candidate } from "./Candidate";
 import { Uid } from "./Uid";
 import { checkForDuplicates } from "./Util";
-import { candidateValidation } from "./Candidate";
 import { WriteInCandidate } from "./WriteIn";
 
 export const validVotingMethods = ['STAR', 'STAR_PR', 'Approval', 'RankedRobin', 'IRV', 'Plurality', 'STV'] as const;
@@ -57,13 +56,6 @@ export function raceValidation(obj:Race):string | null {
         if (checkForDuplicates(obj.candidates.map(candidate => candidate.candidate_name))){
             return "Duplicate Candidate Names";
         }
-        let candidateErrors = '';
-        obj.candidates.forEach(candidate => {
-            const candidateError = candidateValidation(candidate);
-            if (candidateError){
-                candidateErrors += `candidate_id: ${candidate.candidate_id}: ${candidateError} `;
-            }
-        });
     }
     return null;
     
