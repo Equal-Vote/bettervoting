@@ -12,18 +12,18 @@ export default class StripeCheckoutSessionsDB {
         this._sessions.push({ ...session, id: this._nextId++ });
     }
 
-    async getByStripeSessionId(stripe_checkout_session_id: string, ctx: ILoggingContext): Promise<StripeCheckoutSession | null> {
+    async getByStripeSessionId(stripe_checkout_session_id: string, _ctx: ILoggingContext): Promise<StripeCheckoutSession | null> {
         return this._sessions.find(s => s.stripe_checkout_session_id === stripe_checkout_session_id) ?? null;
     }
 
-    async markPaid(stripe_checkout_session_id: string, ctx: ILoggingContext): Promise<void> {
+    async markPaid(stripe_checkout_session_id: string, _ctx: ILoggingContext): Promise<void> {
         const session = this._sessions.find(s => s.stripe_checkout_session_id === stripe_checkout_session_id);
         if (session) {
             session.status = 'paid';
         }
     }
 
-    async sumVoterLimitPurchases(election_id: string, ctx: ILoggingContext): Promise<number> {
+    async sumVoterLimitPurchases(election_id: string, _ctx: ILoggingContext): Promise<number> {
         return this._sessions
             .filter(s => s.election_id === election_id && s.status === 'paid')
             .reduce((sum, s) => sum + (s.voter_count_granted ?? 0), 0);
