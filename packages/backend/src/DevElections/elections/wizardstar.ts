@@ -42,6 +42,7 @@ const election: Election = {
     update_date: Date.now().toString(),
     head: true,
     ballot_source: 'live_election',
+    voter_limit: 100,
 };
 
 // 6 ballots with distinct voting patterns for STAR (scores 0-5)
