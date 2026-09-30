@@ -4,6 +4,7 @@ import { ILoggingContext } from '../../Services/Logging/ILogger';
 import Logger from '../../Services/Logging/Logger';
 import { IElectionStore } from '../IElectionStore';
 import { Conflict } from '@curveball/http-errors';
+import { pricingConfig } from '@equal-vote/star-vote-shared/config';
 
 export default class ElectionsDB implements IElectionStore {
 
@@ -14,34 +15,35 @@ export default class ElectionsDB implements IElectionStore {
 
     createElection(election: Election, ctx:ILoggingContext, _reason:string): Promise<Election>{
         Logger.debug(ctx, "Election Mock Creates Election: ", election);
-        var copy = JSON.parse(JSON.stringify(election));
+        const copy = JSON.parse(JSON.stringify(election));
         copy.update_date = Date.now().toString();
+        copy.voter_limit = pricingConfig.FREE_TIER_LIMIT;
         this.elections.push(copy);
-        var res = JSON.parse(JSON.stringify(copy));
+        const res = JSON.parse(JSON.stringify(copy));
         return Promise.resolve(res);
     }
 
     
     updateElection(election: Election, ctx:ILoggingContext, reason:string, expected_update_date: string): Promise<Election> {
-        var foundIndex = this.elections.findIndex(dbElection => dbElection.election_id == election.election_id);
+        const foundIndex = this.elections.findIndex(dbElection => dbElection.election_id == election.election_id);
         if(foundIndex == -1){
             throw new Error("Election Not Found")
         }
         if (this.elections[foundIndex].update_date !== expected_update_date) {
             throw new Conflict("Concurrent write detected, please try again")
         }
-        var copy = JSON.parse(JSON.stringify(election));
+        const copy = JSON.parse(JSON.stringify(election));
         copy.update_date = Date.now().toString();
         this.elections[foundIndex] = copy;
-        var res = JSON.parse(JSON.stringify(copy));
+        const res = JSON.parse(JSON.stringify(copy));
         return Promise.resolve(res);
     }
 
     getElections(id: string, _email: string, _ctx:ILoggingContext): Promise<Election[] | null> {
-        var elections:Array<Election> = JSON.parse(JSON.stringify(this.elections));
+        let elections:Array<Election> = JSON.parse(JSON.stringify(this.elections));
         if(id != ""){
-            for(var i = 0; i < id.length; i++){
-                var [key, value] = id[i].split(':');
+            for(let i = 0; i < id.length; i++){
+                const [key, value] = id[i].split(':');
                 elections = elections.filter(election => (election as unknown as Record<string, unknown>)[key]==String(value))
             }
         }

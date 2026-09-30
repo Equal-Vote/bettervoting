@@ -3,7 +3,7 @@ import ServiceLocator from "../../ServiceLocator";
 import Logger from "../../Services/Logging/Logger";
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { expectPermission } from "../controllerUtils";
-import { BadRequest } from "@curveball/http-errors";
+import { BadRequest, PaymentRequired } from "@curveball/http-errors";
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
 import { sharedConfig } from "@equal-vote/star-vote-shared/config";
@@ -87,10 +87,10 @@ const addElectionRoll = async (req: IElectionRequest & { body: { electionRoll: E
         }
 
         // Check for roll limit
-        const overrides = sharedConfig.ELECTION_VOTER_LIMIT_OVERRIDES as { [key: string]: number};
-        const voterLimit = overrides[req.election.election_id] ?? sharedConfig.FREE_TIER_PRIVATE_VOTER_LIMIT;
+        const overrides = sharedConfig.ELECTION_VOTER_LIMIT_OVERRIDES as Record<string, number>;
+        const voterLimit = overrides[req.election.election_id] ?? req.election.voter_limit;
         if(req.election.settings.voter_access == 'closed' && existingRolls.length + req.body.electionRoll.length > voterLimit){
-            throw new BadRequest(`Request Denied: this election is limited to ${voterLimit} voters`);
+            throw new PaymentRequired(`Request Denied: this election is limited to ${voterLimit} voters`);
         }
     }
 
