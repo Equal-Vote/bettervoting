@@ -32,20 +32,13 @@ const setStoredVoterLimit = async (id: string, voterLimit: number) => {
 };
 
 describe("Voter limit on closed elections", () => {
-    test("adding voters beyond the free tier limit responds 402 with a PAYMENT_REQUIRED body", async () => {
+    test("adding voters beyond the free tier limit responds 402 Payment Required", async () => {
         const id = await createClosedElection();
 
         const response = await th.submitElectionRoll(id, makeIdVoters(150, 'over'), testInputs.user1token);
 
         expect(response.statusCode).toBe(402);
-        expect(response.body).toEqual({
-            error: expect.stringContaining('Request Denied: this election is limited to 100 voters'),
-            code: 'PAYMENT_REQUIRED',
-            currentVoterLimit: 100,
-            requestedVoterCount: 150,
-            blockSize: 200,
-            pricePerBlockCents: 1000,
-        });
+        expect(response.body.error).toContain('Request Denied: this election is limited to 100 voters');
         th.testComplete();
     });
 
@@ -58,8 +51,7 @@ describe("Voter limit on closed elections", () => {
 
         const overLimit = await th.submitElectionRoll(id, makeIdVoters(31, 'over'), testInputs.user1token);
         expect(overLimit.statusCode).toBe(402);
-        expect(overLimit.body.currentVoterLimit).toBe(150);
-        expect(overLimit.body.requestedVoterCount).toBe(151);
+        expect(overLimit.body.error).toContain('limited to 150 voters');
         th.testComplete();
     });
 });
@@ -78,7 +70,7 @@ describe("Manual voter limit overrides", () => {
         const response = await th.submitElectionRoll(id, makeIdVoters(6, 'override'), testInputs.user1token);
 
         expect(response.statusCode).toBe(402);
-        expect(response.body.currentVoterLimit).toBe(5);
+        expect(response.body.error).toContain('limited to 5 voters');
         th.testComplete();
     });
 });

@@ -62,12 +62,9 @@ export interface UploadRollsResult {
     uploaded: number;
     aborted: boolean;
     errorMessage?: string;
-    // JSON body of the failed request, so callers can react to structured errors like PAYMENT_REQUIRED
-    errorResponse?: RollUploadErrorResponse;
+    // HTTP status of the failed request, so callers can react to specific failures (e.g. 402 when the voter limit is reached)
+    errorStatus?: number;
 }
-
-// Every API error has `error`; a few narrow cases (e.g. PAYMENT_REQUIRED) add a `code` and extra fields.
-export type RollUploadErrorResponse = { error?: string; code?: string; [field: string]: unknown };
 
 // Only failures that a smaller batch could plausibly fix are retried (413 = body too large, 5xx = internal server error)
 // Anything else (voter limit, permissions, duplicates, etc.) aborts right away, since retrying can't help
@@ -87,7 +84,7 @@ export async function uploadRollsBatched(
         const batch = rolls.slice(nextIndex, nextIndex + batchSize);
 
         let errorMessage: string | undefined = undefined;
-        let errorResponse: RollUploadErrorResponse | undefined = undefined;
+        let errorStatus: number | undefined = undefined;
         let retryable = false;
         try {
             const res = await fetch(`/API/Election/${electionId}/rolls/`, {
@@ -104,7 +101,7 @@ export async function uploadRollsBatched(
                 continue;
             }
             const body = await res.json().catch(() => null);
-            errorResponse = body ?? undefined;
+            errorStatus = res.status;
             errorMessage = body?.error ?? `Error making request: ${res.status}`;
             retryable = isRetryableStatus(res.status);
         } catch (err) {
@@ -114,7 +111,7 @@ export async function uploadRollsBatched(
 
         batchSize = Math.round(batchSize * BATCH_SHRINK_FACTOR);
         if (!retryable || batchSize < MIN_BATCH_SIZE) {
-            return { responses, uploaded: nextIndex, aborted: true, errorMessage, errorResponse };
+            return { responses, uploaded: nextIndex, aborted: true, errorMessage, errorStatus };
         }
     }
 

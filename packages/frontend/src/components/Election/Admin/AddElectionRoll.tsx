@@ -47,12 +47,11 @@ const AddElectionRoll = ({ onClose, onUploadingChange }: { onClose: () => void, 
         autoHideDuration: null
     })
 
-    // The voter limit is hit either by the pre-upload check below or by the server's 402 PAYMENT_REQUIRED response
+    // The voter limit is hit either by the pre-upload check below or by the server's 402 Payment Required response
     // (e.g. if the roll grew since we fetched it).
     // TODO: open the payment/cart modal here once it exists. Until then, explain the limit instead.
-    const onPaymentRequired = (currentVoterLimit: number, requestedVoterCount: number, alreadyUploaded = 0) => {
-        const partial = alreadyUploaded > 0 ? ` ${alreadyUploaded} voters were added before the limit was reached.` : ''
-        showError(`This election is limited to ${currentVoterLimit} voters, and this upload would bring it to ${requestedVoterCount}.${partial}`)
+    const onPaymentRequired = (voterLimit: number, requestedVoterCount: number) => {
+        showError(`This election is limited to ${voterLimit} voters, and this upload would bring it to ${requestedVoterCount}.`)
     }
 
     // Shared by the text field and the csv upload
@@ -74,13 +73,12 @@ const AddElectionRoll = ({ onClose, onUploadingChange }: { onClose: () => void, 
                 return
             }
 
-            if (election.settings.voter_access == 'closed') {
-                const overrides = sharedConfig.ELECTION_VOTER_LIMIT_OVERRIDES as Record<string, number>;
-                const voterLimit = overrides[election.election_id] ?? election.voter_limit;
-                if (existing.electionRoll.length + uploadCount > voterLimit) {
-                    onPaymentRequired(voterLimit, existing.electionRoll.length + uploadCount)
-                    return
-                }
+            const overrides = sharedConfig.ELECTION_VOTER_LIMIT_OVERRIDES as Record<string, number>;
+            const voterLimit = overrides[election.election_id] ?? election.voter_limit;
+            const requestedVoterCount = existing.electionRoll.length + uploadCount;
+            if (election.settings.voter_access == 'closed' && requestedVoterCount > voterLimit) {
+                onPaymentRequired(voterLimit, requestedVoterCount)
+                return
             }
 
             if (skippedCount > 0 || alwaysConfirm) {
@@ -106,9 +104,8 @@ const AddElectionRoll = ({ onClose, onUploadingChange }: { onClose: () => void, 
                 (uploaded, total) => setProgress({ uploaded, total })
             )
 
-            if (result.aborted && result.errorResponse?.code === 'PAYMENT_REQUIRED') {
-                // The server only counts the rejected batch, so report the whole upload instead
-                onPaymentRequired(Number(result.errorResponse.currentVoterLimit), existing.electionRoll.length + uploadCount, result.uploaded)
+            if (result.aborted && result.errorStatus === 402) {
+                onPaymentRequired(voterLimit, requestedVoterCount)
                 return
             }
             if (result.aborted) {
