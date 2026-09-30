@@ -34,7 +34,7 @@ export default class ElectionsDB implements IElectionStore {
     }
 
     async init(): Promise<ElectionsDB> {
-        var appInitContext = Logger.createContext("appInit");
+        const appInitContext = Logger.createContext("appInit");
         Logger.debug(appInitContext, "-> ElectionsDB.init")
         return this;
     }
