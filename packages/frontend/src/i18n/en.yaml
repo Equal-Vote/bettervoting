@@ -1264,6 +1264,13 @@ voters:
     receipt: "Voter Receipt Template"
     blank: Empty Template
 
+# Table filters
+table:
+  no_filter_matches: 'Nothing matches your filters: {{filters}}'
+  search_filter: '{{label}} contains "{{value}}"'
+  group_filter: '{{label}} is {{value}}'
+  group_filter_empty: 'no {{label}} options selected'
+
 # Email Templates
 emails:
   voting_begin: Voting will begin on {{datetime, datetime}}
