@@ -11,12 +11,12 @@ const ElectionRollModel = ServiceLocator.electionRollDb();
 
 const className = "VoterRolls.Controllers";
 
-// The only roll fields this endpoint may change. Everything else (election_id, voter_id,
+// This endpoint may change only email and precinct. Everything else (election_id, voter_id,
 // submitted, ballot_id, state, ip_hash, history, email_data) is server-managed and is
 // carried over from the stored row; state changes go through approve/flag/invalidate.
-const EDITABLE_FIELDS = ['email', 'precinct'] as const;
+const isOptionalString = (value: unknown) => value === undefined || value === null || typeof value === 'string';
 
-const editElectionRoll = async (req: IElectionRequest, res: Response, next: NextFunction) => {
+const editElectionRoll = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     expectPermission(req.user_auth.roles, permissions.canEditElectionRoll)
     const electionId = req.election.election_id;
     const input = req.body?.electionRollEntry;
@@ -28,11 +28,11 @@ const editElectionRoll = async (req: IElectionRequest, res: Response, next: Next
     if (input.election_id !== undefined && input.election_id !== electionId) {
         throw new BadRequest("Election ID must match the URL Param");
     }
-    for (const field of EDITABLE_FIELDS) {
-        const value = input[field];
-        if (value !== undefined && value !== null && typeof value !== 'string') {
-            throw new BadRequest(`electionRollEntry.${field} must be a string`);
-        }
+    if (!isOptionalString(input.email)) {
+        throw new BadRequest("electionRollEntry.email must be a string");
+    }
+    if (!isOptionalString(input.precinct)) {
+        throw new BadRequest("electionRollEntry.precinct must be a string");
     }
 
     // Edit an existing entry of this election only; never create one here.
@@ -43,16 +43,15 @@ const editElectionRoll = async (req: IElectionRequest, res: Response, next: Next
         throw new BadRequest(msg)
     }
 
-    const edited: ElectionRoll = { ...existing };
-    for (const field of EDITABLE_FIELDS) {
-        if (field in input) {
-            edited[field] = input[field] ?? undefined;
-        }
-    }
-    edited.history = [
-        ...(existing.history ?? []),
-        { action_type: 'edited', actor: req.user?.email ?? req.user?.sub ?? 'unknown', timestamp: Date.now() },
-    ];
+    const edited: ElectionRoll = {
+        ...existing,
+        ...('email' in input ? { email: input.email ?? undefined } : {}),
+        ...('precinct' in input ? { precinct: input.precinct ?? undefined } : {}),
+        history: [
+            ...(existing.history ?? []),
+            { action_type: 'edited', actor: req.user?.email ?? req.user?.sub ?? 'unknown', timestamp: Date.now() },
+        ],
+    };
 
     const electionRollEntry = await ElectionRollModel.update(edited, req, `User Editing Election Roll`);
     if (!electionRollEntry) {

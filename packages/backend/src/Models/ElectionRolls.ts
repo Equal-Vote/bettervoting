@@ -18,7 +18,7 @@ export default class ElectionRollDB implements IElectionRollStore {
     }
 
     async init(): Promise<ElectionRollDB> {
-        var appInitContext = Logger.createContext("appInit");
+        const appInitContext = Logger.createContext("appInit");
         Logger.debug(appInitContext, "-> ElectionRollDB.init");
         return this;
     }
@@ -93,7 +93,7 @@ export default class ElectionRollDB implements IElectionRollStore {
             .selectAll()
             .executeTakeFirst()
             .then((row) => row ?? null)
-            .catch(((reason: any) => {
+            .catch(((reason: unknown) => {
                 Logger.debug(ctx, reason);
                 return null
             }))
@@ -247,9 +247,9 @@ export default class ElectionRollDB implements IElectionRollStore {
 
     delete(election_roll: ElectionRoll, ctx: ILoggingContext, _reason: string): Promise<boolean> {
         Logger.debug(ctx, `${tableName}.delete`);
-        var sqlString = `DELETE FROM ${this._tableName} WHERE election_id = $1 AND voter_id=$2`;
+        const sqlString = `DELETE FROM ${this._tableName} WHERE election_id = $1 AND voter_id=$2`;
         Logger.debug(ctx, sqlString);
-        let deletedRoll = this._postgresClient
+        const deletedRoll = this._postgresClient
             .deleteFrom(tableName)
             .where('election_id', '=', election_roll.election_id)
             .where('voter_id', '=', election_roll.voter_id)
