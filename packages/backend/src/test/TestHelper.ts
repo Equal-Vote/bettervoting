@@ -257,6 +257,20 @@ export class TestHelper {
         return r.send();
     }
 
+    async editElectionRoll(
+        electionId: Uid,
+        electionRollEntry: object,
+        userToken: string | null,
+        customToken: string| null = null
+    ): Promise<SupertestResponse> {
+        let r = request(this.expressApp)
+            .put(`/API/Election/${electionId}/rolls`)
+            .set("Accept", "application/json");
+
+        r = this.addUserTokenVoterIdCookie(r, userToken, null, customToken, null);
+        return r.send({ electionRollEntry });
+    }
+
     async fetchElectionRoll(
         electionId: Uid,
         userToken: string | null,
