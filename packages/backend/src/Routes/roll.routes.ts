@@ -5,7 +5,6 @@ import {
     getRollsByElectionID,
     getByVoterID,
     lookupVoter,
-    editElectionRoll,
     approveElectionRoll,
     flagElectionRoll,
     invalidateElectionRoll,
@@ -244,36 +243,6 @@ rollRouter.post('/Election/:id/rolls/', asyncHandler(addElectionRoll))
  *         description: Election not found
  */
 rollRouter.delete('/Election/:id/rolls/', asyncHandler(clearElectionRoll))
-
-/** 
- * @swagger
- * /Election/{id}/rolls:
- *   put:
- *     summary: Edit an election roll
- *     tags: [Rolls]
- *     security:
- *      - ApiKeyAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: string
- *         required: true
- *         description: The election ID
- *     responses:
- *       200:
- *         description: Roll edited
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 electionRollEntry:
- *                   type: object
- *                   $ref: '#/components/schemas/ElectionRoll'
- *       404:
- *         description: Election not found */
-rollRouter.put('/Election/:id/rolls/', asyncHandler(editElectionRoll))
 
  /** 
  * @swagger
