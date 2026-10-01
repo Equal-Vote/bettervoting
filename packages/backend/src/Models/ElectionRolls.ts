@@ -185,12 +185,18 @@ export default class ElectionRollDB implements IElectionRollStore {
         Logger.debug(ctx, "", election_roll)
 
         const executeWork = async (activeDb: Kysely<Database> | Transaction<Database>) => {
-            await activeDb.updateTable(tableName)
+            const demoted = await activeDb.updateTable(tableName)
                 .where('election_id', '=', election_roll.election_id)
                 .where('voter_id', '=', election_roll.voter_id)
                 .where('head', '=', true)
                 .set('head', false)
-                .execute()
+                .executeTakeFirst()
+
+            // update() replaces an existing head row; it must never create one. Without a
+            // current head row there is nothing to version, so fail (the transaction rolls back).
+            if (demoted.numUpdatedRows === BigInt(0)) {
+                throw new Error(`No head roll for election ${election_roll.election_id}`);
+            }
 
             // Strip legacy fields and any caller-supplied create_date/update_date/head — the
             // model generates them here so the returned row is the single source of truth.
