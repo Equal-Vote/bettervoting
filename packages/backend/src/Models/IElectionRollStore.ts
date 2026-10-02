@@ -35,6 +35,12 @@ export interface IElectionRollStore {
         ctx: ILoggingContext,
         db?: Kysely<Database> | Transaction<Database>
     ) => Promise<ElectionRoll[] | null>;
+    findOrCreateRoll: (
+        newRoll: NewElectionRoll,
+        match: { voter_id: string | null, email: string | null, ip_hash: string | null },
+        ctx: ILoggingContext,
+        reason: string,
+    ) => Promise<ElectionRoll[]>;
     update: (
         election_roll: NewElectionRoll,
         ctx: ILoggingContext,

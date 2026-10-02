@@ -7,14 +7,14 @@ import { IElectionRequest, IRequest } from '../../IRequest';
 import { Response, NextFunction } from 'express';
 import { roles } from "@equal-vote/star-vote-shared/domain_model/roles"
 import { getPermissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
-import { getOrCreateElectionRoll, checkForMissingAuthenticationData, getVoterAuthorization } from "../Roll/voterRollUtils"
+import { getElectionRollForRequest, checkForMissingAuthenticationData, getVoterAuthorization } from "../Roll/voterRollUtils"
 import { ElectionRoll } from '@equal-vote/star-vote-shared/domain_model/ElectionRoll';
 import { sharedConfig } from '@equal-vote/star-vote-shared/config';
 import { hashString } from '../controllerUtils';
 import { Conflict } from '@curveball/http-errors';
 
-var ElectionsModel =  ServiceLocator.electionsDb();
-var accountService = ServiceLocator.accountService();
+const ElectionsModel =  ServiceLocator.electionsDb();
+const accountService = ServiceLocator.accountService();
 const className="Elections.Controllers";
 
 const getElectionByID = async (req: IElectionRequest, res: Response, next: NextFunction) => {
@@ -23,7 +23,7 @@ const getElectionByID = async (req: IElectionRequest, res: Response, next: NextF
         return next();
     }
     try {
-        let election = await ElectionsModel.getElectionByID(req.params.id, req);
+        const election = await ElectionsModel.getElectionByID(req.params.id, req);
         if (!election) {
             throw new Error(`Election not found: ${req.params.id}`);
         }
@@ -31,7 +31,7 @@ const getElectionByID = async (req: IElectionRequest, res: Response, next: NextF
         req.election = election;
         return next();
     } catch (err: unknown) {
-        let failMsg = 'Election not found';
+        const failMsg = 'Election not found';
         Logger.error(req, `${failMsg} electionId=${req.params.id}: ${getErrorMessage(err)}`);
         return responseErr(res, req, 400, failMsg);
     }
@@ -60,7 +60,7 @@ const electionSpecificAuth = async (req: IElectionRequest, res: Response, next: 
         Logger.warn(req, `${className}.electionSpecificAuth: ignoring non-PEM auth_key`);
         return next();
     }
-    var user = accountService.extractUserFromRequest(req, electionKey);
+    const user = accountService.extractUserFromRequest(req, electionKey);
     req.user = user;
     return next();
 }
@@ -69,9 +69,9 @@ const electionPostAuthMiddleware = async (req: IElectionRequest, res: Response, 
     Logger.info(req, `${className}.electionPostAuthMiddleware ${req.params.id}`);
     try {
         // Update Election State
-        var election = req.election;
+        let election = req.election;
         if (!election){
-            var failMsg = "Election not found";
+            const failMsg = "Election not found";
             Logger.info(req, `${failMsg} electionId=${req.params.id}`);
             return responseErr(res, req, 400, failMsg);
         }
@@ -116,7 +116,7 @@ const electionPostAuthMiddleware = async (req: IElectionRequest, res: Response, 
         Logger.debug(req,req.user_auth);
         return next();
     } catch (err: unknown) {
-        var failMsg = "Could not modify election";
+        const failMsg = "Could not modify election";
         Logger.error(req, `${failMsg} ${getErrorMessage(err)}`);
         return responseErr(res, req, 500, failMsg);
     }
@@ -128,11 +128,11 @@ async function updateElectionStateIfNeeded(req:IRequest, election:Election):Prom
     }
 
     const currentTime = new Date();
-    var stateChange = false;
-    var stateChangeMsg = "";
+    let stateChange = false;
+    let stateChangeMsg = "";
 
     if (election.state === 'finalized') {
-        var openElection = false;
+        let openElection = false;
         if (election.start_time) {
             const startTime = new Date(election.start_time);
             if (currentTime.getTime() > startTime.getTime()) {
@@ -178,12 +178,12 @@ async function updateElectionStateIfNeeded(req:IRequest, election:Election):Prom
 
 const returnElection = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     Logger.info(req, `${className}.returnElection ${req.params.id}`)
-    var election = req.election;
+    const election = req.election;
     
     const missingAuthData = checkForMissingAuthenticationData(req, election, req)
     let roll:ElectionRoll|null = null
     if (missingAuthData === null) {
-        roll = await getOrCreateElectionRoll(req, election, req);
+        roll = await getElectionRollForRequest(req, election, req);
     }
     const voterAuthorization = getVoterAuthorization(roll,missingAuthData)
     // auth_key is a PEM public key, harmless to leak, but we still hide it from

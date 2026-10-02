@@ -11,9 +11,22 @@ import { makeUniqueID, ID_LENGTHS, ID_PREFIXES } from "@equal-vote/star-vote-sha
 
 const ElectionRollModel = ServiceLocator.electionRollDb();
 
+// Finds the requester's roll entry, creating it if they're allowed one and don't have one yet.
+// Used when a vote is cast. Creation is atomic per voter (see ElectionRollModel.findOrCreateRoll).
 export async function getOrCreateElectionRoll(req: IRequest, election: Election, ctx: ILoggingContext, voter_id_override?: string, skipStateCheck?: boolean): Promise<ElectionRoll | null> {
+    return resolveElectionRoll(req, election, ctx, true, voter_id_override, skipStateCheck);
+}
+
+// Read-only variant for requests that only show the election (GET /Election/:id and
+// POST /Election/:id/ballot). It never writes: when an open-access voter has no roll entry
+// yet it returns an unsaved provisional one, and the real row is created when they vote.
+export async function getElectionRollForRequest(req: IRequest, election: Election, ctx: ILoggingContext): Promise<ElectionRoll | null> {
+    return resolveElectionRoll(req, election, ctx, false);
+}
+
+async function resolveElectionRoll(req: IRequest, election: Election, ctx: ILoggingContext, persist: boolean, voter_id_override?: string, skipStateCheck?: boolean): Promise<ElectionRoll | null> {
     // Checks for existing election roll for user
-    Logger.info(req, `getOrCreateElectionRoll`)
+    Logger.info(req, `resolveElectionRoll persist=${persist}`)
     const ip_hash = hashString(req.ip!)
     // Get data that is used for voter authentication
     // NOTE: I'm ensuring that undefined is coaleced into null, that makes it compliant with the type when calling getElectionRoll
@@ -33,7 +46,7 @@ export async function getOrCreateElectionRoll(req: IRequest, election: Election,
     // Get all election roll entries that match any of the voter authentication fields
     // This is an odd way of going about this, rather than getting a roll that matches all three we get all that match any of the fields and
     // check the output for a number of edge cases.
-    var electionRollEntries = null
+    let electionRollEntries = null
     if ((require_ip_hash || email || voter_id)) {
         electionRollEntries = await ElectionRollModel.getElectionRoll(String(election.election_id), voter_id, email, require_ip_hash, ctx);
     }
@@ -43,8 +56,9 @@ export async function getOrCreateElectionRoll(req: IRequest, election: Election,
         if (election.settings.voter_access !== 'open') return null
         if (!skipStateCheck && election.state !== 'open') return null
 
-        Logger.info(req, "Creating new roll");
-        const new_voter_id = election.settings.voter_authentication.voter_id ?
+        const shouldPersist = persist && !!(require_ip_hash || email || voter_id);
+        Logger.info(req, shouldPersist ? "Creating new roll" : "No roll yet; using an unsaved provisional entry");
+        const new_voter_id = (election.settings.voter_authentication.voter_id || !shouldPersist) ?
             (voter_id ?? '') :
             await makeUniqueID(
                 ID_PREFIXES.VOTER,
@@ -66,16 +80,20 @@ export async function getOrCreateElectionRoll(req: IRequest, election: Election,
             state: ElectionRollState.approved,
             history: history,
         }]
-        if ((require_ip_hash || email || voter_id)) {
-            // Return the row the DB actually wrote — its update_date is the canonical value
-            // that OCC will check against on the cast-vote path.
-            const inserted = await ElectionRollModel.submitElectionRoll(roll, ctx, `User requesting Roll and is authorized`)
-            return inserted[0];
-        }
-        else {
+        if (!shouldPersist) {
             // Not persisted; downstream code that needs a real update_date should not reach here.
             return { ...roll[0], update_date: Date.now().toString(), head: true, create_date: new Date().toISOString() }
         }
+        // Atomic find-or-insert: a concurrent first request from the same voter may have created
+        // the row in the meantime, in which case we get that row back and fall through to the
+        // same checks as an existing roll. Returning the stored row matters because its
+        // update_date is what OCC checks on the cast-vote path.
+        electionRollEntries = await ElectionRollModel.findOrCreateRoll(
+            roll[0],
+            { voter_id, email, ip_hash: require_ip_hash },
+            ctx,
+            `User requesting Roll and is authorized`,
+        );
     }
 
 
