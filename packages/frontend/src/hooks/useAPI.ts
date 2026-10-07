@@ -1,5 +1,6 @@
 import { Election, NewElection } from "@equal-vote/star-vote-shared/domain_model/Election";
 import { VoterAuth } from '@equal-vote/star-vote-shared/domain_model/VoterAuth';
+import { ElectionEntitlements } from '@equal-vote/star-vote-shared/domain_model/Entitlement';
 import { ElectionRoll, ElectionRollResponse } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll";
 import useFetch from "./useFetch";
 import { VotingMethod } from "@equal-vote/star-vote-shared/domain_model/Race";
@@ -12,7 +13,8 @@ export const useGetElection = (electionID: string | undefined) => {
     return useFetch<undefined, {
         election: Election,
         precinctFilteredElection: Election,
-        voterAuth: VoterAuth
+        voterAuth: VoterAuth,
+        entitlements: ElectionEntitlements
     }>(`/API/Election/${electionID}`, 'get')
 }
 

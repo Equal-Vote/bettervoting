@@ -2,6 +2,7 @@ import { Ballot, NewBallot } from "@equal-vote/star-vote-shared/domain_model/Bal
 import { Election } from "@equal-vote/star-vote-shared/domain_model/Election";
 import { Uid } from "@equal-vote/star-vote-shared/domain_model/Uid";
 import { VoterAuth } from "@equal-vote/star-vote-shared/domain_model/VoterAuth";
+import { ElectionEntitlements } from "@equal-vote/star-vote-shared/domain_model/Entitlement";
 import makeApp from "../app";
 import Logger from "../Services/Logging/Logger";
 import { TestLoggerImpl } from "../Services/Logging/TestLoggerImpl";
@@ -17,6 +18,7 @@ type ElectionResponse = {
     election: Election;
     precinctFilteredElection: Election;
     voterAuth: VoterAuth;
+    entitlements?: ElectionEntitlements; // only on GET /Election/:id
 };
 
 type BallotResponse = {
@@ -137,6 +139,7 @@ export class TestHelper {
             election: res.body.election,
             precinctFilteredElection: res.body.precinctFilteredElection,
             voterAuth: res.body.voterAuth,
+            entitlements: res.body.entitlements,
         };
     }
 
