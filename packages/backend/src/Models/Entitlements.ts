@@ -28,7 +28,7 @@ export default class EntitlementsDB {
         Logger.debug(ctx, `${tableName}.getTotalsByElection election_id=${election_id}`);
         const rows = await this._postgresClient
             .selectFrom(tableName)
-            .select(['type', (eb) => eb.fn.sum<number>('amount').as('total')])
+            .select(['type', (eb) => eb.fn.sum('amount').as('total')])
             .where('election_id', '=', election_id)
             .groupBy('type')
             .execute();
