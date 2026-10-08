@@ -1,6 +1,6 @@
 import { ILoggingContext } from '../Services/Logging/ILogger';
 import Logger from '../Services/Logging/Logger';
-import { Kysely } from 'kysely'
+import { Kysely, Transaction as KyselyTransaction } from 'kysely'
 import { Database } from './Database';
 import { Transaction } from '@equal-vote/star-vote-shared/domain_model/Transaction';
 
@@ -33,9 +33,10 @@ export default class TransactionsDB {
         return result ?? null;
     }
 
-    async markComplete(stripe_checkout_session_id: string, ctx: ILoggingContext): Promise<void> {
+    // Requires a DB transaction: completing a transaction and inserting its entitlements must commit together.
+    async markComplete(stripe_checkout_session_id: string, ctx: ILoggingContext, trx: KyselyTransaction<Database>): Promise<void> {
         Logger.debug(ctx, `${tableName}.markComplete stripe_checkout_session_id=${stripe_checkout_session_id}`);
-        await this._postgresClient
+        await trx
             .updateTable(tableName)
             .set({ status: 'complete', completed_date: new Date().toISOString() })
             .where('stripe_checkout_session_id', '=', stripe_checkout_session_id)

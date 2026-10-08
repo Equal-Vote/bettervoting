@@ -1,13 +1,15 @@
 import { Entitlement, EntitlementType } from '@equal-vote/star-vote-shared/domain_model/Entitlement';
 import { ILoggingContext } from '../../Services/Logging/ILogger';
 import Logger from '../../Services/Logging/Logger';
+import { Transaction } from 'kysely';
+import { Database } from '../Database';
 
 export default class EntitlementsDB {
 
     _entitlements: Entitlement[] = [];
     _nextId = 1;
 
-    async insert(entitlements: Omit<Entitlement, 'id'>[], ctx: ILoggingContext): Promise<void> {
+    async insert(entitlements: Omit<Entitlement, 'id'>[], ctx: ILoggingContext, _trx: Transaction<Database>): Promise<void> {
         Logger.debug(ctx, `MockEntitlements insert count=${entitlements.length}`);
         entitlements.forEach(e => this._entitlements.push({ ...e, id: this._nextId++ }));
     }

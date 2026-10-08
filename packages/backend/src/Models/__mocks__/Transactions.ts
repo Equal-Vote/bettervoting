@@ -1,6 +1,8 @@
 import { Transaction } from '@equal-vote/star-vote-shared/domain_model/Transaction';
 import { ILoggingContext } from '../../Services/Logging/ILogger';
 import Logger from '../../Services/Logging/Logger';
+import { Transaction as KyselyTransaction } from 'kysely';
+import { Database } from '../Database';
 
 export default class TransactionsDB {
 
@@ -16,7 +18,7 @@ export default class TransactionsDB {
         return this._transactions.find(t => t.stripe_checkout_session_id === stripe_checkout_session_id) ?? null;
     }
 
-    async markComplete(stripe_checkout_session_id: string, _ctx: ILoggingContext): Promise<void> {
+    async markComplete(stripe_checkout_session_id: string, _ctx: ILoggingContext, _trx: KyselyTransaction<Database>): Promise<void> {
         const transaction = this._transactions.find(t => t.stripe_checkout_session_id === stripe_checkout_session_id);
         if (transaction) {
             transaction.status = 'complete';

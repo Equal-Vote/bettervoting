@@ -1,6 +1,6 @@
 import { ILoggingContext } from '../Services/Logging/ILogger';
 import Logger from '../Services/Logging/Logger';
-import { Kysely } from 'kysely'
+import { Kysely, Transaction } from 'kysely'
 import { Database } from './Database';
 import { Entitlement, EntitlementType } from '@equal-vote/star-vote-shared/domain_model/Entitlement';
 
@@ -14,10 +14,11 @@ export default class EntitlementsDB {
         this._postgresClient = postgresClient;
     }
 
-    async insert(entitlements: Omit<Entitlement, 'id'>[], ctx: ILoggingContext): Promise<void> {
+    // Requires a DB transaction: purchased entitlements must commit together with TransactionsDB.markComplete.
+    async insert(entitlements: Omit<Entitlement, 'id'>[], ctx: ILoggingContext, trx: Transaction<Database>): Promise<void> {
         Logger.debug(ctx, `${tableName}.insert count=${entitlements.length}`);
         if (entitlements.length === 0) return;
-        await this._postgresClient
+        await trx
             .insertInto(tableName)
             .values(entitlements)
             .execute();
