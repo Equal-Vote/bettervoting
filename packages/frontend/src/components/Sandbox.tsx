@@ -10,6 +10,7 @@ import { useGetSandboxResults } from '../hooks/useAPI';
 import { VotingMethod } from '@equal-vote/star-vote-shared/domain_model/Race';
 import { ElectionContextProvider } from './ElectionContextProvider';
 import { PrimaryButton } from './styles';
+import PrintBallotsButton from './PaperBallots/PrintBallotsButton';
 
 const Sandbox = () => {
 
@@ -133,6 +134,15 @@ const Sandbox = () => {
                             helperText="Comma seperated list of candidates"
                             onChange={(e) => setCandidates(e.target.value)}
                         />
+                        {votingMethod === 'STAR' && (
+                            <div>
+                                <PrintBallotsButton
+                                    candidates={candidates.split(',').map(c => c.trim()).filter(c => c !== '')}
+                                    qrPrefix='bv:sandbox:'
+                                    fileName='sandbox-ballots.pdf'
+                                />
+                            </div>
+                        )}
                     </Grid>
                     <Grid size={12}>
                         <InputLabel variant="standard" htmlFor="uncontrolled-native">
