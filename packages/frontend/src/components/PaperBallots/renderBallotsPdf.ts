@@ -89,10 +89,18 @@ const prepare = (): Promise<TypstCompiler> => {
     return ready;
 };
 
-// A PDF with one STAR ballot per entry in `ballots`, each showing its ID and QR code.
-export async function renderStarBallotsPdf(candidates: string[], ballots: PaperBallot[]): Promise<Uint8Array> {
+export interface BallotBatch {
+    title: string;    // shown on the cover page
+    printed: string;  // the print date, shown on the cover page
+    candidates: string[];
+    ballots: PaperBallot[];
+}
+
+// A PDF with a cover page listing every ballot ID, then one STAR ballot per entry in
+// `ballots`, each showing its ID and QR code.
+export async function renderStarBallotsPdf(batch: BallotBatch): Promise<Uint8Array> {
     const compiler = await prepare();
-    const options = { mainFilePath: '/ballots.typ', inputs: { data: JSON.stringify({ candidates, ballots }) } };
+    const options = { mainFilePath: '/ballots.typ', inputs: { data: JSON.stringify(batch) } };
     // runWithWorld frees the compiled document afterwards, so repeated prints don't leak.
     const { result, diagnostics } = await compiler.runWithWorld(options, async (world) => world.pdf({ diagnostics: 'unix' }));
     if (!result) throw new Error(`The ballot template produced no PDF: ${(diagnostics ?? []).join('; ')}`);

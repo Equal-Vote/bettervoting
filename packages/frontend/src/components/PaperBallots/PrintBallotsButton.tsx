@@ -10,6 +10,8 @@ const MAX_COPIES = 500;
 const CANDIDATES_PER_PAGE = 12;
 
 interface PrintBallotsButtonProps {
+    // Shown on the batch's cover page, e.g. the election and race titles.
+    title: string;
     candidates: string[];
     // Prepended to each ballot ID in its QR code, e.g. "bv:<election>:<race>:", so a
     // scanned ballot says which election and race it belongs to.
@@ -29,7 +31,7 @@ const downloadPdf = (pdf: Uint8Array, fileName: string) => {
 
 // A small "Print paper ballots" button that opens a dialog asking how many copies to
 // print, then downloads a PDF of STAR ballots, each with its own ID and QR code.
-export default function PrintBallotsButton({ candidates, qrPrefix, fileName }: PrintBallotsButtonProps) {
+export default function PrintBallotsButton({ title, candidates, qrPrefix, fileName }: PrintBallotsButtonProps) {
     const [open, setOpen] = useState(false);
     const [copies, setCopies] = useState('10');
     const [busy, setBusy] = useState(false);
@@ -51,7 +53,8 @@ export default function PrintBallotsButton({ candidates, qrPrefix, fileName }: P
             const ballots = makeBallotIds(count).map(id => ({ id: formatBallotId(id), qr: `${qrPrefix}${id}` }));
             // Loaded on demand: the Typst compiler is large.
             const { renderStarBallotsPdf } = await import('./renderBallotsPdf');
-            downloadPdf(await renderStarBallotsPdf(candidates, ballots), fileName);
+            const printed = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+            downloadPdf(await renderStarBallotsPdf({ title, printed, candidates, ballots }), fileName);
             setOpen(false);
         } catch (err) {
             console.error(err);
@@ -70,8 +73,9 @@ export default function PrintBallotsButton({ candidates, qrPrefix, fileName }: P
                 <DialogTitle>Print paper ballots</DialogTitle>
                 <DialogContent>
                     <Typography variant='body2' sx={{ mb: 2 }}>
-                        Download a PDF of STAR ballots, one per page. Each copy gets its own ballot ID and QR code,
-                        so a copied or double-scanned ballot can be caught when the ballots are counted.
+                        Download a PDF of STAR ballots, one per page. Each copy gets its own ballot ID, printed as
+                        text and as a QR code, so a copied or double-scanned ballot can be caught when the ballots are
+                        counted. The first page lists every ID in the batch; keep it with the ballots.
                     </Typography>
                     <TextField
                         id='print-ballots-copies'

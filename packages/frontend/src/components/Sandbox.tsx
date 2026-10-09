@@ -137,6 +137,7 @@ const Sandbox = () => {
                         {votingMethod === 'STAR' && (
                             <div>
                                 <PrintBallotsButton
+                                    title='Sandbox'
                                     candidates={candidates.split(',').map(c => c.trim()).filter(c => c !== '')}
                                     qrPrefix='bv:sandbox:'
                                     fileName='sandbox-ballots.pdf'

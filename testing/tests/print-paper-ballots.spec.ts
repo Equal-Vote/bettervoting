@@ -4,7 +4,7 @@ import fs from 'fs';
 // The "Print paper ballots" button compiles STAR ballots to a PDF in the browser with the
 // Typst templates from the bettervoting-typst submodule. The sandbox page needs no login.
 test.describe('Print paper ballots', () => {
-    test('Sandbox downloads a PDF with one page per copy', async ({ page }) => {
+    test('Sandbox downloads a PDF with a cover page and one page per copy', async ({ page }) => {
         await page.goto('/sandbox');
         await page.locator('#candidates').fill('Alice, Bob, Carol');
         await page.getByRole('button', { name: 'Print paper ballots' }).click();
@@ -20,7 +20,7 @@ test.describe('Print paper ballots', () => {
         const pdf = fs.readFileSync(await download.path());
         expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
         const pages = pdf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) ?? [];
-        expect(pages).toHaveLength(3);
+        expect(pages).toHaveLength(1 + 3); // cover page listing the IDs, then the ballots
     });
 
     test('Build Ballot offers it on a STAR race', async ({ page }) => {
@@ -51,7 +51,7 @@ test.describe('Print paper ballots', () => {
         ]);
         expect(download.suggestedFilename()).toMatch(new RegExp(`^${electionId}-.+-ballots\\.pdf$`));
         const pages = fs.readFileSync(await download.path()).toString('latin1').match(/\/Type\s*\/Page[^s]/g) ?? [];
-        expect(pages).toHaveLength(2);
+        expect(pages).toHaveLength(1 + 2); // cover page listing the IDs, then the ballots
     });
 
     test('The button only shows for STAR', async ({ page }) => {

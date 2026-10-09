@@ -123,6 +123,7 @@ export default function Race({ race, race_index }: RaceProps) {
             {race.voting_method === 'STAR' && (
                 <Box sx={{ px: 1, pb: 1 }}>
                     <PrintBallotsButton
+                        title={race.title && race.title !== election.title ? `${election.title}: ${race.title}` : election.title}
                         candidates={race.candidates.map(c => c.candidate_name)}
                         qrPrefix={`bv:${election.election_id}:${race.race_id}:`}
                         fileName={`${election.election_id}-${(race.title || race.race_id).replace(/[^\w-]+/g, '-')}-ballots.pdf`}
