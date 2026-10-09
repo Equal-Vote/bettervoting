@@ -20,6 +20,12 @@ PRs opened by an agent must be created as drafts (`gh pr create --draft`), so th
 
 ## Commands
 
+### Setup
+The Typst ballot templates are a git submodule (`packages/shared/bettervoting-typst`). Clone with `--recurse-submodules`, or after cloning run:
+```bash
+git submodule update --init --recursive
+```
+
 ### Development
 ```bash
 # Run frontend dev server

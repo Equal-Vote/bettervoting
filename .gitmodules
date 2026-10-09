@@ -1,0 +1,3 @@
+[submodule "packages/shared/bettervoting-typst"]
+	path = packages/shared/bettervoting-typst
+	url = https://github.com/jacksonloper/bettervoting-typst.git

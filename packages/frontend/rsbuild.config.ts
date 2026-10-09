@@ -21,6 +21,8 @@ export default defineConfig({
   resolve: {
     alias: {
       "~": path.resolve(__dirname, "src"),
+      // Typst ballot templates, a git submodule (run `git submodule update --init --recursive`).
+      "@bettervoting-typst": path.resolve(__dirname, "../shared/bettervoting-typst"),
     },
   },
   server: {
@@ -51,6 +53,14 @@ export default defineConfig({
   output: {
     distPath: {
       root: 'build',
+    },
+  },
+  tools: {
+    rspack: (_config, { appendRules }) => {
+      // `?url` imports of files Rsbuild doesn't already treat as assets: the Typst
+      // templates and their WebAssembly (see components/PaperBallots/renderBallotsPdf.ts).
+      // Emit them as plain files so they're only fetched when ballots are printed.
+      appendRules({ test: /\.(typ|toml|wasm)$/, resourceQuery: /url/, type: 'asset/resource' });
     },
   },
 });

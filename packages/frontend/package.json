@@ -11,6 +11,8 @@
     "@hello-pangea/dnd": "^18.0.0",
     "@mui/icons-material": "^9.0.0",
     "@mui/material": "^9.0.0",
+    "@myriaddreamin/typst-ts-web-compiler": "0.7.0",
+    "@myriaddreamin/typst.ts": "0.7.0",
     "@ungap/structured-clone": "0.3.4",
     "crypto-browserify": "^3.12.1",
     "fast-levenshtein": "^3.0.0",

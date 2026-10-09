@@ -29,6 +29,13 @@ jobs:
             type=ref,event=branch
             type=sha
 
+      # Build from a checkout that includes the Typst ballot templates submodule
+      # (packages/shared/bettervoting-typst), so it's guaranteed to be in the build context.
+      - name: Checkout with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
       - name: Docker Setup Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -42,6 +49,7 @@ jobs:
       - name: Build and push Docker images
         uses: docker/build-push-action@v5
         with:
+          context: .
           build-args: |
             COMMIT_SHA=${{ github.sha }}
           cache-from: type=registry,ref=ghcr.io/${{ env.REPO }}:${{ github.ref_name }}
