@@ -1,6 +1,7 @@
 import { PartialBy } from "./Election";
 import { Uid } from "./Uid";
 import { emailRegex } from "./Util";
+import { VoterEmail } from "./EmailSend";
 // Election roll contains information about the voter's ID and ballot status to ensure only
 // authorized voters submit a single ballot
 export interface ElectionRoll {
@@ -35,6 +36,7 @@ export type NewElectionRoll = PartialBy<ElectionRoll,'create_date'|'update_date'
 // API response type — extends the domain model with computed fields attached at response time
 export interface ElectionRollResponse extends ElectionRoll {
     email_events?: { event_type: string; event_timestamp: string; details?: Record<string, unknown> }[];
+    emails?: VoterEmail[]; // every email sent to this voter, with its current status
 }
 
 export interface ElectionRollAction {
@@ -44,7 +46,7 @@ export interface ElectionRollAction {
     // DEPRECATED: no longer written. Historical rows still carry the raw SendGrid
     // response here; sanitizeHistory strips it before any client sees it. Delivery
     // data lives in emailEventsDB. Kept on the type so existing rows still parse.
-    email_data?: any;
+    email_data?: unknown;
 }
 function electionRollActionValidation(obj:ElectionRollAction): string | null {
     if (!obj){
@@ -98,7 +100,7 @@ export function electionRollValidation(obj:ElectionRoll): string | null {
         return "Invalid State";
     }
     if (obj.history) {
-        for (let action of obj.history){
+        for (const action of obj.history){
             const error = electionRollActionValidation(action);
             if (error){
                 return error;

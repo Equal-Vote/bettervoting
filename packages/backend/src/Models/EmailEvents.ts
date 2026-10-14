@@ -54,6 +54,18 @@ export default class EmailEventsDB {
         return result ?? null;
     }
 
+    // Retention: the events are for diagnosing deliveries while they happen, and their
+    // details can include receiving servers' messages that quote addresses. Each email's
+    // lasting status lives in emailStatusDB. Returns how many rows were deleted.
+    async deleteOlderThan(cutoff: Date, ctx: ILoggingContext): Promise<number> {
+        Logger.debug(ctx, `${tableName}.deleteOlderThan ${cutoff.toISOString()}`);
+        const result = await this._postgresClient
+            .deleteFrom(tableName)
+            .where('event_timestamp', '<', cutoff.toISOString())
+            .executeTakeFirst();
+        return Number(result.numDeletedRows);
+    }
+
     // Full event history for one voter -- the per-voter lookup, not the list.
     async getByElectionIdAndVoterId(election_id: string, voter_id: string, ctx: ILoggingContext): Promise<EmailEvent[]> {
         Logger.debug(ctx, `${tableName}.getByElectionIdAndVoterId ${election_id}`);

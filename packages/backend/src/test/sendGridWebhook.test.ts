@@ -4,7 +4,13 @@ import request from "supertest";
 import express from 'express';
 import makeApp from "../app";
 import ServiceLocator from "../ServiceLocator";
-import EmailEventsDB from "../Models/__mocks__/EmailEvents";
+import { EmailStatus, EmailStatusRecord } from "@equal-vote/star-vote-shared/domain_model/EmailSend";
+import { EmailEvent } from "@equal-vote/star-vote-shared/domain_model/EmailEvent";
+
+// ServiceLocator is jest.mock()'d (see setupTests.ts); these describe the in-memory
+// state its email mocks expose.
+type MockEventStore = { _events: EmailEvent[], _nextId: number };
+type MockStatusStore = { _rows: EmailStatusRecord[], _nextId: number, _insert(row: Omit<EmailStatusRecord, 'id'>): number };
 
 // The real controller uses a hardcoded SendGrid public key.
 // For tests we generate a test key pair and mock crypto.createPublicKey
@@ -35,12 +41,31 @@ function webhookPost(app: express.Express, body: string, timestamp: string, sign
 }
 
 const app = makeApp();
-const emailEventsDb = ServiceLocator.emailEventsDb() as unknown as EmailEventsDB;
+const emailEventsDb = ServiceLocator.emailEventsDb() as unknown as MockEventStore;
+const emailStatusDb = ServiceLocator.emailStatusDb() as unknown as MockStatusStore;
 
 afterEach(() => {
     emailEventsDb._events = [];
     emailEventsDb._nextId = 1;
+    emailStatusDb._rows = [];
+    emailStatusDb._nextId = 1;
 });
+
+// Post a signed batch of events, as SendGrid does.
+async function postEvents(events: object[]) {
+    const body = JSON.stringify(events);
+    const timestamp = String(Math.floor(Date.now() / 1000));
+    return webhookPost(app, body, timestamp, signPayload(timestamp, body));
+}
+
+// An email we've handed to SendGrid, as the send worker leaves it.
+function trackedEmail(message_id: string, status: EmailStatus = 'sending') {
+    emailStatusDb._insert({
+        send_id: "send1", election_id: "election1", voter_id: "voter1", message_id, status,
+        created_at: new Date(0).toISOString(), updated_at: new Date(0).toISOString(),
+    });
+}
+const statusOf = (message_id: string) => emailStatusDb._rows.find(r => r.message_id === message_id)?.status;
 
 afterAll(() => {
     jest.restoreAllMocks();
@@ -214,5 +239,61 @@ describe("SendGrid Webhook", () => {
         expect(emailEventsDb._events).toHaveLength(4);
         expect(emailEventsDb._events[2].message_id).toBe("Cgn9VOciTmKWBU8Ec3mfqw");
         expect(emailEventsDb._events[3].message_id).toBe("GLtITr5eRUOanFH17dmGwQ");
+    });
+
+    describe("email status", () => {
+        test("delivered makes an email done", async () => {
+            trackedEmail("m1");
+            await postEvents([{ event: "processed", sg_message_id: "m1.filter1", timestamp: 1000 },
+                              { event: "delivered", sg_message_id: "m1.filter1", timestamp: 1001 }]);
+            expect(statusOf("m1")).toBe("done");
+        });
+
+        test("a bounce after delivery makes it failed", async () => {
+            trackedEmail("m1", "done");
+            await postEvents([{ event: "bounce", type: "bounce", sg_message_id: "m1.filter1", timestamp: 1002 }]);
+            expect(statusOf("m1")).toBe("failed");
+        });
+
+        test("a delivery arriving after a bounce leaves it failed", async () => {
+            trackedEmail("m1");
+            await postEvents([{ event: "bounce", type: "blocked", sg_message_id: "m1.filter1", timestamp: 1002 },
+                              { event: "delivered", sg_message_id: "m1.filter1", timestamp: 1001 }]);
+            expect(statusOf("m1")).toBe("failed");
+        });
+
+        test("dropped makes an email failed", async () => {
+            trackedEmail("m1");
+            await postEvents([{ event: "dropped", sg_message_id: "m1.filter1", timestamp: 1000 }]);
+            expect(statusOf("m1")).toBe("failed");
+        });
+
+        test("a late deferral or processed event doesn't move a delivered email back", async () => {
+            trackedEmail("m1", "done");
+            await postEvents([{ event: "deferred", sg_message_id: "m1.filter1", timestamp: 999 },
+                              { event: "processed", sg_message_id: "m1.filter1", timestamp: 998 }]);
+            expect(statusOf("m1")).toBe("done");
+        });
+
+        test("deferred keeps an email sending", async () => {
+            trackedEmail("m1", "queued");
+            await postEvents([{ event: "deferred", sg_message_id: "m1.filter1", timestamp: 1000 }]);
+            expect(statusOf("m1")).toBe("sending");
+        });
+
+        test("opens and clicks don't change the status, but are still logged", async () => {
+            trackedEmail("m1", "done");
+            await postEvents([{ event: "open", sg_message_id: "m1.filter1", timestamp: 1000 }]);
+            expect(statusOf("m1")).toBe("done");
+            expect(emailEventsDb._events).toHaveLength(1);
+        });
+
+        test("events for a tracked email are logged with its election and voter, with no sent row needed", async () => {
+            trackedEmail("m1");
+            const res = await postEvents([{ event: "delivered", sg_message_id: "m1.filter1", timestamp: 1000 }]);
+            expect(res.statusCode).toBe(200);
+            expect(emailEventsDb._events).toHaveLength(1);
+            expect(emailEventsDb._events[0]).toMatchObject({ message_id: "m1", election_id: "election1", voter_id: "voter1", event_type: "delivered" });
+        });
     });
 });

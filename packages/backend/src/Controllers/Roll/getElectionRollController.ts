@@ -11,6 +11,7 @@ import { getErrorMessage } from '../../errorUtils';
 
 const ElectionRollModel = ServiceLocator.electionRollDb();
 const EmailEventsModel = ServiceLocator.emailEventsDb();
+const EmailStatusModel = ServiceLocator.emailStatusDb();
 
 const className = "VoterRolls.Controllers";
 
@@ -158,11 +159,19 @@ async function describeVoter(req: IElectionRequest, roll: ElectionRoll, opts: { 
     // uses it) and has no permission check, so it must not start returning them --
     // only the canViewElectionRoll-gated lookup does.
     let emailEvents: ElectionRollResponse['email_events'] | undefined = undefined;
-    if (opts.includeEmailEvents) try {
-        const events = await EmailEventsModel.getByElectionIdAndVoterId(req.election.election_id, roll.voter_id, req);
-        emailEvents = events.map(e => ({ event_type: e.event_type, event_timestamp: e.event_timestamp, details: e.details }));
-    } catch (err: any) {
-        Logger.warn(req, `Could not fetch email events: ${err.message}`);
+    let emails: ElectionRollResponse['emails'] | undefined = undefined;
+    if (opts.includeEmailEvents) {
+        try {
+            const events = await EmailEventsModel.getByElectionIdAndVoterId(req.election.election_id, roll.voter_id, req);
+            emailEvents = events.map(e => ({ event_type: e.event_type, event_timestamp: e.event_timestamp, details: e.details }));
+        } catch (err: unknown) {
+            Logger.warn(req, `Could not fetch email events: ${getErrorMessage(err)}`);
+        }
+        try {
+            emails = await EmailStatusModel.getByElectionAndVoter(req.election.election_id, roll.voter_id, req);
+        } catch (err: unknown) {
+            Logger.warn(req, `Could not fetch email statuses: ${getErrorMessage(err)}`);
+        }
     }
 
     // Scrub ballot_id to prevent linking voters to ballots
@@ -173,15 +182,16 @@ async function describeVoter(req: IElectionRequest, roll: ElectionRoll, opts: { 
         history: sanitizeHistory(roll.history, roll.voter_id, redactVoterIds),
         email_data: redactVoterIds ? sanitizeEmailMetadata(roll.email_data, roll.voter_id, redactVoterIds) : roll.email_data,
         ...(emailEvents !== undefined ? { email_events: emailEvents } : {}),
+        ...(emails !== undefined ? { emails } : {}),
     };
     if (redactVoterIds) {
         // voter_id is ballot access on email-invitation elections; never return it here.
-        delete (scrubbed as any).voter_id;
+        delete (scrubbed as Partial<ElectionRollResponse>).voter_id;
     }
     return scrubbed;
 }
 
-const getByVoterID = async (req: IElectionRequest, res: Response, next: NextFunction) => {
+const getByVoterID = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     Logger.info(req, `${className}.getByVoterID ${req.election.election_id} ${logSafeHash(req.params.voter_id)}`)
     const roll = await ElectionRollModel.getByVoterID(req.election.election_id, req.params.voter_id, req)
     if (!roll) {
@@ -196,7 +206,7 @@ const getByVoterID = async (req: IElectionRequest, res: Response, next: NextFunc
 // caller has. Email-invitation elections redact voter_id from the list (it is
 // ballot access), so the admin dialog only holds the email; other elections hold
 // the voter_id. Email matching is case-insensitive, like the reveal path.
-const lookupVoter = async (req: IElectionRequest, res: Response, next: NextFunction) => {
+const lookupVoter = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     Logger.info(req, `${className}.lookupVoter ${req.election.election_id}`);
     expectPermission(req.user_auth.roles, permissions.canViewElectionRoll)
 

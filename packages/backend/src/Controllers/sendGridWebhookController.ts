@@ -4,6 +4,7 @@ import { IRequest } from '../IRequest';
 import Logger from '../Services/Logging/Logger';
 import ServiceLocator from '../ServiceLocator';
 import { getErrorMessage } from '../errorUtils';
+import { emailStatusForEvent } from '@equal-vote/star-vote-shared/domain_model/EmailSend';
 
 interface SendGridEvent {
     email?: string;
@@ -14,6 +15,7 @@ interface SendGridEvent {
 }
 
 const EmailEventsDB = ServiceLocator.emailEventsDb();
+const EmailStatusDB = ServiceLocator.emailStatusDb();
 
 function extractBaseMessageId(sg_message_id: string): string {
     // SendGrid appends routing suffixes after the base XMessageID, separated
@@ -72,17 +74,27 @@ export const sendGridWebhookController = async (req: IRequest, res: Response) =>
 
             const message_id = extractBaseMessageId(event.sg_message_id);
             try {
-                const sentRow = await EmailEventsDB.getByMessageId(message_id, req);
-                if (!sentRow) {
-                    Logger.warn(req, `SendGridWebhook: no sent row for message_id=${message_id} (raw sg_message_id=${event.sg_message_id})`);
+                // Which email this is. Emails sent before status tracking only have a "sent"
+                // row in the event log, so fall back to that.
+                const sentEmail = await EmailStatusDB.getByMessageId(message_id, req)
+                    ?? await EmailEventsDB.getByMessageId(message_id, req);
+                if (!sentEmail) {
+                    Logger.warn(req, `SendGridWebhook: no email found for message_id=${message_id} (raw sg_message_id=${event.sg_message_id})`);
                     continue;
+                }
+
+                // Move the email's status forward. Duplicate or out-of-order events can't
+                // move it backwards (see laterEmailStatus).
+                const status = emailStatusForEvent(event.event);
+                if (status) {
+                    await EmailStatusDB.advanceByMessageId(message_id, status, req);
                 }
 
                 const { email: _email, unique_args: _unique_args, sg_message_id: _sg_message_id, event: event_type, timestamp: event_ts, ...rest } = event;
                 await EmailEventsDB.insert({
                     message_id,
-                    election_id: sentRow.election_id,
-                    voter_id: sentRow.voter_id,
+                    election_id: sentEmail.election_id,
+                    voter_id: sentEmail.voter_id,
                     event_type: event_type!,
                     event_timestamp: new Date((event_ts ?? Date.now() / 1000) * 1000).toISOString(),
                     details: Object.keys(rest).length > 0 ? rest : undefined,

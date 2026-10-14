@@ -14,10 +14,13 @@ import { Response, NextFunction } from 'express';
 import { logSafeHash } from '../../Services/Logging/logSafeHash';
 import { ILoggingContext } from '../../Services/Logging/ILogger';
 import { getErrorMessage } from '../../errorUtils';
+import { EmailSendAudience } from '@equal-vote/star-vote-shared/domain_model/EmailSend';
 
-var ElectionRollModel = ServiceLocator.electionRollDb();
-var EmailService = ServiceLocator.emailService();
-var EmailEventsDB = ServiceLocator.emailEventsDb();
+const ElectionRollModel = ServiceLocator.electionRollDb();
+const EmailService = ServiceLocator.emailService();
+const EmailEventsDB = ServiceLocator.emailEventsDb();
+const EmailSendsDB = ServiceLocator.emailSendsDb();
+const EmailStatusDB = ServiceLocator.emailStatusDb();
 const EventQueue = ServiceLocator.eventQueue();
 
 const className = "election.Controllers";
@@ -31,6 +34,22 @@ export type SendInviteEvent = {
     url: string,
     electionRoll: ElectionRoll,
     sender: string,
+    status_id?: number, // this invite's emailStatusDB row; absent on jobs queued before tracking
+}
+
+// Invitations use a fixed template, so the send has no subject or body of its own.
+function recordInviteSend(ctx: ILoggingContext, election: Election, voterIds: string[], audience: EmailSendAudience, sender: string): Promise<Map<string, number>> {
+    return EmailSendsDB.create({
+        send_id: randomUUID(),
+        election_id: election.election_id,
+        kind: 'invite',
+        audience,
+        subject: null,
+        body: null,
+        sent_by: sender,
+        created_at: new Date().toISOString(),
+        recipient_count: voterIds.length,
+    }, voterIds, ctx);
 }
 
 const sendInvitationsController = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
@@ -70,7 +89,9 @@ const sendInvitationsController = async (req: IElectionRequest, res: Response, _
     res.json(plan)
 }
 
-async function sendBatchEmailInvites(req: any, electionRoll: ElectionRoll[], election: Election): Promise<ReturnType<typeof sendPlan>> {
+async function sendBatchEmailInvites(req: IElectionRequest, electionRoll: ElectionRoll[], election: Election): Promise<ReturnType<typeof sendPlan>> {
+    const sender = req.user?.email ?? '';
+    const statusIds = await recordInviteSend(req, election, electionRoll.map(roll => roll.voter_id), 'uninvited', sender);
     const Jobs: SendInviteEvent[] = []
     const reqId = req.contextId ? req.contextId : randomUUID();
     const url = ServiceLocator.globalData().mainUrl;
@@ -82,18 +103,22 @@ async function sendBatchEmailInvites(req: any, electionRoll: ElectionRoll[], ele
                 election: election,
                 url: url,
                 electionRoll: roll,
-                sender: req.user?.email ?? ''
+                sender,
+                status_id: statusIds.get(roll.voter_id),
             }
         )
     })
 
-    var failMsg = "Failed to send invitations";
+    const failMsg = "Failed to send invitations";
     Logger.info(req, `${className}.sendInvitations enqueuing ${describeSendPlan(Jobs.length)}`, { election_id: election.election_id });
     try {
         await (await EventQueue).publishBatch(SendInviteEventQueue, Jobs, { spacingMs: emailSendSpacingMs() });
-    } catch (err: any) {
+    } catch (err: unknown) {
         const msg = `Could not send invitations`;
         Logger.error(req, `${msg}: ${getErrorMessage(err)}`);
+        // Nothing was queued, so none of these invitations will go out.
+        await EmailStatusDB.markFailed([...statusIds.values()], req).catch((e: unknown) =>
+            Logger.error(req, `Could not mark unqueued invitations failed: ${getErrorMessage(e)}`));
         throw new InternalServerError(failMsg)
     }
     return sendPlan(Jobs.length)
@@ -121,7 +146,9 @@ const sendInvitationController = async (req: IElectionRequest, res: Response, _n
         throw new InternalServerError('Could not find voter');
     }
 
-    const updatedElectionRoll = await sendInvitation(req, election, electionRoll, req.user?.email ?? '', url)
+    const sender = req.user?.email ?? '';
+    const statusIds = await recordInviteSend(req, election, [electionRoll.voter_id], 'single', sender);
+    const updatedElectionRoll = await sendInvitation(req, election, electionRoll, sender, url, statusIds.get(electionRoll.voter_id))
 
     res.status(200).json({electionRoll: updatedElectionRoll})
 }
@@ -135,12 +162,23 @@ async function handleSendInviteEvent(job: { id: string; data: SendInviteEvent; }
         Logger.error(ctx, `Could not find voter ${logSafeHash(event.electionRoll.voter_id)}`);
         throw new InternalServerError('Could not find voter');
     }
-    await sendInvitation(ctx, event.election, electionRoll, event.sender, event.url)
+    await sendInvitation(ctx, event.election, electionRoll, event.sender, event.url, event.status_id)
 }
 
-async function sendInvitation(ctx: ILoggingContext, election:Election, electionRoll: ElectionRoll, sender: string, url: string) {
+async function sendInvitation(ctx: ILoggingContext, election:Election, electionRoll: ElectionRoll, sender: string, url: string, statusId?: number) {
     const invites = Invites(election, [electionRoll], url)
-    const emailResponse = await EmailService.sendEmails(invites)
+    const markFailed = async () => {
+        if (statusId === undefined) return;
+        await EmailStatusDB.markFailed([statusId], ctx).catch((err: unknown) =>
+            Logger.error(ctx, `Could not mark invitation failed: ${getErrorMessage(err)}`));
+    };
+    let emailResponse;
+    try {
+        emailResponse = await EmailService.sendEmails(invites)
+    } catch (err) {
+        await markFailed();
+        throw err;
+    }
     if (!electionRoll.email_data) {
         electionRoll.email_data = {}
     }
@@ -156,6 +194,15 @@ async function sendInvitation(ctx: ILoggingContext, election:Election, electionR
     }
     // Record the sent event in the email events table
     const xMessageId = emailResponse?.[0]?.[0]?.headers?.['x-message-id'];
+    if (!emailSuccess) {
+        await markFailed();
+    } else if (xMessageId && statusId !== undefined) {
+        try {
+            await EmailStatusDB.markSent(statusId, xMessageId, ctx);
+        } catch (err: unknown) {
+            Logger.error(ctx, `Could not update invitation status: ${getErrorMessage(err)}`);
+        }
+    }
     if (xMessageId) {
         try {
             await EmailEventsDB.insert({

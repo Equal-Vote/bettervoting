@@ -7,6 +7,7 @@ import { ElectionResults } from "@equal-vote/star-vote-shared/domain_model/ITabu
 import { Ballot, NewBallot, AnonymizedBallot, NewBallotWithVoterID, BallotSubmitStatus } from "@equal-vote/star-vote-shared/domain_model/Ballot";
 import { email_request_data } from "@equal-vote/star-vote-backend/src/Controllers/Election/sendEmailController"
 import { WriteInCandidate, WriteInData } from "@equal-vote/star-vote-shared/domain_model/WriteIn";
+import { EmailSendSummary } from "@equal-vote/star-vote-shared/domain_model/EmailSend";
 
 export const useGetElection = (electionID: string | undefined) => {
     return useFetch<undefined, {
@@ -100,6 +101,10 @@ export const useSendInvite = (election_id: string, voter_id: string | undefined)
         'post',
         'Email Invitation Sent!',
     )
+}
+
+export const useGetEmailSends = (electionID: string | undefined) => {
+    return useFetch<undefined, { sends: EmailSendSummary[] }>(`/API/Election/${electionID}/emailSends`, 'get')
 }
 
 export const useGetRolls = (electionID: string | undefined) => {

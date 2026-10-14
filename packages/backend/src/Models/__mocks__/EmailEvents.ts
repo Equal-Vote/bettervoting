@@ -20,6 +20,16 @@ export default class EmailEventsDB {
         return this._events.filter(e => e.election_id === election_id);
     }
 
+    async deleteOlderThan(cutoff: Date, _ctx: ILoggingContext): Promise<number> {
+        const before = this._events.length;
+        this._events = this._events.filter(e => new Date(e.event_timestamp) >= cutoff);
+        return before - this._events.length;
+    }
+
+    async getByElectionIdAndVoterId(election_id: string, voter_id: string, _ctx: ILoggingContext): Promise<EmailEvent[]> {
+        return this._events.filter(e => e.election_id === election_id && e.voter_id === voter_id);
+    }
+
     async getByMessageId(message_id: string, _ctx: ILoggingContext): Promise<EmailEvent | null> {
         return this._events.find(e => e.message_id === message_id && e.event_type === 'sent') ?? null;
     }

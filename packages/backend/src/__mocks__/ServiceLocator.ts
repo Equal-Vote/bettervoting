@@ -2,6 +2,8 @@ import BallotsDB from "../Models/__mocks__/Ballots";
 import ElectionsDB from "../Models/__mocks__/Elections";
 import ElectionRollDB from "../Models/__mocks__/ElectionRolls";
 import EmailEventsDB from "../Models/__mocks__/EmailEvents";
+import EmailSendsDB from "../Models/__mocks__/EmailSends";
+import EmailStatusDB from "../Models/__mocks__/EmailStatus";
 import EmailService from "../Services/Email/__mocks__/EmailService";
 import BlobService from "../Services/Blob/__mocks__/BlobService";
 import CastVoteStore from "../Models/__mocks__/CastVoteStore";
@@ -11,17 +13,18 @@ import { MockEventQueue } from "../Services/EventQueue/MockEventQueue";
 import AccountService from "../Services/Account/__mocks__/AccountService"
 import GlobalData from "../Services/GlobalData";
 
-var _ballotsDb:IBallotStore;
-var _electionsDb:ElectionsDB;
-var _electionRollDb:IElectionRollStore;
-var _emailEventsDb:EmailEventsDB;
-var _emailService:EmailService;
-var _blobService:BlobService;
-var _castVoteStore:CastVoteStore;
-var _eventQueue:MockEventQueue;
-var _castVoteStore:CastVoteStore;;
-var _accountService:AccountService;
-var _globalData:GlobalData;
+let _ballotsDb:IBallotStore;
+let _electionsDb:ElectionsDB;
+let _electionRollDb:IElectionRollStore;
+let _emailEventsDb:EmailEventsDB;
+let _emailSendsDb:EmailSendsDB;
+let _emailStatusDb:EmailStatusDB;
+let _emailService:EmailService;
+let _blobService:BlobService;
+let _castVoteStore:CastVoteStore;
+let _eventQueue:MockEventQueue;
+let _accountService:AccountService;
+let _globalData:GlobalData;
 
 function ballotsDb():IBallotStore {
     if (_ballotsDb == null){
@@ -49,6 +52,24 @@ function emailEventsDb():EmailEventsDB {
         _emailEventsDb = new EmailEventsDB();
     }
     return _emailEventsDb;
+}
+
+// The two email mocks are linked (sends create status rows; the voter view joins sends),
+// so creating either one creates both.
+function emailStatusDb():EmailStatusDB {
+    if (_emailStatusDb == null){
+        _emailStatusDb = new EmailStatusDB();
+        emailSendsDb();
+    }
+    return _emailStatusDb;
+}
+
+function emailSendsDb():EmailSendsDB {
+    if (_emailSendsDb == null){
+        _emailSendsDb = new EmailSendsDB(emailStatusDb());
+        emailStatusDb().sendsDb = _emailSendsDb;
+    }
+    return _emailSendsDb;
 }
 
 function emailService():EmailService {
@@ -94,4 +115,4 @@ function globalData():GlobalData {
     return _globalData;
 }
 
-export  default { ballotsDb, electionsDb, electionRollDb, emailEventsDb, emailService, blobService, castVoteStore, accountService, globalData, eventQueue };
+export  default { ballotsDb, electionsDb, electionRollDb, emailEventsDb, emailSendsDb, emailStatusDb, emailService, blobService, castVoteStore, accountService, globalData, eventQueue };

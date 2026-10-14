@@ -30,6 +30,9 @@ export interface IEventQueue {
     subscribe(queue:QueueName, handler:EventHandler):void;
     publish(queue:QueueName, data:object):Promise<string>;
     publishBatch(queue:QueueName, data:object[], opts?:PublishBatchOptions):Promise<object>;
+    // Run `queue`'s handler on a cron schedule (UTC). The schedule is stored in the
+    // database, so with several replicas the job is still created once per tick.
+    schedule(queue:QueueName, cron:string):Promise<void>;
     // Jobs on `queue` for this election that have not started yet (created or awaiting
     // retry). Jobs must carry a top-level `election_id` in their data to be counted.
     countUnstarted(queue:QueueName, electionId:string):Promise<number>;

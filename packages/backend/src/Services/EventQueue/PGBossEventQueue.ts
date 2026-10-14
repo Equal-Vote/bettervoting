@@ -93,6 +93,11 @@ export default class PGBossEventQueue implements IEventQueue {
         return r.rows[0]?.n ?? 0;
     }
 
+    public async schedule(queue: QueueName, cron: string): Promise<void> {
+        // Upserts by name, so calling this on every startup is safe.
+        await this._boss.schedule(queue, cron);
+    }
+
     public subscribe(queue: QueueName, handler: EventHandler): void {
         const options = { newJobCheckInterval: 500, teamSize: 5 };
         this._boss.work(queue, options, handler);
