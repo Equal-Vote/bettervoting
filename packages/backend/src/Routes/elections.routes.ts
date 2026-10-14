@@ -14,6 +14,7 @@ import {
     editElectionRoles,
     finalizeElection,
     getElectionHistory,
+    getEmailSendsController,
     getElectionResults,
     getElections,
     getGlobalElectionStats,
@@ -728,6 +729,31 @@ electionsRouter.post('/Election/:id/sendEmails', asyncHandler(sendEmailsControll
  *       404:
  *         description: Election or voter not found */
 electionsRouter.post('/Election/:id/sendInvite/:voter_id', asyncHandler(sendInvitationController))
+
+/**
+ * @swagger
+ * /Election/{id}/emailSends:
+ *   get:
+ *     summary: List the election's email sends with delivery progress
+ *     description: >
+ *       Every blast, single email and round of invitations sent for the election, newest
+ *       first, each with how many of its emails are queued, sending, done and failed.
+ *     tags: [Elections]
+ *     security:
+ *      - ApiKeyAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The election ID
+ *     responses:
+ *       200:
+ *         description: The election's sends
+ *       401:
+ *         description: Not allowed to view the voter list */
+electionsRouter.get('/Election/:id/emailSends', asyncHandler(getEmailSendsController))
 
  /** 
  * @swagger

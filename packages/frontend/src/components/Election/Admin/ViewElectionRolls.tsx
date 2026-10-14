@@ -12,6 +12,7 @@ import useFeatureFlags from "../../FeatureFlagContextProvider";
 import { ElectionRollResponse } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll";
 import { getVoterAuthenticationMode, setVoterAuthenticationMode, VoterAuthenticationMode } from "@equal-vote/star-vote-shared/domain_model/VoterAuthenticationMode";
 import SendEmailDialog from "./SendEmailDialog";
+import EmailSendsList from "./EmailSendsList";
 import { PrimaryButton, SecondaryButton } from "~/components/styles";
 import ElectionAuthForm from "~/components/ElectionForm/Details/ElectionAuthForm";
 import useConfirm from "~/components/ConfirmationDialogProvider";
@@ -209,6 +210,7 @@ const ViewElectionRolls = () => {
                             handleOnClick={(voter) => onOpen(voter)}
                             emptyContent={<p>This election doesn&apos;t have any voters yet</p>}
                         />
+                        <EmailSendsList refreshKey={sendEmails.data} />
                     </Box>
                 }
                 <Dialog

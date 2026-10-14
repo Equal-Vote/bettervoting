@@ -1,6 +1,5 @@
 import { randomUUID } from "crypto";
-import { ILoggingContext } from "../Logging/ILogger";
-import { EventHandler, IEventQueue, JobInsert, PublishBatchOptions } from "./IEventQueue";
+import { EventHandler, IEventQueue, PublishBatchOptions } from "./IEventQueue";
 import { QueueName } from "./QueueName";
 
 type Job = {
@@ -30,7 +29,7 @@ export class MockEventQueue implements IEventQueue {
     }
 
     public async publish(queue:QueueName, data:object):Promise<string> {
-        var j = {
+        const j = {
             queue: queue,
             data: data,
             id: randomUUID()
@@ -43,7 +42,7 @@ export class MockEventQueue implements IEventQueue {
     // spacingMs is accepted for signature parity but ignored: the mock runs jobs
     // immediately so tests don't have to wait out a schedule.
     public async publishBatch(queue:QueueName, data:object[], _opts?:PublishBatchOptions):Promise<object> {
-        var j = data.map(d => ({
+        const j = data.map(d => ({
             queue: queue,
             data: d,
             id: randomUUID()
@@ -53,8 +52,14 @@ export class MockEventQueue implements IEventQueue {
         return j;
     }
 
+    // Tests trigger scheduled handlers directly; the mock only records the schedule.
+    public schedules: Map<QueueName, string> = new Map();
+    public async schedule(queue:QueueName, cron:string):Promise<void> {
+        this.schedules.set(queue, cron);
+    }
+
     public async countUnstarted(queue:QueueName, electionId:string):Promise<number> {
-        return this._pendingJobs.filter(j => j.queue === queue && (j.data as any)?.election_id === electionId).length;
+        return this._pendingJobs.filter(j => j.queue === queue && (j.data as { election_id?: string })?.election_id === electionId).length;
     }
 
     private async triggerJobs(){
@@ -70,7 +75,7 @@ export class MockEventQueue implements IEventQueue {
     }
 
     private async processNextJob(){
-        var j = this._pendingJobs.shift();
+        const j = this._pendingJobs.shift();
         if (!j){
             console.info("Event queue empty");
             this._working = false;

@@ -14,11 +14,14 @@ import { Response, NextFunction } from 'express';
 import { Imsg } from '../../Services/Email/IEmail';
 import { logSafeHash } from '../../Services/Logging/logSafeHash';
 import { getErrorMessage } from '../../errorUtils';
+import { EmailSendAudience } from '@equal-vote/star-vote-shared/domain_model/EmailSend';
 
-var ElectionRollModel = ServiceLocator.electionRollDb();
-var ElectionModel = ServiceLocator.electionsDb();
-var EmailService = ServiceLocator.emailService();
-var EmailEventsDB = ServiceLocator.emailEventsDb();
+const ElectionRollModel = ServiceLocator.electionRollDb();
+const ElectionModel = ServiceLocator.electionsDb();
+const EmailService = ServiceLocator.emailService();
+const EmailEventsDB = ServiceLocator.emailEventsDb();
+const EmailSendsDB = ServiceLocator.emailSendsDb();
+const EmailStatusDB = ServiceLocator.emailStatusDb();
 const EventQueue = ServiceLocator.eventQueue();
 
 const className = "election.Controllers";
@@ -49,6 +52,7 @@ export type email_request_event = {
     message_id: string,
     sender: string,
     test_email: string // empty string implies it's a real email
+    status_id?: number, // this email's emailStatusDB row; absent for test emails and jobs queued before tracking
 }
 
 const makeTestRoll = (election_id: string, email: string) => <ElectionRoll>{
@@ -159,6 +163,23 @@ const sendEmailsController = async (req: IElectionRequest, res: Response, _next:
         message_id = `campaign_${election.settings.email_campaign_count}`
     }
 
+    // Record the send and one queued status row per recipient. Test emails go to the
+    // admin's own addresses, not voters, so they aren't tracked.
+    let statusIds = new Map<string, number>();
+    if (email_request.target != 'test') {
+        statusIds = await EmailSendsDB.create({
+            send_id: randomUUID(),
+            election_id: electionId,
+            kind: email_request.target == 'single' ? 'single' : 'blast',
+            audience: email_request.target as EmailSendAudience,
+            subject: email_request.email.subject,
+            body: email_request.email.body,
+            sent_by: req.user?.email ?? '',
+            created_at: new Date().toISOString(),
+            recipient_count: electionRoll.length,
+        }, electionRoll.map(roll => roll.voter_id), req);
+    }
+
     const Jobs: email_request_event[] = []
     const reqId = req.contextId ? req.contextId : randomUUID();
     const url = ServiceLocator.globalData().mainUrl;
@@ -173,18 +194,22 @@ const sendEmailsController = async (req: IElectionRequest, res: Response, _next:
                 sender: req.user?.email ?? '',
                 email: email_request.email,
                 message_id: message_id,
-                test_email: email_request.target == 'test' ? (roll.email ?? '') : ''
+                test_email: email_request.target == 'test' ? (roll.email ?? '') : '',
+                status_id: statusIds.get(roll.voter_id),
             }
         )
     })
 
-    var failMsg = "Failed to send invitations";
+    const failMsg = "Failed to send invitations";
     Logger.info(req, `${className}.sendEmails enqueuing ${describeSendPlan(Jobs.length)}`);
     try {
         await (await EventQueue).publishBatch(SendEmailEventQueue, Jobs, { spacingMs: emailSendSpacingMs() });
-    } catch (err: any) {
+    } catch (err: unknown) {
         const msg = `Could not send invitations`;
         Logger.error(req, `${msg}: ${getErrorMessage(err)}`);
+        // Nothing was queued, so none of these emails will go out.
+        await EmailStatusDB.markFailed([...statusIds.values()], req).catch((e: unknown) =>
+            Logger.error(req, `Could not mark unqueued emails failed: ${getErrorMessage(e)}`));
         throw new InternalServerError(failMsg)
     }
 
@@ -218,17 +243,28 @@ async function handleSendEmailEvent(job: { id: string; data: email_request_event
     }
     // await sendEmail(ctx, event.election, electionRoll, event.sender, event.url)
     // TODO: I think this will always give a single element array, we can probably simplify this and be less generalized
-    let emails: Imsg[] = makeEmails(election, [electionRoll], event.url, event.email.subject, event.email.body, event.test_email != '');
+    const emails: Imsg[] = makeEmails(election, [electionRoll], event.url, event.email.subject, event.email.body, event.test_email != '');
 
     let emailResponse;
     try{
         emailResponse = await EmailService.sendEmails(emails)
     }catch(e){
+        if (event.status_id !== undefined) {
+            await EmailStatusDB.markFailed([event.status_id], ctx).catch((err: unknown) =>
+                Logger.error(ctx, `Could not mark email failed: ${getErrorMessage(err)}`));
+        }
         throw new InternalServerError(`Couldn't send email: ${e}`);
     }
 
     // Record the sent event in the email events table
     const xMessageId = emailResponse?.[0]?.[0]?.headers?.['x-message-id'];
+    if (xMessageId && event.status_id !== undefined) {
+        try {
+            await EmailStatusDB.markSent(event.status_id, xMessageId, ctx);
+        } catch (err: unknown) {
+            Logger.error(ctx, `Could not update email status: ${getErrorMessage(err)}`);
+        }
+    }
     if (xMessageId && !event.test_email) {
         try {
             await EmailEventsDB.insert({
