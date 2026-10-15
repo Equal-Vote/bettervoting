@@ -26,7 +26,7 @@
     "@curveball/http-errors": "^0.4.1",
     "@sendgrid/mail": "^8.1.1",
     "axios": "^1.18.1",
-    "compression": "^1.8.1",
+    "compression": "^1.8.2",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
