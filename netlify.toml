@@ -3,10 +3,11 @@
 
 [build]
   # Build from repository root to properly handle npm workspaces and the shared package
+  # 0. Fetch git submodules (the Typst ballot templates in packages/shared/bettervoting-typst)
   # 1. Install all workspace dependencies
   # 2. Build the shared package first (compiles TypeScript to dist/)
   # 3. Build the frontend
-  command = "npm install && cd packages/shared && npm run build && cd ../frontend && REACT_APP_COMMIT_SHA=$COMMIT_REF npm run build"
+  command = "git submodule update --init --recursive && npm install && cd packages/shared && npm run build && cd ../frontend && REACT_APP_COMMIT_SHA=$COMMIT_REF npm run build"
   # Directory containing the built files to publish (relative to repository root)
   publish = "packages/frontend/build"
 

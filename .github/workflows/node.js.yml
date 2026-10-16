@@ -24,6 +24,8 @@ jobs:
       with:
         # Full history, so the lint/secret-scan steps below can diff against a base commit.
         fetch-depth: 0
+        # The frontend build needs the Typst ballot templates (packages/shared/bettervoting-typst).
+        submodules: recursive
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v3
       with:

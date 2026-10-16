@@ -14,6 +14,7 @@ import { Race as IRace } from "@equal-vote/star-vote-shared/domain_model/Race";
 import { ID_LENGTHS, ID_PREFIXES, makeID } from "@equal-vote/star-vote-shared/utils/makeID";
 import { useDeleteAllBallots } from "~/hooks/useAPI";
 import useConfirm from "~/components/ConfirmationDialogProvider";
+import PrintBallotsButton from "~/components/PaperBallots/PrintBallotsButton";
 
 export interface NewRace extends Omit<IRace, 'voting_method'> {
     voting_method: "STAR" | "STAR_PR" | "Approval" | "RankedRobin" | "IRV" | "Plurality" | "STV" | ""
@@ -119,6 +120,16 @@ export default function Race({ race, race_index }: RaceProps) {
                 </Box>
 
             </Box>
+            {race.voting_method === 'STAR' && (
+                <Box sx={{ px: 1, pb: 1 }}>
+                    <PrintBallotsButton
+                        title={race.title && race.title !== election.title ? `${election.title}: ${race.title}` : election.title}
+                        candidates={race.candidates.map(c => c.candidate_name)}
+                        qrPrefix={`bv:${election.election_id}:${race.race_id}:`}
+                        fileName={`${election.election_id}-${(race.title || race.race_id).replace(/[^\w-]+/g, '-')}-ballots.pdf`}
+                    />
+                </Box>
+            )}
             <RaceForm
                 raceIndex={race_index}
                 onConfirm={async (editedRace) => (await onSave(editedRace) && setOpen(false))}
