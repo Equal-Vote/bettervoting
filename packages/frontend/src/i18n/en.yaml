@@ -53,6 +53,8 @@ ballot:
   no_available: No available candidates
   instructions: Drag candidates from the left to the right list. Candidates on the right are your ranked order; left means unranked.
   instructions_rcv_draggable: Drag candidates left → right. Rank 1 is your top choice. Unranked means no preference.
+  rankings_used: '{{n}} of {{max}} rankings used'
+  max_rankings_reached: You can rank up to {{max}} candidates on this ballot. To rank this candidate, first drag another one out of your rankings.
 
   dialog_submit_title: Submit {{capital_ballot}}?
   dialog_send_receipt: Send Ballot Receipt Email?

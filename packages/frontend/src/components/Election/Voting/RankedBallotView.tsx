@@ -2,7 +2,7 @@ import { useContext, useMemo, useCallback } from 'react';
 import { BallotContext } from './VotePage';
 import GenericBallotView from './GenericBallotView/GenericBallotView';
 import DraggableIRVBallotView from './DraggableIRVBallotView';
-import { useSubstitutedTranslation } from '~/components/util';
+import { getMaxRankings, useSubstitutedTranslation } from '~/components/util';
 import useElection from '../../ElectionContextProvider'; 
 
 
@@ -10,12 +10,6 @@ export default function RankedBallotView({ onlyGrid = false }: { onlyGrid?: bool
   const ballotContext = useContext(BallotContext);
   const { election } = useElection();
   const { t } = useSubstitutedTranslation();
-
-  // Use draggable component for IRV when draggable_ballot setting is enabled
-  if (ballotContext.race.voting_method === 'IRV' && election.settings.draggable_ballot && !onlyGrid) {
-    return <DraggableIRVBallotView />;
-  }
-
 
   // disabling warnings until we have a better solution, see slack convo
   // https://starvoting.slack.com/archives/C01EBAT283H/p1677023113477139
@@ -28,15 +22,7 @@ export default function RankedBallotView({ onlyGrid = false }: { onlyGrid?: bool
   //   )
   //  }  
 
-  const maxRankings = useMemo(() => {
-    const MAX_BALLOT_RANKS = Number(process.env.REACT_APP_MAX_BALLOT_RANKS) ? Number(process.env.REACT_APP_MAX_BALLOT_RANKS) : 8;
-    const DEFAULT_BALLOT_RANKS = Number(process.env.REACT_APP_DEFAULT_BALLOT_RANKS) ? Number(process.env.REACT_APP_DEFAULT_BALLOT_RANKS) : 6;
-    if (ballotContext.maxRankings) {
-      return Math.min(ballotContext.maxRankings, MAX_BALLOT_RANKS);
-    } else {
-      return DEFAULT_BALLOT_RANKS;
-    }
-  }, [ballotContext.maxRankings]);
+  const maxRankings = useMemo(() => getMaxRankings(ballotContext.maxRankings), [ballotContext.maxRankings]);
   const findSkippedColumns = useCallback((scores: number[]): number[] | undefined => {
     const skippedColumns: number[] = [];
     for (let i = 1; i <= maxRankings; i++) {
@@ -107,6 +93,15 @@ export default function RankedBallotView({ onlyGrid = false }: { onlyGrid?: bool
   const columns = useMemo(() => {
     return columnValues.map(v => t('number.rank', { count: v, ordinal: true }));
   }, [columnValues, t]);
+
+  // Use draggable component for IRV when draggable_ballot setting is enabled.
+  // NOTE: this early return must come after all the hooks above — when a voter
+  // pages between a draggable IRV race and another ranked race in the same
+  // election, this component re-renders with the other race, and returning
+  // before the hooks would change the hook count between renders and crash.
+  if (ballotContext.race.voting_method === 'IRV' && election.settings.draggable_ballot && !onlyGrid) {
+    return <DraggableIRVBallotView />;
+  }
 
   return (
     <GenericBallotView
