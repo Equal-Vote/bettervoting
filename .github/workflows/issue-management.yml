@@ -47,6 +47,9 @@ jobs:
     permissions:
       issues: write
       contents: read
+      # read-only, so the stale check can see whether an issue already has an
+      # open pull request
+      pull-requests: read
     
     steps:
       - name: Checkout repository
