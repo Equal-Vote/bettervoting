@@ -11,6 +11,30 @@ import { VotingMethod } from '@equal-vote/star-vote-shared/domain_model/Race';
 import { ElectionContextProvider } from './ElectionContextProvider';
 import { PrimaryButton } from './styles';
 
+// The tabulators bound each method's marks — Star.ts and AllocatedScore.ts to
+// 0-5, Approval.ts and Plurality.ts to 0-1 — and a ballot outside those bounds
+// is silently dropped from the count (filterInitialVotes, counted only as
+// nOutOfBoundsVotes). The sandbox has to say so, or the page just shows a
+// smaller election than the one that was typed in.
+//
+// Ranked methods are deliberately absent: their marks are rankings, bounded by
+// max_rankings rather than by 5, and the sandbox sets no election settings, so
+// any positive rank is legitimate there.
+// null means "not a score at all" — a ranking, bounded by max_rankings rather
+// than by a number, and the sandbox sets no election settings, so any positive
+// rank is legitimate. Spelled as a full Record rather than a Partial so that
+// adding a method to the menu without deciding its range is a type error, not
+// a silent fall-through to no validation.
+const MAX_SCORE_BY_METHOD: Record<VotingMethod, number | null> = {
+    STAR: 5,
+    STAR_PR: 5,
+    Approval: 1,
+    Plurality: 1,
+    RankedRobin: null,
+    IRV: null,
+    STV: null,
+}
+
 const Sandbox = () => {
 
     const { data, error, makeRequest } = useGetSandboxResults()
@@ -31,27 +55,71 @@ const Sandbox = () => {
             setErrorText('Cannot have more winners than candidates')
             return
         }
+        const maxScore = MAX_SCORE_BY_METHOD[votingMethod]
+
+        // The first complaint is the one that gets shown: a later row must not
+        // overwrite it, or a trailing newline reports "wrong length" for a
+        // ballot whose real problem is the score above it.
+        let firstError = ''
+        const fail = (message: string) => { if (firstError === '') firstError = message }
+
+        const checkScores = (marks: string[]) => {
+            for (const mark of marks) {
+                const score = Number(mark)
+                // parseInt would quietly turn 2.5 into 2 and send a ballot the
+                // user never typed, so the raw text is what gets judged.
+                if (!Number.isInteger(score)) {
+                    fail(`You are using incorrect score ${mark}. Scores must be whole numbers.`)
+                    return false
+                }
+                if (score < 0 || (maxScore !== null && score > maxScore)) {
+                    fail(maxScore === null
+                        ? `You are using incorrect score ${score}. Rankings cannot be negative.`
+                        : `You are using incorrect score ${score}. Use scores between 0 and ${maxScore}.`)
+                    return false
+                }
+            }
+            return true
+        }
+
         let valid = true
         cvrRows.forEach((row) => {
+            if (row.trim() === '') return // a trailing newline is not a ballot
             const data = row.split(':')
+            const marks = (data.length == 2 ? data[1] : data[0]).split(/[\s,]+/).filter(d => d !== ' ' && d !== '')
+            // Number, not parseInt, and the same conversion the validation uses:
+            // parseInt('1e2') is 1 where Number is 100, so the two disagreeing
+            // is how a validated mark becomes a different submitted mark.
+            const vote = marks.map(Number)
+
+            if (vote.length !== nCandidates) {
+                fail('Each ballot must have the same length as the number of candidates')
+                valid = false
+                return
+            }
+            if (!checkScores(marks)) {
+                valid = false
+                return
+            }
+
             if (data.length == 2) {
-                const nBallots = parseInt(data[0]);
-                const vote = data[1].split(/[\s,]+/).filter(d => d !== ' ').map((score) => parseInt(score)).filter(d => !isNaN(d))
-                if (vote.length !== nCandidates) {
-                    setErrorText('Each ballot must have the same length as the number of candidates')
+                const nBallots = Number(data[0]);
+                // Array(NaN) and Array(-1) both throw, and the throw escapes an
+                // async effect with no handler, leaving the last error on screen.
+                if (!Number.isInteger(nBallots) || nBallots < 1) {
+                    fail(`'${data[0]}' is not a number of ballots. Use a whole number before the colon.`)
                     valid = false
+                    return
                 }
                 cvrSplit.push(...Array(nBallots).fill(vote))
             } else {
-                const vote = data[0].split(/[\s,]+/).filter(d => d !== ' ').map((score) => parseInt(score)).filter(d => !isNaN(d))
-                if (vote.length !== nCandidates) {
-                    setErrorText('Each ballot must have the same length as the number of candidates')
-                    valid = false
-                }
                 cvrSplit.push(vote)
             }
         })
-        if (!valid) return
+        if (!valid) {
+            setErrorText(firstError)
+            return
+        }
         setErrorText('')
         await makeRequest({
             cvr: cvrSplit,
