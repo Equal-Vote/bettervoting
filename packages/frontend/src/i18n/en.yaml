@@ -213,7 +213,7 @@ ballot_submitted:
   update_ballot_enabled_open: You can update your ballot using the link in your email receipt
   update_ballot_enabled_closed: The election has closed. All ballots are final
   status: 'Status:'
-  precinct: 'Precinct:'
+  voter_group: 'Voter Group:'
   ballot_id: 'Ballot ID:'
   update_ballot: 'Update Ballot:'
 
