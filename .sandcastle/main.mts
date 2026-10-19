@@ -1,4 +1,4 @@
-// Parallel Planner with Review — three-phase orchestration loop
+// Parallel Planner with Review — four-phase orchestration loop
 //
 // This template drives a multi-phase workflow:
 //   Phase 1 (Plan):             A sonnet agent analyzes open issues, builds a
@@ -8,22 +8,31 @@
 //                               createSandbox(). The implementer runs first
 //                               (100 iterations). If it produces commits, a
 //                               reviewer runs in the same sandbox on the same
-//                               branch (1 iteration), which also posts a QA
-//                               comment (summary + manual QA steps) on the
-//                               issue once its review is done. All issue
-//                               pipelines run concurrently via
-//                               Promise.allSettled().
-//   Phase 3 (Merge):            A single agent merges all
-//                               completed branches into the current branch.
+//                               branch (1 iteration). All issue pipelines
+//                               run concurrently via Promise.allSettled().
+//   Phase 3 (Stack):            A single agent rebases each completed branch
+//                               onto the previous one, building a stack of
+//                               branches (one future PR each) on top of the
+//                               branch the run started from.
+//   Phase 4 (QA Issue):         After all cycles, one agent creates a single
+//                               GitHub issue covering the whole stack, with
+//                               manual QA steps for the human reviewer.
 //
 // The outer loop repeats up to MAX_ITERATIONS times so that newly unblocked
-// issues are picked up after each round of merges.
+// issues are picked up after each round, building on the top of the stack.
+//
+// Nothing is pushed. Once QA passes, the human submits the stack as draft PRs
+// with `gh stack submit`.
 //
 // Usage:
-//   npx tsx .sandcastle/main.mts           # plan/execute/review/merge
+//   npx tsx .sandcastle/main.mts [--noqa]
 // Or add to package.json:
 //   "scripts": { "sandcastle": "npx tsx .sandcastle/main.mts" }
+//
+// Flags:
+//   --noqa   Skip Phase 4 (QA issue creation)
 
+import { execFileSync } from "node:child_process";
 import * as sandcastle from "@ai-hero/sandcastle";
 import { docker } from "@ai-hero/sandcastle/sandboxes/docker";
 import { z } from "zod";
@@ -38,9 +47,20 @@ const planSchema = z.object({
   ),
 });
 
+const stackSchema = z.object({
+  branches: z.array(z.string()),
+});
+
+const qaIssueSchema = z.object({
+  id: z.string(),
+  url: z.string(),
+});
+
 // ---------------------------------------------------------------------------
 // Configuration
 // ---------------------------------------------------------------------------
+
+const noqa = process.argv.includes("--noqa");
 
 // Maximum number of plan→execute→merge cycles before stopping.
 // Raise this if your backlog is large; lower it for a quick smoke-test run.
@@ -61,6 +81,17 @@ const copyToWorktree: string[] = [];// ["node_modules"];
 // ---------------------------------------------------------------------------
 // Main loop
 // ---------------------------------------------------------------------------
+
+// The stack is built on top of whatever branch the run starts from.
+const baseBranch = execFileSync("git", ["rev-parse", "--abbrev-ref", "HEAD"], {
+  encoding: "utf8",
+}).trim();
+
+// Branches stacked so far, bottom to top. Each one becomes its own PR.
+const stack: string[] = [];
+
+const formatList = (items: string[]) =>
+  items.length > 0 ? items.map((item) => `- ${item}`).join("\n") : "(empty)";
 
 for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
   console.log(`\n=== Iteration ${iteration}/${MAX_ITERATIONS} ===\n`);
@@ -109,9 +140,7 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
   //
   // For each issue, create a sandbox via createSandbox() so the implementer
   // and reviewer share the same sandbox instance per branch. The implementer
-  // runs first; if it produces commits, the reviewer runs in the same
-  // sandbox and, once done, posts a QA comment (summary + manual QA steps)
-  // on the issue for the human reviewer to follow before merging.
+  // runs first; if it produces commits, the reviewer runs in the same sandbox.
   //
   // Promise.allSettled means one failing pipeline doesn't cancel the others.
   // -------------------------------------------------------------------------
@@ -139,8 +168,7 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
           },
         });
 
-        // Only review if the implementer produced commits. The reviewer also
-        // posts a QA comment on the issue once its review is done.
+        // Only review if the implementer produced commits
         if (implement.commits.length > 0) {
           const review = await sandbox.run({
             name: "reviewer",
@@ -149,7 +177,6 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
             promptFile: "./.sandcastle/review-prompt.md",
             promptArgs: {
               BRANCH: issue.branch,
-              TASK_ID: issue.id,
             },
           });
 
@@ -205,32 +232,75 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
   }
 
   // -------------------------------------------------------------------------
-  // Phase 3: Merge
+  // Phase 3: Stack
   //
-  // One agent merges all completed branches into the current branch,
-  // resolving any conflicts and running tests to confirm everything works.
-  //
-  // The {{BRANCHES}} and {{ISSUES}} prompt arguments are lists that the agent
-  // uses to know which branches to merge and which issues to close.
+  // One agent rebases each completed branch onto the previous one, resolving
+  // any conflicts and running tests, so each branch holds only its own
+  // issue's changes. It leaves the top of the stack checked out so the next
+  // iteration's branches build on it.
   // -------------------------------------------------------------------------
-  await sandcastle.run({
+  const stacked = await sandcastle.run({
     hooks,
     sandbox: docker(),
-    name: "merger",
+    name: "stacker",
     maxIterations: 1,
     agent: sandcastle.claudeCode("claude-opus-4-7"),
     promptFile: "./.sandcastle/merge-prompt.md",
     promptArgs: {
-      // A markdown list of branch names, one per line.
-      BRANCHES: completedBranches.map((b) => `- ${b}`).join("\n"),
-      // A markdown list of issue IDs and titles, one per line.
-      ISSUES: completedIssues.map((i) => `- ${i.id}: ${i.title}`).join("\n"),
+      BASE_BRANCH: baseBranch,
+      STACK: formatList(stack),
+      BRANCHES: formatList(completedBranches),
+      ISSUES: formatList(completedIssues.map((i) => `${i.id}: ${i.title}`)),
     },
+    output: sandcastle.Output.object({ tag: "stack", schema: stackSchema }),
   });
 
-  console.log("\nBranches merged.");
+  stack.push(...stacked.output.branches);
+
+  console.log(`\nStack (bottom to top, on ${baseBranch}):`);
+  for (const branch of stack) {
+    console.log(`  ${branch}`);
+  }
 }
 
-console.log(
-  "\nAll done. Review the QA comments on each issue, then push when ready."
-);
+// ---------------------------------------------------------------------------
+// Phase 4: QA Issue
+//
+// After all cycles complete, one agent inspects the whole stack and creates a
+// single GitHub issue summarising what each branch adds, with manual QA steps
+// for the human reviewer to walk through before submitting the stack.
+// ---------------------------------------------------------------------------
+if (stack.length === 0) {
+  console.log("\nNothing was stacked. All done.");
+} else {
+  if (noqa) {
+    console.log("\nSkipping QA issue (--noqa).");
+  } else {
+    console.log("\n=== Creating QA issue ===\n");
+
+    const qaIssue = await sandcastle.run({
+      hooks,
+      sandbox: docker(),
+      name: "qa-issue",
+      maxIterations: 1,
+      agent: sandcastle.claudeCode("claude-sonnet-4-6"),
+      promptFile: "./.sandcastle/qa-issue-prompt.md",
+      promptArgs: {
+        BASE_BRANCH: baseBranch,
+        STACK: formatList(stack),
+      },
+      output: sandcastle.Output.object({
+        tag: "qa-issue",
+        schema: qaIssueSchema,
+      }),
+    });
+
+    console.log(`\nWalk through the QA issue:`);
+    console.log(`  ${qaIssue.output.url}`);
+  }
+
+  console.log(`\nThen submit the stack as draft PRs (one per branch), e.g. with`);
+  console.log(`the /submit-stack skill in Claude Code:`);
+  console.log(`  base: ${baseBranch}`);
+  console.log(`  stack (bottom to top): ${stack.join(" ")}`);
+}
