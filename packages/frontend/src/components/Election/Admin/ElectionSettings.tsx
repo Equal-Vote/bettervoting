@@ -1,7 +1,10 @@
 import Grid from "@mui/material/Grid";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormControl from "@mui/material/FormControl";
-import { FormGroup, Radio, RadioGroup, Box, capitalize, Typography, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import { FormGroup, Radio, RadioGroup, Box, capitalize, Typography, ToggleButton, ToggleButtonGroup, Button, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, TextField, FormHelperText } from "@mui/material";
+import EditIcon from '@mui/icons-material/Edit';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { ElectionSettings as IElectionSettings, TermType } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
 import { Tip } from '~/components/styles';
 import { useSubstitutedTranslation, SwitchSetting } from '~/components/util';
@@ -10,6 +13,8 @@ import useOptimisticToggle from "~/hooks/useOptimisticToggle";
 import { AdminPageNavigation } from '../Sidebar';
 import { useSetPublicResults } from '~/hooks/useAPI';
 import DialogTextField from '~/components/DialogTextField';
+import useFeatureFlags from '~/components/FeatureFlagContextProvider';
+import { useState } from 'react';
 
 type ElectionSwitchSettingProps = {
     settingKey: keyof IElectionSettings;
@@ -39,6 +44,106 @@ function ElectionSwitchSetting({ settingKey, disabled, disabledMessage, onToggle
         disabled={isDisabled}
         disabledMessage={disabledMessage}
     />;
+}
+
+function VoterGroupsDialog({ voterGroups, onSave, disabled }: {
+    voterGroups: string[];
+    onSave: (groups: string[]) => Promise<void>;
+    disabled: boolean;
+}) {
+    const [open, setOpen] = useState(false);
+    const [groups, setGroups] = useState<string[]>(voterGroups);
+    const [newName, setNewName] = useState('');
+    const [addError, setAddError] = useState('');
+    const { t } = useSubstitutedTranslation('election');
+
+    const handleOpen = () => {
+        setGroups(voterGroups);
+        setNewName('');
+        setAddError('');
+        setOpen(true);
+    };
+
+    const handleAdd = () => {
+        const trimmed = newName.trim();
+        if (!trimmed) {
+            setAddError(t('voter_groups_dialog.cant_delete'));
+            return;
+        }
+        if (groups.some(g => g.toLowerCase() === trimmed.toLowerCase())) {
+            setAddError('A group with this name already exists');
+            return;
+        }
+        setGroups([...groups, trimmed]);
+        setNewName('');
+        setAddError('');
+    };
+
+    const handleDelete = (index: number) => {
+        setGroups(groups.filter((_, i) => i !== index));
+    };
+
+    const handleSave = async () => {
+        await onSave(groups);
+        setOpen(false);
+    };
+
+    const buttonLabel = voterGroups.length === 0
+        ? t('voter_groups_dialog.add_button')
+        : t('voter_groups_dialog.edit_button');
+
+    return (
+        <>
+            <Button
+                variant="outlined"
+                size="small"
+                startIcon={voterGroups.length === 0 ? <AddIcon /> : <EditIcon />}
+                onClick={handleOpen}
+                disabled={disabled}
+                sx={{ mt: 1 }}
+            >
+                {buttonLabel}
+            </Button>
+            <Dialog open={open} onClose={() => setOpen(false)} maxWidth="xs" fullWidth>
+                <DialogTitle>{t('voter_groups_dialog.title')}</DialogTitle>
+                <DialogContent>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
+                        {groups.map((group, i) => (
+                            <Box key={i} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <Typography>{group}</Typography>
+                                <IconButton
+                                    size="small"
+                                    aria-label={t('voter_groups_dialog.delete_tooltip')}
+                                    onClick={() => handleDelete(i)}
+                                >
+                                    <DeleteIcon fontSize="small" />
+                                </IconButton>
+                            </Box>
+                        ))}
+                        <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+                            <TextField
+                                size="small"
+                                placeholder={t('voter_groups_dialog.add_group_label')}
+                                value={newName}
+                                onChange={e => { setNewName(e.target.value); setAddError(''); }}
+                                onKeyDown={e => { if (e.key === 'Enter') handleAdd(); }}
+                                error={!!addError}
+                                sx={{ flexGrow: 1 }}
+                            />
+                            <Button variant="contained" size="small" onClick={handleAdd}>
+                                <AddIcon />
+                            </Button>
+                        </Box>
+                        {addError && <FormHelperText error>{addError}</FormHelperText>}
+                    </Box>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpen(false)}>Cancel</Button>
+                    <Button variant="contained" onClick={handleSave}>Save</Button>
+                </DialogActions>
+            </Dialog>
+        </>
+    );
 }
 
 export default function ElectionSettings() {
@@ -76,6 +181,7 @@ export default function ElectionSettings() {
     // getOpenElections filters on settings.voter_access == 'open' in addition to
     // is_public, so on a voter-list election the flag would have no visible effect.
     const browsable = election.settings.voter_access === 'open';
+    const flags = useFeatureFlags();
 
     // Inclusive [min_rankings, max_rankings] — drives the rank-limit selector below.
     const rankOptions = Array.from({ length: max_rankings - min_rankings + 1 }, (_, i) => min_rankings + i);
@@ -119,6 +225,20 @@ export default function ElectionSettings() {
                     <ElectionSwitchSetting settingKey="ballot_updates" />
                     <ElectionSwitchSetting settingKey="require_instruction_confirmation" />
                     <ElectionSwitchSetting settingKey="draggable_ballot" />
+                    {flags.isSet('PRECINCTS') && (
+                        <Box sx={{ py: 0.5 }}>
+                            <ElectionSwitchSetting settingKey="voter_groups_enabled" label={t('election_settings.voter_groups')} />
+                            {election.settings.voter_groups_enabled && (
+                                <VoterGroupsDialog
+                                    voterGroups={election.settings.voter_groups ?? []}
+                                    disabled={election.state !== 'draft'}
+                                    onSave={async (groups) => {
+                                        await updateElection(e => { e.settings.voter_groups = groups; });
+                                    }}
+                                />
+                            )}
+                        </Box>
+                    )}
                     {/* Note: this can't use ElectionSwitchSetting because we need to use the results from makePublicResultsRequest as the source of truth */}
                     <SwitchSetting
                         label={election.state === 'closed' || election.state === 'archived' ? t('election_settings.public_results') : t('election_settings.preliminary_results')}
