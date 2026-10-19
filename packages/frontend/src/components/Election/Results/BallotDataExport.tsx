@@ -40,7 +40,7 @@ export const BallotDataExport = ({ election, results }: Props) => {
         if (!ballots) return;
         const header = [
             { label: 'ballot_id', key: 'ballot_id' },
-            { label: 'precinct', key: 'precinct' },
+            { label: 'voter_group', key: 'voter_group' },
             ...election.races.map((race) => [
                 ...race.candidates.map((c) => ({
                     label: election.races.length == 1 ? c.candidate_name : `${race.title}!!${c.candidate_name}`,
@@ -56,7 +56,7 @@ export const BallotDataExport = ({ election, results }: Props) => {
         const rows = ballots.map((ballot) => {
             const row: Record<string, string | number> = {
                 ballot_id: ballot.ballot_id,
-                precinct: ballot.precinct ?? '',
+                voter_group: ballot.precinct ?? '',
             };
             ballot.votes.forEach((vote) => {
                 vote.scores.forEach((score) => {
@@ -94,7 +94,7 @@ export const BallotDataExport = ({ election, results }: Props) => {
     };
 
     return (
-        <a onClick={fetchBallots}>
+        <div onClick={fetchBallots} role="presentation">
             {/* A single MenuButton must stay mounted while the ballots load: swapping in a
                 second one on load unmounts the open menu mid-click. Only the items change.
                 (An array of items rather than a fragment, since Menu rejects fragment children.) */}
@@ -112,6 +112,6 @@ export const BallotDataExport = ({ election, results }: Props) => {
                     ]}
                 </MenuButton>
             </Box>
-        </a>
+        </div>
     );
 };
