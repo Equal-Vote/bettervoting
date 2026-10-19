@@ -94,24 +94,22 @@ export const BallotDataExport = ({ election, results }: Props) => {
     };
 
     return (
-        <div onClick={fetchBallots} role="presentation">
-            {/* A single MenuButton must stay mounted while the ballots load: swapping in a
-                second one on load unmounts the open menu mid-click. Only the items change.
-                (An array of items rather than a fragment, since Menu rejects fragment children.) */}
-            <Box sx={{ m: 1, maxWidth: '400px' }}>
-                <MenuButton label={"Download"} >
-                    {!ballots ? <MenuItem disabled>Loading Ballots...</MenuItem> : [
-                        <MenuItem key="csv" id={"download-csv"} onClick={downloadCSV}>
-                            <BorderAll sx={{ marginRight: 1 }} />
-                            Download CSV
-                        </MenuItem>,
-                        <MenuItem key="json" onClick={downloadJson}>
-                            <DataObject sx={{ marginRight: 1 }} />
-                            Download JSON
-                        </MenuItem>,
-                    ]}
-                </MenuButton>
-            </Box>
-        </div>
+        // A single MenuButton must stay mounted while the ballots load: swapping in a
+        // second one on load unmounts the open menu mid-click. Only the items change.
+        // (An array of items rather than a fragment, since Menu rejects fragment children.)
+        <Box onClick={fetchBallots} sx={{ m: 1, maxWidth: '400px' }}>
+            <MenuButton label={"Download"} >
+                {!ballots ? <MenuItem disabled>Loading Ballots...</MenuItem> : [
+                    <MenuItem key="csv" id={"download-csv"} onClick={downloadCSV}>
+                        <BorderAll sx={{ marginRight: 1 }} />
+                        Download CSV
+                    </MenuItem>,
+                    <MenuItem key="json" onClick={downloadJson}>
+                        <DataObject sx={{ marginRight: 1 }} />
+                        Download JSON
+                    </MenuItem>,
+                ]}
+            </MenuButton>
+        </Box>
     );
 };
