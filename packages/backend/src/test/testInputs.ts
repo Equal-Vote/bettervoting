@@ -595,5 +595,49 @@ export default {
             ]
         }]
     } as NewBallot,
+
+    VoterGroupElection: {
+        election_id: "0",
+        title: 'Voter Group Election',
+        state: 'draft',
+        frontend_url: '',
+        owner_id: 'Alice1234',
+        races: [
+            {
+                race_id: '0',
+                title: 'Open Race',
+                num_winners: 1,
+                voting_method: 'STAR',
+                candidates: [
+                    { candidate_id: '0', candidate_name: 'A' },
+                    { candidate_id: '1', candidate_name: 'B' },
+                    { candidate_id: '2', candidate_name: 'C' },
+                ],
+            },
+            {
+                race_id: '1',
+                title: 'Group Race',
+                num_winners: 1,
+                voting_method: 'STAR',
+                precincts: ['Ward 1', 'Ward 2'],
+                candidates: [
+                    { candidate_id: '0', candidate_name: 'D' },
+                    { candidate_id: '1', candidate_name: 'E' },
+                    { candidate_id: '2', candidate_name: 'F' },
+                ],
+            },
+        ] as Race[],
+        settings: {
+            voter_access: 'open',
+            voter_authentication: { email: true },
+            voter_groups: ['Ward 1', 'Ward 2'],
+            voter_groups_enabled: true,
+        } as ElectionSettings,
+    } as Election,
+
+    VoterGroupRoll: [
+        { email: 'Alice@email.com', precinct: 'Ward 1' },
+        { email: 'Bob@email.com', precinct: 'Ward 2' },
+    ],
 }
 
