@@ -9,12 +9,14 @@ import useElection from "../../ElectionContextProvider";
 import { SecondaryButton } from "~/components/styles";
 import ShareButton from "../ShareButton";
 import { useSubstitutedTranslation } from "../../util";
+import useFeatureFlags from "../../FeatureFlagContextProvider";
 
 
 const VerifyBallot = () => {
     const { election } = useElection()
     const { ballot_id } = useParams();
     const { t } = useSubstitutedTranslation(election.settings.term_type);
+    const flags = useFeatureFlags();
 
     const { data, isPending, makeRequest: fetchBallot } = useGetBallot(election.election_id, ballot_id);
     useEffect(() => {
@@ -56,9 +58,9 @@ const VerifyBallot = () => {
                                     <Box sx={{fontWeight: 'bold', m: 1, display: 'inline'}}>{t('ballot_submitted.ballot_id')}</Box>
                                     <Box sx={{fontWeight: 'regular', m: 1, display: 'inline'}}>{`${data.ballot.ballot_id}`}</Box>
                             </Typography>
-                            {data.ballot.precinct &&
+                            {flags.isSet('PRECINCTS') && data.ballot.precinct &&
                                 <Typography component="div" align='left' variant="body1">
-                                    <Box sx={{fontWeight: 'bold', m: 1, display: 'inline'}}>{t('ballot_submitted.precinct')}</Box>
+                                    <Box sx={{fontWeight: 'bold', m: 1, display: 'inline'}}>{t('ballot_submitted.voter_group')}</Box>
                                     <Box sx={{fontWeight: 'regular', m: 1, display: 'inline'}}>{`${data.ballot.precinct}`}</Box>
                                 </Typography>
                             }
