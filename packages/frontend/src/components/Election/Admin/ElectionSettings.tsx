@@ -11,7 +11,7 @@ import { useSubstitutedTranslation, SwitchSetting } from '~/components/util';
 import useElection from '~/components/ElectionContextProvider';
 import useOptimisticToggle from "~/hooks/useOptimisticToggle";
 import { AdminPageNavigation } from '../Sidebar';
-import { useSetPublicResults } from '~/hooks/useAPI';
+import { useGetRolls, useSetPublicResults } from '~/hooks/useAPI';
 import DialogTextField from '~/components/DialogTextField';
 import useFeatureFlags from '~/components/FeatureFlagContextProvider';
 import { useState } from 'react';
@@ -46,32 +46,45 @@ function ElectionSwitchSetting({ settingKey, disabled, disabledMessage, onToggle
     />;
 }
 
-function VoterGroupsDialog({ voterGroups, onSave, disabled }: {
+function VoterGroupsDialog({ voterGroups, onSave, disabled, electionId }: {
     voterGroups: string[];
     onSave: (groups: string[]) => Promise<void>;
     disabled: boolean;
+    electionId: string;
 }) {
     const [open, setOpen] = useState(false);
     const [groups, setGroups] = useState<string[]>(voterGroups);
     const [newName, setNewName] = useState('');
     const [addError, setAddError] = useState('');
+    const [voterCounts, setVoterCounts] = useState<Record<string, number>>({});
     const { t } = useSubstitutedTranslation('election');
+    const { makeRequest: fetchRolls } = useGetRolls(electionId);
 
-    const handleOpen = () => {
+    const handleOpen = async () => {
         setGroups(voterGroups);
         setNewName('');
         setAddError('');
         setOpen(true);
+        const result = await fetchRolls();
+        if (result) {
+            const counts: Record<string, number> = {};
+            for (const roll of result.electionRoll) {
+                if (roll.precinct) {
+                    counts[roll.precinct] = (counts[roll.precinct] ?? 0) + 1;
+                }
+            }
+            setVoterCounts(counts);
+        }
     };
 
     const handleAdd = () => {
         const trimmed = newName.trim();
         if (!trimmed) {
-            setAddError(t('voter_groups_dialog.cant_delete'));
+            setAddError(t('voter_groups_dialog.empty_name'));
             return;
         }
         if (groups.some(g => g.toLowerCase() === trimmed.toLowerCase())) {
-            setAddError('A group with this name already exists');
+            setAddError(t('voter_groups_dialog.duplicate_name'));
             return;
         }
         setGroups([...groups, trimmed]);
@@ -107,18 +120,32 @@ function VoterGroupsDialog({ voterGroups, onSave, disabled }: {
                 <DialogTitle>{t('voter_groups_dialog.title')}</DialogTitle>
                 <DialogContent>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
-                        {groups.map((group, i) => (
-                            <Box key={i} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <Typography>{group}</Typography>
-                                <IconButton
-                                    size="small"
-                                    aria-label={t('voter_groups_dialog.delete_tooltip')}
-                                    onClick={() => handleDelete(i)}
-                                >
-                                    <DeleteIcon fontSize="small" />
-                                </IconButton>
-                            </Box>
-                        ))}
+                        {groups.map((group, i) => {
+                            const count = voterCounts[group] ?? 0;
+                            const deleteDisabled = count > 0;
+                            return (
+                                <Box key={i} sx={{ display: 'flex', flexDirection: 'column' }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <Typography>
+                                            {t('voter_groups_dialog.voter_count', { group, count })}
+                                        </Typography>
+                                        <IconButton
+                                            size="small"
+                                            aria-label={t('voter_groups_dialog.delete_tooltip')}
+                                            onClick={() => handleDelete(i)}
+                                            disabled={deleteDisabled}
+                                        >
+                                            <DeleteIcon fontSize="small" />
+                                        </IconButton>
+                                    </Box>
+                                    {deleteDisabled && (
+                                        <Typography variant="caption" sx={{ fontStyle: 'italic', color: 'text.disabled' }}>
+                                            {t('voter_groups_dialog.cant_delete')}
+                                        </Typography>
+                                    )}
+                                </Box>
+                            );
+                        })}
                         <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
                             <TextField
                                 size="small"
@@ -137,8 +164,8 @@ function VoterGroupsDialog({ voterGroups, onSave, disabled }: {
                     </Box>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setOpen(false)}>Cancel</Button>
-                    <Button variant="contained" onClick={handleSave}>Save</Button>
+                    <Button onClick={() => setOpen(false)}>{t('keyword.cancel')}</Button>
+                    <Button variant="contained" onClick={handleSave}>{t('keyword.save')}</Button>
                 </DialogActions>
             </Dialog>
         </>
@@ -231,6 +258,7 @@ export default function ElectionSettings() {
                                 <VoterGroupsDialog
                                     voterGroups={election.settings.voter_groups ?? []}
                                     disabled={election.state !== 'draft'}
+                                    electionId={election.election_id}
                                     onSave={async (groups) => {
                                         await updateElection(e => { e.settings.voter_groups = groups; });
                                     }}
