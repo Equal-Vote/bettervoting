@@ -7,7 +7,8 @@ import { BadRequest } from "@curveball/http-errors";
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
 
-var ElectionsModel = ServiceLocator.electionsDb();
+const ElectionsModel = ServiceLocator.electionsDb();
+const ElectionRollModel = ServiceLocator.electionRollDb();
 
 
 const editElection = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
@@ -29,8 +30,56 @@ const editElection = async (req: IElectionRequest, res: Response, _next: NextFun
         throw new BadRequest("Election ID must match the URL Param")
     }
 
+    // Voter groups validation and mutation
+    const newGroupsRaw = inputElection.settings?.voter_groups;
+    if (newGroupsRaw !== undefined) {
+        const trimmed = newGroupsRaw.map((g: string) => g.trim());
+
+        const emptyIndex = trimmed.findIndex((g: string) => g === '');
+        if (emptyIndex >= 0) {
+            throw new BadRequest("Voter group names cannot be empty");
+        }
+
+        const seen = new Set<string>();
+        for (const g of trimmed) {
+            const lower = g.toLowerCase();
+            if (seen.has(lower)) {
+                throw new BadRequest("A group with this name already exists");
+            }
+            seen.add(lower);
+        }
+
+        const currentGroups: string[] = req.election.settings?.voter_groups ?? [];
+        const removedGroups = currentGroups.filter(
+            (cg: string) => !trimmed.some((ng: string) => ng.toLowerCase() === cg.toLowerCase())
+        );
+
+        if (removedGroups.length > 0) {
+            const rolls = await ElectionRollModel.getRollsByElectionID(inputElection.election_id, req) ?? [];
+            for (const group of removedGroups) {
+                const count = rolls.filter((r) => r.precinct === group).length;
+                if (count > 0) {
+                    throw new BadRequest(
+                        `Can't delete voter group "${group}": ${count} voter${count === 1 ? '' : 's'} use it`
+                    );
+                }
+            }
+            inputElection.races = inputElection.races.map((race: import('@equal-vote/star-vote-shared/domain_model/Race').Race) => {
+                if (!race.precincts) return race;
+                return {
+                    ...race,
+                    precincts: race.precincts.filter(
+                        (p: string) => !removedGroups.some((rg: string) => rg.toLowerCase() === p.toLowerCase())
+                    ),
+                };
+            });
+        }
+
+        inputElection.settings.voter_groups = trimmed;
+    }
+
     Logger.debug(req, `election ID = ${inputElection}`);
-    var failMsg = `Failed to update election`;
+    const failMsg = `Failed to update election`;
 
     const expected_update_date = expectUpdateDate(req);
     const updatedElection = await ElectionsModel.updateElection(inputElection, req, `User editing draft Election`, expected_update_date);
