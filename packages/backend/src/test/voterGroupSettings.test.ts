@@ -123,7 +123,6 @@ describe("Voter Group Settings", () => {
                     ...testInputs.VoterGroupElection.settings,
                     voter_groups: ['Ward 2'],
                 },
-                races: testInputs.VoterGroupElection.races,
             };
             const response = await th.editElection(updated, testInputs.user1token);
             expect(response.statusCode).toBe(400);
