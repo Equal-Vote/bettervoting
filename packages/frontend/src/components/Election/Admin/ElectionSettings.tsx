@@ -88,16 +88,15 @@ function VoterGroupsDialog({ voterGroups, onSave, disabled }: {
         setOpen(false);
     };
 
-    const buttonLabel = voterGroups.length === 0
-        ? t('voter_groups_dialog.add_button')
-        : t('voter_groups_dialog.edit_button');
+    const hasGroups = voterGroups.length > 0;
+    const buttonLabel = hasGroups ? t('voter_groups_dialog.edit_button') : t('voter_groups_dialog.add_button');
 
     return (
         <>
             <Button
                 variant="outlined"
                 size="small"
-                startIcon={voterGroups.length === 0 ? <AddIcon /> : <EditIcon />}
+                startIcon={hasGroups ? <EditIcon /> : <AddIcon />}
                 onClick={handleOpen}
                 disabled={disabled}
                 sx={{ mt: 1 }}
