@@ -15,6 +15,7 @@ import { useGetRolls, useSetPublicResults } from '~/hooks/useAPI';
 import DialogTextField from '~/components/DialogTextField';
 import useFeatureFlags from '~/components/FeatureFlagContextProvider';
 import { useState } from 'react';
+import VoterGroupGrid from './VoterGroupGrid';
 
 type ElectionSwitchSettingProps = {
     settingKey: keyof IElectionSettings;
@@ -349,7 +350,7 @@ export default function ElectionSettings() {
             </FormControl>
         </Grid>
 
-
+        {flags.isSet('PRECINCTS') && election.settings.voter_groups_enabled && <VoterGroupGrid />}
 
         <AdminPageNavigation />
     </>
