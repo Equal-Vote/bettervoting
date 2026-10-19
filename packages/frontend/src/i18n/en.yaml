@@ -768,6 +768,7 @@ tips:
   voter_groups:
     title: Set Voter Groups
     description: "Split your voters into groups (for example, wards or departments) and choose which {{races}} each group sees. Each voter only sees the {{races}} open to their group."
+    learn_link: https://docs.bettervoting.com/help/voter_groups.html
 
   email_list:
     title: $t(wizard.email_list_title)

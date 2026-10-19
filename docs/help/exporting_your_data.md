@@ -35,7 +35,7 @@ The CSV is a cast vote record: **one row per ballot**, one column per candidate.
 | Column | Meaning |
 |---|---|
 | `ballot_id` | The ballot's unique ID — the same ID shown to the voter on their confirmation screen and email receipt |
-| `precinct` | The voter's precinct, if the voter roll assigned one; blank otherwise |
+| `voter_group` | The voter's voter group; blank for No group |
 | One column per candidate | The voter's mark for that candidate (see below) |
 
 **What the number in a candidate column means depends on the voting method:**
@@ -58,7 +58,7 @@ All races share the same file, still one row per ballot. With a single race, eac
 The JSON download is the fuller archive. It contains three top-level sections:
 
 - **Election** — the complete election setup: title, dates, settings, every race with its voting method, number of winners, and candidate list. This is what lets a re-count know the rules, not just the marks.
-- **Ballots** — every ballot, in the same anonymized form as the CSV: ballot ID, precinct, and each race's per-candidate marks. A `null` score means the voter left that candidate unmarked.
+- **Ballots** — every ballot, in the same anonymized form as the CSV: ballot ID, voter group, and each race's per-candidate marks. A `null` score means the voter left that candidate unmarked.
 - **Results** — the tabulated results as they stood at the moment you downloaded, including round-by-round detail. If a tie was broken, the results record the full tie-break order that was used, so even a tie-broken outcome can be reproduced exactly from the file. See [Ties](ties.md) for how BetterVoting breaks ties.
 
 If you only want to eyeball ballots in a spreadsheet, use the CSV. If you want to archive the election or re-tabulate it with software, use the JSON — it is self-contained.
