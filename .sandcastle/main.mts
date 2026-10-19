@@ -13,15 +13,14 @@
 //                               issue once its review is done. All issue
 //                               pipelines run concurrently via
 //                               Promise.allSettled().
-//   Phase 3 (Merge):            Opt-in via --merge. A single agent merges all
+//   Phase 3 (Merge):            A single agent merges all
 //                               completed branches into the current branch.
 //
 // The outer loop repeats up to MAX_ITERATIONS times so that newly unblocked
 // issues are picked up after each round of merges.
 //
 // Usage:
-//   npx tsx .sandcastle/main.mts           # plan/execute/review only
-//   npx tsx .sandcastle/main.mts --merge   # also merge completed branches
+//   npx tsx .sandcastle/main.mts           # plan/execute/review/merge
 // Or add to package.json:
 //   "scripts": { "sandcastle": "npx tsx .sandcastle/main.mts" }
 
@@ -42,10 +41,6 @@ const planSchema = z.object({
 // ---------------------------------------------------------------------------
 // Configuration
 // ---------------------------------------------------------------------------
-
-// Merging is opt-in: by default branches are left unmerged so the QA
-// comments can be reviewed before anything touches the current branch.
-const shouldMerge = process.argv.includes("--merge");
 
 // Maximum number of plan→execute→merge cycles before stopping.
 // Raise this if your backlog is large; lower it for a quick smoke-test run.
@@ -209,11 +204,6 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
     break; // for now we'll break since this usually means we're done
   }
 
-  if (!shouldMerge) {
-    console.log("\nSkipping merge (pass --merge to merge completed branches into main).");
-    break;
-  }
-
   // -------------------------------------------------------------------------
   // Phase 3: Merge
   //
@@ -242,7 +232,5 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
 }
 
 console.log(
-  shouldMerge
-    ? "\nAll done. Review the QA comments on each issue, then push when ready."
-    : "\nAll done. Review the QA comments on each issue, then re-run with --merge to merge the completed branches.",
+  "\nAll done. Review the QA comments on each issue, then push when ready."
 );
