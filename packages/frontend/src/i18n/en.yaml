@@ -1223,6 +1223,8 @@ voter_groups_dialog:
   voter_count_other: "{{group}} ({{count}} voters)"
   delete_tooltip: Delete group
   cant_delete: Can't delete a group that has voters
+  empty_name: Group name can't be empty
+  duplicate_name: A group with this name already exists
 
 # Admin Home -> Add/Edit Race
 edit_race:
