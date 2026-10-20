@@ -46,13 +46,13 @@ const addElectionRoll = async (req: IElectionRequest & { body: { electionRoll: E
         throw new BadRequest("User provided voterIds are not permitted for email list elections");
     }
 
-    // Validate voter groups
+    // Validate voter groups. A blank precinct means "No group" and is always allowed;
+    // only a non-empty value counts as carrying a group.
     const voterGroupsEnabled = req.election.settings.voter_groups_enabled === true;
     const voterGroups = req.election.settings.voter_groups ?? [];
-    // A blank precinct means "No group" and is always allowed; only a non-empty value counts as carrying a group
-    const hasGroupColumn = req.body.electionRoll.some((r: ElectionRollInput) => r.precinct !== undefined && r.precinct !== null && r.precinct.trim() !== '');
+    const rawGroup = (r: ElectionRollInput) => (r.precinct ?? '').trim();
 
-    if (!voterGroupsEnabled && hasGroupColumn) {
+    if (!voterGroupsEnabled && req.body.electionRoll.some((r: ElectionRollInput) => rawGroup(r) !== '')) {
         throw new BadRequest('Voter groups are not enabled for this election');
     }
 
@@ -61,8 +61,7 @@ const addElectionRoll = async (req: IElectionRequest & { body: { electionRoll: E
         const groupMap = new Map(voterGroups.map(g => [g.toLowerCase(), g]));
         const unknownGroups = new Set<string>();
         for (const rollInput of req.body.electionRoll) {
-            const raw = (rollInput.precinct ?? '').trim();
-            // blank precinct → No group, always valid
+            const raw = rawGroup(rollInput);
             if (raw !== '' && !groupMap.has(raw.toLowerCase())) {
                 unknownGroups.add(raw);
             }
@@ -72,9 +71,9 @@ const addElectionRoll = async (req: IElectionRequest & { body: { electionRoll: E
             throw new BadRequest(`Unknown voter groups: ${names}`);
         }
 
-        // Normalise precinct: trim + canonical spelling; blank → ""
+        // Normalise to canonical spelling; blank stays blank
         req.body.electionRoll = req.body.electionRoll.map((rollInput: ElectionRollInput) => {
-            const raw = (rollInput.precinct ?? '').trim();
+            const raw = rawGroup(rollInput);
             return {
                 ...rollInput,
                 precinct: raw === '' ? '' : groupMap.get(raw.toLowerCase())!,

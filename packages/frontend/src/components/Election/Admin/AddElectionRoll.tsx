@@ -91,19 +91,18 @@ const AddElectionRoll = ({ onClose, onUploadingChange }: { onClose: () => void, 
                 }
             }
 
+            const newGroups = voterGroupsEnabled ? findNewGroups(conflicts.rolls) : new Map<string, number>()
+            const newGroupList = [...newGroups.entries()]
+                .map(([name, count]) => `"${name}" (${count} ${count === 1 ? 'voter' : 'voters'})`)
+                .join(' and ')
             const skipDetails = [
                 conflicts.existingCount > 0 && `${conflicts.existingCount} already on your voter list`,
                 conflicts.fileCount > 0 && `${conflicts.fileCount} repeated within your upload`,
             ].filter(Boolean) as string[]
 
-            // Check for new voter groups
-            const newGroups = voterGroupsEnabled ? findNewGroups(conflicts.rolls) : new Map<string, number>()
             if (newGroups.size > 0) {
-                const newGroupList = [...newGroups.entries()]
-                    .map(([name, count]) => `"${name}" (${count} ${count === 1 ? 'voter' : 'voters'})`)
-                    .join(' and ')
-
-                if (election.state !== 'draft') {
+                const isFinalized = election.state !== 'draft'
+                if (isFinalized) {
                     showError(
                         `This upload includes voter groups that aren't on your list: ${newGroupList}. Voter groups can't be added after the election is finalized, so nothing was uploaded.`
                     )
