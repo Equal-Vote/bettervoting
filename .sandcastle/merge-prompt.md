@@ -30,9 +30,11 @@ Here are the issues for the branches to add:
 
 {{ISSUES}}
 
-For each branch that was added to the stack, remove the `Sandcastle` label from its issue so it isn't picked up again by future planning runs. Do not close the issue; its PR will close it when merged.
+For each branch that was added to the stack, close its issue. This stops future planning runs from picking it up again, and unblocks any issues that depend on it so the next round can work on them. The stacked PR will still link to the issue.
 
-`gh issue edit <ID> --repo Equal-Vote/BetterVoting --remove-label Sandcastle`
+`gh issue close <ID> --repo Equal-Vote/BetterVoting --reason completed --comment "Implemented on branch \`<branch>\` in a Sandcastle stack; its PR will link back here."`
+
+Do not close the issue of a branch that was left out of the stack.
 
 # OUTPUT
 

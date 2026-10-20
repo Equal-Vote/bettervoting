@@ -28,7 +28,7 @@ Draft for each PR:
 - A title (not the branch name).
 - `## Summary`: what this PR changes, scoped to its own diff, not the whole stack.
 - `## Test plan`: how a reviewer can check this branch, drawn from its issue's acceptance criteria and its diff (tests added, manual steps).
-- `Closes #<ID>` for its issue.
+- `Closes #<ID>` for its issue. Sandcastle closes issues as it stacks them, so the issue may already be closed; the line still links the PR to it.
 - The attribution footer for PR descriptions.
 
 ## 3. Get the Human Summary
