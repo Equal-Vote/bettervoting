@@ -765,8 +765,8 @@ tips:
     learn_link: https://docs.bettervoting.com/help/preliminary_results.html
 
   voter_groups:
-    title: Enable Voter Groups
-    description: Allow different voter groups access to different races within a larger election (ex. districts within jurisdiction).
+    title: Set Voter Groups
+    description: "Split your voters into groups (for example, wards or departments) and choose which {{races}} each group sees. Each voter only sees the {{races}} open to their group."
 
   email_list:
     title: $t(wizard.email_list_title)
@@ -1200,7 +1200,7 @@ election_settings:
 
   public_results: Make Results Public !tip(public_results)
 
-  voter_groups: Enable Voter Groups !tip(voter_groups)
+  voter_groups: Set Voter Groups !tip(voter_groups)
 
   custom_email_invite: Customize Emails To Voters !tip(custom_email_invite)
 
@@ -1213,7 +1213,19 @@ election_settings:
   max_rankings: Set Number Of Rankings Allowed !tip(max_rankings)
 
   contact_email: Election Support Email !tip(contact_email)
-  
+
+voter_groups_dialog:
+  title: Voter Groups
+  add_group_label: New group name
+  edit_button: Edit groups
+  add_button: Add groups
+  voter_count_one: "{{group}} (1 voter)"
+  voter_count_other: "{{group}} ({{count}} voters)"
+  delete_tooltip: Delete group
+  cant_delete: Can't delete a group that has voters
+  empty_name: Group name can't be empty
+  duplicate_name: A group with this name already exists
+
 # Admin Home -> Add/Edit Race
 edit_race:
   how_many_winners: How many winners?
