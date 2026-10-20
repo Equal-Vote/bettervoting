@@ -158,7 +158,7 @@ const headCellPool = {
     id: 'precinct',
     numeric: false,
     disablePadding: false,
-    label: 'Precinct',
+    label: 'Voter Group',
     filterType: 'search',
     formatter: a => a || '',
   },

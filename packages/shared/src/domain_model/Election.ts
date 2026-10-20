@@ -184,12 +184,12 @@ export function getPrecinctFilteredElection(obj:Election, electionRoll: Election
 
 // Where should this belong..
 export function getApprovedRaces(election:Election, voterPrecinct:string|null|undefined): Race[] {
+  if (!election.settings.voter_groups_enabled) return election.races;
   return election.races.filter((race:Race) => {
     // If precincts aren't defined, open to all voters
     if(!race.precincts) return true;
-    // If race precinct list contains voter's precinct
-    if(voterPrecinct && race.precincts.includes(voterPrecinct)) return true;
-    // If race has precincts, but voter precinct doesn't match
+    // voterPrecinct != null allows '' (No group) to match races with '' in their list
+    if(voterPrecinct != null && race.precincts.includes(voterPrecinct)) return true;
     return false;
   })
 }
