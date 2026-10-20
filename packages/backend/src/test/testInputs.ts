@@ -519,10 +519,160 @@ export default {
         settings: {
             voter_access: 'open',
             voter_authentication: {email: true},
+            voter_groups_enabled: true,
+            voter_groups: ['0', '1'],
         } as ElectionSettings
     } as Election,
+    // Three-race election used by voter-groups filtering tests (groups on).
+    // Race 0: open to all (no precincts)
+    // Race 1: No group only (precincts: [''])
+    // Race 2: Ward 1 only (precincts: ['Ward 1'])
+    VoterGroupsElection: {
+        election_id: "0",
+        title: 'Voter Groups Election',
+        state: 'open',
+        frontend_url: '',
+        owner_id: 'Alice1234',
+        credential_ids: ['Alice@email.com'],
+        races: [
+            {
+                race_id: '0',
+                title: 'Race 0 - Open',
+                num_winners: 1,
+                voting_method: 'STAR',
+                candidates: [
+                    { candidate_id: '0', candidate_name: 'A' },
+                    { candidate_id: '1', candidate_name: 'B' },
+                    { candidate_id: '2', candidate_name: 'C' },
+                ],
+            },
+            {
+                race_id: '1',
+                title: 'Race 1 - No Group',
+                num_winners: 1,
+                voting_method: 'STAR',
+                precincts: [''],
+                candidates: [
+                    { candidate_id: '0', candidate_name: 'D' },
+                    { candidate_id: '1', candidate_name: 'E' },
+                    { candidate_id: '2', candidate_name: 'F' },
+                ],
+            },
+            {
+                race_id: '2',
+                title: 'Race 2 - Ward 1',
+                num_winners: 1,
+                voting_method: 'STAR',
+                precincts: ['Ward 1'],
+                candidates: [
+                    { candidate_id: '0', candidate_name: 'G' },
+                    { candidate_id: '1', candidate_name: 'H' },
+                    { candidate_id: '2', candidate_name: 'I' },
+                ],
+            },
+        ] as Race[],
+        settings: {
+            voter_access: 'open',
+            voter_authentication: { email: true },
+            voter_groups_enabled: true,
+            voter_groups: ['Ward 1'],
+        } as ElectionSettings,
+    } as Election,
+
+    // Roll for VoterGroupsElection: Alice has No group (''), Bob has Ward 1
+    VoterGroupsRoll: [
+        { email: 'Alice@email.com', precinct: '' },
+        { email: 'Bob@email.com', precinct: 'Ward 1' },
+    ],
+
+    // Election with voter_groups_enabled off but races with precincts defined.
+    // Race 0: open to all; Race 1: Ward 1 only.
+    VoterGroupsOffElection: {
+        election_id: "0",
+        title: 'Voter Groups Off Election',
+        state: 'open',
+        frontend_url: '',
+        owner_id: 'Alice1234',
+        credential_ids: ['Alice@email.com'],
+        races: [
+            {
+                race_id: '0',
+                title: 'Race 0 - Open',
+                num_winners: 1,
+                voting_method: 'STAR',
+                candidates: [
+                    { candidate_id: '0', candidate_name: 'A' },
+                    { candidate_id: '1', candidate_name: 'B' },
+                    { candidate_id: '2', candidate_name: 'C' },
+                ],
+            },
+            {
+                race_id: '1',
+                title: 'Race 1 - Ward 1 Only',
+                num_winners: 1,
+                voting_method: 'STAR',
+                precincts: ['Ward 1'],
+                candidates: [
+                    { candidate_id: '0', candidate_name: 'D' },
+                    { candidate_id: '1', candidate_name: 'E' },
+                    { candidate_id: '2', candidate_name: 'F' },
+                ],
+            },
+        ] as Race[],
+        settings: {
+            voter_access: 'open',
+            voter_authentication: { email: true },
+            voter_groups_enabled: false,
+        } as ElectionSettings,
+    } as Election,
+
+    // Roll for VoterGroupsOffElection: Alice has No group (''), which doesn't match Ward 1
+    VoterGroupsOffRoll: [
+        { email: 'Alice@email.com', precinct: '' },
+    ],
+
+    // Closed election with voter_groups_enabled true; race filtering must not apply
+    ClosedVoterGroupsElection: {
+        election_id: "0",
+        title: 'Closed Voter Groups Election',
+        state: 'closed',
+        frontend_url: '',
+        owner_id: 'Alice1234',
+        credential_ids: ['Alice@email.com'],
+        races: [
+            {
+                race_id: '0',
+                title: 'Race 0 - Open',
+                num_winners: 1,
+                voting_method: 'STAR',
+                candidates: [
+                    { candidate_id: '0', candidate_name: 'A' },
+                    { candidate_id: '1', candidate_name: 'B' },
+                    { candidate_id: '2', candidate_name: 'C' },
+                ],
+            },
+            {
+                race_id: '1',
+                title: 'Race 1 - Ward 1 Only',
+                num_winners: 1,
+                voting_method: 'STAR',
+                precincts: ['Ward 1'],
+                candidates: [
+                    { candidate_id: '0', candidate_name: 'D' },
+                    { candidate_id: '1', candidate_name: 'E' },
+                    { candidate_id: '2', candidate_name: 'F' },
+                ],
+            },
+        ] as Race[],
+        settings: {
+            voter_access: 'open',
+            voter_authentication: { ip_address: true },
+            voter_groups_enabled: true,
+        } as ElectionSettings,
+    } as Election,
+
     EmailWithPrecinctRoll:[
-        { 
+        {
             email:'Alice@email.com',
             precinct:'0'
         },
