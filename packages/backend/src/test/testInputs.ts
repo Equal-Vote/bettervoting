@@ -665,7 +665,6 @@ export default {
             voter_groups_enabled: true,
         } as ElectionSettings,
     } as Election,
-
     IDWithPrecinctRoll:[
         {
             voter_id:'AliceID',
