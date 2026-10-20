@@ -49,7 +49,8 @@ const addElectionRoll = async (req: IElectionRequest & { body: { electionRoll: E
     // Validate voter groups
     const voterGroupsEnabled = req.election.settings.voter_groups_enabled === true;
     const voterGroups = req.election.settings.voter_groups ?? [];
-    const hasGroupColumn = req.body.electionRoll.some((r: ElectionRollInput) => r.precinct != null);
+    // A blank precinct means "No group" and is always allowed; only a non-empty value counts as carrying a group
+    const hasGroupColumn = req.body.electionRoll.some((r: ElectionRollInput) => r.precinct !== undefined && r.precinct !== null && r.precinct.trim() !== '');
 
     if (!voterGroupsEnabled && hasGroupColumn) {
         throw new BadRequest('Voter groups are not enabled for this election');
