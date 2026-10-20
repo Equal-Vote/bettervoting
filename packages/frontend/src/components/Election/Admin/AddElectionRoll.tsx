@@ -91,58 +91,47 @@ const AddElectionRoll = ({ onClose, onUploadingChange }: { onClose: () => void, 
                 }
             }
 
+            const skipDetails = [
+                conflicts.existingCount > 0 && `${conflicts.existingCount} already on your voter list`,
+                conflicts.fileCount > 0 && `${conflicts.fileCount} repeated within your upload`,
+            ].filter(Boolean) as string[]
+
             // Check for new voter groups
             const newGroups = voterGroupsEnabled ? findNewGroups(conflicts.rolls) : new Map<string, number>()
             if (newGroups.size > 0) {
-                const isFinalized = election.state !== 'draft'
-                if (isFinalized) {
-                    const groupList = [...newGroups.entries()]
-                        .map(([name, count]) => `"${name}" (${count} ${count === 1 ? 'voter' : 'voters'})`)
-                        .join(' and ')
+                const newGroupList = [...newGroups.entries()]
+                    .map(([name, count]) => `"${name}" (${count} ${count === 1 ? 'voter' : 'voters'})`)
+                    .join(' and ')
+
+                if (election.state !== 'draft') {
                     showError(
-                        `This upload includes voter groups that aren't on your list: ${groupList}. Voter groups can't be added after the election is finalized, so nothing was uploaded.`
+                        `This upload includes voter groups that aren't on your list: ${newGroupList}. Voter groups can't be added after the election is finalized, so nothing was uploaded.`
                     )
                     return
                 }
 
                 const existingGroups = election.settings.voter_groups ?? []
-                const newGroupList = [...newGroups.entries()]
-                    .map(([name, count]) => `"${name}" (${count} ${count === 1 ? 'voter' : 'voters'})`)
-                    .join(' and ')
                 const existingClause = existingGroups.length > 0
                     ? ` to your existing voter groups ${existingGroups.map(g => `"${g}"`).join(', ')}`
                     : ''
                 const newGroupWord = newGroups.size === 1 ? 'voter group' : 'voter groups'
-                const skipDetails = [
-                    conflicts.existingCount > 0 && `${conflicts.existingCount} already on your voter list`,
-                    conflicts.fileCount > 0 && `${conflicts.fileCount} repeated within your upload`,
-                ].filter(Boolean)
-                const bullets = [
-                    `This adds ${newGroupWord} ${newGroupList}${existingClause}.`,
-                    ...skipDetails,
-                ]
                 const confirmed = await confirm({
                     title: `Upload ${uploadCount} voters?`,
-                    message: bullets.join('\n'),
+                    message: [`This adds ${newGroupWord} ${newGroupList}${existingClause}.`, ...skipDetails].join('\n'),
                     submit: `Upload ${uploadCount} voters`,
                     cancel: 'Cancel',
                 })
                 if (!confirmed) return
 
                 // Add new groups to the election settings before uploading voters
-                const namesArray = [...newGroups.keys()]
                 await updateElection(e => {
-                    e.settings.voter_groups = [...(e.settings.voter_groups ?? []), ...namesArray]
+                    e.settings.voter_groups = [...(e.settings.voter_groups ?? []), ...newGroups.keys()]
                 })
             } else if (skippedCount > 0 || alwaysConfirm) {
-                const skipDetails = [
-                    conflicts.existingCount > 0 && `${conflicts.existingCount} already on your voter list`,
-                    conflicts.fileCount > 0 && `${conflicts.fileCount} repeated within your upload`,
-                ].filter(Boolean).join(' and ')
                 const confirmed = await confirm({
                     title: skippedCount > 0 ? 'Some voters will be skipped' : `Upload ${uploadCount} voters?`,
                     message: skippedCount > 0
-                        ? `${skipDetails} will be skipped because they have a conflicting voter ID or email. Continue uploading the remaining ${uploadCount} voters?`
+                        ? `${skipDetails.join(' and ')} will be skipped because they have a conflicting voter ID or email. Continue uploading the remaining ${uploadCount} voters?`
                         : `${uploadCount} voters will be added to your voter list.`,
                     submit: `Upload ${uploadCount} voters`,
                     cancel: 'Cancel',
@@ -226,9 +215,8 @@ const AddElectionRoll = ({ onClose, onUploadingChange }: { onClose: () => void, 
                 return
             }
             const headers = parsed.meta.fields ?? []
-            const expectedHeaders = allowedColumns
-            if (headers.length === 0 || headers.length !== expectedHeaders.length || !headers.every((h, i) => h === expectedHeaders[i])) {
-                showError(`Invalid headers: expected ${expectedHeaders.join(', ')}`)
+            if (headers.length === 0 || headers.length !== allowedColumns.length || !headers.every((h, i) => h === allowedColumns[i])) {
+                showError(`Invalid headers: expected ${allowedColumns.join(', ')}`)
                 return
             }
             const rolls: RollInput[] = parsed.data
@@ -350,9 +338,7 @@ const AddElectionRoll = ({ onClose, onUploadingChange }: { onClose: () => void, 
                             Upload CSV
                         </Typography>
                         <Typography align='center' component="p">
-                            Upload a csv file of your voter data. Files must include the following headers: {
-                                allowedColumns.map((h) => (h)).join(', ')
-                            }
+                            Upload a csv file of your voter data. Files must include the following headers: {allowedColumns.join(', ')}
                         </Typography>
                     </Grid>
                     <Grid sx={{ m: 1 }}>
