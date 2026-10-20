@@ -173,9 +173,10 @@ export function removeHiddenFields(obj: Election): void {
 }
 
 export function getPrecinctFilteredElection(obj:Election, electionRoll: ElectionRoll|null):Election {
+  const shouldFilter = obj.state === 'open' && obj.settings?.voter_groups_enabled === true;
   return {
     ...obj,
-    races: (obj.state === 'open')?
+    races: shouldFilter ?
       getApprovedRaces(obj, electionRoll?.precinct)
     :
       obj.races
@@ -187,7 +188,7 @@ export function getApprovedRaces(election:Election, voterPrecinct:string|null|un
   if (!election.settings.voter_groups_enabled) return election.races;
   return election.races.filter((race:Race) => {
     // If precincts aren't defined, open to all voters
-    if(!race.precincts) return true;
+    if(!race.precincts || race.precincts.length === 0) return true;
     // voterPrecinct != null allows '' (No group) to match races with '' in their list
     if(voterPrecinct != null && race.precincts.includes(voterPrecinct)) return true;
     return false;
