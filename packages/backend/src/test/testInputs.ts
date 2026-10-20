@@ -626,11 +626,6 @@ export default {
         } as ElectionSettings,
     } as Election,
 
-    // Roll for VoterGroupsOffElection: Alice has No group (''), which doesn't match Ward 1
-    VoterGroupsOffRoll: [
-        { email: 'Alice@email.com', precinct: '' },
-    ],
-
     // Closed election with voter_groups_enabled true; race filtering must not apply
     ClosedVoterGroupsElection: {
         election_id: "0",

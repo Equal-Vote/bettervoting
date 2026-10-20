@@ -49,30 +49,29 @@ const addElectionRoll = async (req: IElectionRequest & { body: { electionRoll: E
     // Validate voter groups
     const voterGroupsEnabled = req.election.settings.voter_groups_enabled === true;
     const voterGroups = req.election.settings.voter_groups ?? [];
-    const hasGroupColumn = req.body.electionRoll.some((r: ElectionRollInput) => r.precinct !== undefined && r.precinct !== null);
+    const hasGroupColumn = req.body.electionRoll.some((r: ElectionRollInput) => r.precinct != null);
 
     if (!voterGroupsEnabled && hasGroupColumn) {
         throw new BadRequest('Voter groups are not enabled for this election');
     }
 
     if (voterGroupsEnabled) {
-        // Build a lowercase → canonical map for fast lookup
+        // Lowercase → canonical map for case-insensitive lookup
         const groupMap = new Map(voterGroups.map(g => [g.toLowerCase(), g]));
-        const unknownGroups = new Map<string, number>(); // raw name → count
+        const unknownGroups = new Set<string>();
         for (const rollInput of req.body.electionRoll) {
             const raw = (rollInput.precinct ?? '').trim();
-            if (raw === '') continue; // missing/blank → No group, always valid
-            const canonical = groupMap.get(raw.toLowerCase());
-            if (canonical === undefined) {
-                unknownGroups.set(raw, (unknownGroups.get(raw) ?? 0) + 1);
+            // blank precinct → No group, always valid
+            if (raw !== '' && !groupMap.has(raw.toLowerCase())) {
+                unknownGroups.add(raw);
             }
         }
         if (unknownGroups.size > 0) {
-            const names = [...unknownGroups.keys()].map(n => `"${n}"`).join(', ');
+            const names = [...unknownGroups].map(n => `"${n}"`).join(', ');
             throw new BadRequest(`Unknown voter groups: ${names}`);
         }
 
-        // Normalise: trim + canonical spelling; blank → ""
+        // Normalise precinct: trim + canonical spelling; blank → ""
         req.body.electionRoll = req.body.electionRoll.map((rollInput: ElectionRollInput) => {
             const raw = (rollInput.precinct ?? '').trim();
             return {
