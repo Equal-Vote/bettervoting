@@ -124,20 +124,6 @@ export default class ElectionsDB implements IElectionStore {
             .execute()
     }
 
-    async getElectionsCreatedInRange(ctx: ILoggingContext, startTime: Date, endTime: Date): Promise<Election[] | null> {
-        Logger.debug(ctx, `${tableName}.getElectionsCreatedInRange`);
-
-        return await this._postgresClient
-            .selectFrom(tableName)
-            .where('head', '=', true)
-            .where('public_archive_id', 'is', null)
-            // 30 days prior to today
-            //.where('create_date', '>=', new Date(new Date().setDate(new Date().getDate() - 30)))
-            .where('create_date', '>=', new Date(startTime))
-            .where('create_date', '<=', new Date(endTime))
-            .selectAll()
-            .execute()
-    }
 
     getElections(id: string, email: string, ctx: ILoggingContext): Promise<Election[] | null> {
         Logger.debug(ctx, `${tableName}.getAll ${id}`);
