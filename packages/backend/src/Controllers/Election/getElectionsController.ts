@@ -8,8 +8,8 @@ import { Race, VotingMethod, MethodTextKey, methodValueToTextKey } from '@equal-
 import { sharedConfig } from '@equal-vote/star-vote-shared/config';
 
 
-var ElectionsModel = ServiceLocator.electionsDb();
-var ElectionRollModel = ServiceLocator.electionRollDb();
+const ElectionsModel = ServiceLocator.electionsDb();
+const ElectionRollModel = ServiceLocator.electionRollDb();
 
 // TODO: We should probably split this up as the user will only need one of these filters
 const getElections = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
@@ -19,11 +19,11 @@ const getElections = async (req: IElectionRequest, res: Response, _next: NextFun
     const id = req.user?.sub || ''
 
     /////////// ELECTIONS WE OWN ////////////////
-    var elections_as_official = null;
+    let elections_as_official = null;
     if((email !== '' || id !== '') && req.user?.typ != 'TEMP_ID'){
         elections_as_official = await ElectionsModel.getElections(id, email, req);
         if (!elections_as_official) {
-            var msg = "Election does not exist";
+            const msg = "Election does not exist";
             Logger.info(req, msg);
             throw new BadRequest(msg);
         }
@@ -31,10 +31,10 @@ const getElections = async (req: IElectionRequest, res: Response, _next: NextFun
     }
 
     /////////// ELECTIONS WE'RE INVITED TO ////////////////
-    var elections_as_unsubmitted_voter = null;
+    let elections_as_unsubmitted_voter = null;
     if (email !== '') {
         // NOTE: This could be very large if the user had uploaded prior elections. In that case the user would have a roll entry for every vote uploaded
-        let myRolls = await ElectionRollModel.getByEmailAndUnsubmitted(email, req)
+        const myRolls = await ElectionRollModel.getByEmailAndUnsubmitted(email, req)
         let election_ids = myRolls?.map(election => election.election_id) ?? [];
         election_ids = election_ids.filter((eid, i) => election_ids.indexOf(eid) == i); // filter unique
 
@@ -48,9 +48,9 @@ const getElections = async (req: IElectionRequest, res: Response, _next: NextFun
     }
 
     /////////// ELECTIONS WE'VE VOTED IN ////////////////
-    var elections_as_submitted_voter = null;
+    let elections_as_submitted_voter = null;
     if (email !== '') {
-        let myRolls = await ElectionRollModel.getByEmailAndSubmitted(email, req)
+        const myRolls = await ElectionRollModel.getByEmailAndSubmitted(email, req)
         let election_ids = myRolls?.map(election => election.election_id) ?? [];
         election_ids = election_ids.filter((eid, i) => election_ids.indexOf(eid) == i); // filter unique
         if (election_ids && election_ids.length > 0) {
@@ -64,21 +64,6 @@ const getElections = async (req: IElectionRequest, res: Response, _next: NextFun
         elections_as_submitted_voter,
         public_archive_elections: await ElectionsModel.getPublicArchiveElections(req),
         open_elections: await ElectionsModel.getOpenElections(req)
-    });
-}
-
-const queryElections = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
-    Logger.info(req, `queryElections`);
-
-    // TODO: https://github.com/Equal-Vote/bettervoting/issues/976
-    //expectPermission(req.user_auth.roles, permissions.canQueryElections);
-
-    /////////// ELECTIONS WE OWN ////////////////
-    res.json({
-        open_elections: await ElectionsModel.getElectionsCreatedInRange(req, req.body.start_time, req.body.end_time),
-        closed_elections: [],
-        popular_elections: [],
-        vote_counts: await ElectionsModel.getBallotCountsForAllElections(req),
     });
 }
 
@@ -169,5 +154,4 @@ export {
     getElections,
     innerGetGlobalElectionStats,
     getGlobalElectionStats,
-    queryElections,
 }
