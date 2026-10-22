@@ -76,7 +76,7 @@ const ElectionsYouManage = () => {
             
     return <EnhancedTable
         title='My Elections & Polls'
-        headKeys={['title', 'update_date', 'election_state', 'start_time', 'end_time', 'description']}
+        headKeys={['title', 'create_date', 'update_date', 'election_state', 'start_time', 'end_time', 'description']}
         isPending={isPending || !authSession.isLoggedIn() || electionToClaim}
         pendingMessage='Loading Elections...'
         data={managedElectionsData}
