@@ -12,5 +12,5 @@ has_children: true
 How votes are counted, how to read the results page, what you can share while voting is still open, and how ties are resolved.
 
 - [Preliminary Results](preliminary_results.md) — showing a running tally while voting is open: what it changes for voters and admins.
-- [Ties](ties.md) — how rare ties are in STAR Voting, and exactly how each kind of tie is broken.
+- [Ties](ties.md) — how BetterVoting breaks ties for each voting method, and how rare ties are.
 - [Hand Count](hand_count.md) — tallying a STAR Voting election by hand, for audits, recounts, or paper elections.
