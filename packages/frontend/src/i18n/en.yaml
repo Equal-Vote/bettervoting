@@ -982,8 +982,6 @@ about:
   contributors_title: All Contributors
   # The image Id can be found by copying the image address of their github profile
   contributors:
-    - github_user_name: Swar-42
-      github_image_id: 70987572
     - github_user_name: mikefranze
       github_image_id: 41272412
     - github_user_name: ArendPeter
@@ -1054,6 +1052,8 @@ about:
       github_image_id: 100322179
     - github_user_name: crayne
       github_image_id: 134657
+    - github_user_name: Swar-42
+      github_image_id: 70987572
 
   contribute_title: Contribute
   contribute_description: >
