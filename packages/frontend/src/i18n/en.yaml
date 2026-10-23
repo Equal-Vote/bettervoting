@@ -632,7 +632,7 @@ results_ext:
   score_range_sub_title: Difference between maximum and minimum score on ballots
   score_range_warning: > 
     In order to have a maximum impact on the scoring round of STAR Voting, voters need to 
-    follow the instructions on the ballot and indicate at at least one zero (or blank),
+    follow the instructions on the ballot and indicate at least one zero (or blank),
     and at least one five. This would result in a range of 5 for the voters scores.
 
 
@@ -642,7 +642,7 @@ results_ext:
 
     Voters who didn't use the full range, either didn't understand the instructions or chose
     to use a smaller range on purpose. This could be as a protest vote expressing that no candidates deserve 5 stars,
-    or it could be the opposite choosing to express that they have a postive opinion of everyone.
+    or it could be the opposite choosing to express that they have a positive opinion of everyone.
 
 
     Note that not the consequences for not following the instructions are relatively minor, whereas failing to follow
@@ -672,7 +672,7 @@ tabulation_logs:
     pairwise_tied: >
       **Runoff Tiebreaker**: {{names}} are tied with {{vote}} voters preferring each and {{equal_votes}} voters showing equal support.
     pairwise_advance_to_runoff: >
-      **Runoff Tiebreaker**: {{winner}} beats {{runner_up}}, {{winner_votes}} votes to {{runner_up_votes}, and becomes the second finalist.
+      **Runoff Tiebreaker**: {{winner}} beats {{runner_up}}, {{winner_votes}} votes to {{runner_up_votes}}, and becomes the second finalist.
 
     # Five-star tiebreak
     five_star_first: >
@@ -812,7 +812,7 @@ tips:
     title: Proportional Multi-Winner
     description: >
       Use a proportional representation algorithm to determine a win quota and ensure that factions can win if they have a quotas worth of supporters.
-      Best for electing diversified winners that reflect the idealogical makeup of the electorate.
+      Best for electing diversified winners that reflect the ideological makeup of the electorate.
     learn_link: https://equal.vote/pr
 
   no_auth:
@@ -833,7 +833,7 @@ tips:
       Provides a great user experience, while also ensuring basic security.
 
   login_auth:
-    title: One for per User
+    title: One vote per User
     description: >
       Only allow votes from people who have created a BetterVoting account and verified their email address. 
       Great for maximizing security for anonymous public {{elections}}. 
@@ -1276,7 +1276,7 @@ emails:
     All test votes will be cleared once the election is finalized.
   pre_start_warning: >
     This election's start time is scheduled for the future on {{datetime, datetime}}. 
-    Voters will not be able to cast ballots until the elction has opened.
+    Voters will not be able to cast ballots until the election has opened.
   post_end_warning: >
     This election is already closed on {{datetime, datetime}} and voters will not be able to cast ballots.
   invite:
