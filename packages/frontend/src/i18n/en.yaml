@@ -672,7 +672,7 @@ tabulation_logs:
     pairwise_tied: >
       **Runoff Tiebreaker**: {{names}} are tied with {{vote}} voters preferring each and {{equal_votes}} voters showing equal support.
     pairwise_advance_to_runoff: >
-      **Runoff Tiebreaker**: {{winner}} beats {{runner_up}}, {{winner_votes}} votes to {{runner_up_votes}, and becomes the second finalist.
+      **Runoff Tiebreaker**: {{winner}} beats {{runner_up}}, {{winner_votes}} votes to {{runner_up_votes}}, and becomes the second finalist.
 
     # Five-star tiebreak
     five_star_first: >
