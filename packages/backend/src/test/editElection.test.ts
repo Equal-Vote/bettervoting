@@ -75,8 +75,8 @@ describe("Edit Election", () => {
         test("edits title", async () => {
             const electionId = await setupInitialElection()
 
-            var election1Copy = {...testInputs.Election1};
-            var newTitle = `${election1Copy.title} - Edited`;
+            const election1Copy = {...testInputs.Election1};
+            const newTitle = `${election1Copy.title} - Edited`;
             election1Copy.election_id = electionId;
             election1Copy.title = newTitle;
 
@@ -94,7 +94,7 @@ describe("Edit Election", () => {
             // I'm testing roll type specifically to make sure nested fields are applied correctly
             const ID = await setupInitialElection()
             // I wanted to use structuredClone here, but I had trouble getting it to work with jest :'(
-            var election1Copy = JSON.parse(JSON.stringify(testInputs.Election1))
+            const election1Copy = JSON.parse(JSON.stringify(testInputs.Election1))
             // Election1 starts as open + ip_address (type 4); replace with open + email (type 3)
             election1Copy.settings.voter_authentication = {email: true};
             election1Copy.election_id = ID;
@@ -110,6 +110,53 @@ describe("Edit Election", () => {
         })
         test("edits voter ids", async () => {
             // TODO
+        })
+    })
+
+    describe("Stored election is the base", () => {
+        test("ignores state, owner and roles in the request body", async () => {
+            const electionId = await setupInitialElection();
+            const before = await fetchElectionById(electionId);
+            const election1Copy = {
+                ...testInputs.Election1,
+                election_id: electionId,
+                title: 'Edited title',
+                state: 'open',
+                owner_id: 'someone-else',
+                admin_ids: ['someone-else@example.com'],
+                public_archive_id: 'injected',
+            } as Election;
+
+            const response = await th.editElection(election1Copy, testInputs.user1token);
+            expect(response.statusCode).toBe(200);
+
+            const after = await fetchElectionById(electionId);
+            expect(after.title).toEqual('Edited title');
+            expect(after.state).toEqual('draft');
+            expect(after.owner_id).toEqual(before.owner_id);
+            expect(after.admin_ids ?? []).toEqual(before.admin_ids ?? []);
+            expect(after.public_archive_id ?? null).toEqual(before.public_archive_id ?? null);
+            th.testComplete();
+        })
+
+        test("rejects edits once the election is finalized, even if the body says draft", async () => {
+            const electionId = await setupInitialElection();
+            const finalized = await th.finalizeElection(electionId, testInputs.user1token);
+            expect(finalized.statusCode).toBe(200);
+
+            const election1Copy = {
+                ...testInputs.Election1,
+                election_id: electionId,
+                title: 'Edited after finalize',
+                state: 'draft',
+            } as Election;
+            const response = await th.editElection(election1Copy, testInputs.user1token);
+            expect(response.statusCode).toBe(400);
+
+            const after = await fetchElectionById(electionId);
+            expect(after.title).toEqual(testInputs.Election1.title);
+            expect(after.state).not.toEqual('draft');
+            th.testComplete();
         })
     })
 
