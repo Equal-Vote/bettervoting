@@ -129,7 +129,6 @@ const Header = () => {
         {
             text: 'Paper Ballots',
             items: [
-                createWizardNav('E-Voting w/ Paper Receipts', isLandingPage),
                 {
                     text: 'Print Ballots',
                     href: 'https://docs.google.com/presentation/d/1va-XEsUy0VI0jCTAHrQ_f9HNKex3VK9cm7WfF6jhUYM/edit',
