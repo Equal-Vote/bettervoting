@@ -517,8 +517,8 @@ export default {
             }
         ] as Race[],
         settings: {
-            voter_access: 'open',
-            voter_authentication: {email: true},
+            voter_access: 'closed',
+            voter_authentication: {voter_id: true},
             voter_groups_enabled: true,
             voter_groups: ['0', '1'],
         } as ElectionSettings
@@ -572,17 +572,17 @@ export default {
             },
         ] as Race[],
         settings: {
-            voter_access: 'open',
-            voter_authentication: { email: true },
+            voter_access: 'closed',
+            voter_authentication: { voter_id: true },
             voter_groups_enabled: true,
             voter_groups: ['Ward 1'],
         } as ElectionSettings,
     } as Election,
 
-    // Roll for VoterGroupsElection: Alice has No group (''), Bob has Ward 1
+    // Roll for VoterGroupsElection: AliceID has No group (''), BobID has Ward 1
     VoterGroupsRoll: [
-        { email: 'Alice@email.com', precinct: '' },
-        { email: 'Bob@email.com', precinct: 'Ward 1' },
+        { voter_id: 'AliceID', precinct: '' },
+        { voter_id: 'BobID', precinct: 'Ward 1' },
     ],
 
     // Election with voter_groups_enabled off but races with precincts defined.
@@ -660,19 +660,19 @@ export default {
             },
         ] as Race[],
         settings: {
-            voter_access: 'open',
-            voter_authentication: { ip_address: true },
+            voter_access: 'closed',
+            voter_authentication: { voter_id: true },
             voter_groups_enabled: true,
         } as ElectionSettings,
     } as Election,
 
-    EmailWithPrecinctRoll:[
+    IDWithPrecinctRoll:[
         {
-            email:'Alice@email.com',
+            voter_id:'AliceID',
             precinct:'0'
         },
         {
-            email:'Bob@email.com',
+            voter_id:'BobID',
             precinct:'1'
         }
     ],
