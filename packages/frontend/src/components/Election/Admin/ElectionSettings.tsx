@@ -57,7 +57,8 @@ function VoterGroupsDialog({ voterGroups, onSave, disabled, electionId }: {
     const [newName, setNewName] = useState('');
     const [addError, setAddError] = useState('');
     const [voterCounts, setVoterCounts] = useState<Record<string, number>>({});
-    const { t } = useSubstitutedTranslation('election');
+    const { election } = useElection();
+    const { t } = useSubstitutedTranslation(election.settings.term_type);
     const { makeRequest: fetchRolls } = useGetRolls(electionId);
 
     const handleOpen = async () => {
