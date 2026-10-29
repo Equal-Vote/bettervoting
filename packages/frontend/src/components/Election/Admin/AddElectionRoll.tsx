@@ -12,7 +12,7 @@ import { useGetRolls } from "../../../hooks/useAPI";
 import useElection from "../../ElectionContextProvider";
 import useSnackbar from "../../SnackbarContext";
 import useFeatureFlags from "../../FeatureFlagContextProvider";
-import { sharedConfig } from '@equal-vote/star-vote-shared/config';
+import { pricingConfig } from '@equal-vote/star-vote-shared/config';
 import { PrimaryButton, SecondaryButton } from "~/components/styles";
 import useConfirm from '../../ConfirmationDialogProvider';
 import { findRollConflicts, uploadRollsBatched, RollInput } from './rollUploadUtils';
@@ -21,7 +21,7 @@ import { findRollConflicts, uploadRollsBatched, RollInput } from './rollUploadUt
 const AddElectionRoll = ({ onClose, onUploadingChange }: { onClose: () => void, onUploadingChange?: (uploading: boolean) => void }) => {
     const { setSnack } = useSnackbar()
     const flags = useFeatureFlags();
-    const { election } = useElection()
+    const { election, entitlements } = useElection()
     const [voterIDList, setVoterIDList] = useState('')
     const getRolls = useGetRolls(election.election_id)
     const [enableVoterID, setEnableVoterID] = useState(election.settings.voter_authentication.voter_id && election.settings.invitation !== 'email')
@@ -47,6 +47,13 @@ const AddElectionRoll = ({ onClose, onUploadingChange }: { onClose: () => void, 
         autoHideDuration: null
     })
 
+    // The voter limit is hit either by the pre-upload check below or by the server's 402 Payment Required response
+    // (e.g. if the roll grew since we fetched it).
+    // TODO: open the payment/cart modal here once it exists. Until then, explain the limit instead.
+    const onPaymentRequired = (voterLimit: number, requestedVoterCount: number) => {
+        showError(`This election is limited to ${voterLimit} voters, and this upload would bring it to ${requestedVoterCount}.`)
+    }
+
     // Shared by the text field and the csv upload
     // 1. fetch the current roll so we can find conflicts (voters that are already on the list, or that repeat within this upload)
     // 2. confirm with the admin (always for csv files, otherwise only when there are conflicts to skip)
@@ -66,13 +73,11 @@ const AddElectionRoll = ({ onClose, onUploadingChange }: { onClose: () => void, 
                 return
             }
 
-            if (election.settings.voter_access == 'closed') {
-                const overrides = sharedConfig.ELECTION_VOTER_LIMIT_OVERRIDES as { [key: string]: number };
-                const voterLimit = overrides[election.election_id] ?? sharedConfig.FREE_TIER_PRIVATE_VOTER_LIMIT;
-                if (existing.electionRoll.length + uploadCount > voterLimit) {
-                    showError(`Request Denied: this election is limited to ${voterLimit} voters (${existing.electionRoll.length} already added, ${uploadCount} new)`)
-                    return
-                }
+            const voterLimit = entitlements.voter_limit;
+            const requestedVoterCount = existing.electionRoll.length + uploadCount;
+            if (election.settings.voter_access == 'closed' && requestedVoterCount > voterLimit) {
+                onPaymentRequired(voterLimit, requestedVoterCount)
+                return
             }
 
             if (skippedCount > 0 || alwaysConfirm) {
@@ -98,6 +103,10 @@ const AddElectionRoll = ({ onClose, onUploadingChange }: { onClose: () => void, 
                 (uploaded, total) => setProgress({ uploaded, total })
             )
 
+            if (result.aborted && result.errorStatus === 402) {
+                onPaymentRequired(voterLimit, requestedVoterCount)
+                return
+            }
             if (result.aborted) {
                 showError(`Upload stopped after adding ${result.uploaded} of ${uploadCount} voters: ${result.errorMessage}. Refresh the page and re-upload the same list to continue, voters that were already added will be skipped.`)
                 return
@@ -202,10 +211,10 @@ const AddElectionRoll = ({ onClose, onUploadingChange }: { onClose: () => void, 
 
                     { election.settings.voter_access == 'closed' && 
                         <Typography align='center' component="p">
-                        { election.election_id in sharedConfig.ELECTION_VOTER_LIMIT_OVERRIDES?
-                            `* Your election is approved for ${sharedConfig.ELECTION_VOTER_LIMIT_OVERRIDES[election.election_id]} voters`
+                        { entitlements.voter_limit > pricingConfig.FREE_TIER_LIMIT ?
+                            `* Your election is approved for ${entitlements.voter_limit} voters`
                         :
-                            `* Free tier elections are limited to ${sharedConfig.FREE_TIER_PRIVATE_VOTER_LIMIT} voters, email us at elections@equal.vote for an override`
+                            `* Free tier elections are limited to ${entitlements.voter_limit} voters, email us at elections@equal.vote for an override`
                         }
                         </Typography>
                     }
