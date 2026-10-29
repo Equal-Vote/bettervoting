@@ -22,6 +22,8 @@ An issue B is **blocked by** issue A if:
 
 An issue is **unblocked** if it has zero blocking dependencies on other open issues.
 
+Only open issues can block. If an issue's body says it is blocked by an issue that isn't in the list above, that blocker is closed (often already implemented earlier in this run's stack), so it no longer blocks.
+
 For each unblocked issue, assign a branch name using the exact format `sandcastle/issue-{id}` (no slug or other suffix). This must be deterministic so that re-planning the same issue always produces the same branch name and accumulated progress is preserved.
 
 # OUTPUT
