@@ -254,8 +254,15 @@ export default function ElectionSettings() {
                     <ElectionSwitchSetting settingKey="draggable_ballot" />
                     {flags.isSet('PRECINCTS') && (
                         <Box sx={{ py: 0.5 }}>
-                            <ElectionSwitchSetting settingKey="voter_groups_enabled" label={t('election_settings.voter_groups')} />
-                            {election.settings.voter_groups_enabled && (
+                            {/* Voter groups are assigned per row of the voter list, so they
+                                mean nothing on an election anyone with the link can vote in. */}
+                            <ElectionSwitchSetting
+                                settingKey="voter_groups_enabled"
+                                label={t('election_settings.voter_groups')}
+                                disabled={election.state !== 'draft' || browsable}
+                                disabledMessage={browsable ? t('disabled_msgs.voter_groups_when_open') : undefined}
+                            />
+                            {election.settings.voter_groups_enabled && !browsable && (
                                 <VoterGroupsDialog
                                     voterGroups={election.settings.voter_groups ?? []}
                                     disabled={election.state !== 'draft'}
