@@ -1,15 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import {
-    Alert, Box, Button, Checkbox, Dialog, DialogActions, DialogContent,
-    DialogTitle, FormHelperText, IconButton, Stack, Table, TableBody,
-    TableCell, TableHead, TableRow, TextField, Typography,
+    Alert, Box, Checkbox, Table, TableBody, TableCell, TableHead, TableRow, Typography,
 } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
 import useElection from '~/components/ElectionContextProvider';
 import { useGetRolls } from '~/hooks/useAPI';
 import { useSubstitutedTranslation } from '~/components/util';
 import { ElectionRoll } from '@equal-vote/star-vote-shared/domain_model/ElectionRoll';
+import VoterGroupsDialog from './VoterGroupsDialog';
 
 const NO_GROUP = '';
 const warn = 'brand.warningColumn';
@@ -18,95 +15,10 @@ function sees(precincts: string[] | undefined, group: string): boolean {
     return precincts === undefined || precincts.includes(group);
 }
 
-// ---------- Edit Groups Dialog ----------
-
-type EditGroupsDialogProps = {
-    open: boolean;
-    onClose: () => void;
-    groups: string[];
-    counts: Record<string, number>;
-    onAdd: (name: string) => string | null;
-    onDelete: (name: string) => void;
-    t: (key: string, opts?: object) => string;
-};
-
-function EditGroupsDialog({ open, onClose, groups, counts, onAdd, onDelete, t }: EditGroupsDialogProps) {
-    const [newName, setNewName] = useState('');
-    const [error, setError] = useState<string | null>(null);
-
-    const handleAdd = () => {
-        const err = onAdd(newName);
-        setError(err);
-        if (!err) setNewName('');
-    };
-
-    const handleClose = () => {
-        setNewName('');
-        setError(null);
-        onClose();
-    };
-
-    return (
-        <Dialog open={open} onClose={handleClose}>
-            <DialogTitle>{t('voter_group_grid.dialog_title')}</DialogTitle>
-            <DialogContent>
-                {groups.map(g => {
-                    const inUse = (counts[g] ?? 0) > 0;
-                    return (
-                        <Box key={g}>
-                            <Stack direction='row' sx={{ alignItems: 'center', justifyContent: 'space-between', gap: 2, minWidth: 260 }}>
-                                <Box>
-                                    <Typography>{g}</Typography>
-                                    <Typography variant='caption' color='text.secondary'>
-                                        {t('voter_group_grid.voter_count', { count: counts[g] ?? 0 })}
-                                    </Typography>
-                                </Box>
-                                <IconButton
-                                    aria-label={`Delete ${g}`}
-                                    disabled={inUse}
-                                    onClick={() => onDelete(g)}
-                                >
-                                    <DeleteIcon />
-                                </IconButton>
-                            </Stack>
-                            {inUse && (
-                                <FormHelperText sx={{ mt: 0, mb: 1, fontStyle: 'italic', textAlign: 'right' }}>
-                                    {t('voter_group_grid.error_has_voters')}
-                                </FormHelperText>
-                            )}
-                        </Box>
-                    );
-                })}
-                <Stack direction='row' sx={{ gap: 1, alignItems: 'flex-start', mt: 2 }}>
-                    <TextField
-                        size='small'
-                        placeholder={t('voter_group_grid.new_group_placeholder')}
-                        value={newName}
-                        error={!!error}
-                        helperText={error ?? ''}
-                        onChange={e => { setNewName(e.target.value); setError(null); }}
-                        onKeyDown={e => { if (e.key === 'Enter') handleAdd(); }}
-                        sx={{ width: 220 }}
-                    />
-                    <Button variant='outlined' onClick={handleAdd}>
-                        {t('voter_group_grid.add_button')}
-                    </Button>
-                </Stack>
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={handleClose}>{t('voter_group_grid.dialog_done')}</Button>
-            </DialogActions>
-        </Dialog>
-    );
-}
-
-// ---------- Main Grid ----------
-
 export default function VoterGroupGrid() {
     const { election, updateElection } = useElection();
     const { t } = useSubstitutedTranslation(election.settings.term_type);
     const { data, error: rollError, makeRequest } = useGetRolls(election.election_id);
-    const [editOpen, setEditOpen] = useState(false);
 
     useEffect(() => { makeRequest(); }, []);
 
@@ -139,31 +51,28 @@ export default function VoterGroupGrid() {
 
     // --- actions ---
 
-    const addGroup = (raw: string): string | null => {
-        const name = raw.trim();
-        if (!name) return t('voter_group_grid.error_empty_name');
-        if (groups.some(g => g.toLowerCase() === name.toLowerCase()))
-            return t('voter_group_grid.error_duplicate_name');
-
-        updateElection(e => {
-            const newGroups = [...(e.settings.voter_groups ?? []), name];
+    const saveGroups = async (newGroups: string[]) => {
+        const added = newGroups.filter(g => !groups.includes(g));
+        await updateElection(e => {
             e.settings.voter_groups = newGroups;
-            // Tick the new group on every race that has an explicit list
+            // Drop deleted groups from every race, and tick added groups on every
+            // race that has an explicit list so they see the same races as everyone else.
             e.races = e.races.map(r =>
-                r.precincts ? { ...r, precincts: [...r.precincts, name] } : r
+                r.precincts
+                    ? { ...r, precincts: [...r.precincts.filter(x => x === NO_GROUP || newGroups.includes(x)), ...added] }
+                    : r
             );
         });
-        return null;
     };
 
-    const deleteGroup = (g: string) => {
-        updateElection(e => {
-            e.settings.voter_groups = (e.settings.voter_groups ?? []).filter(x => x !== g);
-            e.races = e.races.map(r =>
-                r.precincts ? { ...r, precincts: r.precincts.filter(x => x !== g) } : r
-            );
-        });
-    };
+    const groupsDialog = (
+        <VoterGroupsDialog
+            voterGroups={groups}
+            disabled={election.state !== 'draft'}
+            electionId={election.election_id}
+            onSave={saveGroups}
+        />
+    );
 
     const setCell = (raceId: string, g: string, on: boolean) => {
         updateElection(e => {
@@ -179,28 +88,7 @@ export default function VoterGroupGrid() {
     };
 
     if (groups.length === 0 && !showNoGroup) {
-        return (
-            <Box sx={{ mt: 1 }}>
-                <Button
-                    size='small'
-                    variant='outlined'
-                    startIcon={<EditIcon />}
-                    disabled={election.state !== 'draft'}
-                    onClick={() => setEditOpen(true)}
-                >
-                    {t('voter_group_grid.add_groups')}
-                </Button>
-                <EditGroupsDialog
-                    open={editOpen}
-                    onClose={() => setEditOpen(false)}
-                    groups={groups}
-                    counts={counts}
-                    onAdd={addGroup}
-                    onDelete={deleteGroup}
-                    t={t}
-                />
-            </Box>
-        );
+        return groupsDialog;
     }
 
     return (
@@ -214,15 +102,7 @@ export default function VoterGroupGrid() {
                         <TableHead>
                             <TableRow>
                                 <TableCell sx={{ verticalAlign: 'bottom' }}>
-                                    <Button
-                                        size='small'
-                                        variant='outlined'
-                                        startIcon={<EditIcon />}
-                                        disabled={election.state !== 'draft'}
-                                        onClick={() => setEditOpen(true)}
-                                    >
-                                        {groups.length ? t('voter_group_grid.edit_groups') : t('voter_group_grid.add_groups')}
-                                    </Button>
+                                    {groupsDialog}
                                 </TableCell>
                                 {visibleCols.map(g => (
                                     <TableCell
@@ -283,15 +163,6 @@ export default function VoterGroupGrid() {
                     </Alert>
                 ))}
             </Box>
-            <EditGroupsDialog
-                open={editOpen}
-                onClose={() => setEditOpen(false)}
-                groups={groups}
-                counts={counts}
-                onAdd={addGroup}
-                onDelete={deleteGroup}
-                t={t}
-            />
         </Box>
     );
 }
