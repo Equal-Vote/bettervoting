@@ -1231,17 +1231,8 @@ voter_groups_dialog:
 voter_group_grid:
   instruction: Check the boxes to choose which {{races}} each group can see.
   no_group: No group
-  edit_groups: Edit groups
-  add_groups: Add groups
   voter_count_one: '{{count}} voter'
   voter_count_other: '{{count}} voters'
-  new_group_placeholder: New group name
-  add_button: Add
-  dialog_title: Voter Groups
-  dialog_done: Done
-  error_empty_name: Group names can't be empty
-  error_duplicate_name: A group with this name already exists
-  error_has_voters: Can't delete a group that has voters
   warning_empty_row: >-
     No voter group can see "{{title}}". Check at least one group for this {{race}}.
   warning_empty_col_named: >-
