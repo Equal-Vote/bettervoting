@@ -1,6 +1,7 @@
 import { useState, useRef, KeyboardEvent } from 'react';
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, TextField, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
+import { SECONDARY_INDENT } from './util';
 
 /**
  * Click-to-edit field: displays a value with an edit affordance, opens a
@@ -119,6 +120,7 @@ export default function DialogTextField({
                 <Typography
                     component='div'
                     sx={{
+                        ml: SECONDARY_INDENT,
                         wordBreak: 'break-word',
                         ...(isEmpty ? { color: 'primary.main', fontStyle: 'italic' } : {}),
                     }}
