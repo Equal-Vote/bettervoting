@@ -395,6 +395,10 @@ export const getLocalTimeZoneShort = () => {
   return DateTime.local().offsetNameShort
 }
 
+// Left margin (theme spacing units, 32px) for content that sits under a setting's
+// label — its value, options, or disabled message — so it reads as nested.
+export const SECONDARY_INDENT = 4;
+
 export interface SwitchSettingProps {
   label: string
   toggled: boolean
@@ -437,7 +441,7 @@ export function SwitchSetting({ label, toggled, onToggle, disabled=false, disabl
         sx={{ display: 'flex', justifyContent: 'space-between', width: {xs: '100%', md: 400}, py: 0.5, mx: 0, gap: 2, opacity: disabled ? 0.5 : 1 }}
       />
       {disabled && disabledMessage && (
-        <FormHelperText sx={{ mb: 2, mt: 0, fontStyle: 'italic', textAlign: 'center' }}>
+        <FormHelperText sx={{ mb: 2, mt: 0, ml: SECONDARY_INDENT, fontStyle: 'italic' }}>
           {disabledMessage}
         </FormHelperText>
       )}
