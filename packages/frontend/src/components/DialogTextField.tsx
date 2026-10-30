@@ -143,16 +143,15 @@ export default function DialogTextField({
             fullWidth
             maxWidth='sm'
             aria-label={label}
-            // autoFocus alone races the Dialog's open transition + focus trap, which can
+            // autoFocus races the Dialog's open transition + focus trap, which can
             // leave focus on the dialog instead of the input (needing a second click).
             // Focus the field once the enter transition finishes, and select existing
             // text so the value is ready to overwrite.
-            slotProps={{ transition: { onEntered: () => inputRef.current?.select() } }}
+            slotProps={{ transition: { onEntered: () => { inputRef.current?.focus(); inputRef.current?.select(); } } }}
         >
             <DialogTitle>{label}</DialogTitle>
             <DialogContent>
                 <TextField
-                    autoFocus
                     fullWidth
                     value={draft}
                     type={type}
