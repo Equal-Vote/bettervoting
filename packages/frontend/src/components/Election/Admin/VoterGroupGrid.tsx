@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { Theme } from '@mui/material/styles';
 import {
     Alert, Box, Checkbox, Table, TableBody, TableCell, TableHead, TableRow, Typography,
 } from '@mui/material';
@@ -10,6 +11,18 @@ import VoterGroupsDialog from './VoterGroupsDialog';
 
 const NO_GROUP = '';
 const warn = 'brand.warningColumn';
+
+// Pin the race titles so you can tell which row you're on while scrolling
+// sideways through many groups. The background is opaque so ticks scroll under
+// it; on a warned row the translucent warning tint is layered over it.
+const stickyCol = (rowWarn = false) => (theme: Theme) => ({
+    position: 'sticky',
+    left: 0,
+    zIndex: 1,
+    background: rowWarn
+        ? `linear-gradient(${theme.palette.brand.warningColumn}, ${theme.palette.brand.warningColumn}), ${theme.palette.background.paper}`
+        : theme.palette.background.paper,
+} as const);
 
 function sees(precincts: string[] | undefined, group: string): boolean {
     return precincts === undefined || precincts.includes(group);
@@ -92,8 +105,11 @@ export default function VoterGroupGrid() {
     }
 
     return (
-        <Box sx={{ mt: 1 }}>
-            <Box sx={{ width: 'fit-content', maxWidth: '100%' }}>
+        // A single minmax(0, max-content) column hugs the table when there's room
+        // but never forces the page wider than the screen, so a table with many
+        // groups scrolls sideways (e.g. on a phone) instead of overflowing.
+        <Box sx={{ mt: 1, display: 'grid', gridTemplateColumns: 'minmax(0, max-content)' }}>
+            <Box sx={{ minWidth: 0 }}>
                 <Typography variant='body2' color='text.secondary' sx={{ mb: 1 }}>
                     {t('voter_group_grid.instruction')}
                 </Typography>
@@ -101,7 +117,7 @@ export default function VoterGroupGrid() {
                     <Table size='small' sx={{ '& td, & th': { px: 1 } }}>
                         <TableHead>
                             <TableRow>
-                                <TableCell sx={{ verticalAlign: 'bottom' }}>
+                                <TableCell sx={[{ verticalAlign: 'bottom' }, stickyCol()]}>
                                     {groupsDialog}
                                 </TableCell>
                                 {visibleCols.map(g => (
@@ -129,7 +145,7 @@ export default function VoterGroupGrid() {
                                         sx={{ bgcolor: rowWarn ? warn : undefined }}
                                         aria-label={rowWarn ? `Warning: no group can see ${r.title}` : undefined}
                                     >
-                                        <TableCell>{r.title}</TableCell>
+                                        <TableCell sx={[{ minWidth: 120 }, stickyCol(rowWarn)]}>{r.title}</TableCell>
                                         {visibleCols.map(g => (
                                             <TableCell
                                                 key={g}
