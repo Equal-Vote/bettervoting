@@ -395,9 +395,10 @@ export const getLocalTimeZoneShort = () => {
   return DateTime.local().offsetNameShort
 }
 
-// Left margin (theme spacing units, 32px) for content that sits under a setting's
-// label — its value, options, or disabled message — so it reads as nested.
-export const SECONDARY_INDENT = 4;
+// Left margin (theme spacing units: 8px on phones, 32px otherwise) for content that
+// sits under a setting's label — its value, options, or disabled message — so it
+// reads as nested. Smaller on phones so nested content keeps most of the width.
+export const SECONDARY_INDENT = { xs: 1, sm: 4 };
 
 export interface SwitchSettingProps {
   label: string
