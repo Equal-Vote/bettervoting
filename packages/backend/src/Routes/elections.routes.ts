@@ -23,6 +23,7 @@ import {
     setOpenState,
     setPublicResults,
     sendEmailsController,
+    queryElections,
     claimElection,
     setWriteInResults,
 } from '../Controllers/Election';
@@ -243,6 +244,58 @@ electionsRouter.delete('/Election/:id', asyncHandler(deleteElection))
  *  */
  electionsRouter.post('/Elections/', asyncHandler(createElectionController))
  
+/** 
+ * @swagger
+ * /QueryElections:
+ *   get:
+ *     summary: Query Elections based on time range (sys-admin only; currently disabled, always returns 401)
+ *     tags: [Elections]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               start_time:
+ *                 type: date
+ *               end_time:
+ *                 type: date
+ *     responses:
+ *       200:
+ *         description: List of elections
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 open_elections:
+ *                   oneOf:
+ *                     - type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Election'
+ *                     - type: null
+ *                 closed_elections:
+ *                   oneOf:
+ *                     - type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Election'
+ *                     - type: null
+ *                     - type: undefined
+ *                 popular_elections:
+ *                   oneOf:
+ *                     - type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Election'
+ *                     - type: null
+ *                 vote_counts:
+ *                   oneOf:
+ *                     - type: array
+ *                       items:
+ *                         type: object
+ *                     - type: null
+  */
+ electionsRouter.post('/QueryElections', asyncHandler(queryElections))
  
  /**
  *

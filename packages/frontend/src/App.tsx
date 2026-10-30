@@ -87,6 +87,7 @@ const App = () => {
               <Route path='/style_guide' element={<StyleGuide/>} />
                 <Route path='/style-guide' element={<Redirect href='/style_guide'/>} /> 
                 <Route path='/styleguide' element={<Redirect href='/style_guide'/>} /> 
+              {/* /query_tool (components/Elections/QueryTool) is disabled until it can sit behind sysadmin auth, see #976 */}
             </Routes>
           </Box>
           <Footer />

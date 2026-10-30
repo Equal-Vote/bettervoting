@@ -64,6 +64,10 @@ export default function makeApp() {
     app.use('/API/Docs', swaggerUi.serve, swaggerUi.setup(swagger));
     app.post('/API/Token', asyncHandler(getUserToken));
 
+    // The query tool page is disabled until it can sit behind sysadmin auth.
+    // https://github.com/Equal-Vote/bettervoting/issues/976
+    app.get(/^\/query[-_]?tool\/?$/i, (_req, res) => res.status(404).end());
+
     // NOTE: I've removed express.static because it doesn't allow me to inject meta tags
     // https://stackoverflow.com/questions/51120214/how-to-modify-static-file-content-with-express-static
     app.get('*', (req, res) => {

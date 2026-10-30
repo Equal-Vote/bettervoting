@@ -6,6 +6,8 @@ import { Response, NextFunction } from 'express';
 import { Election, removeHiddenFields } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { Race, VotingMethod, MethodTextKey, methodValueToTextKey } from '@equal-vote/star-vote-shared/domain_model/Race';
 import { sharedConfig } from '@equal-vote/star-vote-shared/config';
+import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
+import { expectPermission } from '../controllerUtils';
 
 
 const ElectionsModel = ServiceLocator.electionsDb();
@@ -64,6 +66,23 @@ const getElections = async (req: IElectionRequest, res: Response, _next: NextFun
         elections_as_submitted_voter,
         public_archive_elections: await ElectionsModel.getPublicArchiveElections(req),
         open_elections: await ElectionsModel.getOpenElections(req)
+    });
+}
+
+const queryElections = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
+    Logger.info(req, `queryElections`);
+
+    // Disabled: nobody can hold this permission until sysadmin auth exists for routes
+    // without an election id (req.user_auth isn't set here). Once it does, pass
+    // req.user_auth.roles. https://github.com/Equal-Vote/bettervoting/issues/976
+    expectPermission([], permissions.canQueryElections);
+
+    /////////// ELECTIONS WE OWN ////////////////
+    res.json({
+        open_elections: await ElectionsModel.getElectionsCreatedInRange(req, req.body.start_time, req.body.end_time),
+        closed_elections: [],
+        popular_elections: [],
+        vote_counts: await ElectionsModel.getBallotCountsForAllElections(req),
     });
 }
 
@@ -154,4 +173,5 @@ export {
     getElections,
     innerGetGlobalElectionStats,
     getGlobalElectionStats,
+    queryElections,
 }
