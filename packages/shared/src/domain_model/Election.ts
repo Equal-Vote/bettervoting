@@ -173,9 +173,10 @@ export function removeHiddenFields(obj: Election): void {
 }
 
 export function getPrecinctFilteredElection(obj:Election, electionRoll: ElectionRoll|null):Election {
+  const shouldFilter = obj.state === 'open' && voterGroupsActive(obj);
   return {
     ...obj,
-    races: (obj.state === 'open')?
+    races: shouldFilter ?
       getApprovedRaces(obj, electionRoll?.precinct)
     :
       obj.races
