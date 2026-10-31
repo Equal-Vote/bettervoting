@@ -194,7 +194,6 @@ export function getApprovedRaces(election:Election, voterPrecinct:string|null|un
   return election.races.filter((race:Race) => {
     // If precincts aren't defined, open to all voters
     if(!race.precincts) return true;
-    // voterPrecinct != null allows '' (No group) to match races with '' in their list
     if(race.precincts.includes(voterPrecinct ?? '')) return true;
     return false;
   })
