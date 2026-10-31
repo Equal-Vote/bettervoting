@@ -182,14 +182,19 @@ export function getPrecinctFilteredElection(obj:Election, electionRoll: Election
   }
 }
 
+// Voter groups are assigned on voter roll entries, so they only take effect when the
+// election uses a voter roll; an election anyone with the link can vote in ignores them.
+export function voterGroupsActive(election:Election): boolean {
+  return election.settings.voter_groups_enabled === true && election.settings.voter_access !== 'open';
+}
+
 // Where should this belong..
 export function getApprovedRaces(election:Election, voterPrecinct:string|null|undefined): Race[] {
+  if (!voterGroupsActive(election)) return election.races;
   return election.races.filter((race:Race) => {
     // If precincts aren't defined, open to all voters
     if(!race.precincts) return true;
-    // If race precinct list contains voter's precinct
-    if(voterPrecinct && race.precincts.includes(voterPrecinct)) return true;
-    // If race has precincts, but voter precinct doesn't match
+    if(race.precincts.includes(voterPrecinct ?? '')) return true;
     return false;
   })
 }

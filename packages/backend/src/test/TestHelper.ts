@@ -155,6 +155,19 @@ export class TestHelper {
         return this.electionResponse(res);
     }
 
+    async fetchElectionByIdWithVoterId(
+        electionId: Uid,
+        userToken: string | null,
+        voterId: string | null
+    ): Promise<ElectionResponse> {
+        let req = request(this.expressApp)
+            .get(`/API/Election/${electionId}`)
+            .set("Accept", "application/json");
+
+        req = this.addUserTokenVoterIdCookie(req, userToken, voterId, null, null);
+        return this.electionResponse(await req);
+    }
+
     async submitBallot(
         electionId: Uid,
         ballot: Ballot | NewBallot,
