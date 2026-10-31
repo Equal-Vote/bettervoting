@@ -1,20 +1,17 @@
 import Grid from "@mui/material/Grid";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormControl from "@mui/material/FormControl";
-import { FormGroup, Radio, RadioGroup, Box, capitalize, Typography, ToggleButton, ToggleButtonGroup, Button, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, TextField, FormHelperText } from "@mui/material";
-import EditIcon from '@mui/icons-material/Edit';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { FormGroup, Radio, RadioGroup, Box, capitalize, Typography, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { ElectionSettings as IElectionSettings, TermType } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
 import { Tip } from '~/components/styles';
-import { useSubstitutedTranslation, SwitchSetting } from '~/components/util';
+import { useSubstitutedTranslation, SwitchSetting, SECONDARY_INDENT } from '~/components/util';
 import useElection from '~/components/ElectionContextProvider';
 import useOptimisticToggle from "~/hooks/useOptimisticToggle";
 import { AdminPageNavigation } from '../Sidebar';
-import { useGetRolls, useSetPublicResults } from '~/hooks/useAPI';
+import { useSetPublicResults } from '~/hooks/useAPI';
 import DialogTextField from '~/components/DialogTextField';
 import useFeatureFlags from '~/components/FeatureFlagContextProvider';
-import { useState } from 'react';
+import VoterGroupGrid from './VoterGroupGrid';
 
 type ElectionSwitchSettingProps = {
     settingKey: keyof IElectionSettings;
@@ -44,133 +41,6 @@ function ElectionSwitchSetting({ settingKey, disabled, disabledMessage, onToggle
         disabled={isDisabled}
         disabledMessage={disabledMessage}
     />;
-}
-
-function VoterGroupsDialog({ voterGroups, onSave, disabled, electionId }: {
-    voterGroups: string[];
-    onSave: (groups: string[]) => Promise<void>;
-    disabled: boolean;
-    electionId: string;
-}) {
-    const [open, setOpen] = useState(false);
-    const [groups, setGroups] = useState<string[]>(voterGroups);
-    const [newName, setNewName] = useState('');
-    const [addError, setAddError] = useState('');
-    const [voterCounts, setVoterCounts] = useState<Record<string, number>>({});
-    const { election } = useElection();
-    const { t } = useSubstitutedTranslation(election.settings.term_type);
-    const { makeRequest: fetchRolls } = useGetRolls(electionId);
-
-    const handleOpen = async () => {
-        setGroups(voterGroups);
-        setNewName('');
-        setAddError('');
-        setOpen(true);
-        const result = await fetchRolls();
-        if (result) {
-            const counts: Record<string, number> = {};
-            for (const roll of result.electionRoll) {
-                if (roll.precinct) {
-                    counts[roll.precinct] = (counts[roll.precinct] ?? 0) + 1;
-                }
-            }
-            setVoterCounts(counts);
-        }
-    };
-
-    const handleAdd = () => {
-        const trimmed = newName.trim();
-        if (!trimmed) {
-            setAddError(t('voter_groups_dialog.empty_name'));
-            return;
-        }
-        if (groups.some(g => g.toLowerCase() === trimmed.toLowerCase())) {
-            setAddError(t('voter_groups_dialog.duplicate_name'));
-            return;
-        }
-        setGroups([...groups, trimmed]);
-        setNewName('');
-        setAddError('');
-    };
-
-    const handleDelete = (index: number) => {
-        setGroups(groups.filter((_, i) => i !== index));
-    };
-
-    const handleSave = async () => {
-        await onSave(groups);
-        setOpen(false);
-    };
-
-    const hasGroups = voterGroups.length > 0;
-    const buttonLabel = hasGroups ? t('voter_groups_dialog.edit_button') : t('voter_groups_dialog.add_button');
-
-    return (
-        <>
-            <Button
-                variant="outlined"
-                size="small"
-                startIcon={hasGroups ? <EditIcon /> : <AddIcon />}
-                onClick={handleOpen}
-                disabled={disabled}
-                sx={{ mt: 1 }}
-            >
-                {buttonLabel}
-            </Button>
-            <Dialog open={open} onClose={() => setOpen(false)} maxWidth="xs" fullWidth>
-                <DialogTitle>{t('voter_groups_dialog.title')}</DialogTitle>
-                <DialogContent>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
-                        {groups.map((group, i) => {
-                            const count = voterCounts[group] ?? 0;
-                            const deleteDisabled = count > 0;
-                            return (
-                                <Box key={i} sx={{ display: 'flex', flexDirection: 'column' }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                        <Typography>
-                                            {t('voter_groups_dialog.voter_count', { group, count })}
-                                        </Typography>
-                                        <IconButton
-                                            size="small"
-                                            aria-label={t('voter_groups_dialog.delete_tooltip')}
-                                            onClick={() => handleDelete(i)}
-                                            disabled={deleteDisabled}
-                                        >
-                                            <DeleteIcon fontSize="small" />
-                                        </IconButton>
-                                    </Box>
-                                    {deleteDisabled && (
-                                        <Typography variant="caption" sx={{ fontStyle: 'italic', color: 'text.disabled' }}>
-                                            {t('voter_groups_dialog.cant_delete')}
-                                        </Typography>
-                                    )}
-                                </Box>
-                            );
-                        })}
-                        <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-                            <TextField
-                                size="small"
-                                placeholder={t('voter_groups_dialog.add_group_label')}
-                                value={newName}
-                                onChange={e => { setNewName(e.target.value); setAddError(''); }}
-                                onKeyDown={e => { if (e.key === 'Enter') handleAdd(); }}
-                                error={!!addError}
-                                sx={{ flexGrow: 1 }}
-                            />
-                            <Button variant="contained" size="small" onClick={handleAdd}>
-                                <AddIcon />
-                            </Button>
-                        </Box>
-                        {addError && <FormHelperText error>{addError}</FormHelperText>}
-                    </Box>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setOpen(false)}>{t('keyword.cancel')}</Button>
-                    <Button variant="contained" onClick={handleSave}>{t('keyword.save')}</Button>
-                </DialogActions>
-            </Dialog>
-        </>
-    );
 }
 
 export default function ElectionSettings() {
@@ -233,7 +103,7 @@ export default function ElectionSettings() {
                             {t('wizard.term_question')}
                             <Tip name='polls_vs_elections'/>
                         </Typography>
-                        <RadioGroup row>
+                        <RadioGroup row sx={{ ml: SECONDARY_INDENT }}>
                             {['poll', 'election'].map( (type, i) =>
                                 <FormControlLabel
                                     key={i}
@@ -252,28 +122,6 @@ export default function ElectionSettings() {
                     <ElectionSwitchSetting settingKey="ballot_updates" />
                     <ElectionSwitchSetting settingKey="require_instruction_confirmation" />
                     <ElectionSwitchSetting settingKey="draggable_ballot" />
-                    {flags.isSet('PRECINCTS') && (
-                        <Box sx={{ py: 0.5 }}>
-                            {/* Voter groups are assigned per row of the voter list, so they
-                                mean nothing on an election anyone with the link can vote in. */}
-                            <ElectionSwitchSetting
-                                settingKey="voter_groups_enabled"
-                                label={t('election_settings.voter_groups')}
-                                disabled={election.state !== 'draft' || browsable}
-                                disabledMessage={browsable ? t('disabled_msgs.voter_groups_when_open') : undefined}
-                            />
-                            {election.settings.voter_groups_enabled && !browsable && (
-                                <VoterGroupsDialog
-                                    voterGroups={election.settings.voter_groups ?? []}
-                                    disabled={election.state !== 'draft'}
-                                    electionId={election.election_id}
-                                    onSave={async (groups) => {
-                                        await updateElection(e => { e.settings.voter_groups = groups; });
-                                    }}
-                                />
-                            )}
-                        </Box>
-                    )}
                     {/* Note: this can't use ElectionSwitchSetting because we need to use the results from makePublicResultsRequest as the source of truth */}
                     <SwitchSetting
                         label={election.state === 'closed' || election.state === 'archived' ? t('election_settings.public_results') : t('election_settings.preliminary_results')}
@@ -290,8 +138,9 @@ export default function ElectionSettings() {
                         disabledMessage={browsable ? undefined : t('disabled_msgs.is_public_when_voter_list')}
                     />
                     {/* max_rankings is set for every election (defaulting to default_rankings),
-                        so this is always shown rather than gated behind a toggle. Kept last so the
-                        settings read as radios, then toggles, then the rank-limit selector. */}
+                        so this is always shown rather than gated behind a toggle. Kept after the toggles so the
+                        settings read as radios, then toggles, then the rank-limit selector. Voter
+                        groups go last because the grid under them can get large. */}
                     <Box sx={{ py: 1 }}>
                         <Typography component='div' sx={{ fontWeight: 500, mb: 1 }}>
                             {t('tips.max_rankings.title')}
@@ -310,7 +159,7 @@ export default function ElectionSettings() {
                             sx={{
                                 // Indent only the buttons (not the label above) so they read
                                 // as nested under the heading.
-                                ml: { xs: 0, sm: 4 },
+                                ml: SECONDARY_INDENT,
                                 flexWrap: 'wrap',
                                 gap: 1,
                                 // Detach the grouped border-radius/border-collapse so buttons
@@ -345,11 +194,24 @@ export default function ElectionSettings() {
                             ))}
                         </ToggleButtonGroup>
                     </Box>
+                    {flags.isSet('PRECINCTS') && (
+                        <Box sx={{ py: 0.5 }}>
+                            {/* Voter groups are assigned per row of the voter list, so they
+                                mean nothing on an election anyone with the link can vote in. */}
+                            <ElectionSwitchSetting
+                                settingKey="voter_groups_enabled"
+                                label={t('election_settings.voter_groups')}
+                                disabled={election.state !== 'draft' || browsable}
+                                disabledMessage={browsable ? t('disabled_msgs.voter_groups_when_open') : undefined}
+                            />
+                            {election.settings.voter_groups_enabled && !browsable && (
+                                <Box sx={{ ml: SECONDARY_INDENT }}><VoterGroupGrid /></Box>
+                            )}
+                        </Box>
+                    )}
                 </FormGroup>
             </FormControl>
         </Grid>
-
-
 
         <AdminPageNavigation />
     </>
