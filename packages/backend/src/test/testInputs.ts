@@ -62,7 +62,7 @@ export default {
     } as Election,
     
     // Type 2: closed + voter_id + invitation=email (bv-managed email list).
-    // Voters are pre-listed by email; finalize/sendInvites assigns voter_ids and emails them.
+    // Voters are pre-listed by email; finalize/sendEmails assigns voter_ids and emails them.
     EmailRollElection : {
         election_id: "0",
         title: 'Election 1',
