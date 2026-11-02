@@ -1,4 +1,4 @@
-import { IRequest } from "../IRequest"
+import { IRequest, IUser } from "../IRequest"
 import { Election, electionValidation } from "@equal-vote/star-vote-shared/domain_model/Election";
 import Logger from "../Services/Logging/Logger"
 import { BadRequest, Unauthorized } from "@curveball/http-errors";
@@ -23,6 +23,24 @@ export async function expectValidElectionFromRequest(req:IRequest):Promise<Elect
         throw new BadRequest("Invalid Election " + validationErr);
     }
     return inputElection;
+}
+
+// A "permanent" owner is a signed-in (keycloak or custom-key) user. AccountService sets
+// typ: 'TEMP_ID' when the user is only identified by the unverified temp_id cookie; those
+// ids lose admin access after TEMPORARY_ACCESS_HOURS, and an election created with no user
+// at all has no owner.
+export function hasPermanentOwner(user: IUser | undefined): boolean {
+    return !!user?.sub && user.typ !== 'TEMP_ID';
+}
+
+// Write-ins only count once an election admin approves them (see setWriteInResultsController),
+// so an election nobody will ever be able to administer must not enable them: every write-in
+// vote would be silently dropped.
+export function expectWriteInsAllowed(election: Election, user: IUser | undefined): void {
+    const hasWriteIns = (election.races ?? []).some((race) => race.enable_write_in);
+    if (hasWriteIns && !hasPermanentOwner(user)) {
+        throw new BadRequest("Write-in candidates require a signed-in election owner");
+    }
 }
 
 export function expectPermission(roles:roles[],permission:permission): void {
