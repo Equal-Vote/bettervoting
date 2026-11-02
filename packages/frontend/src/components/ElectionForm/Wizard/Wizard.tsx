@@ -7,6 +7,7 @@ import { setCookie, useCookie } from '~/hooks/useCookie';
 import { NewElection } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { setVoterAuthenticationMode } from '@equal-vote/star-vote-shared/domain_model/VoterAuthenticationMode';
 import { makeUniqueIDSync, makeID, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
+import { sharedConfig } from '@equal-vote/star-vote-shared/config';
 
 import { hashString, TransitionBox, useSubstitutedTranslation } from '../../util.js';
 import useAuthSession from '../../AuthSessionContextProvider.js';
@@ -152,7 +153,14 @@ const Wizard = () => {
             title: editedRace.title,
             description: editedRace.description,
         }
-        const confirmed = await confirm({...t('wizard.publish_confirm'), dismissable: true});
+        // Signed-out users get a caption under each choice explaining what the backend
+        // actually does with an election that has no account behind it
+        // (see docs/contributions/developers/8_election_ownership.md).
+        const signedOutHints = authSession.isLoggedIn() ? {} : {
+            cancelHint: t('wizard.publish_confirm_signed_out.cancel_hint', { hours: sharedConfig.TEMPORARY_ACCESS_HOURS }),
+            submitHint: t('wizard.publish_confirm_signed_out.submit_hint'),
+        };
+        const confirmed = await confirm({...t('wizard.publish_confirm'), ...signedOutHints, dismissable: true});
         if (confirmed === null) {
             return; // dialog dismissed — stay on wizard with inputs intact
         }

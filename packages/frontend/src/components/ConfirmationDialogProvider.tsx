@@ -5,7 +5,7 @@ import {
     useRef,
     useState,
 } from 'react';
-import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton } from '@mui/material'
+import { Box, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, Typography } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close';
 import { PrimaryButton, SecondaryButton } from './styles';
 import { useSubstitutedTranslation } from './util';
@@ -25,6 +25,9 @@ interface ConfirmData {
     message: string
     cancel?: string
     submit?: string
+    // Optional one-line captions rendered under the cancel / submit buttons
+    cancelHint?: React.ReactNode
+    submitHint?: React.ReactNode
     dismissable?: boolean
 }
 
@@ -33,11 +36,12 @@ type confirmContext = (data: ConfirmData) => Promise<boolean | null>
 const ConfirmDialog = createContext<confirmContext>(null);
 
 export function ConfirmDialogProvider({ children }:  { children: React.ReactNode }) {
-    const [state, setState] = useState({ isOpen: false, title: '', message: '', submit: null, cancel: null, dismissable: false });
+    const [state, setState] = useState({ isOpen: false, title: '', message: '', submit: null, cancel: null, cancelHint: null, submitHint: null, dismissable: false });
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const fn = useRef((choice: boolean | null) => {  });
 
     const {t} = useSubstitutedTranslation();
+    const hasHints = Boolean(state.cancelHint || state.submitHint);
 
     const confirm = useCallback(
         (data: ConfirmData) => {
@@ -45,7 +49,7 @@ export function ConfirmDialogProvider({ children }:  { children: React.ReactNode
                 setState({ ...state, ...data, isOpen: true, dismissable: data.dismissable ?? false });
                 fn.current = (choice) => {
                     resolve(choice);
-                    setState({ isOpen: false, title: '', message: '', submit: null, cancel: null, dismissable: false });
+                    setState({ isOpen: false, title: '', message: '', submit: null, cancel: null, cancelHint: null, submitHint: null, dismissable: false });
                 };
             });
         },
@@ -75,22 +79,29 @@ export function ConfirmDialogProvider({ children }:  { children: React.ReactNode
                 <DialogContent>
                     <DialogContentText>{state.message}</DialogContentText>
                 </DialogContent>
-                <DialogActions>
-                    <SecondaryButton
-                        type='button'
-                        variant="outlined"
-                        // width="100%"
-                        fullWidth={false}
-                        onClick={() => fn.current(false)}>
-                        {state['cancel'] ?? t('keyword.cancel')}
-                    </SecondaryButton>
-                    <PrimaryButton
-                        type='button'
-                        variant="contained"
-                        fullWidth={false}
-                        onClick={() => fn.current(true)}>
-                        {state['submit'] ?? t('keyword.submit')}
-                    </PrimaryButton>
+                <DialogActions sx={{ alignItems: 'flex-start' }}>
+                    {/* With hints, give each action half the row so the captions have room; without, keep the buttons right-aligned as before */}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: hasHints ? 1 : undefined }}>
+                        <SecondaryButton
+                            type='button'
+                            variant="outlined"
+                            // width="100%"
+                            fullWidth={false}
+                            onClick={() => fn.current(false)}>
+                            {state['cancel'] ?? t('keyword.cancel')}
+                        </SecondaryButton>
+                        {state.cancelHint && <Typography variant='caption' sx={{ mt: 1, textAlign: 'center' }}>{state.cancelHint}</Typography>}
+                    </Box>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: hasHints ? 1 : undefined }}>
+                        <PrimaryButton
+                            type='button'
+                            variant="contained"
+                            fullWidth={false}
+                            onClick={() => fn.current(true)}>
+                            {state['submit'] ?? t('keyword.submit')}
+                        </PrimaryButton>
+                        {state.submitHint && <Typography variant='caption' sx={{ mt: 1, textAlign: 'center' }}>{state.submitHint}</Typography>}
+                    </Box>
                 </DialogActions>
             </Dialog>
         </ConfirmDialog.Provider>
