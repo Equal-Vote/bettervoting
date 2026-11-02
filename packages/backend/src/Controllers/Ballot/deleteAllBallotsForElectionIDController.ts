@@ -9,18 +9,18 @@ import { Response, NextFunction } from 'express';
 const BallotModel = ServiceLocator.ballotsDb();
 
 const innerDeleteAllBallotsForElectionID = async (req: IElectionRequest) => {
-    var electionId = req.election.election_id;
+    const electionId = req.election.election_id;
 
     Logger.debug(req, "deleteAllBallotsForElectionID : " + electionId);
 
-    let apiAvailable = req.election.state === 'draft' || req.election.public_archive_id !== null;
+    expectPermission(req.user_auth.roles, permissions.canDeleteAllBallots)
+
+    const apiAvailable = req.election.state === 'draft' || req.election.public_archive_id != null;
 
     if (!apiAvailable) {
         Logger.info(req, `Election status, state=${req.election.state}, public_archive_id=${req.election.public_archive_id}`);
         throw new BadRequest("Ballots can only be reset while in draft mode or if it's a public_archive election")
     }
-
-    expectPermission(req.user_auth.roles, permissions.canDeleteAllBallots)
 
     const success = await BallotModel.deleteAllBallotsForElectionID (String(electionId), req);
     if (!success) {
@@ -33,7 +33,8 @@ const innerDeleteAllBallotsForElectionID = async (req: IElectionRequest) => {
 }
 
 const deleteAllBallotsForElectionID = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
-    res.json({ success: innerDeleteAllBallotsForElectionID(req) })
+    const success = await innerDeleteAllBallotsForElectionID(req);
+    res.json({ success })
 }
 
 export {

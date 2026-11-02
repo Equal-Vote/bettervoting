@@ -257,6 +257,18 @@ export class TestHelper {
         return r.send();
     }
 
+    async deleteAllBallots(
+        electionId: Uid,
+        userToken: string | null,
+    ): Promise<SupertestResponse> {
+        let r = request(this.expressApp)
+            .delete(`/API/Election/${electionId}/ballots`)
+            .set("Accept", "application/json");
+
+        r = this.addUserTokenVoterIdCookie(r, userToken, null, null, null);
+        return r.send();
+    }
+
     async fetchElectionRoll(
         electionId: Uid,
         userToken: string | null,
