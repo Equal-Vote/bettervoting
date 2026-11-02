@@ -9,21 +9,26 @@ import useElection from "../../ElectionContextProvider";
 import { SecondaryButton } from "~/components/styles";
 import ShareButton from "../ShareButton";
 import { useSubstitutedTranslation } from "../../util";
+import { ballotIdsHidden } from "@equal-vote/star-vote-shared/domain_model/ElectionSettings";
 
 
 const VerifyBallot = () => {
-    const { election } = useElection()
+    const { election, permissions: userPermissions } = useElection()
     const { ballot_id } = useParams();
     const { t } = useSubstitutedTranslation(election.settings.term_type);
 
+    // Mirrors the server: when ids are hidden only election staff may view a ballot.
+    const hidden = ballotIdsHidden(election.settings) && !userPermissions?.includes('canViewBallots');
+
     const { data, isPending, makeRequest: fetchBallot } = useGetBallot(election.election_id, ballot_id);
     useEffect(() => {
-        if (ballot_id) {
+        if (ballot_id && !hidden) {
             fetchBallot();
         }
-    }, [ballot_id]);
+    }, [ballot_id, hidden]);
     return (
         <Container>
+            {hidden && <Typography align='center' sx={{ my: 4 }}>{t('ballot_submitted.ids_hidden')}</Typography>}
             {isPending && <div> Loading Data... </div>}
             {data?.ballot &&
                 <>
