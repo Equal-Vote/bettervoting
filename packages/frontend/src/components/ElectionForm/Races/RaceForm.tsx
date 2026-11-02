@@ -13,14 +13,20 @@ import useElection from '~/components/ElectionContextProvider';
 import { PrimaryButton, FileDropBox, Tip, UtilityButton } from '~/components/styles';
 import RaceDialog from './RaceDialog';
 import { Candidate } from '@equal-vote/star-vote-shared/domain_model/Candidate';
+import { Race } from '@equal-vote/star-vote-shared/domain_model/Race';
 import { getImage, postImage } from '../Candidates/PhotoUtil';
 
 interface RaceFormProps {
     raceIndex?: number,
     styling: 'Wizard' | 'Dialog',
-    onConfirm?: Function,
-    onCancel?: Function,
+    onConfirm?: (race: Race) => unknown,
+    onCancel?: () => void,
     dialogOpen?: boolean,
+}
+
+// The slice of useEditRace() that the inner form sections need.
+type InnerRaceFormProps = Pick<ReturnType<typeof useEditRace>, 'setErrors' | 'errors' | 'editedRace' | 'applyRaceUpdate'> & {
+    open?: boolean,
 }
 
 export const RACE_FORM_GAP = 0;
@@ -63,7 +69,7 @@ export default function RaceForm({
     )
 }
 
-const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=true}) => {
+const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=true}: InnerRaceFormProps) => {
     const flags = useFeatureFlags();
     const { election, t } = useElection()
     const isDisabled = election.state !== 'draft';
@@ -182,7 +188,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
         for(let i = 0; i < e.dataTransfer.files.length; i++){ 
             const f = e.dataTransfer.files[i];
 
-            const parts = f.name.split('\.');
+            const parts = f.name.split('.');
             parts.pop(); // drop extension
             names.push(parts.join('.'))
 
@@ -261,7 +267,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
                     candidate_id: NOTA_ID,
                     candidate_name: 'None of the Above',
                 }, newCandidateIndex)}} sx={{ml: 1}}>
-                    + Add "None of the Above"
+                    + Add &quot;None of the Above&quot;
                 </UtilityButton>
                 <Tip name='nota'/>
             </Box>}
@@ -276,7 +282,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
     </Box>
 }
 
-const TitleAndDescription = ({setErrors, errors, editedRace, applyRaceUpdate, open}) => {
+const TitleAndDescription = ({setErrors, errors, editedRace, applyRaceUpdate, open}: InnerRaceFormProps) => {
     const [showDescription, setShowDescription] = useState(!!editedRace.description);
     const { election, t } = useElection()
     const isDisabled = election.state !== 'draft';
