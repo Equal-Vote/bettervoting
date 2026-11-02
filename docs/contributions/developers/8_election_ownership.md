@@ -322,7 +322,7 @@ the browser that created the election, while it still holds both the
 `temp_id` and `<id>_claim_key` session cookies, and `hoursSinceCreate <
 10`. "Draft only" refers to `editElection`'s `state === 'draft'` check
 (`editElectionController.ts:29-32`); the `finalize` endpoint also requires
-`draft` (`finalizeElectionController.ts:18`).
+`draft` (`finalizeElectionController.ts:21`).
 
 | | **Signed in — Customize in editor** | **Signed in — Publish Now** | **Not signed in — Customize in editor** | **Not signed in — Publish Now** |
 |---|---|---|---|---|
@@ -332,10 +332,11 @@ the browser that created the election, while it still holds both the
 | Who gets `owner` role | the account, forever (`elections.controllers.ts:101`) | nobody from the UI (see section 2/4 for the no-`temp_id`-cookie corner case) | that browser, during the temp window (`:91-97`) | nobody from the UI |
 | Can be edited (`canEditElection`) | yes, draft only | no — no owner, and not draft | yes, draft only, during the temp window | no |
 | For how long | unlimited | n/a | 10 h from `create_date` (`SharedConfig.ts:18`) | n/a |
-| Can be finalized / opened / closed (`canEditElectionState`, `permissions.ts:25`) | yes | no — closes only via `end_time`, which Publish Now does not set | **backend: yes** during the temp window (the owner role is granted in full); **UI: no** — `PublishAndShare.tsx:74` disables Finalize when `!authSession.isLoggedIn()` and shows "create a free account" instead. The restriction is frontend-only; a temp owner can `POST /finalize` directly. | no — stays `open` indefinitely |
+| Can be finalized (`canEditElectionState`, `permissions.ts:25`) | yes | no — not draft | **no** — `finalizeElectionController.ts:19` calls `expectPermanentUser`, which throws `401 Create an account to finalize this election` when `req.user.typ === 'TEMP_ID'` (`controllerUtils.ts:37-41`). The UI says the same thing: `PublishAndShare.tsx:74` disables Finalize when `!authSession.isLoggedIn()` and shows "create a free account". The temp owner's draft can only be finalized after it is claimed (section 4). | no — not draft |
+| Can be opened / closed (`setOpenState`, `canEditElectionState`) | yes | no — closes only via `end_time`, which Publish Now does not set | **backend: yes** during the temp window (the owner role is granted in full; only `finalize` checks for a permanent user). **UI: no** — a temp owner's election never leaves `draft`, so the admin open/close controls are moot, but a direct `POST /setOpenState` would succeed. | no — stays `open` indefinitely |
 | Write-ins can be approved (`canProcessWriteIns`, `permissions.ts:32`) | yes | no (issue #1434 shape) | yes, during the temp window | no |
-| Can be archived (`archiveElectionController.ts:16`, `canEditElectionState`) | yes | no | yes, during the temp window | no |
-| Can be deleted (`canDeleteElection`) | yes | no | yes, during the temp window | no |
+| Can be archived (`archiveElectionController.ts:16`, `canEditElectionState`) | yes | no | yes, during the temp window (backend; not surfaced for temp owners in the UI) | no |
+| Can be deleted (`canDeleteElection`) | yes | no | yes, during the temp window (backend; not surfaced for temp owners in the UI) | no |
 | Can be claimed by an account (section 4) | n/a (already owned) | no from the UI | yes, during the temp window, via the warning banner → login → `/manage` | no from the UI |
 | After 10 h | unchanged | unchanged | **no one** has any role; the election is frozen in whatever state it was in | unchanged |
 
@@ -352,10 +353,12 @@ After `TEMPORARY_ACCESS_HOURS` (10) from `create_date`:
 
 - `tempUserAuth` is permanently `false` (`elections.controllers.ts:96`), so
   the temp user drops to **no roles**. Every owner-gated endpoint —
-  `edit`, `finalize`, `archive`, `setOpenState`, `delete`, `roles`,
+  `edit`, `archive`, `setOpenState`, `delete`, `roles`,
   `setWriteInResults`, `sendInvites`, roll editing — returns
   `401 Does not have permission` (`controllerUtils.ts:28-32`,
-  `auth.controllers.ts:21-31`).
+  `auth.controllers.ts:21-31`). `finalize` was already refused during the
+  window (`expectPermanentUser`, section 6); after it, the permission check
+  fails first.
 - The election can no longer be **claimed**, because `claimElection` first
   requires the `owner` role (`claimElectionController.ts:16`).
 - `TemporaryAccessWarning` stops rendering (`TemporaryAccessWarning.tsx:19`),
