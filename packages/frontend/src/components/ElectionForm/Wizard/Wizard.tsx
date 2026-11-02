@@ -153,14 +153,17 @@ const Wizard = () => {
             title: editedRace.title,
             description: editedRace.description,
         }
-        // Signed-out users get a caption under each choice explaining what the backend
-        // actually does with an election that has no account behind it
-        // (see docs/contributions/developers/8_election_ownership.md).
-        const signedOutHints = authSession.isLoggedIn() ? {} : {
+        // Captions under each choice explaining what the backend actually does
+        // (see docs/contributions/developers/8_election_ownership.md). Publish Now
+        // creates an ownerless election whether or not the user is signed in, so
+        // signed-in users get a hint there too.
+        const hints = authSession.isLoggedIn() ? {
+            submitHint: t('wizard.publish_confirm_signed_in.submit_hint'),
+        } : {
             cancelHint: t('wizard.publish_confirm_signed_out.cancel_hint', { hours: sharedConfig.TEMPORARY_ACCESS_HOURS }),
             submitHint: t('wizard.publish_confirm_signed_out.submit_hint'),
         };
-        const confirmed = await confirm({...t('wizard.publish_confirm'), ...signedOutHints, dismissable: true});
+        const confirmed = await confirm({...t('wizard.publish_confirm'), ...hints, dismissable: true});
         if (confirmed === null) {
             return; // dialog dismissed — stay on wizard with inputs intact
         }
