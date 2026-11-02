@@ -26,7 +26,7 @@ If updates are allowed, you can change your vote as many times as you like while
 
 ## Did my vote actually count?
 
-**If the election used email invitations, you'll get a receipt** confirming your ballot was counted. It also gives you the option to view the ballot you submitted, so you can check it's what you meant.
+**If the election used email invitations, you'll get a receipt** confirming your ballot was counted. If the organiser chose to share ballot IDs with voters, it also gives you the option to view the ballot you submitted, so you can check it's what you meant. Most elections don't, so that nobody can be pressured into proving how they voted.
 
 **If you voted through a shared link without email**, there's no receipt to send — the confirmation screen you saw immediately after submitting is your confirmation.
 

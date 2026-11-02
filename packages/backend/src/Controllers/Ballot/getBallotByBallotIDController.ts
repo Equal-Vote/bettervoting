@@ -3,14 +3,22 @@ import Logger from "../../Services/Logging/Logger";
 import { BadRequest } from "@curveball/http-errors";
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
+import { expectPermission } from "../controllerUtils";
+import { permissions } from "@equal-vote/star-vote-shared/domain_model/permissions";
+import { ballotIdsHidden } from "@equal-vote/star-vote-shared/domain_model/ElectionSettings";
 
 const BallotModel = ServiceLocator.ballotsDb();
 
 const getBallotByBallotID = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
-    var electionId = req.election.election_id;
-    var ballot_id = req.params.ballot_id
+    const electionId = req.election.election_id;
+    const ballot_id = req.params.ballot_id
     if (!ballot_id) {
         throw new BadRequest('No Ballot ID provided')
+    }
+    // Voters aren't told their ballot id in this election, so a ballot id in
+    // the wild is a leak, not a receipt: only election staff may look one up.
+    if (ballotIdsHidden(req.election.settings)) {
+        expectPermission(req.user_auth.roles, permissions.canViewBallots)
     }
     Logger.debug(req, "getBallotByBallotID: " + ballot_id);
 
