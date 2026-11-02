@@ -332,7 +332,7 @@ the browser that created the election, while it still holds both the
 | Who gets `owner` role | the account, forever (`elections.controllers.ts:101`) | nobody from the UI (see section 2/4 for the no-`temp_id`-cookie corner case) | that browser, during the temp window (`:91-97`) | nobody from the UI |
 | Can be edited (`canEditElection`) | yes, draft only | no — no owner, and not draft | yes, draft only, during the temp window | no |
 | For how long | unlimited | n/a | 10 h from `create_date` (`SharedConfig.ts:18`) | n/a |
-| Can be finalized / opened / closed (`canEditElectionState`, `permissions.ts:25`) | yes | no — closes only via `end_time`, which Publish Now does not set | yes, during the temp window | no — stays `open` indefinitely |
+| Can be finalized / opened / closed (`canEditElectionState`, `permissions.ts:25`) | yes | no — closes only via `end_time`, which Publish Now does not set | **backend: yes** during the temp window (the owner role is granted in full); **UI: no** — `PublishAndShare.tsx:74` disables Finalize when `!authSession.isLoggedIn()` and shows "create a free account" instead. The restriction is frontend-only; a temp owner can `POST /finalize` directly. | no — stays `open` indefinitely |
 | Write-ins can be approved (`canProcessWriteIns`, `permissions.ts:32`) | yes | no (issue #1434 shape) | yes, during the temp window | no |
 | Can be archived (`archiveElectionController.ts:16`, `canEditElectionState`) | yes | no | yes, during the temp window | no |
 | Can be deleted (`canDeleteElection`) | yes | no | yes, during the temp window | no |

@@ -946,7 +946,7 @@ wizard:
   # Captions under the publish_confirm buttons. They describe what the backend does
   # today — see docs/contributions/developers/8_election_ownership.md
   publish_confirm_signed_out:
-      cancel_hint: Without an account you can edit, publish and manage this {{election}} for {{hours}} hours from this browser. Sign in before then to keep it.
+      cancel_hint: Without an account you can edit this {{election}} for {{hours}} hours from this browser, but you'll need to sign in to finalize it. Sign in before then to keep it.
       submit_hint: Published without an account, this {{election}} goes live immediately and can't be edited, closed, or managed later — even if you sign in.
   # Publish Now makes an ownerless election even for a signed-in user (Wizard.tsx posts owner_id null).
   publish_confirm_signed_in:
