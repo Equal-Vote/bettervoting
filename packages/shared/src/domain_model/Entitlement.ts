@@ -14,3 +14,7 @@ export interface Entitlement {
     source: EntitlementSource;
     created_date: string;
 }
+
+// What an election is entitled to, per type: the free-tier default plus the SUM
+// of its entitlement rows. Every type is always present.
+export type ElectionEntitlements = Record<EntitlementType, number>;

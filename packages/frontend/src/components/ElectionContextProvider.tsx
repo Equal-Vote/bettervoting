@@ -4,6 +4,7 @@ import { Election, NewElection } from '@equal-vote/star-vote-shared/domain_model
 import { useEditElection, useGetElection } from '../hooks/useAPI';
 import { Election as IElection } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { VoterAuth } from '@equal-vote/star-vote-shared/domain_model/VoterAuth';
+import { ElectionEntitlements } from '@equal-vote/star-vote-shared/domain_model/Entitlement';
 import structuredClone from '@ungap/structured-clone';
 import { useSubstitutedTranslation } from './util';
 
@@ -12,10 +13,13 @@ export interface IElectionContext {
     election: Election | NewElection;
     precinctFilteredElection: Election;
     voterAuth: VoterAuth;
+    // undefined for a local (unsaved) election, which has no entitlements yet
+    entitlements: ElectionEntitlements | undefined;
     refreshElection: (data?: undefined) => Promise<false | {
         election: Election;
         precinctFilteredElection: Election;
         voterAuth: VoterAuth;
+        entitlements: ElectionEntitlements;
     }>;
     updateElection: (updateFunc: (election: IElection) => void) => Promise<false | {
         election: Election;
@@ -37,6 +41,7 @@ export const ElectionContext = createContext<IElectionContext>({
     election: null,
     precinctFilteredElection: null,
     voterAuth: null,
+    entitlements: undefined,
     refreshElection: () => Promise.resolve(false),
     updateElection: () => Promise.resolve(false),
     enqueueWrite: () => Promise.resolve(undefined as never),
@@ -127,6 +132,7 @@ export const ElectionContextProvider = ({ id, localElection=undefined, setLocalE
             election: id == undefined ? localElection : data?.election,
             precinctFilteredElection: data?.precinctFilteredElection,
             voterAuth: data?.voterAuth,
+            entitlements: data?.entitlements,
             refreshElection: fetchData,
             updateElection: applyElectionUpdate,
             enqueueWrite,

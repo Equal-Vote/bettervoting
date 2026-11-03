@@ -1,5 +1,4 @@
 export const sharedConfig = {
-    FREE_TIER_PRIVATE_VOTER_LIMIT: 100,
     ELECTION_VOTER_LIMIT_OVERRIDES: {
         'ee948c52-f79e-4449-acb1-1296debc0884': 10,
         'h33qt8': 1000, // Brianna Johns, Gathering for Open Science Hardware
