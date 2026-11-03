@@ -12,6 +12,7 @@ import SupportBlurb from '../SupportBlurb';
 import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { AdminPageNavigation } from '../Sidebar';
 import { SecondaryButton } from '../../styles';
+import { electionHasAuditLog } from '@equal-vote/star-vote-shared/domain_model/AuditLog';
 
 const ViewElectionResults = () => {
     const { election } = useElection();
@@ -108,7 +109,7 @@ const ViewElectionResults = () => {
                   </Box>
                 )}
 
-                {election.state !== 'draft' && (
+                {election.state !== 'draft' && electionHasAuditLog(election) && (
                   <Box
                     sx={{
                       width: "100%",

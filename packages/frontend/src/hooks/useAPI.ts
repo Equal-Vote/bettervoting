@@ -20,13 +20,18 @@ export const useElectionExists = (electionID: string | undefined) => {
     return useFetch<undefined, { exists: boolean | string}>(`/API/Election/${electionID}/exists`, 'get')
 }
 
+// Admin-initiated events may carry the optional explanation the admin typed
+// when taking the action (see useAuditConfirm); absent when none was given.
 export type HistoryEvent =
-    | { type: 'state_change'; timestamp: string; from: string | null; to: string }
-    | { type: 'preliminary_results_change'; timestamp: string; to: boolean }
+    | { type: 'state_change'; timestamp: string; from: string | null; to: string; audit_note?: string }
+    | { type: 'preliminary_results_change'; timestamp: string; to: boolean; audit_note?: string }
     | { type: 'ballots_milestone'; timestamp: string; count: number }
-    | { type: 'upload_ballots'; timestamp: string; count: number }
+    | { type: 'upload_ballots'; timestamp: string; count: number; audit_note?: string }
     | { type: 'ballots_edited_milestone'; timestamp: string; count: number }
-    | { type: 'voter_id_revealed'; timestamp: string };
+    | { type: 'voter_id_revealed'; timestamp: string; audit_note?: string };
+
+// Optional explanation for an action recorded in the public audit log
+export type AuditNoteBody = { audit_note?: string }
 
 export const useGetElectionHistory = (electionID: string | undefined) => {
     return useFetch<undefined, {
@@ -112,7 +117,7 @@ export const useLookupVoter = (election_id: string) => {
 }
 
 export const useRevealVoterId = (election_id: string) => {
-    return useFetch<{ email: string }, { voter_id: string, email: string, warning: string }>(`/API/Election/${election_id}/rolls/revealVoterId`, 'post')
+    return useFetch<{ email: string } & AuditNoteBody, { voter_id: string, email: string, warning: string }>(`/API/Election/${election_id}/rolls/revealVoterId`, 'post')
 }
 
 export const useGetRoll = (electionId: string, voterId) => {
@@ -139,7 +144,7 @@ export const useClearRolls = (election_id: string) => {
 }
 
 export const useSetPublicResults = (election_id: string) => {
-    return useFetch<{ public_results: boolean, expected_update_date: string }, { election: Election }>(`/API/Election/${election_id}/setPublicResults`, 'post')
+    return useFetch<{ public_results: boolean, expected_update_date: string } & AuditNoteBody, { election: Election }>(`/API/Election/${election_id}/setPublicResults`, 'post')
 }
 
 export const useDeleteAllBallots = (election_id: string) => {
@@ -147,7 +152,7 @@ export const useDeleteAllBallots = (election_id: string) => {
 }
 
 export const useFinalizeElection = (election_id: string) => {
-    return useFetch<{ expected_update_date: string }, { election: Election }>(`/API/Election/${election_id}/finalize`, 'post')
+    return useFetch<{ expected_update_date: string } & AuditNoteBody, { election: Election }>(`/API/Election/${election_id}/finalize`, 'post')
 }
 
 export const useClaimElection = (election_id: string) => {
@@ -155,11 +160,11 @@ export const useClaimElection = (election_id: string) => {
 }
 
 export const useArchiveEleciton = (election_id: string) => {
-    return useFetch<{ expected_update_date: string }, { election: Election }>(`/API/Election/${election_id}/archive`, 'post')
+    return useFetch<{ expected_update_date: string } & AuditNoteBody, { election: Election }>(`/API/Election/${election_id}/archive`, 'post')
 }
 
 export const useSetOpenState = (election_id: string) => {
-    return useFetch<{ open: boolean, expected_update_date: string }, { election: Election }>(`/API/Election/${election_id}/setOpenState`, 'post')
+    return useFetch<{ open: boolean, expected_update_date: string } & AuditNoteBody, { election: Election }>(`/API/Election/${election_id}/setOpenState`, 'post')
 }
 
 export const useApproveRoll = (election_id: string) => {
@@ -199,7 +204,7 @@ export const usePostBallot = (election_id: string | undefined) => {
 }
 
 export const useUploadBallots = (election_id: string | undefined) => {
-    return useFetch<{ ballots: NewBallotWithVoterID[] }, {responses: BallotSubmitStatus[]}>(`/API/Election/${election_id}/uploadBallots`, 'post')
+    return useFetch<{ ballots: NewBallotWithVoterID[] } & AuditNoteBody, {responses: BallotSubmitStatus[]}>(`/API/Election/${election_id}/uploadBallots`, 'post')
 }
 
 export const useGetWriteIns = (election_id: string) => {

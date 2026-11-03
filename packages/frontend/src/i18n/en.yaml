@@ -23,6 +23,7 @@ election_history:
   loading: Loading audit log…
   empty: No events recorded yet.
   not_finalized: This election has not been finalized yet, so no audit log is available.
+  not_available: This {{election}} was created before public audit logs were introduced, so no audit log is available for it.
   # Column headers and event chip labels live in EnhancedTable's head cell pool,
   # which keys its group filters and chip colours off plain English strings.
   desc:
@@ -34,6 +35,27 @@ election_history:
     upload_ballots: 'An admin uploaded {{count}} ballot(s)'
     edits_milestone: 'Ballot edits reached {{count}}'
     voter_revealed: An admin used the break-glass tool to reveal a voter ID
+
+# Confirmation shown before any admin action that is recorded in the public audit log
+audit_confirm:
+  notice: This action will be recorded in the {{election}}'s audit log, which anyone can view. You can add an optional explanation; it will be shown publicly next to the entry.
+  note_label: Explanation (optional)
+  note_placeholder: e.g. Board approved the final candidate list on Monday
+  open:
+    title: Open {{capital_election}}?
+  close:
+    title: Close {{capital_election}}?
+  preliminary_on:
+    title: Publish Preliminary Results?
+  preliminary_off:
+    title: Hide Preliminary Results?
+  reveal_voter_id:
+    title: Obtain Unique Voting URL
+    message: |
+      This action reveals the unique voting link for the voter. This should only be done if the voter is unable to acquire their voting link through their email inbox.
+
+      This action will create a permanent audit log entry and record who performed this action. Would you like to proceed?
+    submit: Confirm
 
 # Ballot (ex. https://bettervoting.com/j87vqp/vote)
 ballot:
