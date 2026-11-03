@@ -2,46 +2,61 @@ import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { Uid } from '@equal-vote/star-vote-shared/domain_model/Uid';
 import { ILoggingContext } from '../../Services/Logging/ILogger';
 import Logger from '../../Services/Logging/Logger';
-import { IElectionStore } from '../IElectionStore';
+import { ElectionVersionRow, IElectionStore } from '../IElectionStore';
 import { Conflict } from '@curveball/http-errors';
 
 export default class ElectionsDB implements IElectionStore {
 
     elections: Election[] = [];
+    // Superseded (head=false) versions, oldest first. The real store keeps every
+    // version in one table; the mock keeps heads in `elections` so the rest of
+    // the mock can stay index-based, and parks the rest here for the audit log.
+    priorVersions: Election[] = [];
 
     constructor() {
     }
 
     createElection(election: Election, ctx:ILoggingContext, _reason:string): Promise<Election>{
         Logger.debug(ctx, "Election Mock Creates Election: ", election);
-        var copy = JSON.parse(JSON.stringify(election));
+        const copy = JSON.parse(JSON.stringify(election));
         copy.update_date = Date.now().toString();
         this.elections.push(copy);
-        var res = JSON.parse(JSON.stringify(copy));
+        const res = JSON.parse(JSON.stringify(copy));
         return Promise.resolve(res);
     }
 
     
-    updateElection(election: Election, ctx:ILoggingContext, reason:string, expected_update_date: string): Promise<Election> {
-        var foundIndex = this.elections.findIndex(dbElection => dbElection.election_id == election.election_id);
+    updateElection(election: Election, ctx:ILoggingContext, reason:string, expected_update_date: string, audit_note: string | null = null): Promise<Election> {
+        const foundIndex = this.elections.findIndex(dbElection => dbElection.election_id == election.election_id);
         if(foundIndex == -1){
             throw new Error("Election Not Found")
         }
         if (this.elections[foundIndex].update_date !== expected_update_date) {
             throw new Conflict("Concurrent write detected, please try again")
         }
-        var copy = JSON.parse(JSON.stringify(election));
+        const copy = JSON.parse(JSON.stringify(election));
         copy.update_date = Date.now().toString();
+        copy.audit_note = audit_note;
+        this.priorVersions.push({ ...this.elections[foundIndex], head: false });
         this.elections[foundIndex] = copy;
-        var res = JSON.parse(JSON.stringify(copy));
+        const res = JSON.parse(JSON.stringify(copy));
         return Promise.resolve(res);
     }
 
+    getElectionVersions(election_id: Uid, _ctx: ILoggingContext): Promise<ElectionVersionRow[]> {
+        return Promise.resolve(
+            [...this.priorVersions, ...this.elections]
+                .filter(election => election.election_id == election_id)
+                .sort((a, b) => Number(a.update_date) - Number(b.update_date))
+                .map(({ state, settings, update_date, audit_note }) => JSON.parse(JSON.stringify({ state, settings, update_date, audit_note })))
+        );
+    }
+
     getElections(id: string, _email: string, _ctx:ILoggingContext): Promise<Election[] | null> {
-        var elections:Array<Election> = JSON.parse(JSON.stringify(this.elections));
+        let elections:Array<Election> = JSON.parse(JSON.stringify(this.elections));
         if(id != ""){
-            for(var i = 0; i < id.length; i++){
-                var [key, value] = id[i].split(':');
+            for(let i = 0; i < id.length; i++){
+                const [key, value] = id[i].split(':');
                 elections = elections.filter(election => (election as unknown as Record<string, unknown>)[key]==String(value))
             }
         }

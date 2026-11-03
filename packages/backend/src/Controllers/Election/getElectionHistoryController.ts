@@ -1,10 +1,15 @@
 import ServiceLocator from '../../ServiceLocator';
 import Logger from '../../Services/Logging/Logger';
-import { NotFound } from '@curveball/http-errors';
+import { Forbidden, NotFound } from '@curveball/http-errors';
 import { IElectionRequest } from '../../IRequest';
 import { Response, NextFunction } from 'express';
 import { ElectionRollAction } from '@equal-vote/star-vote-shared/domain_model/ElectionRoll';
 import { BallotAction } from '@equal-vote/star-vote-shared/domain_model/Ballot';
+import { AUDIT_LOG_CUTOFF_DATE, electionHasAuditLog } from '@equal-vote/star-vote-shared/domain_model/AuditLog';
+
+const ElectionsModel = ServiceLocator.electionsDb();
+const BallotModel = ServiceLocator.ballotsDb();
+const ElectionRollModel = ServiceLocator.electionRollDb();
 
 const className = 'election.Controllers';
 
@@ -43,19 +48,27 @@ type MilestoneType = 'ballots_milestone' | 'ballots_edited_milestone';
 
 // Spelled out one member per type (rather than reusing MilestoneType for a
 // single member) so the union stays discriminated on `type`.
+//
+// Admin-initiated events (every type except the voter milestones) may carry
+// the optional explanation the admin typed when taking the action. It is
+// omitted, not null, when there was none.
 export type HistoryEvent =
-    | { type: 'state_change'; timestamp: string; from: string | null; to: string }
-    | { type: 'preliminary_results_change'; timestamp: string; to: boolean }
+    | { type: 'state_change'; timestamp: string; from: string | null; to: string; audit_note?: string }
+    | { type: 'preliminary_results_change'; timestamp: string; to: boolean; audit_note?: string }
     | { type: 'ballots_milestone'; timestamp: string; count: number }
     | { type: 'ballots_edited_milestone'; timestamp: string; count: number }
-    | { type: 'upload_ballots'; timestamp: string; count: number }
-    | { type: 'voter_id_revealed'; timestamp: string };
+    | { type: 'upload_ballots'; timestamp: string; count: number; audit_note?: string }
+    | { type: 'voter_id_revealed'; timestamp: string; audit_note?: string };
 
 // The row shapes buildHistory needs — a structural subset of what the
 // electionDB / ballotDB / electionRollDB selects return.
-export type ElectionHistoryRow = { state: string; settings: { public_results?: boolean } | null; update_date: Date | string };
+export type ElectionHistoryRow = { state: string; settings: { public_results?: boolean } | null; update_date: Date | string; audit_note?: string | null };
 export type BallotHistoryRow = { ballot_id: string; update_date: Date | string; history?: BallotAction[] | null };
 export type RollHistoryRow = { history?: ElectionRollAction[] | null };
+
+// Spread onto an event so an absent note stays absent rather than `undefined`.
+const withNote = (note: string | null | undefined): { audit_note?: string } =>
+    note ? { audit_note: note } : {};
 
 const msToIso = (ms: number) => new Date(ms).toISOString();
 
@@ -77,16 +90,20 @@ const emitMilestones = (
             return { event: { type, timestamp: truncateToDayIso(rawMs), count: m }, rawMs };
         });
 
-// Collapse a sorted list of admin-submit timestamps into upload batches, so a
-// single "upload 400 ballots" action reads as one event rather than 400.
-const clusterUploads = (sortedMs: number[]): { startMs: number; count: number }[] => {
-    const batches: { startMs: number; count: number }[] = [];
-    for (const ms of sortedMs) {
+// Collapse a sorted list of admin-submit actions into upload batches, so a
+// single "upload 400 ballots" action reads as one event rather than 400. The
+// batch's note is the first one any ballot in it carries (one request stamps
+// the same note on every ballot it submits).
+type UploadBatch = { startMs: number; count: number; audit_note?: string };
+const clusterUploads = (sorted: { ms: number; audit_note?: string }[]): UploadBatch[] => {
+    const batches: UploadBatch[] = [];
+    for (const { ms, audit_note } of sorted) {
         const current = batches[batches.length - 1];
         if (current !== undefined && ms - current.startMs <= UPLOAD_BATCH_GAP_MS) {
             current.count++;
+            if (current.audit_note === undefined && audit_note) current.audit_note = audit_note;
         } else {
-            batches.push({ startMs: ms, count: 1 });
+            batches.push({ startMs: ms, count: 1, ...withNote(audit_note) });
         }
     }
     return batches;
@@ -123,14 +140,14 @@ export const buildHistory = (
         const rowMs = parseUpdateMs(row.update_date);
         if (row.state !== prevState) {
             pairs.push({
-                event: { type: 'state_change', timestamp: msToIso(rowMs), from: prevState, to: row.state },
+                event: { type: 'state_change', timestamp: msToIso(rowMs), from: prevState, to: row.state, ...withNote(row.audit_note) },
                 rawMs: rowMs,
             });
         }
         const publicResults = row.settings?.public_results ?? false;
         if (prevPublicResults !== null && publicResults !== prevPublicResults) {
             pairs.push({
-                event: { type: 'preliminary_results_change', timestamp: msToIso(rowMs), to: publicResults },
+                event: { type: 'preliminary_results_change', timestamp: msToIso(rowMs), to: publicResults, ...withNote(row.audit_note) },
                 rawMs: rowMs,
             });
         }
@@ -142,7 +159,7 @@ export const buildHistory = (
     // recorded in their history arrays. Grouping by ballot_id (rather than
     // trusting row order) is what makes the first-cast vs edit split reliable.
     const versionsByBallot = new Map<string, number[]>();
-    const adminSubmitTimes: number[] = [];
+    const adminSubmits: { ms: number; audit_note?: string }[] = [];
     const seenAdminSubmit = new Set<string>();
     for (const row of ballotRows) {
         const rowMs = parseUpdateMs(row.update_date);
@@ -160,7 +177,7 @@ export const buildHistory = (
                 const key = `${row.ballot_id}:${action.timestamp}`;
                 if (seenAdminSubmit.has(key)) continue;
                 seenAdminSubmit.add(key);
-                adminSubmitTimes.push(action.timestamp);
+                adminSubmits.push({ ms: action.timestamp, ...withNote(action.audit_note) });
             }
         }
     }
@@ -176,7 +193,7 @@ export const buildHistory = (
 
     castTimes.sort((a, b) => a - b);
     editTimes.sort((a, b) => a - b);
-    adminSubmitTimes.sort((a, b) => a - b);
+    adminSubmits.sort((a, b) => a.ms - b.ms);
 
     pairs.push(...emitMilestones('ballots_milestone', COUNT_MILESTONES, castTimes));
     pairs.push(...emitMilestones('ballots_edited_milestone', EDIT_MILESTONES, editTimes));
@@ -185,9 +202,9 @@ export const buildHistory = (
     // property of the admin's action, not of any individual voter — but the
     // timestamp is still truncated to the day since it bounds when the
     // uploaded ballots entered the count.
-    for (const batch of clusterUploads(adminSubmitTimes)) {
+    for (const batch of clusterUploads(adminSubmits)) {
         pairs.push({
-            event: { type: 'upload_ballots', timestamp: truncateToDayIso(batch.startMs), count: batch.count },
+            event: { type: 'upload_ballots', timestamp: truncateToDayIso(batch.startMs), count: batch.count, ...withNote(batch.audit_note) },
             rawMs: batch.startMs,
         });
     }
@@ -199,7 +216,7 @@ export const buildHistory = (
         for (const action of history) {
             if (action?.action_type === REVEAL_ACTION_TYPE && typeof action.timestamp === 'number') {
                 pairs.push({
-                    event: { type: 'voter_id_revealed', timestamp: truncateToDayIso(action.timestamp) },
+                    event: { type: 'voter_id_revealed', timestamp: truncateToDayIso(action.timestamp), ...withNote(action.audit_note) },
                     rawMs: action.timestamp,
                 });
             }
@@ -221,28 +238,20 @@ const getElectionHistory = async (req: IElectionRequest, res: Response, _next: N
     const electionId = req.election.election_id;
     Logger.info(req, `${className}.getElectionHistory ${electionId}`);
 
-    const db = ServiceLocator.database();
+    // Enforced here, not just hidden in the UI: the log for an election set up
+    // before anyone was told it would be public is never served.
+    if (!electionHasAuditLog(req.election)) {
+        throw new Forbidden(`Audit logs are only available for elections created on or after ${AUDIT_LOG_CUTOFF_DATE.slice(0, 10)}`);
+    }
 
     // Need full version histories (head=false rows included) for elections and
     // ballots. For rolls we only need head=true: each update inserts a fresh row
     // carrying the full appended history array, so the head row contains every
     // reveal action ever recorded.
     const [electionRows, ballotRows, rollHeadRows] = await Promise.all([
-        db.selectFrom('electionDB')
-            .where('election_id', '=', electionId)
-            .select(['state', 'settings', 'update_date'])
-            .orderBy('update_date', 'asc')
-            .execute(),
-        db.selectFrom('ballotDB')
-            .where('election_id', '=', electionId)
-            .select(['ballot_id', 'update_date', 'history'])
-            .orderBy('update_date', 'asc')
-            .execute(),
-        db.selectFrom('electionRollDB')
-            .where('election_id', '=', electionId)
-            .where('head', '=', true)
-            .select(['history'])
-            .execute(),
+        ElectionsModel.getElectionVersions(electionId, req),
+        BallotModel.getBallotVersionsByElectionID(electionId, req),
+        ElectionRollModel.getHeadHistoriesByElectionID(electionId, req),
     ]);
 
     const { finalizedAtMs, events } = buildHistory(

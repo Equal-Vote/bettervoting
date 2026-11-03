@@ -1,7 +1,7 @@
 import { ILoggingContext } from '../Services/Logging/ILogger';
 import Logger from '../Services/Logging/Logger';
 import { logSafeHash } from '../Services/Logging/logSafeHash';
-import { IElectionRollStore } from './IElectionRollStore';
+import { IElectionRollStore, RollHistoryRow } from './IElectionRollStore';
 import { Kysely, Transaction } from 'kysely'
 import { Database } from './Database';
 import { ElectionRoll, NewElectionRoll } from '@equal-vote/star-vote-shared/domain_model/ElectionRoll';
@@ -18,7 +18,7 @@ export default class ElectionRollDB implements IElectionRollStore {
     }
 
     async init(): Promise<ElectionRollDB> {
-        var appInitContext = Logger.createContext("appInit");
+        const appInitContext = Logger.createContext("appInit");
         Logger.debug(appInitContext, "-> ElectionRollDB.init");
         return this;
     }
@@ -48,6 +48,19 @@ export default class ElectionRollDB implements IElectionRollStore {
             .values(sanitized)
             .returningAll()
             .execute();
+    }
+
+    // Head rows only: each update inserts a fresh row carrying the full appended
+    // history array, so the head row holds every action ever recorded.
+    getHeadHistoriesByElectionID(election_id: string, ctx: ILoggingContext): Promise<RollHistoryRow[]> {
+        Logger.debug(ctx, `${tableName}.getHeadHistoriesByElectionID ${election_id}`);
+
+        return this._postgresClient
+            .selectFrom(tableName)
+            .where('election_id', '=', election_id)
+            .where('head', '=', true)
+            .select(['history'])
+            .execute()
     }
 
     getRollsByElectionID(election_id: string, ctx: ILoggingContext): Promise<ElectionRoll[] | null> {
@@ -93,7 +106,7 @@ export default class ElectionRollDB implements IElectionRollStore {
             .selectAll()
             .executeTakeFirst()
             .then((row) => row ?? null)
-            .catch(((reason: any) => {
+            .catch(((reason: unknown) => {
                 Logger.debug(ctx, reason);
                 return null
             }))
@@ -241,9 +254,9 @@ export default class ElectionRollDB implements IElectionRollStore {
 
     delete(election_roll: ElectionRoll, ctx: ILoggingContext, _reason: string): Promise<boolean> {
         Logger.debug(ctx, `${tableName}.delete`);
-        var sqlString = `DELETE FROM ${this._tableName} WHERE election_id = $1 AND voter_id=$2`;
+        const sqlString = `DELETE FROM ${this._tableName} WHERE election_id = $1 AND voter_id=$2`;
         Logger.debug(ctx, sqlString);
-        let deletedRoll = this._postgresClient
+        const deletedRoll = this._postgresClient
             .deleteFrom(tableName)
             .where('election_id', '=', election_roll.election_id)
             .where('voter_id', '=', election_roll.voter_id)

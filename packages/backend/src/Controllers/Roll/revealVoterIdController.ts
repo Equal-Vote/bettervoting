@@ -6,6 +6,7 @@ import { BadRequest } from "@curveball/http-errors";
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
 import { logSafeHash } from "../../Services/Logging/logSafeHash";
+import { parseAuditNote } from "../auditNote";
 
 const ElectionRollModel = ServiceLocator.electionRollDb();
 
@@ -29,6 +30,9 @@ const revealVoterIdByEmail = async (req: IElectionRequest, res: Response, _next:
     if (!email || typeof email !== 'string') {
         throw new BadRequest('Email address is required');
     }
+    // Optional explanation, shown next to the reveal in the public audit log.
+    // Parsed before the lookup so a bad note is rejected without touching the roll.
+    const auditNote = parseAuditNote(req);
 
     // Reveal endpoint is only available when voter IDs are redacted
     const redactVoterIds = req.election.settings?.invitation === 'email';
@@ -59,6 +63,7 @@ const revealVoterIdByEmail = async (req: IElectionRequest, res: Response, _next:
         action_type: '🚨 VOTER_ID_REVEALED',
         actor: actor,
         timestamp: Date.now(),
+        ...(auditNote ? { audit_note: auditNote } : {}),
     });
 
     await ElectionRollModel.update(rollEntry, req, '🚨 VOTER_ID_REVEALED');

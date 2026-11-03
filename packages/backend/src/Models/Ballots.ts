@@ -3,7 +3,7 @@ import { Uid } from '@equal-vote/star-vote-shared/domain_model/Uid';
 import { ILoggingContext } from '../Services/Logging/ILogger';
 import Logger from '../Services/Logging/Logger';
 import { logSafeHash } from '../Services/Logging/logSafeHash';
-import { BallotVotes, IBallotStore } from './IBallotStore';
+import { BallotVersionRow, BallotVotes, IBallotStore } from './IBallotStore';
 import { Kysely, sql, Transaction } from 'kysely';
 import { Database } from './Database';
 
@@ -20,7 +20,7 @@ export default class BallotsDB implements IBallotStore {
     }
 
     async init(): Promise<IBallotStore> {
-        var appInitContext = Logger.createContext("appInit");
+        const appInitContext = Logger.createContext("appInit");
         Logger.debug(appInitContext, "BallotsDB.init");
         return this;
     }
@@ -64,7 +64,7 @@ export default class BallotsDB implements IBallotStore {
 
     private makeSubmitBallotsQuery(inputBallots: Ballot | Ballot[], ctx: ILoggingContext, reason: string,
                                    db: Kysely<Database> | Transaction<Database> = this._postgresClient): Promise<Ballot[] | Ballot> {
-        let ballots = Array.isArray(inputBallots)? inputBallots : [inputBallots];
+        const ballots = Array.isArray(inputBallots)? inputBallots : [inputBallots];
 
         // Strip legacy fields (see Ballot.ts) so callers can't write them.
         const sanitizedBallots = ballots.map(b => {
@@ -77,7 +77,7 @@ export default class BallotsDB implements IBallotStore {
             };
         });
 
-        let query = db
+        const query = db
             .insertInto(tableName)
             .values(sanitizedBallots)
             .returningAll()
@@ -104,6 +104,19 @@ export default class BallotsDB implements IBallotStore {
             });
     }
 
+
+    // Every version of every ballot (head=false included): the audit log needs
+    // the first version of each ballot for casts and the later ones for edits.
+    getBallotVersionsByElectionID(election_id: string, ctx: ILoggingContext): Promise<BallotVersionRow[]> {
+        Logger.debug(ctx, `${tableName}.getBallotVersionsByElectionID ${election_id}`);
+
+        return this._postgresClient
+            .selectFrom(tableName)
+            .where('election_id', '=', election_id)
+            .select(['ballot_id', 'update_date', 'history'])
+            .orderBy('update_date', 'asc')
+            .execute();
+    }
 
     getBallotsByElectionID(election_id: string, ctx: ILoggingContext, db?: Kysely<Database> | Transaction<Database>): Promise<Ballot[]> {
         Logger.debug(ctx, `${tableName}.getBallotsByElectionID ${election_id}`);

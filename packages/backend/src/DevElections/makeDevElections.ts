@@ -5,6 +5,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') })
 import servicelocator from '../ServiceLocator'
 import { DevElectionDefinition, validateDefinition } from './types'
 import { ElectionState } from '@equal-vote/star-vote-shared/domain_model/ElectionStates'
+import { AUDIT_LOG_CUTOFF_DATE } from '@equal-vote/star-vote-shared/domain_model/AuditLog'
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -123,9 +124,13 @@ async function main() {
         // lifetime.
         const now = Date.now();
         const { chain, ballotWindow, earliestMs, liveMs } = makeTimeline(def.election.state, now);
+        // create_date is clamped to the audit-log cutoff: these fixtures exist
+        // partly to exercise the public history endpoint, which refuses the log
+        // for elections created before the cutoff (see AuditLog.ts).
+        const createMs = Math.max(earliestMs, new Date(AUDIT_LOG_CUTOFF_DATE).getTime());
         const baseElection = {
             ...def.election,
-            create_date: new Date(earliestMs).toISOString(),
+            create_date: new Date(createMs).toISOString(),
         };
 
         console.info(`  Inserting ${chain.length} election row(s)...`);

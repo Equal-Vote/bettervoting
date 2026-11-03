@@ -3,7 +3,12 @@ import { ILoggingContext } from "../Services/Logging/ILogger";
 import { Kysely, Transaction } from 'kysely';
 import { Database } from './Database';
 
+/** The one column the public audit log reads from each head roll row. */
+export type RollHistoryRow = Pick<ElectionRoll, 'history'>;
+
 export interface IElectionRollStore {
+    // history of every head roll row in the election, for the audit log (narrower than getRollsByElectionID)
+    getHeadHistoriesByElectionID: (election_id: string, ctx: ILoggingContext) => Promise<RollHistoryRow[]>;
     submitElectionRoll: (
         electionRolls: NewElectionRoll[],
         ctx: ILoggingContext,

@@ -1,21 +1,30 @@
 import { Ballot } from "@equal-vote/star-vote-shared/domain_model/Ballot";
 import { Uid } from "@equal-vote/star-vote-shared/domain_model/Uid";
 import { ILoggingContext } from "../../Services/Logging/ILogger";
-import { BallotVotes, IBallotStore } from "../IBallotStore";
+import { BallotVersionRow, BallotVotes, IBallotStore } from "../IBallotStore";
 
 export default class BallotsDB implements IBallotStore {
     ballots: Ballot[] = [];
 
     constructor() {}
+
+    // The mock appends a row per submit/update, so this is already every version.
+    getBallotVersionsByElectionID(election_id: string, _ctx: ILoggingContext): Promise<BallotVersionRow[]> {
+        return Promise.resolve(
+            this.ballots
+                .filter(ballot => ballot.election_id === election_id)
+                .map(({ ballot_id, update_date, history }) => JSON.parse(JSON.stringify({ ballot_id, update_date, history })))
+        );
+    }
     submitBallot(ballot: Ballot, _ctx:ILoggingContext, _reason:string): Promise<Ballot> {
-        var copy = JSON.parse(JSON.stringify(ballot));
+        const copy = JSON.parse(JSON.stringify(ballot));
         copy.head = true; // the real store always inserts ballots as the head version
         this.ballots.push(copy);
         return Promise.resolve(JSON.parse(JSON.stringify(copy)));
     }
 
     updateBallot(ballot: Ballot, _ctx:ILoggingContext, _reason:string): Promise<Ballot> {
-        var copy = JSON.parse(JSON.stringify(ballot));
+        const copy = JSON.parse(JSON.stringify(ballot));
         this.ballots.push(copy);
         return Promise.resolve(JSON.parse(JSON.stringify(copy)));
     }
@@ -29,7 +38,7 @@ export default class BallotsDB implements IBallotStore {
         const ballots = this.ballots.filter(
             (ballot) => ballot.election_id === election_id
         );
-        var resBallots = JSON.parse(JSON.stringify(ballots));
+        const resBallots = JSON.parse(JSON.stringify(ballots));
         return Promise.resolve(resBallots);
     }
 
@@ -65,7 +74,7 @@ export default class BallotsDB implements IBallotStore {
         if (!ballots) {
             return Promise.resolve(undefined);
         }
-        var resBallots = JSON.parse(JSON.stringify(ballots));
+        const resBallots = JSON.parse(JSON.stringify(ballots));
         return Promise.resolve(resBallots);
     }
 
@@ -76,7 +85,7 @@ export default class BallotsDB implements IBallotStore {
         if (!ballot) {
             return Promise.resolve(null);
         }
-        var resBallot = JSON.parse(JSON.stringify(ballot));
+        const resBallot = JSON.parse(JSON.stringify(ballot));
         return Promise.resolve(resBallot);
     }
 
