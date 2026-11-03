@@ -16,6 +16,7 @@ import { PrimaryButton, SecondaryButton } from "~/components/styles";
 import ElectionAuthForm from "~/components/ElectionForm/Details/ElectionAuthForm";
 import useConfirm from "~/components/ConfirmationDialogProvider";
 import { AdminPageNavigation } from '../Sidebar';
+import HeadToHeadChart from "../../../components/Election/Results/components/HeadToHeadChart";
 
 const ViewElectionRolls = () => {
     const { election, permissions, t, updateElection } = useElection()
@@ -27,6 +28,9 @@ const ViewElectionRolls = () => {
     }, [])
     const [inspectingVoter, setInspectingVoter] = useState(false)
     const [addRollPage, setAddRollPage] = useState(false)
+    const [uploadingRolls, setUploadingRolls] = useState(false)
+    // refetch on close since an upload may have partially succeeded
+    const closeAddRoll = () => { setAddRollPage(false); fetchRolls(); }
     const [editedRoll, setEditedRoll] = useState<ElectionRollResponse|null>(null)
     const flags = useFeatureFlags();
     const navigate = useNavigate();
@@ -40,7 +44,11 @@ const ViewElectionRolls = () => {
     let mode: VoterAuthenticationMode | null;
     try { mode = getVoterAuthenticationMode(election.settings); } catch { mode = null; }
     const voterAccess: 'open' | 'closed' = mode?.startsWith('closed') ? 'closed' : 'open';
-    const usesEmail = mode === 'closed_bv_managed_ids';
+    // BV-managed elections auto-generate voter_id and redact it from the admin view,
+    // matching voters by email instead. Admin-managed elections still let the admin
+    // collect emails per-voter and send email blasts — they just aren't required to.
+    const redactsVoterIds = mode === 'closed_bv_managed_ids';
+    const canSendEmailBlast = voterAccess === 'closed';
     const writeMode = (m: Parameters<typeof setVoterAuthenticationMode>[1]) =>
         updateElection(e => { e.settings = setVoterAuthenticationMode(e.settings, m); });
 
@@ -88,7 +96,7 @@ const ViewElectionRolls = () => {
 
     if (flags.isSet('PRECINCTS')) headKeys.push('precinct');
 
-    if(!usesEmail) headKeys.unshift('voter_id')
+    if(!redactsVoterIds) headKeys.unshift('voter_id')
 
     const electionRollData = React.useMemo(
         () => data?.electionRoll ? [...data.electionRoll] : [],
@@ -105,6 +113,7 @@ const ViewElectionRolls = () => {
         await fetchRolls();
     }
 
+    const submittedCount = electionRollData.filter(voter => voter.submitted === true).length;
     return (
         <>
             <Box>
@@ -148,11 +157,25 @@ const ViewElectionRolls = () => {
 
                                 writeMode(email ? 'closed_bv_managed_ids' : 'closed_admin_managed_ids');
                             }}
-                            checked={usesEmail === email}
+                            checked={redactsVoterIds === email}
                         />
                     )}
                 </RadioGroup>
             </Box>}
+
+            <HeadToHeadChart
+                leftOnly={true}
+                leftName={'Voted'}
+                rightName={''}
+                leftVotes={submittedCount}
+                rightVotes={0}
+                total={electionRollData.length}
+                equalContent={{
+                    title: 'Election Votes',
+                    description: 'Percentage of voters who have cast a vote'
+                }}
+            />
+
             {voterAccess == 'open' && <ElectionAuthForm />}
             {voterAccess == 'closed' && <>
                 {!inspectingVoter && !addRollPage &&
@@ -166,7 +189,7 @@ const ViewElectionRolls = () => {
                                 }} > Add Voters </SecondaryButton>
                             </PermissionHandler>
                         }
-                        {usesEmail &&
+                        {canSendEmailBlast &&
                             <SecondaryButton onClick={() => setDialogOpen(true)} sx={{ml: 2}}>Draft Email Blast</SecondaryButton>
                         }
                         {canClearRolls &&
@@ -206,22 +229,22 @@ const ViewElectionRolls = () => {
                 </Dialog>
                 <Dialog
                     open={addRollPage}
-                    onClose={() => setAddRollPage(false)}
+                    onClose={() => { if (!uploadingRolls) closeAddRoll() }}
                     fullWidth
                     maxWidth='md'
                 >
                     <DialogTitle sx={{m: 0}}>Adding Voters</DialogTitle>
                     <DialogContent>
-                        <AddElectionRoll onClose={() => { setAddRollPage(false); fetchRolls(); }}/>
+                        <AddElectionRoll onClose={closeAddRoll} onUploadingChange={setUploadingRolls}/>
                     </DialogContent>
                     <DialogActions>
-                        <PrimaryButton onClick={() => setAddRollPage(false)}>
+                        <PrimaryButton disabled={uploadingRolls} onClick={closeAddRoll}>
                             {t('keyword.close')}
                         </PrimaryButton>
                     </DialogActions>
                 </Dialog>
 
-                <SendEmailDialog electionRoll={data?.electionRoll} open={dialogOpen} onClose={() => setDialogOpen(false)} onSubmit={onSendEmails}/>
+                <SendEmailDialog electionRoll={data?.electionRoll?.filter(roll => roll.email)} open={dialogOpen} onClose={() => setDialogOpen(false)} onSubmit={onSendEmails}/>
             </>}
             <AdminPageNavigation />
         </>

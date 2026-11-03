@@ -1,7 +1,6 @@
 import { Button, IconButton, Menu, Typography } from "@mui/material";
 import { popoverClasses } from "@mui/material/Popover";
 import { useState } from "react";
-import KeyboardArrowRightRoundedIcon from '@mui/icons-material/KeyboardArrowRightRounded';
 
 const navTextSx = {fontWeight: 'bold', fontSize: '1.2rem'};
 
@@ -85,6 +84,7 @@ export default function({name, onClick=undefined, desktopText=undefined, mobileI
             }}
             open={Boolean(anchorEl)}
             onClose={handleClose}
+            disableAutoFocusItem // This was added since clicking an item would have it be highlghted on the next page 
             sx={{ [`&.${popoverClasses.root}`]: {xs: {}, md: { pointerEvents: "none" }}, }}
             disableScrollLock
             // https://github.com/mui/material-ui/issues/10072

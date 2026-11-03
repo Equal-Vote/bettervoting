@@ -57,7 +57,7 @@ const ballotPatterns: { voterIndex: number; scores: number[] }[] = [
 ];
 
 function makeBallots(): Ballot[] {
-    return ballotPatterns.map(({ voterIndex, scores }, i) => ({
+    return ballotPatterns.map(({ voterIndex: _voterIndex, scores }, i) => ({
         ballot_id: devBallotId(ELECTION_ID, i),
         election_id: ELECTION_ID,
         status: 'submitted',

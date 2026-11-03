@@ -1,4 +1,3 @@
-import { randomUUID } from "crypto";
 import { ILoggingContext } from "./ILogger";
 import Logger from "./Logger";
 
@@ -10,19 +9,19 @@ export class TestLoggerImpl {
     constructor() {
     }
 
-    debug(context?:ILoggingContext,  message?: any, ...optionalParams: any[]):void{
+    debug(context?:ILoggingContext,  message?: unknown, ...optionalParams: unknown[]):void{
         this.log(context, "", message, ...optionalParams);
     }
 
-    info(context?:ILoggingContext,  message?: any, ...optionalParams: any[]):void{
+    info(context?:ILoggingContext,  message?: unknown, ...optionalParams: unknown[]):void{
         this.log(context, "", message, ...optionalParams);
     }
 
-    warn(context?:ILoggingContext,  message?: any, ...optionalParams: any[]):void{
+    warn(context?:ILoggingContext,  message?: unknown, ...optionalParams: unknown[]):void{
         this.log(context, "WARN ", message, ...optionalParams);
     }
 
-    error(context?:ILoggingContext,  message?: any, ...optionalParams: any[]):void{
+    error(context?:ILoggingContext,  message?: unknown, ...optionalParams: unknown[]):void{
         //TODO - put more structure to the data shared in request and spit it all out here
         this.log(context, "ERROR", message, ...optionalParams);
     }
@@ -42,7 +41,7 @@ export class TestLoggerImpl {
         this.logs=[];
     }
 
-    log(context?:ILoggingContext, levelStr?:string,  message?: any, ...optionalParams: any[]):void { 
+    log(context?:ILoggingContext, levelStr?:string,  message?: unknown, ...optionalParams: unknown[]):void { 
         var msg = "";
         var lvlStr = "";
         var ctxStr = "";

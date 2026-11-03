@@ -9,7 +9,6 @@ import WidgetContainer from '../components/WidgetContainer';
 import Widget from '../components/Widget';
 import ResultsBarChart from '../components/ResultsBarChart';
 import ResultsPieChart from '../components/ResultsPieChart';
-import { getEntry } from '@equal-vote/star-vote-shared/domain_model/Util';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const STARResultSummaryWidget = ({ results, roundIndex, t }: {results: starResults, roundIndex: number, t: (key: string, v?: object) => any }) => {
@@ -50,15 +49,15 @@ const STARResultSummaryWidget = ({ results, roundIndex, t }: {results: starResul
         votes: c.votesPreferredOver[finalists[1-i].id]
     }));
 
-    const noPreferenceVotes = results.summaryData.nTallyVotes - pieData[0].votes - pieData[1].votes;
-    const noPreferencePercentage = results.summaryData.nTallyVotes > 0 
-        ? (noPreferenceVotes / results.summaryData.nTallyVotes * 100).toFixed(1)
+    const equalSupportVotes = results.summaryData.nTallyVotes - pieData[0].votes - pieData[1].votes;
+    const equalSupportPercentage = results.summaryData.nTallyVotes > 0 
+        ? (equalSupportVotes / results.summaryData.nTallyVotes * 100).toFixed(1)
         : '0.0';
 
     const runoffData = [...pieData]
     runoffData.push({
       name: t('results.star.equal_preferences'),
-      votes: noPreferenceVotes,
+      votes: equalSupportVotes,
     })
 
     return (
@@ -79,7 +78,7 @@ const STARResultSummaryWidget = ({ results, roundIndex, t }: {results: starResul
                     <>
                         <ResultsPieChart data={pieData} star runoff/>
                         <Typography variant="body2" sx={{ fontStyle: 'italic', textAlign: 'center', mt: 1 }}>
-                            {t('results.star.runoff_no_preference_footnote', { percentage: noPreferencePercentage })}
+                            {t('results.star.runoff_equal_support_footnote', { percentage: equalSupportPercentage })}
                         </Typography>
                     </>
                 :

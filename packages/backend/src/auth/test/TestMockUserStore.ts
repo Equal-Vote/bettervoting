@@ -39,7 +39,7 @@ export async function testMockUserStore(): Promise<string> {
 }
 
 
-function assertSame(data1:any, data2:any, message:string) {
+function assertSame(data1:unknown, data2:unknown, message:string) {
     if (data1 != data2){
         throw(new Error(`${message}\n${JSON.stringify(data1)} != ${JSON.stringify(data2)}`));
     }

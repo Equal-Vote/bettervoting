@@ -12,7 +12,7 @@ export default class ElectionsDB implements IElectionStore {
     constructor() {
     }
 
-    createElection(election: Election, ctx:ILoggingContext, reason:string): Promise<Election>{
+    createElection(election: Election, ctx:ILoggingContext, _reason:string): Promise<Election>{
         Logger.debug(ctx, "Election Mock Creates Election: ", election);
         var copy = JSON.parse(JSON.stringify(election));
         copy.update_date = Date.now().toString();
@@ -37,14 +37,12 @@ export default class ElectionsDB implements IElectionStore {
         return Promise.resolve(res);
     }
 
-    getElections(id: string, email: string, ctx:ILoggingContext): Promise<Election[] | null> {
+    getElections(id: string, _email: string, _ctx:ILoggingContext): Promise<Election[] | null> {
         var elections:Array<Election> = JSON.parse(JSON.stringify(this.elections));
         if(id != ""){
-            var filters = id.split(',');
-            
             for(var i = 0; i < id.length; i++){
                 var [key, value] = id[i].split(':');
-                elections = elections.filter(election => (election as any)[key]==String(value))
+                elections = elections.filter(election => (election as unknown as Record<string, unknown>)[key]==String(value))
             }
         }
         if (!elections){
@@ -74,7 +72,7 @@ export default class ElectionsDB implements IElectionStore {
         return Promise.resolve(election? true : false);
     }
 
-    delete(election_id: Uid, ctx:ILoggingContext, reason:string): Promise<boolean> {
+    delete(election_id: Uid, _ctx:ILoggingContext, _reason:string): Promise<boolean> {
         const election = this.elections.find(election => election.election_id==election_id)
         if (!election){
             return Promise.resolve(false)

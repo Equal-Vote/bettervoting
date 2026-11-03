@@ -94,7 +94,8 @@ export const formatPercent = (f: number): string => {
 export const MailTo = ({ children }: { children: string }) => {
   const { setSnack } = useSnackbar();
   // https://adamsilver.io/blog/the-trouble-with-mailto-email-links-and-what-to-do-instead/
-  return <span style={{ whiteSpace: 'nowrap' }}>
+  // NOTE: using nowrap on small devices can extend the copy button beyond the end fo the screen
+  return <Box component='span' sx={{ whiteSpace: {xs: 'normal', md: 'nowrap' }}}>
     <Link href={`mailto:${children}`} sx={{ color: 'var(--brand-pop)' }}>{children}</Link>
     <SecondaryButton
       onClick={() => {
@@ -108,7 +109,7 @@ export const MailTo = ({ children }: { children: string }) => {
       }}
       sx={{ minWidth: 0, ml: 1, px: 1, py: 0}}
     >Copy</SecondaryButton>
-  </span>
+  </Box>
 }
 
 interface RowButtonWithArrowProps {
@@ -311,14 +312,16 @@ export const truncName = (name, maxSize) => {
   return name.slice(0, maxSize - 3).concat("...");
 };
 
+// Fider instance for feature requests and feedback. Overridable so non-prod
+// deployments can point somewhere else.
+export const FEEDBACK_URL =
+  process.env.REACT_APP_FEEDBACK_URL || 'https://feedback.prod.equal.vote';
+
+// Opens feedback in a new tab so someone part-way through building an election
+// doesn't lose their place. Fider is a separate app with its own sign-in, so
+// there's nothing to embed -- this is a link-out by design.
 export const openFeedback = () => {
-  // simulate clicking the feedback button
-  const launcherFrame = document.getElementById("launcher-frame");
-  const button =
-    (launcherFrame as HTMLIFrameElement).contentWindow.document.getElementsByClassName(
-      "launcher-button"
-    )[0];
-  (button as HTMLButtonElement).click();
+  window.open(FEEDBACK_URL, '_blank', 'noopener,noreferrer');
 };
 
 export function scrollToElement(e, opts: { behavior?: ScrollBehavior; delay?: number; cancelOnUserInput?: boolean } = {}) {

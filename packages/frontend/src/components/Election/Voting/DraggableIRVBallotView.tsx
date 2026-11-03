@@ -133,7 +133,7 @@ export default function DraggableIRVBallotView() {
                 })}
               </Typography>
               <Typography align="center" sx={{ mt: 1, typography: { sm: 'body1', xs: 'body2' } }}>
-                {t('ballot.instructions_rcv_draggable', 'Drag candidates left → right. Rank 1 is your top choice. Unranked means no preference.')}
+                {t('ballot.instructions_rcv_draggable', 'Drag candidates left → right. Rank 1 is your top choice. Your vote never counts for a candidate you leave unranked.')}
               </Typography>
               {election?.settings?.require_instruction_confirmation && (
                 <FormGroup>
@@ -143,6 +143,7 @@ export default function DraggableIRVBallotView() {
                       <Checkbox
                         disabled={ballotContext.instructionsRead}
                         checked={ballotContext.instructionsRead}
+                        tabIndex={0}
                         onChange={() => ballotContext.setInstructionsRead()}
                       />
                     }
@@ -189,7 +190,7 @@ export default function DraggableIRVBallotView() {
                           {...prov.dragHandleProps}
                           style={{
                             ...(prov.draggableProps.style as React.CSSProperties),
-                            width: snapshot.isDragging ? (prov.draggableProps.style as any)?.width : '100%'
+                            width: snapshot.isDragging ? (prov.draggableProps.style as React.CSSProperties)?.width : '100%'
                           }}
                           aria-roledescription="Draggable"
                           aria-labelledby={`cand-${c.candidate_id}`}
@@ -249,9 +250,10 @@ export default function DraggableIRVBallotView() {
                           {...prov.dragHandleProps}
                           style={{
                             ...(prov.draggableProps.style as React.CSSProperties),
-                            width: snapshot.isDragging ? (prov.draggableProps.style as any)?.width : '100%'
+                            width: snapshot.isDragging ? (prov.draggableProps.style as React.CSSProperties)?.width : '100%'
                           }}
                           role="option"
+                          aria-selected={snapshot.isDragging}
                           aria-roledescription="Draggable"
                           aria-posinset={index + 1}
                           aria-setsize={rankedCandidates.length}

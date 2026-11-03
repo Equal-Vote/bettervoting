@@ -7,7 +7,6 @@ import MenuItem from "@mui/material/MenuItem";
 import Button from "@mui/material/Button";
 import { Box, InputLabel } from "@mui/material";
 import levenshtein from 'fast-levenshtein';
-import { DragHandle, SortableList } from './DragAndDrop';
 
 
 type group = {
@@ -162,7 +161,7 @@ const NameMatchingTester = () => {
             existingCandidatesMap = JSON.parse(existingCandidates)
             setJsonError(null)
             log.push(`✓ Parsed ${Object.keys(existingCandidatesMap).length} existing candidate(s)`)
-        } catch (e) {
+        } catch {
             setJsonError("Invalid JSON format")
             return
         }

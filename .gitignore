@@ -16,3 +16,6 @@
 
 # Generated build artifacts
 packages/backend/src/OpenApi/swagger.json
+
+# Husky's own internal state, not a hook itself
+.husky/_

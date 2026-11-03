@@ -54,7 +54,9 @@ const [rawNumbers, setRawNumbers] = useState(false);
   data = rawData.map((d, i) => {
     const s = {
       ...d,
-      name: ((i < stars || d['star']) ? "⭐ " : "") + truncName(d["name"], 40),
+      // NOTE: It's best practice to have a space after the emojis like the star, but we're not doing it in this case it creates a change of a line break on the space
+      //       &nbsp; would be ideal but htlm isn't supported as an input for 
+      name: truncName(((i < stars || d['star']) ? "⭐" : "") + d["name"], 40),
       // hack to get smaller values to allign different from larger ones
       left: (percentage && !rawNumbers)
         ? formatPercent(d[xKey] / percentDenominator)
@@ -136,7 +138,7 @@ const [rawNumbers, setRawNumbers] = useState(false);
   const adjustedAxisWidth = useTickMargin ? axisWidth + tickOffset : axisWidth;
   return (
     <div style={{width:'100%', maxWidth: '600px', marginLeft: 'auto', marginRight: 'auto'}} onMouseEnter={() => setRawNumbers(true)} onMouseLeave={() => setRawNumbers(false)}>
-    <ResponsiveContainer width="90%" height={50 * data.length} style={maxBarSize ?
+    <ResponsiveContainer width="90%" height={50 * data.length + (majorityLegend == undefined ? 0 : 32)} style={maxBarSize ?
       {marginTop: '-50px'}: {}
     }>
       <ComposedChart data={data} barCategoryGap={5} layout="vertical">

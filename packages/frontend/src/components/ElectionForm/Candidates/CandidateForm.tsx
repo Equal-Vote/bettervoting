@@ -1,11 +1,9 @@
-import { useRef, useState, useCallback, useEffect } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useLocalState } from '../../util'
 import { Candidate } from "@equal-vote/star-vote-shared/domain_model/Candidate"
-import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
 import Typography from '@mui/material/Typography';
-import { Box, Dialog, DialogActions, DialogContent, DialogTitle, FormHelperText, IconButton, Link, Paper } from '@mui/material';
-import Cropper from 'react-easy-crop';
+import { Box, Dialog, DialogActions, DialogContent, DialogTitle, FormHelperText, IconButton, Paper } from '@mui/material';
 import {getImage, postImage} from './PhotoUtil';
 import CloseIcon from '@mui/icons-material/Close';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
@@ -185,7 +183,7 @@ interface CandidateFormProps {
     electionState: string
 }
 
-export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled, special, inputRef, onKeyDown, electionState}: CandidateFormProps) => {
+export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled, special, inputRef, onKeyDown}: CandidateFormProps) => {
     const [open, setOpen] = useState(false);
     const [linkOpen, setLinkOpen] = useState(false);
     // Track hover and focus so the UI (actions + textarea underline) appears on hover or when the textbox is focused

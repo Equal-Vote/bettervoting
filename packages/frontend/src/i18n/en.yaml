@@ -52,14 +52,14 @@ ballot:
   drop_here: Drop candidates here to rank them
   no_available: No available candidates
   instructions: Drag candidates from the left to the right list. Candidates on the right are your ranked order; left means unranked.
-  instructions_rcv_draggable: Drag candidates left → right. Rank 1 is your top choice. Unranked means no preference.
+  instructions_rcv_draggable: Drag candidates left → right. Rank 1 is your top choice. Your vote never counts for a candidate you leave unranked.
 
   dialog_submit_title: Submit {{capital_ballot}}?
   dialog_send_receipt: Send Ballot Receipt Email?
   dialog_email_placeholder: Receipt Email (Optional)
   dialog_cancel: Cancel
   dialog_submit: Submit
-  dialog_abstention: Abstained - No preference was expressed
+  dialog_abstention: Abstained - All candidates were left blank or marked the same
   warnings:
     skipped_rank: Do not skip rankings. Rank candidates in order to clearly show preferences. Candidates left blank are ranked last.
     duplicate_rank: Do not rank multiple candidates equally. (Ranking candidates equally can void your ballot.)
@@ -303,7 +303,7 @@ results:
       - Each vote goes to the voter's preferred finalist.
       - Finalist with most votes wins.
     runoff_majority: majority threshold (½ of voters with preference)
-    runoff_no_preference_footnote: "{{percentage}}% of voters expressed no preference between the two finalists."
+    runoff_equal_support_footnote: "{{percentage}}% of voters gave equal support to the two finalists."
     score_table_title: Scores Table
     score_table_columns:
       - '{{capital_candidate}}'
@@ -323,6 +323,8 @@ results:
       - To understand how the tie was broken, we recommend [learning more about Star Voting's Official Tiebreaker Protocol](https://starvoting.org/ties) and then following the steps below to see how they were resolved for this election.
     equal_preferences_title: Distribution of Equal Support
     equal_preferences: Equal Support
+    equal_preferences_pair: '{{winner}} vs {{runner_up}}'
+    seat_heading: Winner {{n}}
     score_higher_than_runoff_title: Why is the top scoring candidate different from the winner?
     score_higher_than_runoff_text: |
       The top-scoring candidate often matches the runoff winner, but not always.
@@ -398,8 +400,6 @@ keyword:
 # Nav Bar
 nav:
   about: About Us
-  help: Help 
-  public_elections: Vote in a Poll
   new_election: Create Election
   greeting: Hello, {{name}}
   feedback: Feedback?
@@ -431,7 +431,7 @@ footer:
   # proportional representation elections with either paper or digital ballots.
   about_us_title: About Us
   about_us_description: >
-    BetterVoting is a project of the Equal Vote Coalition, a nonpartisan 501c3 nonprofit. 
+    BetterVoting is a project of the Equal Vote Coalition, a nonpartisan 501(c)(3) nonprofit. 
     Our mission is to fight for true equality in the vote itself.
 
 
@@ -501,20 +501,21 @@ landing_page:
       text: Supports methods that yield multiple winners, including both proportional and basic multi-winner methods.
     - title: Multi-Race Elections
       text: Setup multi-race elections for when there are multiple issues or positions to vote on.
-    - title: Compare Methods
-      text: Allow voters to vote on one issue with multiple methods to compare the voter experience and winners; Just duplicate your race and select different methods. 
+    - title: Paper Ballots
+      text: Use [a template](https://docs.google.com/presentation/d/1va-XEsUy0VI0jCTAHrQ_f9HNKex3VK9cm7WfF6jhUYM/edit) to create your paper ballots. Those ballots can then be hand tallied or manually uploaded and tallied automatically. Upload CSV feature coming soon.
     - title: Secure Elections
       text: Offers a spectrum of security options including email verification, voter IDs, imported email lists, and direct voting links.
     - title: Accessible Polls
       text: Quick and easy options for creating and sharing a public poll online.
-    - title: Open Source
-      text: This project is shared [open source](https://github.com/Equal-Vote/bettervoting/) under a AGPL-3.0 license. Run your elections via BetterVoting or self host on your own server.
+    - title: Compare Methods
+      text: Allow voters to vote on one issue with multiple methods to compare the voter experience and winners; Just duplicate your race and select different methods. 
     - title: Educational Resources
       text: Find everything you need to learn about voting methods and choose the best option for you.
 
   # Featured Elections Section
   featured_elections:
-    title: Vote in a Featured Public Election
+    title: Vote in a BetterVoting Demo Election
+    button: Browse Public Elections and Polls
 
   # Sign Up Section
   sign_up:
@@ -566,7 +567,7 @@ landing_page:
         icon_url: https://starbestfit.com/_next/static/media/logo.4a868e2a.svg
         url: https://starbestfit.com/
       - name: STAR Voting on Google Forms
-        description: Use our Google Forms plugin to let tabulate votes cast on Google Forms
+        description: Use our plugin to tally STAR Voting elections on Google Forms
         icon_url: https://www.gstatic.com/images/branding/product/2x/forms_2020q4_48dp.png
         url: https://docs.bettervoting.com/other_tools/google_forms.html
       - name: STAR Voting on Google Sheets
@@ -708,6 +709,7 @@ tabulation_logs:
 
 disabled_msgs:
     ballot_updates_when_open: Only supported when election uses email list
+    is_public_when_voter_list: Only supported when anyone with the link can {{vote}}
 
 #######################################
 #### PRIORITY 4 : Info Bubbles ####
@@ -1051,6 +1053,10 @@ about:
       github_image_id: 100322179
     - github_user_name: crayne
       github_image_id: 134657
+    - github_user_name: Swar-42
+      github_image_id: 70987572
+    - github_user_name: megancw
+      github_image_id: 17257395
 
   contribute_title: Contribute
   contribute_description: >

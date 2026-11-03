@@ -18,7 +18,7 @@ export async function getOrCreateElectionRoll(req: IRequest, election: Election,
     // Get data that is used for voter authentication
     // NOTE: I'm ensuring that undefined is coaleced into null, that makes it compliant with the type when calling getElectionRoll
     const require_ip_hash = (election.settings.voter_authentication.ip_address ? ip_hash : null) ?? null;
-    const email = election.settings.voter_authentication.email ? req.user?.email : null
+    const email = election.settings.voter_authentication.email ? (req.user?.email ?? null) : null
     
     // Get voter ID if required and available, otherwise set to null
     let voter_id = null
@@ -27,7 +27,7 @@ export async function getOrCreateElectionRoll(req: IRequest, election: Election,
         // https://help.vtex.com/en/tutorial/why-dont-cookies-support-special-characters--6hs7MQzTri6Yg2kQoSICoQ
         voter_id = voter_id_override ?? atob(req.cookies?.voter_id); 
     } else if (election.settings.voter_authentication.voter_id && election.settings.voter_access == 'open') {
-        voter_id = voter_id_override ?? req.user?.sub
+        voter_id = voter_id_override ?? req.user?.sub ?? null
     }
 
     // Get all election roll entries that match any of the voter authentication fields
@@ -44,8 +44,8 @@ export async function getOrCreateElectionRoll(req: IRequest, election: Election,
         if (!skipStateCheck && election.state !== 'open') return null
 
         Logger.info(req, "Creating new roll");
-        const new_voter_id = election.settings.voter_authentication.voter_id ? 
-            voter_id : 
+        const new_voter_id = election.settings.voter_authentication.voter_id ?
+            (voter_id ?? '') :
             await makeUniqueID(
                 ID_PREFIXES.VOTER,
                 ID_LENGTHS.VOTER,
@@ -96,7 +96,7 @@ export async function getOrCreateElectionRoll(req: IRequest, election: Election,
         Logger.error(req, `Email does not match saved election roll, voter: ${logSafeHash(electionRollEntries[0].voter_id)}`);
         throw new Unauthorized('Email does not match saved election roll');
     }
-    if (election.settings.voter_authentication.voter_id && electionRollEntries[0].voter_id.trim() !== voter_id.trim()) {
+    if (election.settings.voter_authentication.voter_id && electionRollEntries[0].voter_id.trim() !== (voter_id ?? '').trim()) {
         // Voter ID does not match saved election roll, for example if email and voter ID are selected but email doesn't match the voter ID 
         Logger.error(req, `Voter ID does not match saved election roll, voter: ${logSafeHash(electionRollEntries[0].voter_id)}`);
         throw new Unauthorized('Voter ID does not match saved voter roll');

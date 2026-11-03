@@ -2,6 +2,25 @@ remote_theme: just-the-docs/just-the-docs
 color_scheme: custom
 logo: images/logo.png
 
+# Lets the Pages plugins identify the repo without inspecting a git remote, so a
+# local preview works when only the docs/ folder is mounted (see
+# contributions/writers/4_adding_documentation.md). No effect on the published
+# site, which already knows which repo it is building.
+repository: Equal-Vote/bettervoting
+
+# Renders ```mermaid fenced code blocks as diagrams. just-the-docs loads the
+# library from jsDelivr at this version; without the key the fence renders as
+# a plain code block. Bumping the version is the only maintenance this needs.
+mermaid:
+  version: "11.4.1"
+
+# Enables `redirect_from:` in a page's front matter, so a page that moves can
+# leave its old URL working. Without this key the front matter is silently
+# ignored and the old URL 404s. The gem ships with the `github-pages` bundle
+# that GitHub Pages already builds this site with, so nothing new is installed.
+plugins:
+  - jekyll-redirect-from
+
 
 # https://github.com/just-the-docs/just-the-docs/discussions/1583
 callouts_level: quiet # or loud

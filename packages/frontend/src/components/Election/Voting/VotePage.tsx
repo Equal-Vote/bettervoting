@@ -3,7 +3,7 @@ import BallotPageSelector from "./BallotPageSelector";
 import { useParams } from "react-router";
 import React from 'react'
 import { useNavigate } from "react-router";
-import { Box, Checkbox, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControlLabel, Step, StepLabel, Stepper, SvgIcon, TextField, Typography } from "@mui/material";
+import { Box, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Step, StepLabel, Stepper, SvgIcon, TextField, Typography } from "@mui/material";
 import { NewBallot } from "@equal-vote/star-vote-shared/domain_model/Ballot";
 import { Vote } from "@equal-vote/star-vote-shared/domain_model/Vote";
 import { Score } from "@equal-vote/star-vote-shared/domain_model/Score";

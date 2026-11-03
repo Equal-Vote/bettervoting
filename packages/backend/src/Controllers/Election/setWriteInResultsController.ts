@@ -52,7 +52,7 @@ function validateWriteInCandidates(candidates: unknown[]): WriteInCandidate[] {
     return result;
 }
 
-const setWriteInResults = async (req: IElectionRequest, res: Response, next: NextFunction) => {
+const setWriteInResults = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     Logger.info(req, `setWriteInResults ${req.election.election_id}`);
     expectPermission(req.user_auth.roles, permissions.canProcessWriteIns)
 

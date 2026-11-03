@@ -1,11 +1,9 @@
-import useAnonymizedBallots from "~/components/AnonymizedBallotsContextProvider";
 import useElection from "~/components/ElectionContextProvider";
 import Widget from "./Widget";
 import useRace from "~/components/RaceContextProvider";
 import { useState } from "react";
 import { Box, Divider, MenuItem, Select, Typography } from "@mui/material";
 import { CHART_COLORS} from "~/components/util";
-import { Candidate } from "@equal-vote/star-vote-shared/domain_model/Candidate";
 import HeadToHeadChart from "./HeadToHeadChart";
 import ResultsKey from "./ResultsKey";
 import { methodValueToTextKey } from "@equal-vote/star-vote-shared/domain_model/Race";
@@ -67,7 +65,7 @@ const HeadToHeadWidget = () => {
                     equalContent={
                         (race.voting_method == 'IRV' || race.voting_method == 'STV')?
                         {
-                            title: 'No Preferences',
+                            title: 'Equal Support',
                             description: `These voters didn't rank either candidate`
                         }
                         :

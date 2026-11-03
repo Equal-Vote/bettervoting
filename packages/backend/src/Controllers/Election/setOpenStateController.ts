@@ -11,7 +11,7 @@ const ElectionsModel = ServiceLocator.electionsDb();
 
 const className = "election.Controllers";
 
-const setOpenState = async (req: IElectionRequest, res: Response, next: NextFunction) => {
+const setOpenState = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     Logger.info(req, `${className}.archive ${req.election.election_id}`);
     expectPermission(req.user_auth.roles, permissions.canEditElectionState)
 

@@ -2,7 +2,8 @@
 layout: default
 title: How to enable beta features
 nav_order: 99
-parent: BetterVoting Documentation
+parent: Reference
+grand_parent: Running an Election
 ---
 
 # How to enable beta features

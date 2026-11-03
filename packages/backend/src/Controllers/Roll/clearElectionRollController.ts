@@ -26,7 +26,7 @@ const clearElectionRoll = async (req: IElectionRequest, res: Response, next: Nex
     const cleared = await ElectionRollModel.archiveRollsByElectionID(
         req.election.election_id,
         req,
-        `${req.user.email} cleared the voter list of draft election ${req.election.election_id}`
+        `${req.user?.email ?? ''} cleared the voter list of draft election ${req.election.election_id}`
     );
 
     Logger.info(req, `${className}.clearElectionRoll archived ${cleared} voters from ${req.election.election_id}`);
