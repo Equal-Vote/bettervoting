@@ -7,6 +7,7 @@ import { ElectionResults } from "@equal-vote/star-vote-shared/domain_model/ITabu
 import { Ballot, NewBallot, AnonymizedBallot, NewBallotWithVoterID, BallotSubmitStatus } from "@equal-vote/star-vote-shared/domain_model/Ballot";
 import { email_request_data } from "@equal-vote/star-vote-backend/src/Controllers/Election/sendEmailController"
 import { WriteInCandidate, WriteInData } from "@equal-vote/star-vote-shared/domain_model/WriteIn";
+import { ImportBallotsRequest, ImportBallotsResponse } from "@equal-vote/star-vote-shared/domain_model/BallotImport";
 
 export const useGetElection = (electionID: string | undefined) => {
     return useFetch<undefined, {
@@ -200,6 +201,10 @@ export const usePostBallot = (election_id: string | undefined) => {
 
 export const useUploadBallots = (election_id: string | undefined) => {
     return useFetch<{ ballots: NewBallotWithVoterID[] }, {responses: BallotSubmitStatus[]}>(`/API/Election/${election_id}/uploadBallots`, 'post')
+}
+
+export const useImportBallots = (election_id: string | undefined) => {
+    return useFetch<ImportBallotsRequest, ImportBallotsResponse>(`/API/Election/${election_id}/importBallots`, 'post')
 }
 
 export const useGetWriteIns = (election_id: string) => {

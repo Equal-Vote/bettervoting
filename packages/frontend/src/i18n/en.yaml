@@ -501,7 +501,7 @@ landing_page:
     - title: Multi-Race Elections
       text: Setup multi-race elections for when there are multiple issues or positions to vote on.
     - title: Paper Ballots
-      text: Use [a template](https://docs.google.com/presentation/d/1va-XEsUy0VI0jCTAHrQ_f9HNKex3VK9cm7WfF6jhUYM/edit) to create your paper ballots. Those ballots can then be hand tallied or manually uploaded and tallied automatically. Upload CSV feature coming soon.
+      text: Use [a template](https://docs.google.com/presentation/d/1va-XEsUy0VI0jCTAHrQ_f9HNKex3VK9cm7WfF6jhUYM/edit) to create your paper ballots. Those ballots can then be hand tallied, or uploaded as a CSV and tallied automatically.
     - title: Secure Elections
       text: Offers a spectrum of security options including email verification, voter IDs, imported email lists, and direct voting links.
     - title: Accessible Polls
@@ -751,6 +751,12 @@ tips:
   random_candidate_order:
     title: Randomize Candidate Order
     description: Randomizes the order of candidates on the ballots.
+
+  paper_ballots:
+    title: Accept Uploaded Paper Ballots
+    description: >
+      Lets the {{election}} admin upload a CSV of paper ballots while the {{election}} is open.
+      If BetterVoting holds the voter list, a second CSV lists the voters who cast them.
 
   ballot_updates:
     title: Allow Voters To Update Ballot
@@ -1211,6 +1217,8 @@ election_settings:
   require_instruction_confirmation: Confirm That Voter Read Instructions !tip(require_instruction_confirmation)
 
   draggable_ballot: Use Draggable Ballots for RCV !tip(draggable_ballot)
+
+  paper_ballots: Accept Uploaded Paper Ballots !tip(paper_ballots)
 
   is_public: Make {{capital_election}} Publicly Searchable !tip(is_public)
 
