@@ -23,7 +23,8 @@ election_history:
   loading: Loading audit log…
   empty: No events recorded yet.
   not_finalized: This election has not been finalized yet, so no audit log is available.
-  not_available: This {{election}} was created before public audit logs were introduced, so no audit log is available for it.
+  not_available: This {{election}} was created before public audit logs were introduced, so its audit log is hidden from the public. Only the {{election}}'s admins can view it.
+  admin_only: This {{election}} was created before public audit logs were introduced, so this log is hidden from the public and visible only to its admins.
   # Column headers and event chip labels live in EnhancedTable's head cell pool,
   # which keys its group filters and chip colours off plain English strings.
   desc:
@@ -39,6 +40,8 @@ election_history:
 # Confirmation shown before any admin action that is recorded in the public audit log
 audit_confirm:
   notice: This action will be recorded in the {{election}}'s audit log, which anyone can view. You can add an optional explanation; it will be shown publicly next to the entry.
+  # Elections created before the audit-log cutoff: the log exists but is only shown to the election's admins
+  notice_admin_only: This action will be recorded in the {{election}}'s audit log. Because this {{election}} was created before audit logs became public, the log is visible only to its admins. You can add an optional explanation; it will be shown next to the entry.
   note_label: Explanation (optional)
   note_placeholder: e.g. Board approved the final candidate list on Monday
   open:

@@ -6,11 +6,14 @@ import EnhancedTable from "../EnhancedTable";
 import { electionHasAuditLog } from "@equal-vote/star-vote-shared/domain_model/AuditLog";
 
 const ElectionHistoryView = () => {
-    const { election, t } = useElection();
+    const { election, permissions, t } = useElection();
     const { data, isPending, error, makeRequest: getHistory } = useGetElectionHistory(election?.election_id);
-    // The backend refuses the log for elections created before the cutoff;
-    // don't even ask, so the page explains why instead of showing an error.
-    const hasAuditLog = electionHasAuditLog(election);
+    // Elections created before the cutoff have no public log: the backend
+    // serves it only to the election's admins. Don't ask on behalf of anyone
+    // else, so the page explains why instead of showing an error.
+    const isPublic = electionHasAuditLog(election);
+    const isAdmin = !!permissions?.includes('canEditElection');
+    const hasAuditLog = isPublic || isAdmin;
 
     useEffect(() => {
         if (election?.election_id && hasAuditLog) getHistory();
@@ -32,6 +35,12 @@ const ElectionHistoryView = () => {
                 {!hasAuditLog && (
                     <Typography color="text.secondary">
                         {t('election_history.not_available')}
+                    </Typography>
+                )}
+
+                {hasAuditLog && !isPublic && (
+                    <Typography variant="body2" sx={{ mb: 2, color: 'warning.main' }}>
+                        {t('election_history.admin_only')}
                     </Typography>
                 )}
 

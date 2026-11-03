@@ -84,7 +84,7 @@ electionsRouter.get('/Election/:id', asyncHandler(returnElection));
  *           Admin-initiated events may carry an `audit_note`: the optional
  *           explanation the admin entered when taking the action.
  *       403:
- *         description: Election was created before the audit-log cutoff date, so no log is available
+ *         description: Election was created before the audit-log cutoff date and the caller is not one of its admins (canEditElection), so the log is not public
  *       404:
  *         description: Election has not been finalized
  */

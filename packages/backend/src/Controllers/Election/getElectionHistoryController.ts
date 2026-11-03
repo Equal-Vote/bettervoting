@@ -6,6 +6,7 @@ import { Response, NextFunction } from 'express';
 import { ElectionRollAction } from '@equal-vote/star-vote-shared/domain_model/ElectionRoll';
 import { BallotAction } from '@equal-vote/star-vote-shared/domain_model/Ballot';
 import { AUDIT_LOG_CUTOFF_DATE, electionHasAuditLog } from '@equal-vote/star-vote-shared/domain_model/AuditLog';
+import { hasPermission, permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 
 const ElectionsModel = ServiceLocator.electionsDb();
 const BallotModel = ServiceLocator.ballotsDb();
@@ -239,9 +240,11 @@ const getElectionHistory = async (req: IElectionRequest, res: Response, _next: N
     Logger.info(req, `${className}.getElectionHistory ${electionId}`);
 
     // Enforced here, not just hidden in the UI: the log for an election set up
-    // before anyone was told it would be public is never served.
-    if (!electionHasAuditLog(req.election)) {
-        throw new Forbidden(`Audit logs are only available for elections created on or after ${AUDIT_LOG_CUTOFF_DATE.slice(0, 10)}`);
+    // before anyone was told it would be public is served only to the people
+    // who run that election (owner and admin_ids holders — canEditElection),
+    // so they can still debug it. Everyone else gets 403.
+    if (!electionHasAuditLog(req.election) && !hasPermission(req.user_auth.roles, permissions.canEditElection)) {
+        throw new Forbidden(`Audit logs for elections created before ${AUDIT_LOG_CUTOFF_DATE.slice(0, 10)} are only available to that election's admins`);
     }
 
     // Need full version histories (head=false rows included) for elections and

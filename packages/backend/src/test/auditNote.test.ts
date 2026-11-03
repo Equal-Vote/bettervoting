@@ -45,7 +45,8 @@ const finalize = async (electionId: string, body: object) => {
     );
 };
 
-const getHistory = (electionId: string) => th.getRequest(`/API/Election/${electionId}/history`, null);
+// The log is public, so by default it is fetched anonymously.
+const getHistory = (electionId: string, userToken: string | null = null) => th.getRequest(`/API/Election/${electionId}/history`, userToken);
 
 describe("audit note", () => {
     test("is stored with the action and returned in the audit log", async () => {
@@ -133,13 +134,32 @@ describe("audit note", () => {
 });
 
 describe("audit log creation-date cutoff", () => {
-    test("refuses the log for an election created before the cutoff", async () => {
+    test("hides the log of a pre-cutoff election from the public", async () => {
         const electionId = await createDraft(ONE_MS_BEFORE_CUTOFF);
         expect((await finalize(electionId, {})).statusCode).toBe(200);
 
-        const history = await getHistory(electionId);
-        expect(history.statusCode).toBe(403);
-        expect(history.body).not.toHaveProperty('events');
+        // Anonymous
+        const anonymous = await getHistory(electionId);
+        expect(anonymous.statusCode).toBe(403);
+        expect(anonymous.body).not.toHaveProperty('events');
+
+        // Logged in, but holding no role on this election
+        const outsider = await getHistory(electionId, testInputs.user2token);
+        expect(outsider.statusCode).toBe(403);
+        expect(outsider.body).not.toHaveProperty('events');
+        th.testComplete();
+    });
+
+    test("still returns the log of a pre-cutoff election to its admins", async () => {
+        const electionId = await createDraft(ONE_MS_BEFORE_CUTOFF);
+        expect((await finalize(electionId, { audit_note: 'owner note' })).statusCode).toBe(200);
+
+        // user1 owns Election1 (canEditElection), so the cutoff doesn't apply.
+        const history = await getHistory(electionId, testInputs.user1token);
+        expect(history.statusCode).toBe(200);
+        expect(history.body.events[0]).toEqual(
+            expect.objectContaining({ type: 'state_change', to: 'finalized', audit_note: 'owner note' }),
+        );
         th.testComplete();
     });
 

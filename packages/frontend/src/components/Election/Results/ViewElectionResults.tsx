@@ -15,7 +15,9 @@ import { SecondaryButton } from '../../styles';
 import { electionHasAuditLog } from '@equal-vote/star-vote-shared/domain_model/AuditLog';
 
 const ViewElectionResults = () => {
-    const { election } = useElection();
+    const { election, permissions } = useElection();
+    // Pre-cutoff elections have no *public* log, but their admins can still open it.
+    const canViewAuditLog = electionHasAuditLog(election) || !!permissions?.includes('canEditElection');
     const { data, isPending, makeRequest: getResults } = useGetResults(election.election_id)
     useEffect(() => { if (election.settings.public_results) getResults() }, [election.settings.public_results])
     const {t} = useSubstitutedTranslation(election.settings.term_type);
@@ -109,7 +111,7 @@ const ViewElectionResults = () => {
                   </Box>
                 )}
 
-                {election.state !== 'draft' && electionHasAuditLog(election) && (
+                {election.state !== 'draft' && canViewAuditLog && (
                   <Box
                     sx={{
                       width: "100%",

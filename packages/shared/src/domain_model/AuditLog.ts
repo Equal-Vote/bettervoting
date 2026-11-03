@@ -4,8 +4,9 @@ import type { Election } from "./Election";
 // admins set the election up when nothing told them that finalizing, opening,
 // closing, publishing results, uploading ballots or revealing a voter ID would
 // become part of a public record, so it isn't fair to expose one after the
-// fact. The backend refuses the log for these elections and the frontend hides
-// the link and the explanation prompt. Compared against electionDB.create_date.
+// fact. The backend serves the log for these elections only to the election's
+// admins (canEditElection) and the frontend hides the link from everyone else.
+// Compared against electionDB.create_date.
 export const AUDIT_LOG_CUTOFF_DATE = '2026-12-01T00:00:00.000Z';
 
 // Upper bound on the optional explanation an admin can attach to an auditable

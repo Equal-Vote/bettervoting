@@ -21,21 +21,16 @@ export type AuditConfirmResult = { audit_note?: string } | null
  * public audit log: tells the admin so, and offers an optional explanation that
  * is stored with the entry.
  *
- * Elections created before the audit-log cutoff have no public log, so for
- * them this degrades to the action's ordinary confirmation (when it has one)
- * or to no dialog at all.
+ * Elections created before the audit-log cutoff have no *public* log; it is
+ * still kept and shown to the election's admins, so the dialog still appears
+ * but says so instead of calling the entry public.
  */
 export default function useAuditConfirm() {
     const { election, t } = useElection();
     const confirm = useConfirm();
 
     return async ({ title, message, cancel, submit }: AuditConfirmOptions): Promise<AuditConfirmResult> => {
-        if (!electionHasAuditLog(election)) {
-            if (!message) return {};
-            return await confirm({ title, message, cancel, submit }) ? {} : null;
-        }
-
-        const notice = t('audit_confirm.notice');
+        const notice = t(electionHasAuditLog(election) ? 'audit_confirm.notice' : 'audit_confirm.notice_admin_only');
         const result = await confirm({
             title,
             message: message ? `${message}\n\n${notice}` : notice,
