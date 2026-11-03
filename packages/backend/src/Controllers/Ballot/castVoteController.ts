@@ -151,6 +151,12 @@ async function uploadBallotsController(req: IElectionRequest, res: Response, _ne
         Logger.info(req, errMsg);
         throw new BadRequest(errMsg);
     }
+    // Live elections import through importBallots, which validates the whole batch up front,
+    // keeps ballots unlinked from voters, and writes all-or-nothing. This per-row path stays
+    // for the public archive importer only.
+    if (targetElection.ballot_source !== 'prior_election') {
+        throw new BadRequest("uploadBallots is only available for prior elections; use importBallots");
+    }
  
     const events = await Promise.all(
         req.body.ballots.map(({ballot, voter_id} : {ballot: OrderedNewBallot, voter_id: string}) =>

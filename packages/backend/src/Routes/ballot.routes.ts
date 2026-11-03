@@ -5,6 +5,7 @@ import {
     castVoteController,
     getAnonymizedBallotsByElectionID,
     uploadBallotsController,
+    importBallotsController,
     getWriteInNamesController,
 } from '../Controllers/Ballot';
 import {
@@ -198,7 +199,7 @@ ballotRouter.post('/Election/:id/vote', asyncHandler(castVoteController))
  * @swagger
  * /Election/{id}/uploadBallots:
  *   post:
- *     summary: Upload ballots for an election
+ *     summary: Upload ballots for a prior election (public archive import). Use importBallots for live elections.
  *     tags: [Ballots]
  *     security:
  *      - ApiKeyAuth: []
@@ -242,6 +243,44 @@ ballotRouter.post('/Election/:id/vote', asyncHandler(castVoteController))
  *       404:
  *         description: Election not found */
 ballotRouter.post('/Election/:id/uploadBallots', asyncHandler(uploadBallotsController))
+
+/**
+ * @swagger
+ * /Election/{id}/importBallots:
+ *   post:
+ *     summary: Import admin-collected (e.g. paper) ballots into an open election, all-or-nothing
+ *     description: >
+ *       Closed elections (BetterVoting holds the voter list) require voter_ids, a list of the
+ *       voters who cast these ballots, with exactly one entry per ballot; the two lists are
+ *       not linked to each other. Open elections must omit voter_ids.
+ *     tags: [Ballots]
+ *     security:
+ *      - ApiKeyAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The election ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *        application/json:
+ *          schema:
+ *            $ref: '#/components/schemas/ImportBallotsRequest'
+ *     responses:
+ *       200:
+ *         description: Every ballot was imported
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ImportBallotsResponse'
+ *       400:
+ *         description: Validation failed, nothing was imported
+ *       409:
+ *         description: A listed voter changed during the import, nothing was imported */
+ballotRouter.post('/Election/:id/importBallots', asyncHandler(importBallotsController))
 
 /**
  * @swagger

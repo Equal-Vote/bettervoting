@@ -40,82 +40,61 @@ const makeElection = (allowed_submit_types?: string[]): Election => ({
 // race_order and a single ballot in ordered-vote format for the election above.
 const RACE_ORDER = [{ race_id: "race0", candidate_id_order: ["cand0", "cand1"] }];
 // orderedVote = [aliceScore, bobScore, overvote_rank, has_duplicate_rank]
-const ORDERED_BALLOT = { orderedVotes: [[5, 0, null, null]] };
+const IMPORT_BODY = { race_order: RACE_ORDER, ballots: [{ ballot_id: "P-1", orderedVotes: [[5, 0, null, null]] }] };
 
 // electionSettingsValidation unit tests for allowed_submit_types live in
 // packages/shared/src/domain_model/ElectionSettings.test.ts, next to the
 // function they test.
 
-describe("allowed_submit_types enforcement — admin ballot upload", () => {
-    test("admin ballot is accepted when allowed_submit_types includes submitted_via_admin", async () => {
+describe("allowed_submit_types enforcement — admin ballot import", () => {
+    test("import is accepted when allowed_submit_types includes submitted_via_admin", async () => {
         const elec = makeElection(["submitted_via_browser", "submitted_via_admin"]);
         const created = await th.createElection(elec, testInputs.user1token);
         expect(created.statusCode).toBe(200);
         const id = created.election.election_id;
 
-        const res = await th.uploadBallots(
-            id,
-            [{ ballot: ORDERED_BALLOT, voter_id: "voter1" }],
-            RACE_ORDER,
-            testInputs.user1token,
-        );
+        const res = await th.importBallots(id, IMPORT_BODY, testInputs.user1token);
         expect(res.statusCode).toBe(200);
-        expect(res.body.responses[0].success).toBe(true);
+        expect(res.body.imported).toBe(1);
         th.testComplete();
     });
 
-    test("admin ballot is rejected when allowed_submit_types excludes submitted_via_admin", async () => {
+    test("import is rejected when allowed_submit_types excludes submitted_via_admin", async () => {
         const elec = makeElection(["submitted_via_browser"]);
         const created = await th.createElection(elec, testInputs.user1token);
         expect(created.statusCode).toBe(200);
         const id = created.election.election_id;
 
-        const res = await th.uploadBallots(
-            id,
-            [{ ballot: ORDERED_BALLOT, voter_id: "voter2" }],
-            RACE_ORDER,
-            testInputs.user1token,
-        );
-        expect(res.statusCode).toBe(200);
-        expect(res.body.responses[0].success).toBe(false);
+        const res = await th.importBallots(id, IMPORT_BODY, testInputs.user1token);
+        expect(res.statusCode).toBe(400);
+        expect(res.body.error).toContain("not enabled");
         th.testComplete();
     });
 
-    test("admin ballot is rejected by default (no allowed_submit_types field set)", async () => {
+    test("import is rejected by default (no allowed_submit_types field set)", async () => {
         // Default is ['submitted_via_browser', 'submitted_via_discord'] — admin is not included.
         const elec = makeElection(undefined);
         const created = await th.createElection(elec, testInputs.user1token);
         expect(created.statusCode).toBe(200);
         const id = created.election.election_id;
 
-        const res = await th.uploadBallots(
-            id,
-            [{ ballot: ORDERED_BALLOT, voter_id: "voter3" }],
-            RACE_ORDER,
-            testInputs.user1token,
-        );
-        expect(res.statusCode).toBe(200);
-        expect(res.body.responses[0].success).toBe(false);
+        const res = await th.importBallots(id, IMPORT_BODY, testInputs.user1token);
+        expect(res.statusCode).toBe(400);
+        expect(res.body.error).toContain("not enabled");
         th.testComplete();
     });
 
-    test("admin ballot is accepted when election is in draft (bypass block skips the check)", async () => {
-        const draftElec: Election = {
-            ...makeElection(["submitted_via_browser"]), // admin NOT in allowed list
-            state: "draft",
-        } as Election;
-        const created = await th.createElection(draftElec, testInputs.user1token);
+    test("browser vote is rejected when allowed_submit_types excludes submitted_via_browser", async () => {
+        const elec = makeElection(["submitted_via_admin"]);
+        const created = await th.createElection(elec, testInputs.user1token);
         expect(created.statusCode).toBe(200);
         const id = created.election.election_id;
 
-        const res = await th.uploadBallots(
-            id,
-            [{ ballot: ORDERED_BALLOT, voter_id: "voter4" }],
-            RACE_ORDER,
-            testInputs.user1token,
-        );
-        expect(res.statusCode).toBe(200);
-        expect(res.body.responses[0].success).toBe(true);
+        const res = await th.submitBallot(id, {
+            votes: [{ race_id: "race0", scores: [{ candidate_id: "cand0", score: 5 }, { candidate_id: "cand1", score: 0 }] }],
+        }, testInputs.user1token);
+        expect(res.statusCode).toBe(400);
+        expect(res.body.error).toContain("submitted_via_browser");
         th.testComplete();
     });
 
@@ -139,25 +118,18 @@ describe("allowed_submit_types enforcement — admin ballot upload", () => {
         const rollRes = await th.submitElectionRoll(id, [{ voter_id: "voter5" }], testInputs.user1token);
         expect(rollRes.statusCode).toBe(200);
 
-        // First upload for voter5 should succeed (admin is allowed).
-        const firstUpload = await th.uploadBallots(
-            id,
-            [{ ballot: ORDERED_BALLOT, voter_id: "voter5" }],
-            RACE_ORDER,
-            testInputs.user1token,
-        );
-        expect(firstUpload.statusCode).toBe(200);
-        expect(firstUpload.body.responses[0].success).toBe(true);
+        // First import for voter5 should succeed (admin is allowed).
+        const firstImport = await th.importBallots(id, { ...IMPORT_BODY, voter_ids: ["voter5"] }, testInputs.user1token);
+        expect(firstImport.statusCode).toBe(200);
 
-        // Second upload for voter5 should fail (already voted) — not because of allowed_submit_types.
-        const secondUpload = await th.uploadBallots(
-            id,
-            [{ ballot: ORDERED_BALLOT, voter_id: "voter5" }],
-            RACE_ORDER,
-            testInputs.user1token,
-        );
-        expect(secondUpload.statusCode).toBe(200);
-        expect(secondUpload.body.responses[0].success).toBe(false);
+        // Second import for voter5 should fail (already voted) — not because of allowed_submit_types.
+        const secondImport = await th.importBallots(id, {
+            ...IMPORT_BODY,
+            ballots: [{ ballot_id: "P-2", orderedVotes: [[5, 0, null, null]] }],
+            voter_ids: ["voter5"],
+        }, testInputs.user1token);
+        expect(secondImport.statusCode).toBe(400);
+        expect(secondImport.body.error).toContain("Already voted");
 
         th.testComplete();
     });

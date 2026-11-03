@@ -20,7 +20,7 @@ export default class BallotsDB implements IBallotStore {
     }
 
     async init(): Promise<IBallotStore> {
-        var appInitContext = Logger.createContext("appInit");
+        const appInitContext = Logger.createContext("appInit");
         Logger.debug(appInitContext, "BallotsDB.init");
         return this;
     }
@@ -64,7 +64,7 @@ export default class BallotsDB implements IBallotStore {
 
     private makeSubmitBallotsQuery(inputBallots: Ballot | Ballot[], ctx: ILoggingContext, reason: string,
                                    db: Kysely<Database> | Transaction<Database> = this._postgresClient): Promise<Ballot[] | Ballot> {
-        let ballots = Array.isArray(inputBallots)? inputBallots : [inputBallots];
+        const ballots = Array.isArray(inputBallots)? inputBallots : [inputBallots];
 
         // Strip legacy fields (see Ballot.ts) so callers can't write them.
         const sanitizedBallots = ballots.map(b => {
@@ -77,7 +77,7 @@ export default class BallotsDB implements IBallotStore {
             };
         });
 
-        let query = db
+        const query = db
             .insertInto(tableName)
             .values(sanitizedBallots)
             .returningAll()
@@ -115,6 +115,23 @@ export default class BallotsDB implements IBallotStore {
             .where('election_id', '=', election_id)
             .where('head', '=', true)
             .execute();
+    }
+
+    // Includes head=false rows on purpose: reusing the id of a superseded ballot version
+    // would make that id's history two unrelated ballots.
+    async getExistingBallotIDs(election_id: string, ballot_ids: string[], ctx: ILoggingContext, db?: Kysely<Database> | Transaction<Database>): Promise<string[]> {
+        Logger.debug(ctx, `${tableName}.getExistingBallotIDs ${election_id} (${ballot_ids.length} ids)`);
+        if (ballot_ids.length === 0) return [];
+        const client = db || this._postgresClient;
+
+        const rows = await client
+            .selectFrom(tableName)
+            .select('ballot_id')
+            .distinct()
+            .where('election_id', '=', election_id)
+            .where('ballot_id', 'in', ballot_ids)
+            .execute();
+        return rows.map(r => r.ballot_id);
     }
 
     streamSubmittedBallotsByElectionID(election_id: string, ctx: ILoggingContext, db?: Kysely<Database> | Transaction<Database>): AsyncIterableIterator<Ballot> {

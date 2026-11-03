@@ -16,6 +16,8 @@ export interface IBallotStore {
     bulkSubmitBallots: (ballots: Ballot[], ctx: ILoggingContext, reason: string, db?: Kysely<Database> | Transaction<Database>) => Promise<Ballot[]>;
     getBallotByID: (ballot_id: string, ctx: ILoggingContext, db?: Kysely<Database> | Transaction<Database>) => Promise<Ballot | null>;
     getBallotsByElectionID: (election_id: string, ctx: ILoggingContext, db?: Kysely<Database> | Transaction<Database>) => Promise<Ballot[]>;
+    // Which of the given ballot ids already exist in this election, counting superseded (head=false) versions too
+    getExistingBallotIDs: (election_id: string, ballot_ids: string[], ctx: ILoggingContext, db?: Kysely<Database> | Transaction<Database>) => Promise<string[]>;
     // Streams head, submitted ballots in random order (see Ballots.ts for the anonymity rationale)
     streamSubmittedBallotsByElectionID: (election_id: string, ctx: ILoggingContext, db?: Kysely<Database> | Transaction<Database>) => AsyncIterableIterator<Ballot>;
     // Streams just the votes column of every head ballot, for tabulation
