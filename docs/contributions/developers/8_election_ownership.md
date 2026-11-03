@@ -225,6 +225,18 @@ multi-race path goes straight to `onCustomize`, `:61-99`, `:194`).
   `start_time` (`elections.controllers.ts:134-148`), and with no `end_time`
   it never auto-closes (`:150-159`). Navigates to the election home page.
 
+Each button has an (i) icon whose tooltip states these consequences in plain
+language (`wizard.publish_confirm_signed_out.*` and
+`wizard.publish_confirm_signed_in.submit_hint` in `en.yaml`). Signed out, both
+buttons get one; signed in, only Publish Now does, since Customize in editor
+then behaves as a normal owned draft.
+
+![Not signed in — Customize in editor hint](../../images/wizard_publish_hint_customize.png)
+
+![Not signed in — Publish Now hint](../../images/wizard_publish_hint_publish_signed_out.png)
+
+![Signed in — Publish Now hint](../../images/wizard_publish_hint_publish_signed_in.png)
+
 Dismissing the dialog (`confirmed === null`) does nothing (`:156-158`).
 
 ## 4. Claim / transfer: the only ownership-changing endpoint

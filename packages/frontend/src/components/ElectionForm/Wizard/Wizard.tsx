@@ -153,7 +153,7 @@ const Wizard = () => {
             title: editedRace.title,
             description: editedRace.description,
         }
-        // Captions under each choice explaining what the backend actually does
+        // (i) tooltips beside each choice explaining what the backend actually does
         // (see docs/contributions/developers/8_election_ownership.md). Publish Now
         // creates an ownerless election whether or not the user is signed in, so
         // signed-in users get a hint there too.

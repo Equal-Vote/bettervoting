@@ -943,7 +943,7 @@ wizard:
       cancel: 'Customize in editor'
       submit: 'Publish Now'
 
-  # Captions under the publish_confirm buttons. They describe what the backend does
+  # (i) tooltips next to the publish_confirm buttons. They describe what the backend does
   # today — see docs/contributions/developers/8_election_ownership.md
   publish_confirm_signed_out:
       cancel_hint: Without an account you can edit this {{election}} for {{hours}} hours from this browser, but you'll need to sign in to finalize it. Sign in before then to keep it.

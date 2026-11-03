@@ -5,8 +5,9 @@ import {
     useRef,
     useState,
 } from 'react';
-import { Box, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, Typography } from '@mui/material'
+import { Box, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, Tooltip } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { PrimaryButton, SecondaryButton } from './styles';
 import { useSubstitutedTranslation } from './util';
 // Built from this example buth with MUI dialogs: https://akashhamirwasia.com/blog/building-expressive-confirm-dialog-api-in-react/
@@ -25,7 +26,7 @@ interface ConfirmData {
     message: string
     cancel?: string
     submit?: string
-    // Optional one-line captions rendered under the cancel / submit buttons
+    // Optional explanations shown in an (i) tooltip next to the cancel / submit buttons
     cancelHint?: React.ReactNode
     submitHint?: React.ReactNode
     dismissable?: boolean
@@ -41,7 +42,17 @@ export function ConfirmDialogProvider({ children }:  { children: React.ReactNode
     const fn = useRef((choice: boolean | null) => {  });
 
     const {t} = useSubstitutedTranslation();
-    const hasHints = Boolean(state.cancelHint || state.submitHint);
+
+    // Same look as the Tip bubbles in styles.tsx. Tap-to-open on touch, hover on desktop.
+    const HintIcon = ({ hint }: { hint: React.ReactNode }) => hint ? (
+        <Tooltip title={hint} placement='top' arrow enterTouchDelay={0} leaveTouchDelay={5000} slotProps={{
+            tooltip: { sx: { background: '#2B344AFF', border: '2px solid white' } },
+        }}>
+            <IconButton size='small' aria-label='info'>
+                <InfoOutlinedIcon fontSize='inherit' />
+            </IconButton>
+        </Tooltip>
+    ) : null;
 
     const confirm = useCallback(
         (data: ConfirmData) => {
@@ -79,9 +90,8 @@ export function ConfirmDialogProvider({ children }:  { children: React.ReactNode
                 <DialogContent>
                     <DialogContentText>{state.message}</DialogContentText>
                 </DialogContent>
-                <DialogActions sx={{ alignItems: 'flex-start' }}>
-                    {/* With hints, give each action half the row so the captions have room; without, keep the buttons right-aligned as before */}
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: hasHints ? 1 : undefined }}>
+                <DialogActions sx={{ flexWrap: 'wrap', gap: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <SecondaryButton
                             type='button'
                             variant="outlined"
@@ -90,9 +100,9 @@ export function ConfirmDialogProvider({ children }:  { children: React.ReactNode
                             onClick={() => fn.current(false)}>
                             {state['cancel'] ?? t('keyword.cancel')}
                         </SecondaryButton>
-                        {state.cancelHint && <Typography variant='caption' sx={{ mt: 1, textAlign: 'center' }}>{state.cancelHint}</Typography>}
+                        <HintIcon hint={state.cancelHint} />
                     </Box>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: hasHints ? 1 : undefined }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <PrimaryButton
                             type='button'
                             variant="contained"
@@ -100,7 +110,7 @@ export function ConfirmDialogProvider({ children }:  { children: React.ReactNode
                             onClick={() => fn.current(true)}>
                             {state['submit'] ?? t('keyword.submit')}
                         </PrimaryButton>
-                        {state.submitHint && <Typography variant='caption' sx={{ mt: 1, textAlign: 'center' }}>{state.submitHint}</Typography>}
+                        <HintIcon hint={state.submitHint} />
                     </Box>
                 </DialogActions>
             </Dialog>
