@@ -376,6 +376,21 @@ function stableSort<T>(array: readonly T[], comparator: (a: T, b: T) => number) 
 
 // type filterTypes = 'search' | 'groups' | null
 
+function searchableText(item: any): string {
+  // if it's not a string, assume it's a ReactNode and strip away the noise
+  return typeof item === 'string' ? item : item.props.children[0]
+}
+
+// Substring search buries exact hits (e.g. "10@x.com" among "110@x.com", "210@x.com", ...), so these get pinned to the top
+function isExactMatch<T>(row: T, headCells: HeadCell[], filters: any[]) {
+  if (headCells.length != filters.length) return false;
+  return headCells.some((col, colInd) =>
+    col.filterType === 'search' &&
+    filters[colInd] != '' &&
+    searchableText(row[col.id]).toLowerCase() === filters[colInd].toLowerCase()
+  )
+}
+
 function filterData<T>(array: readonly T[], headCells: HeadCell[], filters: any[]) {
   // when tweaking the headKeys the filters and headCells can sometimes be temporarily mismatched
   if (headCells.length != filters.length) return array;
@@ -384,10 +399,7 @@ function filterData<T>(array: readonly T[], headCells: HeadCell[], filters: any[
       if (!col.filterType) return true
       if (col.filterType === 'search') {
         if (filters[colInd] == '') return true
-        let item = row[col.id];
-        // if it's not a string, assume it's a ReactNode and strip away the noise
-        if(typeof item !== 'string') item = row[col.id].props.children[0]
-        return item.toLowerCase().includes(filters[colInd].toLowerCase())
+        return searchableText(row[col.id]).toLowerCase().includes(filters[colInd].toLowerCase())
       }
       if (col.filterType === 'groups') {
         return filters[colInd][row[col.id]]
@@ -588,12 +600,22 @@ export default function EnhancedTable(props: EnhancedTableProps) {
 
 
   const visibleRows = useMemo(
-    () =>
-      stableSort(filteredRows, getComparator(order, orderBy, headCellPool[orderBy].isDate === true)).slice(
+    () => {
+      const sortedRows = stableSort(filteredRows, getComparator(order, orderBy, headCellPool[orderBy].isDate === true));
+      const isSearching = headCells.some((col, colInd) => col.filterType === 'search' && filters[colInd]);
+      let orderedRows = sortedRows;
+      if (isSearching) {
+        const exactRows = [];
+        const otherRows = [];
+        sortedRows.forEach(row => (isExactMatch(row, headCells, filters) ? exactRows : otherRows).push(row));
+        orderedRows = [...exactRows, ...otherRows];
+      }
+      return orderedRows.slice(
         page * rowsPerPage,
         page * rowsPerPage + rowsPerPage,
-      ),
-    [order, orderBy, page, rowsPerPage, filteredRows],
+      );
+    },
+    [order, orderBy, page, rowsPerPage, filteredRows, filters],
   );
 
 

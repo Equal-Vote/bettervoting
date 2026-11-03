@@ -34,7 +34,7 @@ export default class ElectionsDB implements IElectionStore {
     }
 
     async init(): Promise<ElectionsDB> {
-        var appInitContext = Logger.createContext("appInit");
+        const appInitContext = Logger.createContext("appInit");
         Logger.debug(appInitContext, "-> ElectionsDB.init")
         return this;
     }
@@ -46,7 +46,7 @@ export default class ElectionsDB implements IElectionStore {
 
     createElection(election: Election, ctx: ILoggingContext, _reason: string): Promise<Election> {
         Logger.debug(ctx, `${tableName}.createElection`, election);
-        election.update_date = Date.now().toString()// Use now() because it doesn't change with time zone 
+        election.update_date = Date.now().toString()// Use now() because it doesn't change with time zone
         election.head = true
         election.create_date = new Date().toISOString()
 
@@ -223,7 +223,7 @@ export default class ElectionsDB implements IElectionStore {
         // A: I feel weird about calling classic.star.vote that frequently, so I'm only doing it when the id doesn't exist on our DB
 
         // Check New DB
-        let newElections = await this._postgresClient
+        const newElections = await this._postgresClient
             .selectFrom(tableName)
             .where('election_id', '=', election_id)
             .where('head', '=', true)

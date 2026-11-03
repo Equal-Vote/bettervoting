@@ -12,6 +12,8 @@ export const sharedConfig = {
         'vwqgm6': 600, // AMPFA Union Poll
         '79p6yw': 30000, // Arend 25k test
         '29x62f': 28000, // FOSS United 2026 Election
+        'g39cd2': 600, // AMPFA Union Poll #2 
+        'cj3dhv': 600, // AMPFA Union Poll #3
     },
     TEMPORARY_ACCESS_HOURS: 10,
     CLASSIC_DOMAIN: 'https://classic.star.vote',

@@ -65,7 +65,7 @@ const HeadToHeadWidget = () => {
                     equalContent={
                         (race.voting_method == 'IRV' || race.voting_method == 'STV')?
                         {
-                            title: 'No Preferences',
+                            title: 'Equal Support',
                             description: `These voters didn't rank either candidate`
                         }
                         :
