@@ -5,6 +5,7 @@ import { Race } from "./Race";
 import { Uid } from "./Uid";
 import { raceValidation } from "./Race";
 import { checkForDuplicates } from "./Util";
+import { AUDIT_NOTE_MAX_LENGTH } from "./AuditLog";
 
 export { ElectionState }
 
@@ -30,6 +31,11 @@ export interface Election {
     head:           boolean;// Head version of this object
     ballot_source:  'live_election' | 'prior_election';
     public_archive_id?: string;
+    // Optional admin explanation for the action that produced this version
+    // (finalize, open/close, archive, publish results). Shown in the public
+    // audit log next to that event. Set per write by the model; never carried
+    // over from the previous version. See AuditLog.ts for the length bound.
+    audit_note?:    string | null;
 }
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
 export type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
@@ -162,6 +168,14 @@ export function electionValidation(obj:Election): string | null {
   }
   if (obj.head && typeof obj.head !== 'boolean'){
     return "Invalid Head";
+  }
+  if (obj.audit_note !== undefined && obj.audit_note !== null) {
+    if (typeof obj.audit_note !== 'string') {
+      return "Invalid Audit Note";
+    }
+    if (obj.audit_note.length > AUDIT_NOTE_MAX_LENGTH) {
+      return `Audit Note exceeds ${AUDIT_NOTE_MAX_LENGTH} characters`;
+    }
   }
 
   //TODO... etc

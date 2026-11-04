@@ -284,6 +284,15 @@ const headCellPool = {
     filterType: 'search',
     formatter: (_, event, t) => describeHistoryEvent(event, t),
   },
+  history_note: {
+    id: 'history_note',
+    numeric: false,
+    disablePadding: false,
+    // The optional explanation the admin entered when taking the action
+    label: 'Explanation',
+    filterType: 'search',
+    formatter: (_, event) => ('audit_note' in event && event.audit_note) || '',
+  },
   history_when: {
     id: 'history_when',
     numeric: false,

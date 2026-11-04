@@ -5,7 +5,7 @@ import Logger from '../Services/Logging/Logger';
 import { Kysely, sql } from 'kysely'
 import { Election, electionValidation } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { sharedConfig } from '@equal-vote/star-vote-shared/config';
-import { IElectionStore } from './IElectionStore';
+import { ElectionVersionRow, IElectionStore } from './IElectionStore';
 import { Conflict, InternalServerError } from '@curveball/http-errors';
 import { BadRequest } from "@curveball/http-errors";
 import { hasErrorCode } from '../errorUtils';
@@ -49,6 +49,7 @@ export default class ElectionsDB implements IElectionStore {
         election.update_date = Date.now().toString()// Use now() because it doesn't change with time zone
         election.head = true
         election.create_date = new Date().toISOString()
+        election.audit_note = null
 
         const newElection = this._postgresClient
             .insertInto(tableName)
@@ -58,8 +59,11 @@ export default class ElectionsDB implements IElectionStore {
         return newElection
     }
 
-    async updateElection(election: Election, ctx: ILoggingContext, reason: string, expected_update_date: string): Promise<Election> {
+    async updateElection(election: Election, ctx: ILoggingContext, reason: string, expected_update_date: string, audit_note: string | null = null): Promise<Election> {
         Logger.debug(ctx, `${tableName}.updateElection`);
+        // Always overwrite: the incoming object is usually the previous head row,
+        // which may still carry the note from the action that produced it.
+        election.audit_note = audit_note
         const validationFailure = electionValidation(election);
         if (validationFailure) {
             Logger.error(ctx, validationFailure);
@@ -202,6 +206,19 @@ export default class ElectionsDB implements IElectionStore {
         return result as Promise<IVoteCount[] | null>;
     }
 
+
+    // Every version of the election, oldest first, for the public audit log —
+    // state transitions are read by walking the list.
+    getElectionVersions(election_id: Uid, ctx: ILoggingContext): Promise<ElectionVersionRow[]> {
+        Logger.debug(ctx, `${tableName}.getElectionVersions ${election_id}`);
+
+        return this._postgresClient
+            .selectFrom(tableName)
+            .where('election_id', '=', election_id)
+            .select(['state', 'settings', 'update_date', 'audit_note'])
+            .orderBy('update_date', 'asc')
+            .execute()
+    }
 
     getElectionByID(election_id: Uid, ctx: ILoggingContext): Promise<Election | null> {
         Logger.debug(ctx, `${tableName}.getElectionByID ${election_id}`);

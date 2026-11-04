@@ -81,6 +81,10 @@ electionsRouter.get('/Election/:id', asyncHandler(returnElection));
  *           ID reveals are publicly visible. Ballot-related events are
  *           truncated to the UTC day and counts are reported on a milestone
  *           ladder; no voter IDs, ballot IDs, or vote contents are returned.
+ *           Admin-initiated events may carry an `audit_note`: the optional
+ *           explanation the admin entered when taking the action.
+ *       403:
+ *         description: Election was created before the audit-log cutoff date and the caller is not one of its admins (canEditElection), so the log is not public
  *       404:
  *         description: Election has not been finalized
  */
@@ -524,6 +528,17 @@ electionsRouter.delete('/Election/:id', asyncHandler(deleteElection))
  *           type: string
  *         required: true
  *         description: The election ID
+ *     requestBody:
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *                expected_update_date:
+ *                  type: string
+ *                audit_note:
+ *                  type: string
+ *                  description: Optional explanation shown in the public audit log (max 1000 characters)
  *     responses:
  *       200:
  *         description: Election finalized
@@ -562,6 +577,9 @@ electionsRouter.post('/Election/:id/finalize',asyncHandler(finalizeElection))
  *            properties:
  *                public_results:
  *                  type: boolean
+ *                audit_note:
+ *                  type: string
+ *                  description: Optional explanation shown in the public audit log (max 1000 characters)
  *     responses:
  *       200:
  *         description: Public results set
@@ -592,6 +610,17 @@ electionsRouter.post('/Election/:id/setPublicResults',asyncHandler(setPublicResu
  *           type: string
  *         required: true
  *         description: The election ID
+ *     requestBody:
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *                expected_update_date:
+ *                  type: string
+ *                audit_note:
+ *                  type: string
+ *                  description: Optional explanation shown in the public audit log (max 1000 characters)
  *     responses:
  *       200:
  *         description: Election archived
@@ -633,6 +662,9 @@ electionsRouter.post('/Election/:id/archive', asyncHandler(archiveElection))
  *             type: boolean
  *             description: True if reopening a closed election; false if closing an open election
  *             required: true
+ *            audit_note:
+ *             type: string
+ *             description: Optional explanation shown in the public audit log (max 1000 characters)
  *     responses:
  *       200:
  *         description: Election state changed

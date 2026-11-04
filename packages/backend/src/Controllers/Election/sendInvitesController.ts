@@ -9,15 +9,16 @@ import { ElectionRoll } from '@equal-vote/star-vote-shared/domain_model/Election
 import { Uid } from "@equal-vote/star-vote-shared/domain_model/Uid";
 import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { randomUUID } from "crypto";
-import { IElectionRequest } from "../../IRequest";
+import { IElectionRequest, IRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
 import { logSafeHash } from '../../Services/Logging/logSafeHash';
 import { ILoggingContext } from '../../Services/Logging/ILogger';
 import { getErrorMessage } from '../../errorUtils';
+import { updateRollWithRetry } from '../Roll/rollHistoryUtils';
 
-var ElectionRollModel = ServiceLocator.electionRollDb();
-var EmailService = ServiceLocator.emailService();
-var EmailEventsDB = ServiceLocator.emailEventsDb();
+const ElectionRollModel = ServiceLocator.electionRollDb();
+const EmailService = ServiceLocator.emailService();
+const EmailEventsDB = ServiceLocator.emailEventsDb();
 const EventQueue = ServiceLocator.eventQueue();
 
 const className = "election.Controllers";
@@ -70,7 +71,7 @@ const sendInvitationsController = async (req: IElectionRequest, res: Response, _
     res.json(plan)
 }
 
-async function sendBatchEmailInvites(req: any, electionRoll: ElectionRoll[], election: Election): Promise<ReturnType<typeof sendPlan>> {
+async function sendBatchEmailInvites(req: IRequest, electionRoll: ElectionRoll[], election: Election): Promise<ReturnType<typeof sendPlan>> {
     const Jobs: SendInviteEvent[] = []
     const reqId = req.contextId ? req.contextId : randomUUID();
     const url = ServiceLocator.globalData().mainUrl;
@@ -87,11 +88,11 @@ async function sendBatchEmailInvites(req: any, electionRoll: ElectionRoll[], ele
         )
     })
 
-    var failMsg = "Failed to send invitations";
+    const failMsg = "Failed to send invitations";
     Logger.info(req, `${className}.sendInvitations enqueuing ${describeSendPlan(Jobs.length)}`, { election_id: election.election_id });
     try {
         await (await EventQueue).publishBatch(SendInviteEventQueue, Jobs, { spacingMs: emailSendSpacingMs() });
-    } catch (err: any) {
+    } catch (err: unknown) {
         const msg = `Could not send invitations`;
         Logger.error(req, `${msg}: ${getErrorMessage(err)}`);
         throw new InternalServerError(failMsg)
@@ -141,18 +142,14 @@ async function handleSendInviteEvent(job: { id: string; data: SendInviteEvent; }
 async function sendInvitation(ctx: ILoggingContext, election:Election, electionRoll: ElectionRoll, sender: string, url: string) {
     const invites = Invites(election, [electionRoll], url)
     const emailResponse = await EmailService.sendEmails(invites)
-    if (!electionRoll.email_data) {
-        electionRoll.email_data = {}
-    }
     //Should have an array of one response in which case grab the first, but could have an error message
     let emailSuccess = false
+    let inviteResponse: unknown = emailResponse
     if (emailResponse.length > 0) {
-        electionRoll.email_data.inviteResponse = emailResponse[0]
+        inviteResponse = emailResponse[0]
         if (emailResponse[0][0].statusCode < 400) {
             emailSuccess = true
         }
-    } else {
-        electionRoll.email_data.inviteResponse = emailResponse
     }
     // Record the sent event in the email events table
     const xMessageId = emailResponse?.[0]?.[0]?.headers?.['x-message-id'];
@@ -171,21 +168,32 @@ async function sendInvitation(ctx: ILoggingContext, election:Election, electionR
         }
     }
 
-    if (electionRoll.history == null) {
-        electionRoll.history = [];
-    }
-    electionRoll.history.push({
+    // The email has already gone out, so the record of it must land even if the
+    // roll was rewritten underneath us (voter voted, admin changed its state);
+    // updateRollWithRetry re-reads and re-applies this mutation on conflict.
+    const historyAction = {
         action_type: `email invite sent: ${emailSuccess ? 'success' : 'failed'}`,
         actor: sender,
         timestamp: Date.now(),
-    });
+    };
     try {
-        const updatedElectionRoll = await ElectionRollModel.update(electionRoll, ctx, `Email Invite Sent`);
-        if (updatedElectionRoll) {
-            return updatedElectionRoll
-        } else {
-            throw new InternalServerError()
-        }
+        return await updateRollWithRetry(
+            election.election_id,
+            electionRoll.voter_id,
+            (roll) => {
+                if (!roll.email_data) {
+                    roll.email_data = {}
+                }
+                roll.email_data.inviteResponse = inviteResponse
+                if (roll.history == null) {
+                    roll.history = [];
+                }
+                roll.history.push(historyAction);
+            },
+            ctx,
+            `Email Invite Sent`,
+            electionRoll,
+        );
     } catch (err: unknown) {
         const msg = `Could not update election roll`;
         Logger.error(ctx, `${msg}: ${getErrorMessage(err)}`);
