@@ -47,7 +47,7 @@
   "dependencies": {
     "ts-node": "^10.9.2",
     "typescript": "^5.9.0",
-    "zod": "^4.4.3"
+    "zod": "^4.6.6"
   },
   "optionalDependencies": {
     "@rspack/binding-darwin-arm64": "latest",
