@@ -3,6 +3,7 @@ import Logger from '../Services/Logging/Logger';
 import { logSafeHash } from '../Services/Logging/logSafeHash';
 import { IElectionRollStore, RollHistoryRow } from './IElectionRollStore';
 import { Kysely, Transaction } from 'kysely'
+import { Conflict } from '@curveball/http-errors';
 import { Database } from './Database';
 import { ElectionRoll, NewElectionRoll } from '@equal-vote/star-vote-shared/domain_model/ElectionRoll';
 const tableName = 'electionRollDB';
@@ -193,17 +194,29 @@ export default class ElectionRollDB implements IElectionRollStore {
             }))
     }
 
-    async update(election_roll: NewElectionRoll, ctx: ILoggingContext, reason: string, db?: Kysely<Database> | Transaction<Database>): Promise<ElectionRoll | null> {
+    // Optimistic concurrency: `expected_update_date` is the update_date of the head
+    // row the caller read and modified. If another writer has replaced that row in
+    // the meantime, nothing is demoted and a Conflict is thrown instead of
+    // silently installing a row built from stale data. This matters for history:
+    // every version carries the full history array, so a stale write would drop
+    // whatever the other writer appended (e.g. a voter-ID reveal) from the head
+    // row that the public audit log reads.
+    async update(election_roll: NewElectionRoll, ctx: ILoggingContext, reason: string, expected_update_date: string, db?: Kysely<Database> | Transaction<Database>): Promise<ElectionRoll> {
         Logger.debug(ctx, `${tableName}.updateRoll`);
         Logger.debug(ctx, "", election_roll)
 
         const executeWork = async (activeDb: Kysely<Database> | Transaction<Database>) => {
-            await activeDb.updateTable(tableName)
+            const demoted = await activeDb.updateTable(tableName)
                 .where('election_id', '=', election_roll.election_id)
                 .where('voter_id', '=', election_roll.voter_id)
                 .where('head', '=', true)
+                .where('update_date', '=', expected_update_date)
                 .set('head', false)
-                .execute()
+                .executeTakeFirst()
+
+            if (demoted.numUpdatedRows === BigInt(0)) {
+                throw new Conflict('Concurrent write detected, please try again');
+            }
 
             // Strip legacy fields and any caller-supplied create_date/update_date/head — the
             // model generates them here so the returned row is the single source of truth.
@@ -221,16 +234,12 @@ export default class ElectionRollDB implements IElectionRollStore {
                 .executeTakeFirstOrThrow()
         };
 
-        try {
-            if (db) {
-                return await executeWork(db);
-            } else {
-                return await this._postgresClient.transaction().execute(executeWork);
-            }
-        } catch (_reason: unknown) {
-            Logger.debug(ctx, ".get null");
-            return null;
+        // Errors propagate: a caller that cannot prove the write landed must not
+        // act as if it did.
+        if (db) {
+            return await executeWork(db);
         }
+        return await this._postgresClient.transaction().execute(executeWork);
     }
 
     // Clears the roll without destroying it: every head row for the election is demoted to

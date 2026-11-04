@@ -7,6 +7,7 @@ import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
 import { logSafeHash } from "../../Services/Logging/logSafeHash";
 import { parseAuditNote } from "../auditNote";
+import { updateRollWithRetry } from "./rollHistoryUtils";
 
 const ElectionRollModel = ServiceLocator.electionRollDb();
 
@@ -57,22 +58,35 @@ const revealVoterIdByEmail = async (req: IElectionRequest, res: Response, _next:
         throw new BadRequest(msg);
     }
 
-    // Log the action in the roll entry history
-    rollEntry.history = rollEntry.history || [];
-    rollEntry.history.push({
+    // Record the reveal in the roll entry's history BEFORE disclosing anything.
+    // The write is optimistic-concurrency checked and retried from a fresh read
+    // if another writer (roll state change, invite send, the voter casting a
+    // ballot) got there first; if it still cannot be made durable the request
+    // fails and the voter ID is never returned. There must be no path on which
+    // an admin learns a voter ID without the public audit log recording it.
+    const revealAction = {
         action_type: '🚨 VOTER_ID_REVEALED',
         actor: actor,
         timestamp: Date.now(),
         ...(auditNote ? { audit_note: auditNote } : {}),
-    });
+    };
+    const logged = await updateRollWithRetry(
+        electionId,
+        rollEntry.voter_id,
+        (roll) => {
+            roll.history = roll.history || [];
+            roll.history.push(revealAction);
+        },
+        req,
+        '🚨 VOTER_ID_REVEALED',
+        rollEntry,
+    );
 
-    await ElectionRollModel.update(rollEntry, req, '🚨 VOTER_ID_REVEALED');
-
-    Logger.error(req, `BREAK GLASS COMPLETED - ${className}.revealVoterIdByEmail - Election: ${electionId}, VoterID: ${logSafeHash(rollEntry.voter_id)}, Email: ${logSafeHash(email)}`);
+    Logger.error(req, `BREAK GLASS COMPLETED - ${className}.revealVoterIdByEmail - Election: ${electionId}, VoterID: ${logSafeHash(logged.voter_id)}, Email: ${logSafeHash(email)}`);
 
     res.json({
-        voter_id: rollEntry.voter_id,
-        email: rollEntry.email,
+        voter_id: logged.voter_id,
+        email: logged.email,
         warning: 'This action has been logged in the audit trail'
     });
 }

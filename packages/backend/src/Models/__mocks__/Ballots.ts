@@ -2,6 +2,7 @@ import { Ballot } from "@equal-vote/star-vote-shared/domain_model/Ballot";
 import { Uid } from "@equal-vote/star-vote-shared/domain_model/Uid";
 import { ILoggingContext } from "../../Services/Logging/ILogger";
 import { BallotVersionRow, BallotVotes, IBallotStore } from "../IBallotStore";
+import { Conflict } from "@curveball/http-errors";
 
 export default class BallotsDB implements IBallotStore {
     ballots: Ballot[] = [];
@@ -19,12 +20,22 @@ export default class BallotsDB implements IBallotStore {
     submitBallot(ballot: Ballot, _ctx:ILoggingContext, _reason:string): Promise<Ballot> {
         const copy = JSON.parse(JSON.stringify(ballot));
         copy.head = true; // the real store always inserts ballots as the head version
+        copy.update_date = Date.now().toString();
         this.ballots.push(copy);
         return Promise.resolve(JSON.parse(JSON.stringify(copy)));
     }
 
-    updateBallot(ballot: Ballot, _ctx:ILoggingContext, _reason:string): Promise<Ballot> {
+    updateBallot(ballot: Ballot, _ctx:ILoggingContext, _reason:string, expected_update_date: string): Promise<Ballot> {
+        // Mirrors the real store's optimistic concurrency: only the head version the
+        // caller read can be replaced.
+        const head = this.ballots.find(b => b.ballot_id === ballot.ballot_id && b.election_id === ballot.election_id && b.head);
+        if (!head || String(head.update_date) !== expected_update_date) {
+            return Promise.reject(new Conflict('Concurrent write detected, please try again'));
+        }
+        head.head = false;
         const copy = JSON.parse(JSON.stringify(ballot));
+        copy.head = true;
+        copy.update_date = Math.max(Date.now(), Number(head.update_date) + 1).toString();
         this.ballots.push(copy);
         return Promise.resolve(JSON.parse(JSON.stringify(copy)));
     }
