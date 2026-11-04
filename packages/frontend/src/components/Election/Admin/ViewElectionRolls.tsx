@@ -16,6 +16,7 @@ import { PrimaryButton, SecondaryButton } from "~/components/styles";
 import ElectionAuthForm from "~/components/ElectionForm/Details/ElectionAuthForm";
 import useConfirm from "~/components/ConfirmationDialogProvider";
 import { AdminPageNavigation } from '../Sidebar';
+import HeadToHeadChart from "../../../components/Election/Results/components/HeadToHeadChart";
 
 const ViewElectionRolls = () => {
     const { election, permissions, t, updateElection } = useElection()
@@ -27,6 +28,9 @@ const ViewElectionRolls = () => {
     }, [])
     const [inspectingVoter, setInspectingVoter] = useState(false)
     const [addRollPage, setAddRollPage] = useState(false)
+    const [uploadingRolls, setUploadingRolls] = useState(false)
+    // refetch on close since an upload may have partially succeeded
+    const closeAddRoll = () => { setAddRollPage(false); fetchRolls(); }
     const [editedRoll, setEditedRoll] = useState<ElectionRollResponse|null>(null)
     const flags = useFeatureFlags();
     const navigate = useNavigate();
@@ -109,6 +113,7 @@ const ViewElectionRolls = () => {
         await fetchRolls();
     }
 
+    const submittedCount = electionRollData.filter(voter => voter.submitted === true).length;
     return (
         <>
             <Box>
@@ -157,6 +162,20 @@ const ViewElectionRolls = () => {
                     )}
                 </RadioGroup>
             </Box>}
+
+            <HeadToHeadChart
+                leftOnly={true}
+                leftName={'Voted'}
+                rightName={''}
+                leftVotes={submittedCount}
+                rightVotes={0}
+                total={electionRollData.length}
+                equalContent={{
+                    title: 'Election Votes',
+                    description: 'Percentage of voters who have cast a vote'
+                }}
+            />
+
             {voterAccess == 'open' && <ElectionAuthForm />}
             {voterAccess == 'closed' && <>
                 {!inspectingVoter && !addRollPage &&
@@ -210,16 +229,16 @@ const ViewElectionRolls = () => {
                 </Dialog>
                 <Dialog
                     open={addRollPage}
-                    onClose={() => setAddRollPage(false)}
+                    onClose={() => { if (!uploadingRolls) closeAddRoll() }}
                     fullWidth
                     maxWidth='md'
                 >
                     <DialogTitle sx={{m: 0}}>Adding Voters</DialogTitle>
                     <DialogContent>
-                        <AddElectionRoll onClose={() => { setAddRollPage(false); fetchRolls(); }}/>
+                        <AddElectionRoll onClose={closeAddRoll} onUploadingChange={setUploadingRolls}/>
                     </DialogContent>
                     <DialogActions>
-                        <PrimaryButton onClick={() => setAddRollPage(false)}>
+                        <PrimaryButton disabled={uploadingRolls} onClick={closeAddRoll}>
                             {t('keyword.close')}
                         </PrimaryButton>
                     </DialogActions>

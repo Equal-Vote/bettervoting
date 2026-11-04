@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { IRequest } from '../IRequest';
 import Logger from '../Services/Logging/Logger';
 import ServiceLocator from '../ServiceLocator';
+import { getErrorMessage } from '../errorUtils';
 
 interface SendGridEvent {
     email?: string;
@@ -77,7 +78,7 @@ export const sendGridWebhookController = async (req: IRequest, res: Response) =>
                     continue;
                 }
 
-                const { email, unique_args, sg_message_id, event: event_type, timestamp: event_ts, ...rest } = event;
+                const { email: _email, unique_args: _unique_args, sg_message_id: _sg_message_id, event: event_type, timestamp: event_ts, ...rest } = event;
                 await EmailEventsDB.insert({
                     message_id,
                     election_id: sentRow.election_id,
@@ -86,14 +87,14 @@ export const sendGridWebhookController = async (req: IRequest, res: Response) =>
                     event_timestamp: new Date((event_ts ?? Date.now() / 1000) * 1000).toISOString(),
                     details: Object.keys(rest).length > 0 ? rest : undefined,
                 }, req);
-            } catch (err: any) {
-                Logger.error(req, `SendGridWebhook: failed to store event for message_id=${message_id}: ${err.message}`);
+            } catch (err: unknown) {
+                Logger.error(req, `SendGridWebhook: failed to store event for message_id=${message_id}: ${getErrorMessage(err)}`);
             }
         }
 
         res.status(200).send('OK');
-    } catch (err: any) {
-        Logger.error(req, `SendGridWebhook: unexpected error: ${err.message}`);
+    } catch (err: unknown) {
+        Logger.error(req, `SendGridWebhook: unexpected error: ${getErrorMessage(err)}`);
         res.status(500).send('Internal server error');
     }
 };

@@ -1,4 +1,4 @@
-import React, { MouseEventHandler, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import CandidateForm from "../Candidates/CandidateForm";
 import TextField from "@mui/material/TextField";
 import Typography from '@mui/material/Typography';
@@ -6,11 +6,11 @@ import { Box, FormHelperText, Stack } from "@mui/material";
 import { useLocalState } from '../../util';
 import useFeatureFlags from '../../FeatureFlagContextProvider';
 import { SortableList } from '~/components/DragAndDrop';
-import { makeDefaultRace, RaceErrors, useEditRace } from './useEditRace';
+import { RaceErrors, useEditRace } from './useEditRace';
 import { makeUniqueIDSync, ID_PREFIXES, ID_LENGTHS, NOTA_ID, makeWriteInCandidateId, isWriteInCandidate } from '@equal-vote/star-vote-shared/utils/makeID';
 import VotingMethodSelector from './VotingMethodSelector';
 import useElection from '~/components/ElectionContextProvider';
-import { SecondaryButton, PrimaryButton, FileDropBox, LinkButton, Tip, UtilityButton } from '~/components/styles';
+import { PrimaryButton, FileDropBox, Tip, UtilityButton } from '~/components/styles';
 import RaceDialog from './RaceDialog';
 import { Candidate } from '@equal-vote/star-vote-shared/domain_model/Candidate';
 import { getImage, postImage } from '../Candidates/PhotoUtil';
@@ -156,26 +156,6 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
             })
         }
     }, [ephemeralCandidates.length, applyRaceUpdate]);
-
-    const Precincts = () => <>
-        <TextField
-            id={`race-precincts`}
-            name="precincts"
-            label="Precincts"
-            disabled={isDisabled}
-            fullWidth
-            multiline
-            type="text"
-            value={editedRace.precincts ? editedRace.precincts.join('\n') : ''}
-            sx={{
-                m: 1,
-                boxShadow: 2,
-            }}
-            onChange={(e) => applyRaceUpdate(race => {
-                race.precincts = e.target.value ? e.target.value.split('\n') : undefined;
-            })}
-        />
-    </>
 
     const candidateItems = election.state === 'draft' ? ephemeralCandidates : editedRace.candidates;
 

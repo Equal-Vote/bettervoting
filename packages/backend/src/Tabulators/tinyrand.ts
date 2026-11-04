@@ -2,7 +2,6 @@
 
 const SUPPORTED_VERSIONS: readonly number[] = [0];
 const DEFAULT_VERSION: number = 0;
-const MASK32: number = 0xffffffff;
 
 // Note: In Python, NSTATES is set to 1 << BITS (with BITS === 32) so that
 // NSTATES is 2^32. (That is our “upper‐bound” check for shuffle().)

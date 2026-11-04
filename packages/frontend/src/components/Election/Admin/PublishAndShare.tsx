@@ -1,19 +1,15 @@
-import { useState } from 'react';
-import { DateTime } from 'luxon';
 import Grid from "@mui/material/Grid";
-import { Box, Divider, FormControl, FormHelperText, Input, InputLabel, MenuItem, Select, TextField } from "@mui/material";
+import { Box } from "@mui/material";
 import { Typography } from "@mui/material";
-import { LinkButton, PrimaryButton, SecondaryButton } from "../../styles";
-import { Link, useNavigate } from 'react-router-dom';
+import { PrimaryButton } from "../../styles";
+import { useNavigate } from 'react-router-dom';
 import ShareButton from "../ShareButton";
-import { useArchiveEleciton, useFinalizeElection, useSetOpenState } from "../../../hooks/useAPI";
-import { isValidDate, SwitchSetting, TransitionBox, useSubstitutedTranslation } from '../../util';
-import { dateToLocalLuxonDate, useEditElectionDetails } from '../../ElectionForm/Details/useEditElectionDetails';
+import { useFinalizeElection, useSetOpenState } from "../../../hooks/useAPI";
+import { SwitchSetting } from '../../util';
 import useConfirm from '../../ConfirmationDialogProvider';
 import useElection from '../../ElectionContextProvider';
 import useAuthSession from '../../AuthSessionContextProvider';
 import { AdminPageNavigation } from '../Sidebar';
-import { TimeZone, timeZones } from '@equal-vote/star-vote-shared/domain_model/Util';
 import useOptimisticToggle from '~/hooks/useOptimisticToggle';
 
 export default () => {

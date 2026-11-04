@@ -34,7 +34,7 @@ With STAR Voting hand counting is absolutely still an option. A well-organized g
 * The two highest scoring candidates overall are your finalists who advance to the automatic runoff. 
 
 ### Automatic Runoff: (2 people needed, including an observer.)
-* Sort the ballots into three piles - One for each finalist and one pile for no-preference votes. Each ballot counts as a vote for the finalist who was scored higher on that ballot. If both candidates were scored equally that ballot is counted as a vote of no-preference in the runoff.
+* Sort the ballots into three piles - One for each finalist and one pile for ballots showing equal support. Each ballot counts as a vote for the finalist who was scored higher on that ballot. If both candidates were scored equally, that ballot counts as equal support in the runoff.
 * One person looks at each ballot and determines the finalist who was preferred, then puts it in the corresponding pile.
 * A second person watches to ensure there are no mistakes made.
 * Pro Tip: It's easy to make a paper cutout or stencil that goes over the ballot and covers all candidates but the two finalists. This can make it easier to compare the finalists scores at a glance, especially for people without great vision.

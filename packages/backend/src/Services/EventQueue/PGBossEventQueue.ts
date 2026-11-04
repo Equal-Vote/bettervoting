@@ -1,24 +1,27 @@
+import PgBoss from 'pg-boss';
+import { Pool } from 'pg';
 import { ILoggingContext } from "../Logging/ILogger";
 import Logger from "../Logging/Logger";
 import { EventHandler, IEventQueue, JobInsert, PublishBatchOptions } from "./IEventQueue";
 import { QueueName } from "./QueueName";
 
-
+// Jobs per INSERT statement in publishBatch. Bounds the size of the single json
+// parameter pg-boss builds per insert (see publishBatch).
+const INSERT_CHUNK_SIZE = 1000;
 
 export default class PGBossEventQueue implements IEventQueue {
 
-    _boss: any;
-    _pgConnection: object | undefined;
-    _pool: any;
+    _boss!: PgBoss;
+    _pgConnection: PgBoss.DatabaseOptions | undefined;
+    _pool: Pool | undefined;
 
     constructor() {
     }
 
-    public async init(pgConnection: object, ctx: ILoggingContext): Promise<PGBossEventQueue> {
-        const PgBoss = require('pg-boss');
+    public async init(pgConnection: PgBoss.DatabaseOptions, ctx: ILoggingContext): Promise<PGBossEventQueue> {
         this._pgConnection = pgConnection;
         this._boss = new PgBoss(pgConnection);
-        this._boss.on('error', (error: any) => Logger.error(ctx, error));
+        this._boss.on('error', (error: Error) => Logger.error(ctx, error));
 
         await this._boss.start();
         return this;
@@ -26,9 +29,9 @@ export default class PGBossEventQueue implements IEventQueue {
 
     public async publish(queue: QueueName, data: object): Promise<string> {
         const job = await this._boss.send(queue, data, { retryLimit: 3, expireInSeconds: 60 });
-        return job;
+        return job as string;
     }
-    
+
     public async publishBatch(queue: QueueName, data: object[], opts: PublishBatchOptions = {}): Promise<object> {
         // Retry/expiry are deliberately NOT defaulted here (pg-boss insert() default is
         // retrylimit 0). The email handlers call SendGrid before they record the send,
@@ -43,19 +46,47 @@ export default class PGBossEventQueue implements IEventQueue {
             ...(opts.expireInSeconds !== undefined ? { expireInSeconds: opts.expireInSeconds } : {}),
             ...(spacingMs > 0 ? { startAfter: new Date(base + i * spacingMs) } : {}),
         }))
-        const jobs = await this._boss.insert(Jobs);
-        return jobs;
+
+        // pg-boss insert() sends the whole array as ONE json parameter. At 25k email
+        // jobs (each carrying the full subject+body) that is tens of MB in a single
+        // bind message, and the connection was dropped mid-query ("Connection
+        // terminated unexpectedly"). Insert in chunks instead, but inside a single
+        // transaction on one client so the batch stays all-or-nothing: a failure
+        // part-way must not leave half a blast queued, since a retry would re-send it.
+        const client = await this.getPool().connect();
+        const db: PgBoss.Db = {
+            executeSql: async (text: string, values: unknown[]) => {
+                const r = await client.query(text, values);
+                return { rows: r.rows, rowCount: r.rowCount ?? 0 };
+            },
+        };
+        try {
+            await client.query('BEGIN');
+            for (let i = 0; i < Jobs.length; i += INSERT_CHUNK_SIZE) {
+                await this._boss.insert(Jobs.slice(i, i + INSERT_CHUNK_SIZE), { db });
+            }
+            await client.query('COMMIT');
+        } catch (err) {
+            await client.query('ROLLBACK').catch(() => { });
+            throw err;
+        } finally {
+            client.release();
+        }
+        return { inserted: Jobs.length };
+    }
+
+    private getPool(): Pool {
+        if (!this._pool) {
+            this._pool = new Pool(this._pgConnection);
+        }
+        return this._pool;
     }
 
     public async countUnstarted(queue: QueueName, electionId: string): Promise<number> {
         // pg-boss exposes per-queue totals only; a per-election count needs its own
         // query. pgboss.job.data is jsonb, so this is an indexed name lookup plus a
         // filter over that queue's pending rows.
-        if (!this._pool) {
-            const { Pool } = require('pg');
-            this._pool = new Pool(this._pgConnection);
-        }
-        const r = await this._pool.query(
+        const r = await this.getPool().query(
             `SELECT count(*)::int AS n FROM pgboss.job
               WHERE name = $1 AND state IN ('created', 'retry') AND data->>'election_id' = $2`,
             [queue, electionId]);
@@ -68,7 +99,9 @@ export default class PGBossEventQueue implements IEventQueue {
     }
 
     async debugInfo(): Promise<string> {
-        const states = await this._boss.countStates();
+        // countStates() exists at runtime but is missing from pg-boss's type definitions.
+        const boss = this._boss as unknown as { countStates(): Promise<{ queues: Record<string, unknown> }> };
+        const states = await boss.countStates();
         return JSON.stringify(states.queues["test-queue"]);
     }
 

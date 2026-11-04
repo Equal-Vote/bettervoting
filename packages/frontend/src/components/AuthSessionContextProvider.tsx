@@ -35,7 +35,7 @@ export interface IAuthSession {
 const AuthSessionContext = createContext<IAuthSession>(null);
 
 export function AuthSessionContextProvider({ children }: { children: React.ReactNode }) {
-    const [accessToken, setAccessToken] = useCookie('access_token', null, 24 * 5)
+    const [, setAccessToken] = useCookie('access_token', null, 24 * 5)
     const [idToken, setIdToken] = useCookie('id_token', null, 24 * 5)
     const [refreshToken, setRefreshToken] = useCookie('refresh_token', null, 24 * 5)
 

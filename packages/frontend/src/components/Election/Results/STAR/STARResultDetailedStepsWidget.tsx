@@ -5,7 +5,7 @@ import Widget from '../components/Widget';
 
 // NOTE: we're not using filterRandomFromLogs at the moment, but we'll add the functionality back later
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const STARResultDetailedStepsWidget = ({ results, rounds, t, filterRandomFromLogs}: {results: starResults, rounds: number, t: (key: string, v?: object) => any, filterRandomFromLogs: boolean }) => {
+const STARResultDetailedStepsWidget = ({ results, rounds, t }: {results: starResults, rounds: number, t: (key: string, v?: object) => any, filterRandomFromLogs: boolean }) => {
 
     // make log groups
     const topLogs = [
@@ -44,7 +44,7 @@ const STARResultDetailedStepsWidget = ({ results, rounds, t, filterRandomFromLog
             </Paper> }
             {results.roundResults.map((round, r) => (
                 <Box key={r}>
-                    {rounds > 1 && <Typography variant="h4">{`Winner ${r + 1}`}</Typography>}
+                    {rounds > 1 && <Typography variant="h4">{t('results.star.seat_heading', {n: r + 1})}</Typography>}
                     <ul style={{listStyleType: 'none'}}>
                         {roundLogGroups[r].map((group, i) => <li key={i} style={{textAlign: 'left'}}>
                             {group.length == 1 && group[0]}

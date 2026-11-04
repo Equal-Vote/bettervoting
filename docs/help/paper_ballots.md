@@ -81,7 +81,7 @@ For hand-counts, for the scoring round we recommend at least four people: a call
 
 STAR Voting is summable, which means that any subset of ballots can be tallied independently and the totals can be added together. Hand counts can be run quickly if needed by breaking volunteers into 3 person teams and giving each team a stack of ballots. Having each team in a separate room or far enough apart to provide some sonic space is a good idea.
 
-For the runoff round, volunteers can break into teams of two. One person looks at each ballot to determine which finalist was preferred or whether the voter had no preference between those two, then sets each ballot in the corresponding pile. The other person watches to confirm that no mistakes are made. The three stacks of ballots are then counted to determine the winner.
+For the runoff round, volunteers can break into teams of two. One person looks at each ballot to determine which finalist was preferred or whether the voter gave those two equal support, then sets each ballot in the corresponding pile. The other person watches to confirm that no mistakes are made. The three stacks of ballots are then counted to determine the winner.
 
 [For more detailed information and tips on hand counting read this article.](https://www.starvoting.org/hand_count)
 

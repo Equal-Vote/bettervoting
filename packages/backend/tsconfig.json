@@ -19,5 +19,10 @@
     ],
     "resolveJsonModule": true,
   },
-  "include": ["./src/**/*", "verifyShared.js"]
+  "include": ["./src/**/*", "verifyShared.js"],
+  "ts-node": {
+    // Without this, ts-node only type-checks each entry file's import graph and misses
+    // ambient .d.ts files (like untyped-modules.d.ts) that nothing explicitly imports.
+    "files": true
+  }
 }

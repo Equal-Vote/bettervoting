@@ -1,8 +1,7 @@
-import { Ballot } from "@equal-vote/star-vote-shared/domain_model/Ballot";
-import { ElectionRoll } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll";
 import { ILoggingContext } from "../../Services/Logging/ILogger";
 import { IBallotStore } from "../IBallotStore";
 import { IElectionRollStore } from "../IElectionRollStore";
+import { CastVoteEvent } from "../CastVoteStore";
 
 export default class CastVoteStore {
 
@@ -14,7 +13,7 @@ export default class CastVoteStore {
         this._rollStore = rollStore;
     }
 
-    async submitBallotEvent(event: any, ctx: ILoggingContext): Promise<void> {
+    async submitBallotEvent(event: CastVoteEvent, ctx: ILoggingContext): Promise<void> {
         if (event.roll) {
             const currentRoll = await this._rollStore.getByVoterID(event.roll.election_id, event.roll.voter_id, ctx);
             if (currentRoll && currentRoll.submitted && !event.isBallotUpdate) {

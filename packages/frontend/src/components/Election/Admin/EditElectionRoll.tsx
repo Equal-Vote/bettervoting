@@ -2,25 +2,24 @@ import { useEffect, useState } from "react"
 import Grid from "@mui/material/Grid";
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
-import { Box, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
+import { Box, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, Paper } from "@mui/material";
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import PermissionHandler from "../../PermissionHandler";
 import { useApproveRoll, useFlagRoll, useLookupVoter, useInvalidateRoll, useRevealVoterId, useSendEmails, useUnflagRoll } from "../../../hooks/useAPI";
-import { getLocalTimeZoneShort } from "../../util";
 import useElection from "../../ElectionContextProvider";
 import useFeatureFlags from "../../FeatureFlagContextProvider";
 import { ElectionRollResponse } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll";
 import SendEmailDialog from "./SendEmailDialog";
 import useSnackbar from "~/components/SnackbarContext";
 import { PrimaryButton, SecondaryButton } from "~/components/styles";
-import EmailEventsList from "./EmailEventsList";
+import RollActivityTable from "./RollActivityTable";
 
 type Props = {
     roll: ElectionRollResponse,
     fetchRolls: () => Promise<void>,
   }
 const EditElectionRoll = ({ roll, fetchRolls }:Props) => {
-    const { t, election, permissions } = useElection()
+    const { election, permissions } = useElection()
     const flags = useFeatureFlags();
     const [dialogOpen, setDialogOpen] = useState(false);
     const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
@@ -254,31 +253,7 @@ const EditElectionRoll = ({ roll, fetchRolls }:Props) => {
                             </PermissionHandler>
                         </Grid>}
                 </>}
-                {lookup.data?.electionRollEntry?.email_events &&
-                    <EmailEventsList events={lookup.data.electionRollEntry.email_events} />
-                }
-                {roll?.history &&
-                    <TableContainer component={Paper}>
-                        <Table style={{ width: '100%' }} aria-label="simple table">
-                            <TableHead>
-                                <TableCell> Action </TableCell>
-                                <TableCell align="right"> Actor </TableCell>
-                                <TableCell align="right"> {`Timestamp (${getLocalTimeZoneShort()})`} </TableCell>
-                            </TableHead>
-                            <TableBody>
-                                {roll.history.map((history, i) => (
-                                    <TableRow key={i} >
-                                        <TableCell component="th" scope="row">
-                                            {history.action_type}
-                                        </TableCell>
-                                        <TableCell align="right" >{history.actor}</TableCell>
-                                        <TableCell align="right" >{ t('listed_datetime', {listed_datetime: history.timestamp} )}</TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
-                }
+                <RollActivityTable history={roll.history} emailEvents={lookup.data?.electionRollEntry?.email_events} />
             </Grid>
             <SendEmailDialog
                 open={dialogOpen}
@@ -308,6 +283,7 @@ const EditElectionRoll = ({ roll, fetchRolls }:Props) => {
                         <SecondaryButton onClick={() => setConfirmDialogOpen(false)}>
                             Cancel
                         </SecondaryButton>
+                        {/* eslint-disable-next-line jsx-a11y/no-autofocus */}
                         <PrimaryButton onClick={handleConfirmReveal} autoFocus>
                             Confirm
                         </PrimaryButton>

@@ -26,7 +26,8 @@ export default defineConfig([
   {
     ignores: [
       "**/node_modules/**",
-      "**/vite.config.ts"
+      "**/vite.config.ts",
+      "build/**"
     ]
   },
 ]);
