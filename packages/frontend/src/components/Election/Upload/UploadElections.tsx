@@ -1,19 +1,18 @@
 import { Box, Checkbox, FormControlLabel, FormGroup, Typography } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
-import { useSubstitutedTranslation } from "./util";
-import EnhancedTable from "./EnhancedTable";
+import { useSubstitutedTranslation } from "../../util";
+import EnhancedTable from "../../EnhancedTable";
 import { rankColumnCSV } from "./cvrParsers";
 import { makeID, ID_PREFIXES, ID_LENGTHS } from '@equal-vote/star-vote-shared/utils/makeID';
 import Papa from 'papaparse';
-import useAuthSession from "./AuthSessionContextProvider";
+import useAuthSession from "../../AuthSessionContextProvider";
 import { Candidate } from "@equal-vote/star-vote-shared/domain_model/Candidate";
 import { Election, NewElection } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { useGetElections } from "~/hooks/useAPI";
-import { OrderedNewBallot, RaceCandidateOrder } from "@equal-vote/star-vote-shared/domain_model/Ballot";
-import { encodeOrderedVote } from "@equal-vote/star-vote-shared/domain_model/OrderedVoteCodec";
-import { inferElectionSettings } from "./ElectionSettingInference";
-import { PrimaryButton, SecondaryButton } from "./styles";
-import { makeDefaultElection } from "./ElectionForm/Wizard/Wizard";
+import { inferElectionSettings } from "../../ElectionSettingInference";
+import { computeRaceOrder, encodeBallotRow, uploadBallotsBatched } from "./uploadUtils";
+import { PrimaryButton, SecondaryButton } from "../../styles";
+import { makeDefaultElection } from "../../ElectionForm/Wizard/Wizard";
 
 const UploadElections = () => {
     const [addToPublicArchive, setAddToPublicArchive] = useState(true)
@@ -157,75 +156,32 @@ const UploadElections = () => {
 
                 // #5 : Convert Rows to Ballots
                 const {ballots, errors} = rankColumnCSV(parsed_csv, election)
-                const raceOrder: RaceCandidateOrder[] = ballots[0].votes.map(v => ({
-                    race_id: v.race_id,
-                    candidate_id_order: v.scores.map(s => s.candidate_id)
-                }))
-                const orderedBallots: OrderedNewBallot[] = ballots
-                    .filter((b, i) => !errorRows.has(i))
-                    .map(b => {
-                        // TODO: define subBallot type
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        const subBallot: any = {...b};
-                        delete subBallot.votes;
-                        return {
-                            ...subBallot,
-                            orderedVotes: b.votes.map(v => encodeOrderedVote(v.scores.map(s => s.score), v.overvote_rank, v.has_duplicate_rank ?? false))
-                        }
-                    });
+                const raceOrder = computeRaceOrder(election)
+                const orderedBallots = ballots
+                    .filter((_, i) => !errorRows.has(i))
+                    .map(b => encodeBallotRow(b, raceOrder));
 
                 // #6 : Upload Ballots
-                let batchSize = 700;
-                let nextIndex = 0;
-                let responses = [];
-                // TODO: this batching isn't ideal since it'll be tricky to recovered from a partial failure
-                //       that said this will mainly be relevant when uploading batches for an existing election so I'll leave it for now
-                while(nextIndex+1 < ballots.length && nextIndex < 2000000 /* a dummy check to avoid infinite loops*/){
-                    updateElection(cvr.name, (e) => ({
+                const uploadResult = await uploadBallotsBatched(
+                    election.election_id,
+                    raceOrder,
+                    orderedBallots,
+                    (uploaded, total) => {
+                        updateElection(cvr.name, (e) => ({
+                            ...e,
+                            message: `uploading ${uploaded}/${total}...`
+                        }))
+                    }
+                );
+
+                if (uploadResult.aborted) {
+                    console.log('ERRORS for', cvr.name, errors);
+                    updateElection(cvr.name, e => ({
                         ...e,
-                        message: `uploading ${nextIndex}/${parsed_csv.data.length}...`
+                        upload_status: "Error",
+                        message: "(see console)"
                     }))
-
-                    let uploadRes;
-                    do{
-                        uploadRes = await fetch(`/API/Election/${election.election_id}/uploadBallots`, {
-                            method: 'post',
-                            headers: {
-                                'Accept': 'application/json',
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                race_order: raceOrder,
-                                ballots: orderedBallots.slice(nextIndex, nextIndex+batchSize).map((b, i) => ({
-                                    voter_id: i,
-                                    ballot: b
-                                }))
-                            })
-                        })
-
-                        if (!uploadRes.ok){
-                            errors.push({
-                                code: "UploadBallotsFailed",
-                                message: `Error making request: ${uploadRes.status.toString()}`,
-                                row: -1,
-                                type: "UploadBallotsFailed"
-                            })
-                            batchSize = Math.round(batchSize * 0.75);
-                            if(batchSize < 10){
-                                console.log('ERRORS for', cvr.name, errors);
-                                updateElection(cvr.name, e => ({
-                                    ...e,
-                                    upload_status: "Error",
-                                    message: "(see console)"
-                                }))
-                                return;
-                            }
-                        }
-                    }while(!uploadRes.ok);
-                    nextIndex += batchSize;
-
-                    const res = await uploadRes.json();
-                    responses = [...responses, ...res.responses];
+                    return;
                 }
 
                 updateElection(cvr.name, (e) => ({

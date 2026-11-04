@@ -1,7 +1,7 @@
 import { ILoggingContext } from "../../Services/Logging/ILogger";
 import { IBallotStore } from "../IBallotStore";
 import { IElectionRollStore } from "../IElectionRollStore";
-import { CastVoteEvent } from "../CastVoteStore";
+import { CastVoteEvent, ImportBallotsEvent } from "../CastVoteStore";
 
 export default class CastVoteStore {
 
@@ -30,6 +30,26 @@ export default class CastVoteStore {
         if (event.roll) {
             event.roll.submitted = true;
             await this._rollStore.update(event.roll, ctx, `User submits a ballot`);
+        }
+    }
+
+    // All checks before any write, so a failure leaves the stores untouched like the real transaction would
+    async importBallots(event: ImportBallotsEvent, ctx: ILoggingContext): Promise<void> {
+        for (const roll of event.rolls) {
+            const currentRoll = await this._rollStore.getByVoterID(roll.election_id, roll.voter_id, ctx);
+            if (!currentRoll || currentRoll.update_date.toString() !== roll.update_date.toString()) {
+                throw new Error("CONCURRENT_ROLL_EDIT_DETECTED");
+            }
+            if (currentRoll.submitted) {
+                throw new Error("ALREADY_VOTED");
+            }
+        }
+        for (const ballot of event.ballots) {
+            await this._ballotStore.submitBallot(ballot, ctx, `Admin imports a ballot`);
+        }
+        for (const roll of event.rolls) {
+            roll.submitted = true;
+            await this._rollStore.update(roll, ctx, `Admin marks an imported voter as submitted`);
         }
     }
 
