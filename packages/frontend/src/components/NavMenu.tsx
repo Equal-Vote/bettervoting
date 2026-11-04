@@ -1,7 +1,6 @@
 import { Button, IconButton, Menu, Typography } from "@mui/material";
 import { popoverClasses } from "@mui/material/Popover";
 import { useState } from "react";
-import KeyboardArrowRightRoundedIcon from '@mui/icons-material/KeyboardArrowRightRounded';
 
 const navTextSx = {fontWeight: 'bold', fontSize: '1.2rem'};
 

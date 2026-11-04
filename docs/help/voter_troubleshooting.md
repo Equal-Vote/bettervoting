@@ -103,7 +103,7 @@ Beyond that, there are two positive confirmations:
 If the election publishes live tallies, you may also be able to watch the count as it happens — see [Preliminary Results](preliminary_results.md). Whether results are visible, and when, is the organiser's choice.
 
 {: .note }
-> Left a race completely blank, or gave every candidate the same score in a STAR race? The confirmation dialog lists it as *"Abstained - No preference was expressed"*. That's an accurate record of a valid ballot, not an error.
+> Left a race completely blank, or gave every candidate the same score in a STAR race? The confirmation dialog lists it as *"Abstained - All candidates were left blank or marked the same"*. That's an accurate record of a valid ballot, not an error.
 
 ## Warnings while filling out your ballot
 

@@ -7,25 +7,25 @@ export default class BallotsDB implements IBallotStore {
     ballots: Ballot[] = [];
 
     constructor() {}
-    submitBallot(ballot: Ballot, ctx:ILoggingContext, reason:string): Promise<Ballot> {
+    submitBallot(ballot: Ballot, _ctx:ILoggingContext, _reason:string): Promise<Ballot> {
         var copy = JSON.parse(JSON.stringify(ballot));
         copy.head = true; // the real store always inserts ballots as the head version
         this.ballots.push(copy);
         return Promise.resolve(JSON.parse(JSON.stringify(copy)));
     }
 
-    updateBallot(ballot: Ballot, ctx:ILoggingContext, reason:string): Promise<Ballot> {
+    updateBallot(ballot: Ballot, _ctx:ILoggingContext, _reason:string): Promise<Ballot> {
         var copy = JSON.parse(JSON.stringify(ballot));
         this.ballots.push(copy);
         return Promise.resolve(JSON.parse(JSON.stringify(copy)));
     }
 
     // place holder bulkSubmitBallots for now
-    bulkSubmitBallots(ballots: Ballot[], ctx:ILoggingContext, reason:string): Promise<Ballot[]>{
+    bulkSubmitBallots(_ballots: Ballot[], _ctx:ILoggingContext, _reason:string): Promise<Ballot[]>{
         return Promise.resolve(JSON.parse(JSON.stringify([] as Ballot[])));
     }
 
-    getBallotsByElectionID(election_id: string, ctx:ILoggingContext): Promise<Ballot[]> {
+    getBallotsByElectionID(election_id: string, _ctx:ILoggingContext): Promise<Ballot[]> {
         const ballots = this.ballots.filter(
             (ballot) => ballot.election_id === election_id
         );
@@ -33,7 +33,7 @@ export default class BallotsDB implements IBallotStore {
         return Promise.resolve(resBallots);
     }
 
-    async *streamSubmittedBallotsByElectionID(election_id: string, ctx:ILoggingContext): AsyncIterableIterator<Ballot> {
+    async *streamSubmittedBallotsByElectionID(election_id: string, _ctx:ILoggingContext): AsyncIterableIterator<Ballot> {
         const ballots = this.ballots.filter(
             (ballot) => ballot.election_id === election_id && ballot.head && ballot.status === 'submitted'
         );
@@ -49,7 +49,7 @@ export default class BallotsDB implements IBallotStore {
 
     // mirrors getBallotsByElectionID's filter (see Ballots.ts) so tabulation
     // sees exactly the same ballots as the old non-streaming path
-    async *streamVotesByElectionID(election_id: string, ctx:ILoggingContext): AsyncIterableIterator<BallotVotes> {
+    async *streamVotesByElectionID(election_id: string, _ctx:ILoggingContext): AsyncIterableIterator<BallotVotes> {
         const ballots = this.ballots.filter(
             (ballot) => ballot.election_id === election_id
         );
@@ -58,7 +58,7 @@ export default class BallotsDB implements IBallotStore {
         }
     }
 
-    getBallotByVoterID(voter_id: string, election_id: string, ctx:ILoggingContext): Promise<Ballot | undefined> {
+    getBallotByVoterID(voter_id: string, _election_id: string, _ctx:ILoggingContext): Promise<Ballot | undefined> {
         const ballots = this.ballots.filter(
             (ballot) => ballot.user_id === voter_id
         );
@@ -69,7 +69,7 @@ export default class BallotsDB implements IBallotStore {
         return Promise.resolve(resBallots);
     }
 
-    getBallotByID(ballot_id: string, ctx:ILoggingContext): Promise<Ballot | null> {
+    getBallotByID(ballot_id: string, _ctx:ILoggingContext): Promise<Ballot | null> {
         const ballot = this.ballots.find(
             (ballot) => ballot.ballot_id === ballot_id
         );
@@ -80,11 +80,11 @@ export default class BallotsDB implements IBallotStore {
         return Promise.resolve(resBallot);
     }
 
-    deleteAllBallotsForElectionID(election_id: string, ctx: ILoggingContext): Promise<boolean> {
+    deleteAllBallotsForElectionID(_election_id: string, _ctx: ILoggingContext): Promise<boolean> {
         return Promise.resolve(true);
     }
 
-    delete(ballot_id: Uid, ctx:ILoggingContext,reason:string): Promise<boolean> {
+    delete(ballot_id: Uid, _ctx:ILoggingContext,_reason:string): Promise<boolean> {
         const ballot = this.ballots.find(
             (ballot) => ballot.ballot_id === ballot_id
         );

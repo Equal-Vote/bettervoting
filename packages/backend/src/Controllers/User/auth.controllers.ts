@@ -3,11 +3,13 @@ import { responseErr } from "../../Util"
 import { permission } from "@equal-vote/star-vote-shared/domain_model/permissions"
 import { roles } from "@equal-vote/star-vote-shared/domain_model/roles"
 import ServiceLocator from "../../ServiceLocator"
+import { IElectionRequest, IRequest } from "../../IRequest"
+import { Response, NextFunction } from 'express';
 
 const className = 'Auth.Controllers';
 const accountService = ServiceLocator.accountService();
 
-const getUser = (req: any, res: any, next: any) => {
+const getUser = (req: IRequest, res: Response, next: NextFunction) => {
   Logger.info(req, `${className}.getUser`);
   const user = accountService.extractUserFromRequest(req);
   if (user){
@@ -17,7 +19,7 @@ const getUser = (req: any, res: any, next: any) => {
 }
 
 const hasPermission = (permission: permission) => {
-  return (req: any, res: any, next: any) => {
+  return (req: IElectionRequest, res: Response, next: NextFunction) => {
     Logger.debug(req, "\n= = = = =\n!!! hasPermission with: " + JSON.stringify(req.user_auth));
     if (!req.user_auth.roles.some( (role:roles) => permission.includes(role))) {
       var msg = "Does not have permission";
@@ -28,7 +30,7 @@ const hasPermission = (permission: permission) => {
   }
 }
 
-const isLoggedIn = (req: any, res: any, next: any) => {
+const isLoggedIn = (req: IRequest, res: Response, next: NextFunction) => {
   Logger.info(req, `${className}.isLoggedIn user=${!!req.user}`);
   if (!req.user) {
     var msg = "Not Logged In";
@@ -38,10 +40,10 @@ const isLoggedIn = (req: any, res: any, next: any) => {
   next()
 }
 
-const assertOwnership = (req: any, res: any, next: any) => {
+const assertOwnership = (req: IElectionRequest, res: Response, next: NextFunction) => {
   Logger.info(req, `${className}.assertOwnership`);
-  Logger.debug(req, `${req.election.owner_id} ==? ${req.user.sub}`);
-  if (req.election.owner_id != req.user.sub) {
+  Logger.debug(req, `${req.election.owner_id} ==? ${req.user?.sub}`);
+  if (req.election.owner_id != req.user?.sub) {
     var msg = "Unauthorized: User does not own electon";
     Logger.info(req, msg);
     return responseErr(res, req, 401, msg);

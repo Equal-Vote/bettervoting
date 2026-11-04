@@ -12,7 +12,7 @@ import shuffleCandidatesForRandomTiebreak from "../../Tabulators/shuffleCandidat
 
 const BallotModel = ServiceLocator.ballotsDb();
 
-const getElectionResults = async (req: IElectionRequest, res: Response, next: NextFunction) => {
+const getElectionResults = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     const election = req.election
     const electionId = election.election_id;
 

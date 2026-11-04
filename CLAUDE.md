@@ -151,4 +151,4 @@ Only `ready-for-agent` is tracked, via the label `sandcastle`; the other four ca
 
 ### Domain docs
 
-Single-context — one `CONTEXT.md` + `dev-docs/adr/` at the repo root. See `dev-docs/agents/domain.md`.
+Single-context — one `GLOSSARY.md` + `dev-docs/adr/` at the repo root. See `dev-docs/agents/domain.md`.

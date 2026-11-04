@@ -355,6 +355,39 @@ code {
   font-weight: bold;
 }
 
+/* Native ballot inputs are visually hidden in the label but stay focusable and tabbable. */
+.circle:has(input) {
+  position: relative;
+}
+
+.circle input {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Focus ring for both bubble kinds; teal contrasts with white and filled (black) bubbles. */
+.circle:focus-visible,
+.circle:has(input:focus-visible) {
+  outline: 2px solid var(--brand-ltblue);
+  outline-offset: 2px;
+}
+
+@media (forced-colors: active) {
+  .circle input {
+    outline: 1px solid ButtonText;
+  }
+}
+
 /* Results */
 .resultWidget {
   display: flex;

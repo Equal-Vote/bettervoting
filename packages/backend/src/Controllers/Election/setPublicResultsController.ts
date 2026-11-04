@@ -2,7 +2,7 @@ import ServiceLocator from '../../ServiceLocator';
 import Logger from '../../Services/Logging/Logger';
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { expectPermission, expectUpdateDate } from "../controllerUtils";
-import { BadRequest, InternalServerError } from "@curveball/http-errors";
+import { BadRequest } from "@curveball/http-errors";
 import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
@@ -11,7 +11,7 @@ var ElectionsModel = ServiceLocator.electionsDb();
 
 const className = "election.Controllers";
 
-const setPublicResults = async (req: IElectionRequest, res: Response, next: NextFunction) => {
+const setPublicResults = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     Logger.info(req, `${className}.setPublicResults ${req.election.election_id}`);
     expectPermission(req.user_auth.roles, permissions.canEditElectionState)
     const election: Election = req.election

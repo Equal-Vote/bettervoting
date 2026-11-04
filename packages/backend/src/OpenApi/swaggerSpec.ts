@@ -1,8 +1,11 @@
 import swaggerJsdoc from 'swagger-jsdoc';
 
 try{
+  // intentionally require()'d (not the static `import` below) so a missing build
+  // of the shared package throws here, where we can give a friendlier error message
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   require('@equal-vote/star-vote-shared/schema.json')
-}catch(e){
+}catch(_e){
   throw "Could not find shared module. Did you build it?\n Try: npm run build -w @equal-vote/star-vote-shared"
 }
 

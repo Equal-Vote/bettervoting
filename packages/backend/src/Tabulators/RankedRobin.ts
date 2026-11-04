@@ -30,7 +30,7 @@ export function RankedRobin(candidates: candidate[], votes: rawVote[], nWinners 
   );
 }
 
-const singleWinnerRankedRobin = (remainingCandidates: rankedRobinCandidate[], summaryData: rankedRobinSummaryData): rankedRobinRoundResults => {
+const singleWinnerRankedRobin = (remainingCandidates: rankedRobinCandidate[], _summaryData: rankedRobinSummaryData): rankedRobinRoundResults => {
   // Initialize output results data structure
   const roundResults: rankedRobinRoundResults = {
     winners: [],

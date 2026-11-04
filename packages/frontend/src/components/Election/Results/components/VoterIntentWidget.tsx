@@ -4,7 +4,7 @@ import Widget from "./Widget";
 import useRace from "~/components/RaceContextProvider";
 import { Box, Typography } from "@mui/material";
 import ResultsPieChart from "./ResultsPieChart";
-import { candidate, irvResults } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
+import { irvResults } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
 
 // eliminationOrder is an array of candidateIds
 const VoterIntentWidget = () => {

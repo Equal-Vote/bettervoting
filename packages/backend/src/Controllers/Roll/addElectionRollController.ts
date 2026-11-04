@@ -39,7 +39,7 @@ const addElectionRoll = async (req: IElectionRequest & { body: { electionRoll: E
 
     const history = [{
         action_type: "added",
-        actor: req.user.email,
+        actor: req.user?.email ?? '',
         timestamp: Date.now(),
     }]
     if (req.election.settings.invitation === "email" && req.body.electionRoll.some((r: ElectionRollInput) => r.voter_id)) {

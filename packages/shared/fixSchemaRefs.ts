@@ -1,4 +1,4 @@
-const fs = require('fs');
+import fs from 'fs';
 
 // Load the generated schema
 const schemaPath = './dist/schema.json';

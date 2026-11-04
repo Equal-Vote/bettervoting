@@ -1,4 +1,4 @@
-require("dotenv").config();
+import 'dotenv/config';
 
 import { Election } from "@equal-vote/star-vote-shared/domain_model/Election";
 import { NewBallot } from "@equal-vote/star-vote-shared/domain_model/Ballot";
@@ -122,9 +122,9 @@ describe("Multi Race Results", () => {
         const [race0, race1] = res.body.results;
 
         // the candidate lists must not have crossed over
-        expect(race0.summaryData.candidates.map((c: any) => c.name).sort())
+        expect(race0.summaryData.candidates.map((c: {name: string}) => c.name).sort())
             .toEqual(['Alice', 'Bob', 'Cara']);
-        expect(race1.summaryData.candidates.map((c: any) => c.name).sort())
+        expect(race1.summaryData.candidates.map((c: {name: string}) => c.name).sort())
             .toEqual(['Dan', 'Erin', 'Fay']);
 
         // nor the marks
