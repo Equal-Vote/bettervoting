@@ -334,15 +334,43 @@ describe("Import ballots — election without a voter list (ballots only)", () =
 });
 
 describe("Import ballots — election state", () => {
-    test("a draft election rejects imports", async () => {
+    const MULTI_RACE_ORDER = [{ race_id: '0', candidate_id_order: ['0', '1', '2'] }, { race_id: '1', candidate_id_order: ['0', '1', '2'] }];
+    const multiBallot = (ballot_id: string): ImportBallotRow => ({ ballot_id, orderedVotes: [[5, 3, 0, null, null], [null, 4, 1, null, null]] });
+
+    test("a draft election takes test uploads, and finalizing deletes them", async () => {
         const id = await createElection(withSettings({ ...testInputs.MultiRaceElection, state: 'draft' } as Election, PAPER_ENABLED));
-        const res = await th.importBallots(id, {
-            race_order: [{ race_id: '0', candidate_id_order: ['0', '1', '2'] }, { race_id: '1', candidate_id_order: ['0', '1', '2'] }],
-            ballots: [{ ballot_id: 'A1', orderedVotes: [[5, 3, 0, null, null], [null, 4, 1, null, null]] }],
+        const res = await th.importBallots(id, { race_order: MULTI_RACE_ORDER, ballots: [multiBallot('A1'), multiBallot('A2')] }, testInputs.user1token);
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toEqual({ imported: 2, voters_marked: 0 });
+        expect(await fetchBallots(id)).toHaveLength(2);
+
+        const finalized = await th.finalizeElection(id, testInputs.user1token);
+        expect(finalized.statusCode).toBe(200);
+        expect(await ServiceLocator.ballotsDb().getBallotsByElectionID(id, th.ctx)).toHaveLength(0);
+        th.testComplete();
+    });
+
+    test("a draft election with a voter list checks the voter file but marks nobody", async () => {
+        const id = await createElection(withSettings({ ...testInputs.IDRollElection, state: 'draft' } as Election, PAPER_ENABLED));
+        expect((await th.submitElectionRoll(id, testInputs.IDRoll, testInputs.user1token)).statusCode).toBe(200);
+
+        const notOnRoll = await th.importBallots(id, {
+            race_order: RACE_ORDER, ballots: [ballot('P-1'), ballot('P-2')], voter_ids: ['AliceID', 'NobodyID'],
         }, testInputs.user1token);
-        expect(res.statusCode).toBe(400);
-        expect(res.body.error).toContain("state is 'draft'");
-        expect(await fetchBallots(id)).toHaveLength(0);
+        expect(notOnRoll.statusCode).toBe(400);
+        expect(notOnRoll.body.error).toContain('Not on the voter list');
+
+        const res = await th.importBallots(id, {
+            race_order: RACE_ORDER, ballots: [ballot('P-1'), ballot('P-2')], voter_ids: ['AliceID', 'BobID'],
+        }, testInputs.user1token);
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toEqual({ imported: 2, voters_marked: 0 });
+        expect((await fetchRolls(id)).map(r => r.submitted)).toEqual([false, false]);
+
+        // finalizing removes the test ballots and leaves every voter free to vote
+        expect((await th.finalizeElection(id, testInputs.user1token)).statusCode).toBe(200);
+        expect(await ServiceLocator.ballotsDb().getBallotsByElectionID(id, th.ctx)).toHaveLength(0);
+        expect((await fetchRolls(id)).map(r => r.submitted)).toEqual([false, false]);
         th.testComplete();
     });
 
@@ -368,6 +396,54 @@ describe("Import ballots — election state", () => {
         expect(res.statusCode).toBe(400);
         expect(res.body.error).toContain('importBallots');
         expect(await fetchBallots(id)).toHaveLength(0);
+        th.testComplete();
+    });
+});
+
+describe("Import ballots — never together with ballot updates", () => {
+    // ballot_updates is only allowed on email list elections
+    const emailListDraft = { ...testInputs.EmailRollElection, state: 'draft' } as Election;
+
+    test("an election can't be created with both", async () => {
+        const res = await th.createElection(withSettings(emailListDraft, { ...PAPER_ENABLED, ballot_updates: true }), testInputs.user1token);
+        expect(res.statusCode).toBe(400);
+        th.testComplete();
+    });
+
+    test("a draft can't turn on ballot updates while uploads are on, or the reverse", async () => {
+        const withUploads = await createElection(withSettings(emailListDraft, PAPER_ENABLED));
+        const current = (await th.fetchElectionById(withUploads, testInputs.user1token)).election!;
+        const addUpdates = await th.editElection(withSettings(current, { ballot_updates: true }), testInputs.user1token);
+        expect(addUpdates.statusCode).toBe(400);
+        expect(JSON.stringify(addUpdates.err)).toContain('cannot be combined with uploaded paper ballots');
+
+        const withUpdates = await createElection(withSettings(emailListDraft, { ballot_updates: true }));
+        const current2 = (await th.fetchElectionById(withUpdates, testInputs.user1token)).election!;
+        const addUploads = await th.editElection(withSettings(current2, PAPER_ENABLED), testInputs.user1token);
+        expect(addUploads.statusCode).toBe(400);
+        th.testComplete();
+    });
+
+    test("upload settings can't be changed once the election is finalized", async () => {
+        const id = await createElection(withSettings({ ...testInputs.MultiRaceElection, state: 'draft' } as Election, PAPER_ENABLED));
+        expect((await th.finalizeElection(id, testInputs.user1token)).statusCode).toBe(200);
+        const current = (await th.fetchElectionById(id, testInputs.user1token)).election!;
+        const res = await th.editElection(withSettings(current, { allowed_submit_types: ['submitted_via_browser'] }), testInputs.user1token);
+        expect(res.statusCode).toBe(400);
+        expect((await th.fetchElectionById(id, testInputs.user1token)).election!.settings.allowed_submit_types).toContain('submitted_via_admin');
+        th.testComplete();
+    });
+
+    test("an election saved with both before this rule still refuses uploads", async () => {
+        const id = await createElection(withSettings(testInputs.EmailRollElection, PAPER_ENABLED));
+        const stored = (await ServiceLocator.electionsDb().getElectionByID(id, th.ctx))!;
+        stored.settings.ballot_updates = true;
+        await ServiceLocator.electionsDb().updateElection(stored, th.ctx, 'test: legacy settings', String(stored.update_date));
+        const res = await th.importBallots(id, {
+            race_order: RACE_ORDER, ballots: [ballot('P-1')], voter_ids: ['Alice@email.com'],
+        }, testInputs.user1token);
+        expect(res.statusCode).toBe(400);
+        expect(res.body.error).toContain('update their ballot');
         th.testComplete();
     });
 });

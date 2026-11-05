@@ -30,7 +30,7 @@ function useAdminPages() {
         { label: 'Settings',          path: `/${id}/admin/settings`,     icon: <SettingsIcon/> },
         { label: isDraft ? 'Preview Ballot' : 'Live Ballot',   path: `/${id}`,         icon: <PreviewIcon/> },
         { label: isDraft ? 'Preview Results' : 'Live Results', path: `/${id}/results`, icon: <BarChartIcon/> },
-        ...(!isDraft && acceptsPaperBallots ? [{ label: 'Upload Ballots', path: `/${id}/admin/upload_ballots`, icon: <UploadFileIcon/> }] : []),
+        ...(acceptsPaperBallots ? [{ label: 'Upload Ballots', path: `/${id}/admin/upload_ballots`, icon: <UploadFileIcon/> }] : []),
         { label: 'Publish & Share',   path: `/${id}/admin/publish`,      icon: <SendIcon/> },
     ];
 }

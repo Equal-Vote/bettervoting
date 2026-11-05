@@ -71,17 +71,19 @@ async function importBallotsController(req: IElectionRequest, res: Response, _ne
     if (election == null) {
         throw new BadRequest("Invalid election Id");
     }
-    if (election.state !== 'open') {
-        throw new BadRequest(`Ballots can only be imported while the election is open (state is '${election.state}')`);
+    // In draft, uploads are test ballots: finalizing deletes them, like test votes cast online.
+    if (election.state !== 'draft' && election.state !== 'open') {
+        throw new BadRequest(`Ballots can only be imported while the election is a draft or open (state is '${election.state}')`);
     }
     const allowedTypes = election.settings.allowed_submit_types ?? DEFAULT_ALLOWED_SUBMIT_TYPES;
     if (!allowedTypes.includes(ADMIN_SUBMIT_TYPE)) {
         throw new BadRequest("Paper ballot uploads are not enabled for this election");
     }
     const mode = getBallotImportMode(election.settings);
-    // An imported voter has no linked ballot, so the "update your ballot" flow would hand
-    // them a second one. Refuse rather than silently double count.
-    if (mode === 'roll' && election.settings.ballot_updates) {
+    // Settings validation already refuses this combination (see ElectionSettings.ts); this
+    // guards elections saved before that rule. An imported voter has no linked ballot, so
+    // the "update your ballot" flow would hand them a second one.
+    if (election.settings.ballot_updates) {
         throw new BadRequest("Ballots cannot be imported into an election that lets voters update their ballot");
     }
 
@@ -99,7 +101,11 @@ async function importBallotsController(req: IElectionRequest, res: Response, _ne
         throw new BadRequest(`Already in this election: ${describeRows('ballot', rows)} (${[...existingIds].slice(0, 5).join(', ')})`);
     }
 
-    const rolls = mode === 'roll' ? await resolveRolls(req, body) : [];
+    // The voter file is checked against the voter list in draft too, so the admin can try
+    // their files, but voters are only marked once the election is open. Online test votes
+    // in draft don't touch the voter list either, and finalizing doesn't reset it.
+    const resolvedRolls = mode === 'roll' ? await resolveRolls(req, body) : [];
+    const rolls = election.state === 'open' ? resolvedRolls : [];
 
     const now = Date.now();
     const actor = req.user?.username ?? req.user?.email ?? '';

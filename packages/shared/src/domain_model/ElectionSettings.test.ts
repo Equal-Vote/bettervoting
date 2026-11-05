@@ -46,3 +46,28 @@ describe("electionSettingsValidation — allowed_submit_types", () => {
         expect(err).not.toBeNull();
     });
 });
+
+describe("electionSettingsValidation — ballot updates and uploaded ballots", () => {
+    // ballot_updates is only allowed on email list elections, so that's the only place the two can meet
+    const emailList = { voter_access: "closed", voter_authentication: { voter_id: true }, invitation: "email" } as const;
+
+    test("allows ballot updates without uploads", () => {
+        expect(electionSettingsValidation({ ...emailList, ballot_updates: true } as ElectionSettings)).toBeNull();
+    });
+
+    test("allows uploads without ballot updates", () => {
+        expect(electionSettingsValidation({
+            ...emailList,
+            allowed_submit_types: ["submitted_via_browser", "submitted_via_admin"],
+        } as ElectionSettings)).toBeNull();
+    });
+
+    test("rejects ballot updates together with uploads", () => {
+        const err = electionSettingsValidation({
+            ...emailList,
+            ballot_updates: true,
+            allowed_submit_types: ["submitted_via_browser", "submitted_via_admin"],
+        } as ElectionSettings);
+        expect(err).toContain("cannot be combined with uploaded paper ballots");
+    });
+});

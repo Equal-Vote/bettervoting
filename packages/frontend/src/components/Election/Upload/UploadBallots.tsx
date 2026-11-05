@@ -63,12 +63,14 @@ export default function UploadBallots() {
             Paper ballot uploads are turned off for this election. They can be turned on under Settings while the election is still a draft.
         </Alert>;
     }
-    if (election.state !== 'open') {
-        return <Alert severity='info'>Ballots can be uploaded while the election is open.</Alert>;
+    const isDraft = election.state === 'draft';
+    if (!isDraft && election.state !== 'open') {
+        return <Alert severity='info'>Ballots can be uploaded while the election is a draft (as test ballots) or open.</Alert>;
     }
 
     const usesRoll = getBallotImportMode(election.settings) === 'roll';
-    if (usesRoll && election.settings.ballot_updates) {
+    // Settings validation keeps this from happening; it guards elections saved before that rule
+    if (election.settings.ballot_updates) {
         return <Alert severity='warning'>
             Ballots cannot be uploaded to an election that lets voters edit their vote, because an uploaded voter has no ballot of their own to edit.
         </Alert>;
@@ -97,9 +99,11 @@ export default function UploadBallots() {
         if (!request || validationError) return;
         const res = await importBallots.makeRequest(request);
         if (!res) return;
-        setLastResult(usesRoll
-            ? `${res.imported} ballots uploaded and ${res.voters_marked} voters marked as having voted.`
-            : `${res.imported} ballots uploaded.`);
+        setLastResult(isDraft
+            ? `${res.imported} test ballots uploaded. They will be deleted when you finalize the election.`
+            : usesRoll
+                ? `${res.imported} ballots uploaded and ${res.voters_marked} voters marked as having voted.`
+                : `${res.imported} ballots uploaded.`);
         setBallotFile(null);
         setVoterFile(null);
     };
@@ -107,6 +111,10 @@ export default function UploadBallots() {
     const voterColumn = election.settings.invitation === 'email' ? 'email' : 'voter_id';
 
     return <Stack spacing={2} sx={{ maxWidth: 600 }}>
+        {isDraft && <Alert severity='info'>
+            This election is still a draft, so uploads are test ballots: they show up in the preview results and are deleted when you finalize.
+            {usesRoll && ' The voter file is checked against the voter list, but no voters are marked as having voted.'}
+        </Alert>}
         {usesRoll ? <>
             <Typography>
                 This election has a voter list, so upload two files together: one with the ballots and one with the voters who cast them.
@@ -147,7 +155,7 @@ export default function UploadBallots() {
             ? <Alert severity='error'>{validationError}</Alert>
             : <Alert severity='info'>
                 {`Ready to upload ${request.ballots.length} ballots`}
-                {usesRoll && ` and mark ${request.voter_ids?.length ?? 0} voters as having voted`}.
+                {isDraft ? ' as test ballots' : usesRoll && ` and mark ${request.voter_ids?.length ?? 0} voters as having voted`}.
             </Alert>
         )}
         {lastResult && <Alert severity='success'>{lastResult}</Alert>}

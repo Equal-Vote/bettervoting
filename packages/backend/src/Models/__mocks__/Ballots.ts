@@ -90,7 +90,9 @@ export default class BallotsDB implements IBallotStore {
         return Promise.resolve(resBallot);
     }
 
-    deleteAllBallotsForElectionID(_election_id: string, _ctx: ILoggingContext): Promise<boolean> {
+    deleteAllBallotsForElectionID(election_id: string, _ctx: ILoggingContext): Promise<boolean> {
+        // matches the real store, which hard-deletes every row for the election
+        this.ballots = this.ballots.filter(ballot => ballot.election_id !== election_id);
         return Promise.resolve(true);
     }
 

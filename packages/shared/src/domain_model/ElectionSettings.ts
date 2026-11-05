@@ -54,6 +54,11 @@ function settingsCompatiblityValidation(settings: ElectionSettings): string {
         if (settings.invitation != 'email') {
             errorMsg += 'Ballot updating is only permitted on email list elections.  ';
         }
+        // An uploaded ballot has no voter behind it to update it, and an uploaded voter has
+        // no ballot of their own to edit, so the two never run in the same election.
+        if (settings.allowed_submit_types?.includes('submitted_via_admin')) {
+            errorMsg += 'Ballot updating cannot be combined with uploaded paper ballots.  ';
+        }
     }
     return errorMsg;
 }

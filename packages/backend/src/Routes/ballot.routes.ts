@@ -248,11 +248,13 @@ ballotRouter.post('/Election/:id/uploadBallots', asyncHandler(uploadBallotsContr
  * @swagger
  * /Election/{id}/importBallots:
  *   post:
- *     summary: Import admin-collected (e.g. paper) ballots into an open election, all-or-nothing
+ *     summary: Import admin-collected (e.g. paper) ballots into a draft or open election, all-or-nothing
  *     description: >
  *       Closed elections (BetterVoting holds the voter list) require voter_ids, a list of the
  *       voters who cast these ballots, with exactly one entry per ballot; the two lists are
- *       not linked to each other. Open elections must omit voter_ids.
+ *       not linked to each other. Open elections must omit voter_ids. In a draft election the
+ *       ballots are test ballots that finalizing deletes, and voters are checked but not marked
+ *       as having voted. Refused when the election lets voters update their ballot.
  *     tags: [Ballots]
  *     security:
  *      - ApiKeyAuth: []

@@ -10,9 +10,17 @@ grand_parent: Running an Election
 
 If some of your voters vote on paper (or through another system), you can upload their ballots as a CSV file so BetterVoting counts them together with the ballots cast online. For planning a paper election in general, see [Paper Ballots](paper_ballots.md).
 
-## Before the election opens
+## Turning uploads on
 
-Uploads have to be switched on while the election is still a draft: on the **Settings** page, turn on **Accept Uploaded Paper Ballots**. Once the election is open, an **Upload Ballots** page appears in the admin sidebar. Ballots can be uploaded while the election is open.
+Uploads have to be switched on while the election is still a draft: on the **Settings** page, turn on **Accept Uploaded Paper Ballots**. An **Upload Ballots** page then appears in the admin sidebar. The setting can't be changed once the election is finalized.
+
+Uploads can't be combined with **Allow Voters To Edit Vote**: while one is on, the other is turned off and can't be switched on. An uploaded ballot has no voter behind it to edit it.
+
+## Trying it out in a draft
+
+While the election is a draft you can upload test ballots to check your files and see them in the preview results. Test ballots are deleted when you finalize the election, just like test votes cast online. In an election with a voter list, the voter file is checked against the list, but nobody is marked as having voted.
+
+Ballots that count are uploaded once the election is open.
 
 ## Which files you upload
 
@@ -69,9 +77,7 @@ Every upload is all or nothing: if anything is wrong, no ballots are added and n
 - a mark is not a whole number, or not allowed by the race's voting method
 - the ballot file is missing a candidate column, or has a column that isn't a candidate
 - (voter list elections) the voter file is missing, has a different number of rows than the ballot file, repeats a voter, lists someone who isn't on the voter list or isn't approved, or lists someone who has already voted
-- the election isn't open, or uploads weren't turned on for it
-
-Elections that let voters edit their vote can't take uploads when they have a voter list, because an uploaded voter has no ballot of their own to edit.
+- the election is closed, or uploads weren't turned on for it
 
 ## Keeping ballots secret
 

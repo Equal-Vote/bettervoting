@@ -127,14 +127,20 @@ export default function ElectionSettings() {
                     </Box>
 
                     <ElectionSwitchSetting settingKey="random_candidate_order" />
-                    <ElectionSwitchSetting settingKey="ballot_updates" />
+                    {/* editable ballots and uploaded ballots never run together (see ElectionSettings.ts in shared) */}
+                    <ElectionSwitchSetting
+                        settingKey="ballot_updates"
+                        disabled={election.state !== 'draft' || paperBallots}
+                        disabledMessage={paperBallots ? t('disabled_msgs.ballot_updates_with_paper_ballots') : undefined}
+                    />
                     <ElectionSwitchSetting settingKey="require_instruction_confirmation" />
                     <ElectionSwitchSetting settingKey="draggable_ballot" />
                     <SwitchSetting
                         label={t('election_settings.paper_ballots')}
                         toggled={paperBallots}
                         onToggle={setPaperBallots}
-                        disabled={election.state !== 'draft'}
+                        disabled={election.state !== 'draft' || !!election.settings.ballot_updates}
+                        disabledMessage={election.settings.ballot_updates ? t('disabled_msgs.paper_ballots_with_ballot_updates') : undefined}
                     />
                     {/* Note: this can't use ElectionSwitchSetting because we need to use the results from makePublicResultsRequest as the source of truth */}
                     <SwitchSetting

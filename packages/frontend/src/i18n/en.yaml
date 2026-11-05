@@ -709,6 +709,8 @@ tabulation_logs:
 disabled_msgs:
     ballot_updates_when_open: Only supported when election uses email list
     is_public_when_voter_list: Only supported when anyone with the link can {{vote}}
+    ballot_updates_with_paper_ballots: Not available while uploaded paper ballots are accepted
+    paper_ballots_with_ballot_updates: Not available while voters can edit their vote
 
 #######################################
 #### PRIORITY 4 : Info Bubbles ####
@@ -755,8 +757,10 @@ tips:
   paper_ballots:
     title: Accept Uploaded Paper Ballots
     description: >
-      Lets the {{election}} admin upload a CSV of paper ballots while the {{election}} is open.
+      Lets the {{election}} admin upload a CSV of paper ballots while the {{election}} is open
+      (or test ballots while it's a draft, which are deleted when it's finalized).
       If BetterVoting holds the voter list, a second CSV lists the voters who cast them.
+      Can't be combined with letting voters edit their vote.
 
   ballot_updates:
     title: Allow Voters To Update Ballot
