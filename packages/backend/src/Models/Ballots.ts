@@ -7,6 +7,7 @@ import { BallotVotes, IBallotStore } from './IBallotStore';
 import { Kysely, sql, Transaction } from 'kysely';
 import { Conflict } from '@curveball/http-errors';
 import { Database } from './Database';
+import { nextVersionDate } from './versionDate';
 
 const tableName = 'ballotDB';
 const electionRollTableName = 'electionRollDB';
@@ -54,7 +55,8 @@ export default class BallotsDB implements IBallotStore {
             if (demoted.numUpdatedRows === BigInt(0)) {
                 throw new Conflict('Concurrent write detected, please try again');
             }
-            return this.submitBallot(ballot, ctx, reason, activeDb);
+            // The new version's update_date must differ from the one it replaces.
+            return this.makeSubmitBallotsQuery(ballot, ctx, reason, activeDb, nextVersionDate(expected_update_date)) as Promise<Ballot>;
         };
 
         if (db) {
@@ -70,7 +72,8 @@ export default class BallotsDB implements IBallotStore {
     }
 
     private makeSubmitBallotsQuery(inputBallots: Ballot | Ballot[], ctx: ILoggingContext, reason: string,
-                                   db: Kysely<Database> | Transaction<Database> = this._postgresClient): Promise<Ballot[] | Ballot> {
+                                   db: Kysely<Database> | Transaction<Database> = this._postgresClient,
+                                   update_date?: string): Promise<Ballot[] | Ballot> {
         const ballots = Array.isArray(inputBallots)? inputBallots : [inputBallots];
 
         // Strip legacy fields (see Ballot.ts) so callers can't write them.
@@ -78,7 +81,7 @@ export default class BallotsDB implements IBallotStore {
             const { user_id: _user_id, ip_hash: _ip_hash, ...rest } = b;
             return {
                 ...rest,
-                update_date: Date.now().toString(), // Use now() because it doesn't change with time zone
+                update_date: update_date ?? Date.now().toString(), // Use now() because it doesn't change with time zone
                 head: true,
                 create_date: new Date().toISOString(),
             };

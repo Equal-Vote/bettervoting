@@ -4,6 +4,7 @@ import { ILoggingContext } from "../Services/Logging/ILogger";
 import Logger from "../Services/Logging/Logger";
 import { Kysely } from "kysely";
 import { Database } from "./Database";
+import { nextVersionDate } from "./versionDate";
 import { Uid } from "@equal-vote/star-vote-shared/domain_model/Uid";
 
 export type CastVoteEvent = {
@@ -36,6 +37,8 @@ export default class CastVoteStore {
                     if (!event.expected_ballot_update_date) {
                         throw new Error("CONCURRENT_BALLOT_UPDATE_DETECTED");
                     }
+                    // Must differ from the version being replaced, or a stale writer could match it.
+                    ballotToInsert.update_date = nextVersionDate(event.expected_ballot_update_date);
                     // Optimistic Concurrency Control: demote only the exact version this
                     // update was built from, so two edits of one ballot can't both land.
                     const updateBallotResult = await trx.updateTable('ballotDB')

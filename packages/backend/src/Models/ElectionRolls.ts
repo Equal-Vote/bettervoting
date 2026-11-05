@@ -5,6 +5,7 @@ import { IElectionRollStore } from './IElectionRollStore';
 import { Kysely, Transaction } from 'kysely'
 import { Conflict } from '@curveball/http-errors';
 import { Database } from './Database';
+import { nextVersionDate } from './versionDate';
 import { ElectionRoll, NewElectionRoll } from '@equal-vote/star-vote-shared/domain_model/ElectionRoll';
 const tableName = 'electionRollDB';
 
@@ -210,7 +211,8 @@ export default class ElectionRollDB implements IElectionRollStore {
             const { address: _address, registration: _registration, create_date: _cd, update_date: _ud, head: _h, ...rest } = election_roll;
             const sanitizedRoll = {
                 ...rest,
-                update_date: Date.now().toString(),
+                // Must differ from expected_update_date, or a stale writer could match this row.
+                update_date: nextVersionDate(expected_update_date),
                 head: true,
                 create_date: new Date().toISOString(),
             };
