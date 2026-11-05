@@ -9,12 +9,14 @@ import { API_BASE_URL, getSub } from './helperfunctions';
 
 let electionId = '';
 
-const createDraftElection = async (context: BrowserContext, request: APIRequestContext, voterAccess: 'open' | 'closed') => {
+// 'open': open_open (no voter list); 'closed': closed_admin_managed_ids; 'email': closed_bv_managed_ids
+const createDraftElection = async (context: BrowserContext, request: APIRequestContext, kind: 'open' | 'closed' | 'email') => {
+    const voterAccess = kind === 'open' ? 'open' : 'closed';
     const sub = await getSub(context);
     const response = await request.post(`${API_BASE_URL}/elections`, {
         data: {
             Election: {
-                title: `Playwright Upload Ballots (${voterAccess})`,
+                title: `Playwright Upload Ballots (${kind})`,
                 owner_id: sub,
                 description: '',
                 state: 'draft',
@@ -27,8 +29,8 @@ const createDraftElection = async (context: BrowserContext, request: APIRequestC
                     candidates: ['Alice', 'Bob', 'Carol'].map(candidate_name => ({ candidate_id: randomUUID(), candidate_name })),
                 }],
                 settings: {
-                    // open_open (no voter list) or closed_admin_managed_ids (voter list)
                     voter_authentication: { voter_id: voterAccess === 'closed', email: false, ip_address: false },
+                    ...(kind === 'email' ? { invitation: 'email' } : {}),
                     ballot_updates: false,
                     public_results: true,
                     time_zone: 'America/Denver',
@@ -52,16 +54,22 @@ const addVoters = async (request: APIRequestContext, voterIds: string[]) => {
     await expect(response).toBeOK();
 };
 
-// Turns on "Accept Uploaded Paper Ballots" in Settings (draft only), then opens the election
-const enableUploadsAndOpen = async (page: Page) => {
-    await page.goto(`/${electionId}/admin/settings`);
-    const toggle = page.getByLabel('Accept Uploaded Paper Ballots');
-    await expect(toggle).not.toBeChecked();
+const toggleSetting = async (page: Page, label: string, on: boolean) => {
+    const toggle = page.getByLabel(label);
+    await expect(toggle).toBeChecked({ checked: !on });
     const saved = page.waitForResponse(r => r.url().includes(`/Election/${electionId}/edit`) && r.ok());
     await toggle.click();
     await saved;
-    await expect(toggle).toBeChecked();
+    await expect(toggle).toBeChecked({ checked: on });
+};
 
+// Turns on "Accept Uploaded Paper Ballots" in Settings (draft only)
+const enableUploads = async (page: Page) => {
+    await page.goto(`/${electionId}/admin/settings`);
+    await toggleSetting(page, 'Accept Uploaded Paper Ballots', true);
+};
+
+const finalize = async (page: Page) => {
     await page.getByRole('link', { name: 'Publish & Share' }).click();
     await page.waitForURL(`**/${electionId}/admin/publish`);
     await page.getByRole('button', { name: 'Finalize Election' }).click();
@@ -69,6 +77,11 @@ const enableUploadsAndOpen = async (page: Page) => {
     await page.getByRole('link', { name: 'Admin Home' }).click();
     await page.waitForURL(`**/${electionId}/admin`);
     await expect(page.getByText('open', { exact: true })).toBeVisible();
+};
+
+const enableUploadsAndOpen = async (page: Page) => {
+    await enableUploads(page);
+    await finalize(page);
 };
 
 const csvFile = (name: string, lines: string[]) => ({ name, mimeType: 'text/csv', buffer: Buffer.from(lines.join('\n') + '\n') });
@@ -183,5 +196,55 @@ test.describe('Upload paper ballots', () => {
 
         expect(await ballotCount(request)).toBe(0);
         expect(await votedVoterIds(request)).toEqual([]);
+    });
+
+    test('a draft takes test ballots, and finalizing deletes them', async ({ page, context, request }) => {
+        await createDraftElection(context, request, 'open');
+        await enableUploads(page);
+
+        await page.getByRole('link', { name: 'Upload Ballots' }).click();
+        await page.waitForURL(`**/${electionId}/admin/upload_ballots`);
+        await expect(page.getByText('uploads are test ballots')).toBeVisible();
+        await fileInputs(page).nth(0).setInputFiles(BALLOT_CSV);
+        await expect(page.getByText('Ready to upload 3 ballots as test ballots.')).toBeVisible();
+        await page.getByRole('button', { name: 'Upload ballots' }).click();
+        await expect(page.getByText('3 test ballots uploaded.')).toBeVisible();
+        expect(await ballotCount(request)).toBe(3);
+
+        await page.goto(`/${electionId}/results`);
+        await expect(page.getByText('Bob wins!')).toBeVisible({ timeout: 10000 });
+
+        await page.goto(`/${electionId}/admin`);
+        await finalize(page);
+        expect(await ballotCount(request)).toBe(0);
+
+        // once finalized, the upload setting is locked
+        await page.goto(`/${electionId}/admin/settings`);
+        await expect(page.getByLabel('Accept Uploaded Paper Ballots')).toBeChecked();
+        await expect(page.getByLabel('Accept Uploaded Paper Ballots')).toBeDisabled();
+    });
+
+    test('editable ballots and uploads lock each other out', async ({ page, context, request }) => {
+        // editable ballots are only offered on email list elections
+        await createDraftElection(context, request, 'email');
+        await page.goto(`/${electionId}/admin/settings`);
+        const uploads = page.getByLabel('Accept Uploaded Paper Ballots');
+        const editable = page.getByLabel('Allow Voters To Edit Vote');
+
+        await toggleSetting(page, 'Allow Voters To Edit Vote', true);
+        await expect(uploads).toBeDisabled();
+        await toggleSetting(page, 'Allow Voters To Edit Vote', false);
+        await expect(uploads).toBeEnabled();
+
+        await toggleSetting(page, 'Accept Uploaded Paper Ballots', true);
+        await expect(editable).toBeDisabled();
+
+        // the server refuses the combination too, whatever the page allows
+        const current = (await (await request.get(`${API_BASE_URL}/Election/${electionId}`)).json()).election as Election;
+        const response = await request.post(`${API_BASE_URL}/Election/${electionId}/edit`, {
+            data: { Election: { ...current, settings: { ...current.settings, ballot_updates: true } }, expected_update_date: current.update_date },
+        });
+        expect(response.status()).toBe(400);
+        expect(await response.text()).toContain('cannot be combined with uploaded paper ballots');
     });
 });
