@@ -66,9 +66,6 @@ async function makeBallotEvent(req: IElectionRequest, targetElection: Election, 
     // TODO: move to db trigger
     inputBallot.date_submitted = Date.now();
     inputBallot.status = 'submitted';
-    if (inputBallot.history == null){
-        inputBallot.history = [];
-    }
     // preserve the ballot id if it's already provided from prior election
     let updatableBallot;
     if (targetElection.settings.ballot_updates && targetElection.state !== 'draft') {
@@ -80,6 +77,11 @@ async function makeBallotEvent(req: IElectionRequest, targetElection: Election, 
             throw new InternalServerError(msg);
         }
     }
+    // History is server-authoritative too: the public audit log derives
+    // "admin uploaded ballots" events from `submitted_via_admin` entries in it, so
+    // whatever the client sent is discarded. A new ballot starts empty; an update
+    // continues from the stored ballot's history, not the client's copy.
+    inputBallot.history = updatableBallot ? [...(updatableBallot.history ?? [])] : [];
     if (updatableBallot) {
         inputBallot.ballot_id = updatableBallot.ballot_id;
     } else if(!inputBallot.ballot_id || targetElection.ballot_source != 'prior_election') {
@@ -118,6 +120,8 @@ async function makeBallotEvent(req: IElectionRequest, targetElection: Election, 
         roll: roll || undefined,
         userEmail: undefined,
         isBallotUpdate: !!updatableBallot,
+        // The version this update was built from; the store refuses to replace any other.
+        expected_ballot_update_date: updatableBallot ? String(updatableBallot.update_date) : undefined,
     }
 }
 
@@ -147,7 +151,7 @@ async function uploadBallotsController(req: IElectionRequest, res: Response, _ne
         throw new BadRequest(errMsg);
     }
  
-    let events = await Promise.all(
+    const events = await Promise.all(
         req.body.ballots.map(({ballot, voter_id} : {ballot: OrderedNewBallot, voter_id: string}) =>
             makeBallotEvent(
                 req,
@@ -165,7 +169,7 @@ async function uploadBallotsController(req: IElectionRequest, res: Response, _ne
         )
     );
 
-    let output = events.map((event, i) => ({
+    const output = events.map((event, i) => ({
         voter_id: req.body.ballots[i].voter_id,
         success: !('error' in event),
         message: ('error' in event)? event.error : 'Success'
@@ -233,7 +237,7 @@ async function castVoteController(req: IElectionRequest, res: Response, _next: N
         throw new BadRequest("Election is not open");
     }
 
-    let event = await makeBallotEvent(req, targetElection, req.body.ballot, 'submitted_via_browser')
+    const event = await makeBallotEvent(req, targetElection, req.body.ballot, 'submitted_via_browser')
 
     event.userEmail = event.roll?.email ?? AccountService.extractUserFromRequest(req)?.email ?? req.body.receiptEmail;
 

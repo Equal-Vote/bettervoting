@@ -4,6 +4,7 @@ import Logger from '../../Services/Logging/Logger';
 import { IElectionRollStore } from '../IElectionRollStore';
 import { Kysely, Transaction } from 'kysely';
 import { Database } from '../Database';
+import { Conflict } from '@curveball/http-errors';
 
 export default class ElectionRollDB implements IElectionRollStore{
 
@@ -15,13 +16,12 @@ export default class ElectionRollDB implements IElectionRollStore{
     }
 
     submitElectionRoll(electionRolls: NewElectionRoll[], ctx:ILoggingContext, _reason:string, _db?: Kysely<Database> | Transaction<Database>): Promise<ElectionRoll[]> {
-        const self = this;
         const inserted: ElectionRoll[] = [];
-        electionRolls.forEach(function(roll){
+        electionRolls.forEach((roll) => {
             Logger.debug(ctx, `Mock Election Roll Store:  submit:  ${JSON.stringify(roll)}`);
             // Mirrors the partial unique index: only head rows conflict, so a voter_id
             // whose rows have all been archived can be re-added.
-            var existing = self._electionRolls.find(x => x.election_id==roll.election_id && x.voter_id==roll.voter_id && x.head)
+            const existing = this._electionRolls.find(x => x.election_id==roll.election_id && x.voter_id==roll.voter_id && x.head)
             if (existing){
                 Logger.error(ctx, `Already have conflicting voter roll entry!  ${JSON.stringify(existing)}`);
             }
@@ -31,7 +31,7 @@ export default class ElectionRollDB implements IElectionRollStore{
                 head: true,
                 create_date: new Date().toISOString(),
             };
-            self._electionRolls.push(sanitized);
+            this._electionRolls.push(sanitized);
             inserted.push(JSON.parse(JSON.stringify(sanitized)));
         });
         return Promise.resolve(inserted);
@@ -74,7 +74,7 @@ export default class ElectionRollDB implements IElectionRollStore{
 
     getElectionRoll(election_id: string, voter_id: string|null, email: string|null, ip_hash: string|null, ctx:ILoggingContext): Promise<[ElectionRoll] | null> {
         Logger.debug(ctx, `MockElectionRolls get election:${election_id}, voter_id:${voter_id}, email: ${email}, ip_hash: ${ip_hash}`);
-        let roll = this._electionRolls.filter(electionRolls => {
+        const roll = this._electionRolls.filter(electionRolls => {
             if (electionRolls.election_id!==election_id) return false
             if (!electionRolls.head) return false
             if (ip_hash && electionRolls.ip_hash===ip_hash) return true
@@ -92,23 +92,28 @@ export default class ElectionRollDB implements IElectionRollStore{
         return Promise.resolve(res)
     }
 
-    update(voter_roll: NewElectionRoll, ctx: ILoggingContext, _reason: string, _db?: Kysely<Database> | Transaction<Database>): Promise<ElectionRoll | null> {
+    update(voter_roll: NewElectionRoll, ctx: ILoggingContext, _reason: string, expected_update_date: string, _db?: Kysely<Database> | Transaction<Database>): Promise<ElectionRoll> {
         Logger.debug(ctx, `MockElectionRolls update ${JSON.stringify(voter_roll)}`);
-        const index = this._electionRolls.findIndex(electionRoll => {
-            var electionMatch = electionRoll.election_id===voter_roll.election_id;
-            var voterMatch = electionRoll.voter_id===voter_roll.voter_id;
-            return electionMatch && voterMatch && electionRoll.head
-        });
-        if (index < 0){
-            return Promise.resolve(null)
+        // Mirrors the real store: only the head row whose update_date the caller
+        // read can be replaced. Anything else is a concurrent write.
+        const head = this._electionRolls.find(electionRoll =>
+            electionRoll.election_id === voter_roll.election_id
+            && electionRoll.voter_id === voter_roll.voter_id
+            && electionRoll.head
+        );
+        if (!head || String(head.update_date) !== expected_update_date) {
+            return Promise.reject(new Conflict('Concurrent write detected, please try again'));
         }
+        head.head = false;
+        const { create_date: _cd, update_date: _ud, head: _h, ...rest } = JSON.parse(JSON.stringify(voter_roll));
         const sanitized: ElectionRoll = {
-            ...JSON.parse(JSON.stringify(voter_roll)),
-            update_date: Date.now().toString(),
+            ...rest,
+            // Strictly increasing so a same-millisecond rewrite still gets a new version id.
+            update_date: Math.max(Date.now(), Number(head.update_date) + 1).toString(),
             head: true,
             create_date: new Date().toISOString(),
         };
-        this._electionRolls[index] = sanitized;
+        this._electionRolls.push(sanitized);
         return Promise.resolve(JSON.parse(JSON.stringify(sanitized)));
     }
 
