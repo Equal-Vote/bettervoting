@@ -17,6 +17,9 @@ jobs:
     #   name: github-pages
     #   url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    env:
+      # CI-only compose override adds GitHub Actions layer caching.
+      COMPOSE_FILE: docker-compose.yml:docker-compose.ci.yml
 
     steps:
       - name: Checkout repository
@@ -30,11 +33,18 @@ jobs:
           docker-compose --version
         continue-on-error: false
 
+      # Exposes ACTIONS_RUNTIME_TOKEN / ACTIONS_RESULTS_URL so buildx's `type=gha` cache can talk to the cache service.
+      - name: Expose GitHub Actions runtime for the build cache
+        uses: crazy-max/ghaction-github-runtime@v3
+
+      - name: Build images (with GitHub Actions layer cache)
+        run: docker compose build web playwright
+
       - name: Start application-specific services using Docker Compose
-        # We're telling it to build playwright specifically without the -d tag so we can see the logs and the next
+        # Images were built in the previous step. We start playwright specifically without the -d tag so we can see the logs and the next
         # step won't start until all the tests are done. The docker-compose.yml has the dependencies set up so it
         # will build all of the components playwright needs to run the tests.
-        run: docker compose up --build playwright
+        run: docker compose up --no-build playwright
         continue-on-error: false
 
       - name: Check for failure
