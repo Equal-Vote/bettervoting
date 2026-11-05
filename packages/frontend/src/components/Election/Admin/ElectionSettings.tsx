@@ -87,6 +87,7 @@ export default function ElectionSettings() {
     // getOpenElections filters on settings.voter_access == 'open' in addition to
     // is_public, so on a voter-list election the flag would have no visible effect.
     const browsable = election.settings.voter_access === 'open';
+    const emailList = election.settings.invitation === 'email' && election.settings.voter_access !== 'open';
 
     // Inclusive [min_rankings, max_rankings] — drives the rank-limit selector below.
     const rankOptions = Array.from({ length: max_rankings - min_rankings + 1 }, (_, i) => min_rankings + i);
@@ -127,11 +128,14 @@ export default function ElectionSettings() {
                     </Box>
 
                     <ElectionSwitchSetting settingKey="random_candidate_order" />
-                    {/* editable ballots and uploaded ballots never run together (see ElectionSettings.ts in shared) */}
+                    {/* Editable ballots need an email list, and never run together with uploaded
+                        ballots (settingsCompatiblityValidation in shared refuses both). Turning it
+                        off is always allowed in a draft, so an older election can get out of it. */}
                     <ElectionSwitchSetting
                         settingKey="ballot_updates"
-                        disabled={election.state !== 'draft' || paperBallots}
-                        disabledMessage={paperBallots ? t('disabled_msgs.ballot_updates_with_paper_ballots') : undefined}
+                        disabled={election.state !== 'draft' || (!election.settings.ballot_updates && (!emailList || paperBallots))}
+                        disabledMessage={!emailList ? t('disabled_msgs.ballot_updates_when_open')
+                            : paperBallots ? t('disabled_msgs.ballot_updates_with_paper_ballots') : undefined}
                     />
                     <ElectionSwitchSetting settingKey="require_instruction_confirmation" />
                     <ElectionSwitchSetting settingKey="draggable_ballot" />

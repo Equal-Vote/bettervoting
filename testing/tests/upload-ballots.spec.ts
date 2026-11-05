@@ -200,7 +200,10 @@ test.describe('Upload paper ballots', () => {
 
     test('a draft takes test ballots, and finalizing deletes them', async ({ page, context, request }) => {
         await createDraftElection(context, request, 'open');
-        await enableUploads(page);
+        await page.goto(`/${electionId}/admin/settings`);
+        // editable ballots need an email list, so an open election never offers them
+        await expect(page.getByLabel('Allow Voters To Edit Vote')).toBeDisabled();
+        await toggleSetting(page, 'Accept Uploaded Paper Ballots', true);
 
         await page.getByRole('link', { name: 'Upload Ballots' }).click();
         await page.waitForURL(`**/${electionId}/admin/upload_ballots`);
