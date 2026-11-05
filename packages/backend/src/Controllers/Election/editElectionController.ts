@@ -2,7 +2,7 @@ import { Election, electionValidation } from '@equal-vote/star-vote-shared/domai
 import { Race } from '@equal-vote/star-vote-shared/domain_model/Race';
 import ServiceLocator from '../../ServiceLocator';
 import Logger from '../../Services/Logging/Logger';
-import { expectPermission, expectUpdateDate } from "../controllerUtils";
+import { expectPermission, expectUpdateDate, expectWriteInsAllowed } from "../controllerUtils";
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { BadRequest } from "@curveball/http-errors";
 import { IElectionRequest } from "../../IRequest";
@@ -50,6 +50,7 @@ const editElection = async (req: IElectionRequest, res: Response, _next: NextFun
         Logger.info(req, `Invalid Election: '${election.election_id}'` + validationErr);
         throw new BadRequest("Invalid Election: " + validationErr);
     }
+    expectWriteInsAllowed(election, req.user);
 
     const inputGroups: string[] | undefined = election.settings?.voter_groups;
     if (inputGroups !== undefined) {

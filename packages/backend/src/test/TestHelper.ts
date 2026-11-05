@@ -54,19 +54,19 @@ export class TestHelper {
         this.logger = new TestLoggerImpl().setup();
     }
 
-    getRequest(url: string, userToken: string | null, customToken: string| null = null, tempId: string|null=null) {
+    getRequest(url: string, userToken: string | null, customToken: string| null = null, tempId: string|null=null, extraCookies: Record<string, string> = {}) {
         let r = request(this.expressApp)
             .get(url)
             .set("Accept", "application/json");
-        r = this.addUserTokenVoterIdCookie(r, userToken, null, customToken, tempId);
+        r = this.addUserTokenVoterIdCookie(r, userToken, null, customToken, tempId, extraCookies);
         return r;
     }
 
-    postRequest(url: string, body: object, userToken: string | null, customToken: string| null = null, tempId: string|null=null) {
+    postRequest(url: string, body: object, userToken: string | null, customToken: string| null = null, tempId: string|null=null, extraCookies: Record<string, string> = {}) {
         let r = request(this.expressApp)
             .post(url)
             .set("Accept", "application/json");
-        r = this.addUserTokenVoterIdCookie(r, userToken, null, customToken, tempId);
+        r = this.addUserTokenVoterIdCookie(r, userToken, null, customToken, tempId, extraCookies);
         return r.send(body);
     }
 
@@ -92,9 +92,11 @@ export class TestHelper {
         election: Election,
         userToken: string | null,
         customToken: string | null = null,
-        tempId: string | null = null
+        tempId: string | null = null,
+        // e.g. the `${election_id}_claim_key` cookie a temp owner needs for edit access
+        extraCookies: Record<string, string> = {}
     ): Promise<ElectionResponse> {
-        const current = await this.fetchElectionById(election.election_id, userToken, customToken, tempId);
+        const current = await this.fetchElectionById(election.election_id, userToken, customToken, tempId, extraCookies);
         const res = await this.postRequest(
             `/API/Election/${election.election_id}/edit`,
             {
@@ -103,7 +105,8 @@ export class TestHelper {
             },
             userToken,
             customToken,
-            tempId
+            tempId,
+            extraCookies
         );
         return this.electionResponse(res);
     }
@@ -144,13 +147,15 @@ export class TestHelper {
         electionId: Uid,
         userToken: string | null,
         customToken: string | null = null,
-        tempId: string | null = null
+        tempId: string | null = null,
+        extraCookies: Record<string, string> = {}
     ): Promise<ElectionResponse> {
         const res = await this.getRequest(
             `/API/Election/${electionId}`,
             userToken,
             customToken,
-            tempId
+            tempId,
+            extraCookies
         );
         return this.electionResponse(res);
     }
@@ -301,6 +306,7 @@ export class TestHelper {
         voterId: string | null,
         customToken: string | null,
         tempId: string | null,
+        extraCookies: Record<string, string> = {},
     ): SupertestTest {
         let cookies = "";
         if (userToken != null) {
@@ -323,6 +329,12 @@ export class TestHelper {
                 cookies += "; ";
             }
             cookies += "temp_id=" + tempId;
+        }
+        for (const [name, value] of Object.entries(extraCookies)) {
+            if (cookies.length > 0) {
+                cookies += "; ";
+            }
+            cookies += `${name}=${value}`;
         }
         if (cookies.length > 0) {
             req = req.set("Cookie", [cookies]);
