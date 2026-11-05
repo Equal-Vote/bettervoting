@@ -89,7 +89,7 @@ describe("Import ballots — election with a voter list (two lists: ballots and 
         expect(rolls.map(r => r.submitted)).toEqual([true, true]);
         // the roll never learns which ballot belongs to which voter
         rolls.forEach(r => expect(r.ballot_id).toBeUndefined());
-        rolls.forEach(r => expect(r.history?.at(-1)?.action_type).toBe('submit'));
+        rolls.forEach(r => expect(r.history?.at(-1)?.action_type).toBe('submitted_via_admin'));
         th.testComplete();
     });
 
@@ -318,8 +318,45 @@ describe("Import ballots — election without a voter list (ballots only)", () =
             ballots: [multiBallot('A1'), { ballot_id: 'A2', orderedVotes: [[9, 3, 0, null, null], [null, 4, 1, null, null]] }],
         }, testInputs.user1token);
         expect(res.statusCode).toBe(400);
-        expect(res.body.error).toContain('Invalid ballot 2');
-        expect(res.body.error).toContain('out of bounds');
+        expect(res.body.error).toContain('Ballot "A2", Race 0 / A: STAR scores go from 0 to 5, not 9');
+        expect(await fetchBallots(id)).toHaveLength(0);
+        th.testComplete();
+    });
+
+    // race 0 takes write-ins, race 1 doesn't
+    const writeInElection = () => {
+        const base = withSettings(testInputs.MultiRaceElection, PAPER_ENABLED);
+        return { ...base, races: base.races.map((r, i) => i === 0 ? { ...r, enable_write_in: true } : r) };
+    };
+
+    test("write-ins are stored the way online write-ins are", async () => {
+        const id = await createElection(writeInElection());
+        const res = await th.importBallots(id, {
+            race_order: MULTI_RACE_ORDER,
+            ballots: [{ ...multiBallot('W1'), write_ins: [{ race_id: '0', name: ' Zed ', mark: 4 }] }],
+        }, testInputs.user1token);
+        expect(res.statusCode).toBe(200);
+        const [stored] = await fetchBallots(id);
+        expect(stored.votes[0].scores.at(-1)).toEqual({ candidate_id: 'cwi-Zed', score: 4, write_in_name: 'Zed' });
+        expect(stored.votes[1].scores).toHaveLength(3);
+        th.testComplete();
+    });
+
+    test("a write-in on a race without write-ins, or out of range, is refused by race and slot", async () => {
+        const id = await createElection(writeInElection());
+        const noWriteIns = await th.importBallots(id, {
+            race_order: MULTI_RACE_ORDER,
+            ballots: [{ ...multiBallot('W1'), write_ins: [{ race_id: '1', name: 'Zed', mark: 4 }] }],
+        }, testInputs.user1token);
+        expect(noWriteIns.statusCode).toBe(400);
+        expect(noWriteIns.body.error).toContain(`Race "Race 1" doesn't allow write-ins`);
+
+        const outOfRange = await th.importBallots(id, {
+            race_order: MULTI_RACE_ORDER,
+            ballots: [{ ...multiBallot('W1'), write_ins: [{ race_id: '0', name: 'Zed', mark: 7 }] }],
+        }, testInputs.user1token);
+        expect(outOfRange.statusCode).toBe(400);
+        expect(outOfRange.body.error).toContain('Ballot "W1", Race 0 / write-in 1: STAR scores go from 0 to 5, not 7');
         expect(await fetchBallots(id)).toHaveLength(0);
         th.testComplete();
     });
@@ -444,6 +481,50 @@ describe("Import ballots — never together with ballot updates", () => {
         }, testInputs.user1token);
         expect(res.statusCode).toBe(400);
         expect(res.body.error).toContain('update their ballot');
+        th.testComplete();
+    });
+});
+
+describe("Delete uploaded ballots", () => {
+    test("withdraws uploads and unmarks their voters, keeps online ballots, and frees the ids", async () => {
+        const id = await createIdRollElection();
+        const uploaded = await th.importBallots(id, { race_order: RACE_ORDER, ballots: [ballot('P-1')], voter_ids: ['AliceID'] }, testInputs.user1token);
+        expect(uploaded.statusCode).toBe(200);
+        const online = await th.submitBallotWithId(id, testInputs.Ballot2, testInputs.user1token, 'BobID');
+        expect(online.statusCode).toBe(200);
+        await (await th.eventQueue as MockEventQueue).waitUntilJobsFinished();
+        expect(await fetchBallots(id)).toHaveLength(2);
+
+        const res = await th.deleteUploadedBallots(id, testInputs.user1token);
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toEqual({ deleted: 1, voters_unmarked: 1 });
+
+        const left = await fetchBallots(id);
+        expect(left).toHaveLength(1);
+        expect(left[0].ballot_id).not.toBe('P-1');
+        const rolls = await fetchRolls(id);
+        expect(rolls.find(r => r.voter_id === 'AliceID')!.submitted).toBe(false);
+        expect(rolls.find(r => r.voter_id === 'AliceID')!.history?.at(-1)?.action_type).toBe('uploaded_ballots_deleted');
+        expect(rolls.find(r => r.voter_id === 'BobID')!.submitted).toBe(true);
+
+        // the withdrawn ballot stays in the store, archived with the deletion recorded
+        const stored = await ServiceLocator.ballotsDb().getBallotsByElectionID(id, th.ctx);
+        expect(stored.some(b => b.ballot_id === 'P-1')).toBe(false);
+
+        // the corrected file can be uploaded with the same ids and voters
+        const again = await th.importBallots(id, { race_order: RACE_ORDER, ballots: [ballot('P-1', [1, 2, 3])], voter_ids: ['AliceID'] }, testInputs.user1token);
+        expect(again.statusCode).toBe(200);
+        expect(await fetchBallots(id)).toHaveLength(2);
+        th.testComplete();
+    });
+
+    test("only the election admin can delete, and nothing to delete is fine", async () => {
+        const id = await createIdRollElection();
+        const forbidden = await th.deleteUploadedBallots(id, testInputs.user2token);
+        expect(forbidden.statusCode).toBe(401);
+        const empty = await th.deleteUploadedBallots(id, testInputs.user1token);
+        expect(empty.statusCode).toBe(200);
+        expect(empty.body).toEqual({ deleted: 0, voters_unmarked: 0 });
         th.testComplete();
     });
 });

@@ -256,6 +256,10 @@ export class TestHelper {
         );
     }
 
+    async deleteUploadedBallots(electionId: Uid, userToken: string | null): Promise<SupertestResponse> {
+        return this.postRequest(`/API/Election/${electionId}/deleteUploadedBallots`, {}, userToken);
+    }
+
     async fetchBallots(
         electionId: Uid,
         userToken: string | null

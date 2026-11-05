@@ -5,9 +5,13 @@ import { OrderedVote, Vote } from "./Vote";
 
 export const BALLOT_SUBMIT_TYPES = ['submitted_via_browser', 'submitted_via_admin', 'submitted_via_discord'] as const;
 export type BallotSubmitType = typeof BALLOT_SUBMIT_TYPES[number];
-// BallotActionType currently mirrors BallotSubmitType 1:1 because submitting is the only ballot action we track.
-// Once other action types exist (e.g. edits, retractions), this should become its own union that includes them.
-export type BallotActionType = BallotSubmitType;
+// An admin withdrew every uploaded ballot (deleteUploadedBallotsController). The ballot row
+// is archived (head=false) with this action appended, so the withdrawal stays in the
+// election history and the ballot id can be uploaded again.
+export const UPLOAD_DELETED_ACTION = 'deleted_via_admin' as const;
+export type BallotActionType = BallotSubmitType | typeof UPLOAD_DELETED_ACTION;
+export const isDeletedUpload = (history?: BallotAction[] | null) =>
+    (history ?? []).some(a => a?.action_type === UPLOAD_DELETED_ACTION);
 
 export interface NewBallotWithVoterID {
     voter_id: string;

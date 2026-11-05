@@ -33,6 +33,7 @@ election_history:
     preliminary_off: Preliminary results disabled
     ballots_milestone: 'Ballots cast reached {{count}}'
     upload_ballots: 'An admin uploaded {{count}} ballot(s)'
+    uploaded_ballots_deleted: 'An admin deleted {{count}} uploaded ballot(s)'
     edits_milestone: 'Ballot edits reached {{count}}'
     voter_revealed: An admin used the break-glass tool to reveal a voter ID
 

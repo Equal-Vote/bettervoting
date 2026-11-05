@@ -6,6 +6,7 @@ import {
     getAnonymizedBallotsByElectionID,
     uploadBallotsController,
     importBallotsController,
+    deleteUploadedBallotsController,
     getWriteInNamesController,
 } from '../Controllers/Ballot';
 import {
@@ -283,6 +284,39 @@ ballotRouter.post('/Election/:id/uploadBallots', asyncHandler(uploadBallotsContr
  *       409:
  *         description: A listed voter changed during the import, nothing was imported */
 ballotRouter.post('/Election/:id/importBallots', asyncHandler(importBallotsController))
+
+/**
+ * @swagger
+ * /Election/{id}/deleteUploadedBallots:
+ *   post:
+ *     summary: Withdraw every uploaded ballot from a draft or open election
+ *     description: >
+ *       Every ballot uploaded through importBallots is withdrawn, and every voter an upload
+ *       marked as having voted goes back to not having voted. Online ballots are kept. The
+ *       withdrawal is recorded in the ballots' history and shows in the election history,
+ *       and the withdrawn ballot ids can be uploaded again.
+ *     tags: [Ballots]
+ *     security:
+ *      - ApiKeyAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The election ID
+ *     responses:
+ *       200:
+ *         description: The uploaded ballots were withdrawn
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DeleteUploadedBallotsResponse'
+ *       400:
+ *         description: The election is not a draft or open
+ *       409:
+ *         description: Something changed during the deletion, nothing was deleted */
+ballotRouter.post('/Election/:id/deleteUploadedBallots', asyncHandler(deleteUploadedBallotsController))
 
 /**
  * @swagger

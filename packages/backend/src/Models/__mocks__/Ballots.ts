@@ -1,4 +1,4 @@
-import { Ballot } from "@equal-vote/star-vote-shared/domain_model/Ballot";
+import { Ballot, BallotAction, isDeletedUpload } from "@equal-vote/star-vote-shared/domain_model/Ballot";
 import { Uid } from "@equal-vote/star-vote-shared/domain_model/Uid";
 import { ILoggingContext } from "../../Services/Logging/ILogger";
 import { BallotVotes, IBallotStore } from "../IBallotStore";
@@ -26,8 +26,9 @@ export default class BallotsDB implements IBallotStore {
     }
 
     getBallotsByElectionID(election_id: string, _ctx:ILoggingContext): Promise<Ballot[]> {
+        // head !== false: ballots updated through the mock keep head=true on both versions
         const ballots = this.ballots.filter(
-            (ballot) => ballot.election_id === election_id
+            (ballot) => ballot.election_id === election_id && ballot.head !== false
         );
         const resBallots = JSON.parse(JSON.stringify(ballots));
         return Promise.resolve(resBallots);
@@ -37,7 +38,7 @@ export default class BallotsDB implements IBallotStore {
         const wanted = new Set(ballot_ids);
         const existing = new Set(
             this.ballots
-                .filter((ballot) => ballot.election_id === election_id && wanted.has(ballot.ballot_id))
+                .filter((ballot) => ballot.election_id === election_id && wanted.has(ballot.ballot_id) && !isDeletedUpload(ballot.history))
                 .map((ballot) => ballot.ballot_id)
         );
         return Promise.resolve([...existing]);
@@ -61,7 +62,7 @@ export default class BallotsDB implements IBallotStore {
     // sees exactly the same ballots as the old non-streaming path
     async *streamVotesByElectionID(election_id: string, _ctx:ILoggingContext): AsyncIterableIterator<BallotVotes> {
         const ballots = this.ballots.filter(
-            (ballot) => ballot.election_id === election_id
+            (ballot) => ballot.election_id === election_id && ballot.head !== false
         );
         for (const ballot of ballots) {
             yield { votes: JSON.parse(JSON.stringify(ballot.votes)) };
@@ -88,6 +89,17 @@ export default class BallotsDB implements IBallotStore {
         }
         const resBallot = JSON.parse(JSON.stringify(ballot));
         return Promise.resolve(resBallot);
+    }
+
+    // what CastVoteStore.deleteUploadedBallots does to ballot rows
+    archiveWithAction(election_id: string, ballot_ids: string[], action: BallotAction) {
+        const ids = new Set(ballot_ids);
+        for (const ballot of this.ballots) {
+            if (ballot.election_id === election_id && ids.has(ballot.ballot_id) && ballot.head !== false) {
+                ballot.head = false;
+                ballot.history = [...(ballot.history ?? []), action];
+            }
+        }
     }
 
     deleteAllBallotsForElectionID(election_id: string, _ctx: ILoggingContext): Promise<boolean> {

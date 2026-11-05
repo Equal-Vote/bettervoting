@@ -56,20 +56,47 @@ The two files are **never linked**. The rows don't need to be in the same order,
 
 ## The ballot file
 
-The ballot file has the same layout as the CSV you can download from the results page (see [Exporting Your Data](exporting_your_data.md)), so the **Download ballot file template** button on the upload page gives you the right headers.
+The ballot file has the same layout as the CSV you can download from the results page (see [Exporting Your Data](exporting_your_data.md)), so the **Download ballot file template** button on the upload page gives you the right headers. The upload page also shows a table of what goes in each column for your election, with an example row.
 
 | Column | Meaning |
 |---|---|
 | `ballot_id` | Your id for the paper ballot, for example the number printed on it. Required, up to 64 characters, and must not already be used in this election. |
 | `precinct` | Optional. Only needed if your races are limited to certain precincts. |
-| One column per candidate | The mark for that candidate: the score for STAR, 1 or 0 for Approval, the rank for ranked methods. Leave the cell blank if the candidate was not marked. |
+| One column per candidate | The mark for that candidate (see below). Leave the cell blank if the candidate was not marked. |
+| Write-in pairs | Only for races that take write-ins (see below). |
 
-With a single race, each candidate column is headed by the candidate's name. With more than one race, headers are `Race Title!!Candidate Name`.
+With a single race, each candidate column is headed by the candidate's name (or `Race Title!!Candidate Name`, which also works). With more than one race, headers are `Race Title!!Candidate Name`.
 
 ```
 ballot_id,precinct,Alice,Bob,Carol
 P-0001,,5,0,3
 ```
+
+### Marks
+
+| Voting method | In each candidate's column | A blank cell means |
+|---|---|---|
+| STAR, STAR PR | a score from 0 to 5 | not scored |
+| Approval | 1 to approve | not approved (0 also means not approved) |
+| Choose one | 1 for the one chosen candidate; mark at most one | not chosen |
+| Ranked (RCV, STV, Ranked Robin) | a rank: 1 for first choice, 2 for second, and so on, up to the election's rank limit | not ranked |
+
+A choose-one race with more than one candidate marked is refused. Leave the race blank for a spoiled ballot.
+
+### Write-ins
+
+A race that takes write-ins has pairs of columns after its candidates: `write_in_1` for the written-in name and `write_in_1_mark` for its mark, then `write_in_2` and `write_in_2_mark`, and so on (with the `Race Title!!` prefix when there is more than one race). The mark follows the same rule as the candidates. Leave both blank if nobody was written in. The template has two pairs per race; add more columns if a ballot has more write-ins, up to 10.
+
+```
+ballot_id,precinct,Measure!!Yes,Measure!!No,Measure!!write_in_1,Measure!!write_in_1_mark
+P-0001,,1,,Pat Writein,1
+```
+
+Written-in names show up for review with the write-ins cast online.
+
+### Files from older templates
+
+The layout only ever gains columns, so a template or export you saved earlier keeps uploading as long as the election's races and candidates haven't changed.
 
 ## The voter file
 
@@ -84,13 +111,25 @@ If BetterVoting sends the invitations for your election, voter IDs are hidden fr
 
 ## What gets checked
 
-Every upload is all or nothing: if anything is wrong, no ballots are added and no voters are marked, and the error says which rows to fix. An upload is refused if:
+Every upload is all or nothing: if anything is wrong, no ballots are added and no voters are marked. Problems with the file show up as soon as you select it, in a table giving the spreadsheet row, the ballot id, the column and what's wrong, so you can fix them all in one go. An upload is refused if:
 
 - a `ballot_id` is blank, repeated in the file, or already used in this election
 - a mark is not a whole number, or not allowed by the race's voting method
+- a write-in has a name but no mark, or a mark but no name
 - the ballot file is missing a candidate column, or has a column that isn't a candidate
 - (voter list elections) the voter file is missing, has a different number of rows than the ballot file, repeats a voter, lists someone who isn't on the voter list or isn't approved, or lists someone who has already voted
 - the election is closed, or it doesn't take uploaded ballots
+
+Before anything is uploaded, the page asks you to confirm. Once the election is open, an upload can only be undone by deleting all uploaded ballots.
+
+## Fixing a mistake
+
+If an upload went wrong, use **Delete all uploaded ballots** at the bottom of the upload page, then upload corrected files. You confirm by typing *delete all uploaded ballots*.
+
+- Every uploaded ballot is withdrawn. Ballots cast online are kept.
+- Voters the uploads marked as having voted go back to not having voted, so the same voter file can be uploaded again.
+- The same ballot ids can be used again.
+- Nothing is erased: the withdrawn ballots are kept in the election's records, and once the election is finalized the deletion appears in its public audit log, like uploads do.
 
 ## Keeping ballots secret
 

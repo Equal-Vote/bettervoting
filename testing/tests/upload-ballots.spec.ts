@@ -10,7 +10,7 @@ import { API_BASE_URL, getSub } from './helperfunctions';
 let electionId = '';
 
 // 'open': open_open (no voter list); 'closed': closed_admin_managed_ids; 'email': closed_bv_managed_ids
-const createDraftElection = async (context: BrowserContext, request: APIRequestContext, kind: 'open' | 'closed' | 'email') => {
+const createDraftElection = async (context: BrowserContext, request: APIRequestContext, kind: 'open' | 'closed' | 'email', writeIns = false) => {
     const voterAccess = kind === 'open' ? 'open' : 'closed';
     const sub = await getSub(context);
     const response = await request.post(`${API_BASE_URL}/elections`, {
@@ -27,6 +27,7 @@ const createDraftElection = async (context: BrowserContext, request: APIRequestC
                     num_winners: 1,
                     voting_method: 'STAR',
                     candidates: ['Alice', 'Bob', 'Carol'].map(candidate_name => ({ candidate_id: randomUUID(), candidate_name })),
+                    ...(writeIns ? { enable_write_in: true } : {}),
                 }],
                 settings: {
                     voter_authentication: { voter_id: voterAccess === 'closed', email: false, ip_address: false },
@@ -93,6 +94,13 @@ const enableUploadsAndOpen = async (page: Page) => {
     await finalize(page);
 };
 
+// Upload, through the confirmation the page asks for first
+const upload = async (page: Page) => {
+    await page.getByRole('button', { name: 'Upload ballots' }).click();
+    await expect(page.getByRole('dialog')).toContainText(/Upload \d+ ballots?\?/);
+    await page.getByRole('dialog').getByRole('button', { name: 'Upload', exact: true }).click();
+};
+
 const csvFile = (name: string, lines: string[]) => ({ name, mimeType: 'text/csv', buffer: Buffer.from(lines.join('\n') + '\n') });
 
 // The page has one hidden file input per file, in this order: ballot file, then voter file
@@ -139,7 +147,7 @@ test.describe('Upload paper ballots', () => {
 
         await fileInputs(page).nth(0).setInputFiles(BALLOT_CSV);
         await expect(page.getByText('Ready to upload 3 ballots.')).toBeVisible();
-        await page.getByRole('button', { name: 'Upload ballots' }).click();
+        await upload(page);
         await expect(page.getByText('3 ballots uploaded.')).toBeVisible();
 
         expect(await ballotCount(request)).toBe(3);
@@ -161,7 +169,7 @@ test.describe('Upload paper ballots', () => {
         // listed in a different order from the ballots: the files are never linked
         await fileInputs(page).nth(1).setInputFiles(csvFile('voters.csv', ['voter_id', '3', '1', '2']));
         await expect(page.getByText('Ready to upload 3 ballots and mark 3 voters as having voted.')).toBeVisible();
-        await page.getByRole('button', { name: 'Upload ballots' }).click();
+        await upload(page);
         await expect(page.getByText('3 ballots uploaded and 3 voters marked as having voted.')).toBeVisible();
 
         expect(await ballotCount(request)).toBe(3);
@@ -199,7 +207,7 @@ test.describe('Upload paper ballots', () => {
         await fileInputs(page).nth(1).setInputFiles(csvFile('voters.csv', ['voter_id', '1', '2', '99']));
         await expect(page.getByText('Ready to upload 3 ballots and mark 3 voters as having voted.')).toBeVisible();
         const rejected = page.waitForResponse(r => r.url().includes(`/Election/${electionId}/importBallots`));
-        await uploadButton.click();
+        await upload(page);
         expect((await rejected).status()).toBe(400);
         await expect(page.getByText(/Not on the voter list/)).toBeVisible();
 
@@ -219,7 +227,7 @@ test.describe('Upload paper ballots', () => {
         await expect(page.getByText('uploads are test ballots')).toBeVisible();
         await fileInputs(page).nth(0).setInputFiles(BALLOT_CSV);
         await expect(page.getByText('Ready to upload 3 ballots as test ballots.')).toBeVisible();
-        await page.getByRole('button', { name: 'Upload ballots' }).click();
+        await upload(page);
         await expect(page.getByText('3 test ballots uploaded.')).toBeVisible();
         expect(await ballotCount(request)).toBe(3);
 
@@ -294,8 +302,74 @@ test.describe('Upload paper ballots', () => {
         await page.goto(`/${electionId}/admin/upload_ballots`);
         await fileInputs(page).nth(0).setInputFiles(BALLOT_CSV);
         await fileInputs(page).nth(1).setInputFiles(csvFile('voters.csv', ['voter_id', '2', '3', '1']));
-        await page.getByRole('button', { name: 'Upload ballots' }).click();
+        await upload(page);
         await expect(page.getByText('3 ballots uploaded and 3 voters marked as having voted.')).toBeVisible();
         expect(await votedVoterIds(request)).toEqual(['1', '2', '3']);
+    });
+
+    test('a mistaken upload can be deleted, with the phrase typed, and uploaded again', async ({ page, context, request }) => {
+        await createDraftElection(context, request, 'closed');
+        await addVoters(request, ['1', '2', '3']);
+        await enableUploadsAndOpen(page);
+        await page.goto(`/${electionId}/admin/upload_ballots`);
+        const voters = csvFile('voters.csv', ['voter_id', '3', '1', '2']);
+        await fileInputs(page).nth(0).setInputFiles(BALLOT_CSV);
+        await fileInputs(page).nth(1).setInputFiles(voters);
+        await page.getByRole('button', { name: 'Upload ballots' }).click();
+        await expect(page.getByRole('dialog')).toContainText('This cannot be undone without deleting all uploaded ballots.');
+        await page.getByRole('dialog').getByRole('button', { name: 'Upload', exact: true }).click();
+        await expect(page.getByText('3 ballots uploaded and 3 voters marked as having voted.')).toBeVisible();
+
+        await page.getByRole('button', { name: 'Delete all uploaded ballots' }).click();
+        const dialog = page.getByRole('dialog');
+        const confirmDelete = dialog.getByRole('button', { name: 'Delete uploaded ballots' });
+        await expect(confirmDelete).toBeDisabled();
+        await dialog.getByLabel('Confirmation phrase').fill('delete all ballots');
+        await expect(confirmDelete).toBeDisabled();
+        await dialog.getByLabel('Confirmation phrase').fill('delete all uploaded ballots');
+        await confirmDelete.click();
+        await expect(page.getByText('3 uploaded ballots deleted and 3 voters marked as not having voted.')).toBeVisible();
+        expect(await ballotCount(request)).toBe(0);
+        expect(await votedVoterIds(request)).toEqual([]);
+
+        // the corrected file goes in with the same ballot ids and voters
+        await fileInputs(page).nth(0).setInputFiles(BALLOT_CSV);
+        await fileInputs(page).nth(1).setInputFiles(voters);
+        await upload(page);
+        await expect(page.getByText('3 ballots uploaded and 3 voters marked as having voted.')).toBeVisible();
+        expect(await ballotCount(request)).toBe(3);
+    });
+
+    test('the page explains each column, lists every problem, and takes write-ins', async ({ page, context, request }) => {
+        await createDraftElection(context, request, 'open', true);
+        await enableUploadsAndOpen(page);
+        await page.goto(`/${electionId}/admin/upload_ballots`);
+        const guide = page.getByRole('table', { name: 'What to write for each race' });
+        await expect(guide).toContainText('a score from 0 to 5');
+        await expect(page.getByText('write_in_1_mark').first()).toBeVisible();
+
+        await fileInputs(page).nth(0).setInputFiles(csvFile('ballots.csv', [
+            'ballot_id,precinct,Alice,Bob,Carol,write_in_1,write_in_1_mark',
+            'P-001,,1,5,0,,',
+            'P-002,,9,5,0,,',
+            'P-003,,0,4,5,Zed,',
+        ]));
+        const problems = page.getByRole('table', { name: 'Problems in the file' });
+        await expect(problems.getByRole('row')).toHaveCount(3); // header + 2
+        await expect(problems).toContainText('STAR scores go from 0 to 5, not 9');
+        await expect(problems).toContainText('The write-in "Zed" needs a mark');
+        await expect(page.getByRole('button', { name: 'Upload ballots' })).toBeDisabled();
+
+        await fileInputs(page).nth(0).setInputFiles(csvFile('ballots.csv', [
+            'ballot_id,precinct,Alice,Bob,Carol,write_in_1,write_in_1_mark',
+            'P-001,,1,5,0,,',
+            'P-002,,2,5,0,,',
+            'P-003,,0,4,5,Zed,3',
+        ]));
+        await upload(page);
+        await expect(page.getByText('3 ballots uploaded.')).toBeVisible();
+        const ballots = (await (await request.get(`${API_BASE_URL}/Election/${electionId}/ballots`)).json()).ballots as { votes: { scores: { write_in_name?: string, score: number }[] }[] }[];
+        const writeIns = ballots.flatMap(b => b.votes[0].scores.filter(s => s.write_in_name));
+        expect(writeIns).toEqual([expect.objectContaining({ write_in_name: 'Zed', score: 3 })]);
     });
 });

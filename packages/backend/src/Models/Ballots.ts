@@ -1,4 +1,4 @@
-import { Ballot } from '@equal-vote/star-vote-shared/domain_model/Ballot';
+import { Ballot, UPLOAD_DELETED_ACTION } from '@equal-vote/star-vote-shared/domain_model/Ballot';
 import { Uid } from '@equal-vote/star-vote-shared/domain_model/Uid';
 import { ILoggingContext } from '../Services/Logging/ILogger';
 import Logger from '../Services/Logging/Logger';
@@ -118,7 +118,8 @@ export default class BallotsDB implements IBallotStore {
     }
 
     // Includes head=false rows on purpose: reusing the id of a superseded ballot version
-    // would make that id's history two unrelated ballots.
+    // would make that id's history two unrelated ballots. Deleted uploads are the exception:
+    // the admin withdrew them to upload a corrected file, which reuses the ids.
     async getExistingBallotIDs(election_id: string, ballot_ids: string[], ctx: ILoggingContext, db?: Kysely<Database> | Transaction<Database>): Promise<string[]> {
         Logger.debug(ctx, `${tableName}.getExistingBallotIDs ${election_id} (${ballot_ids.length} ids)`);
         if (ballot_ids.length === 0) return [];
@@ -130,6 +131,7 @@ export default class BallotsDB implements IBallotStore {
             .distinct()
             .where('election_id', '=', election_id)
             .where('ballot_id', 'in', ballot_ids)
+            .where(sql<boolean>`not (coalesce(history::jsonb, '[]'::jsonb) @> ${JSON.stringify([{ action_type: UPLOAD_DELETED_ACTION }])}::jsonb)`)
             .execute();
         return rows.map(r => r.ballot_id);
     }

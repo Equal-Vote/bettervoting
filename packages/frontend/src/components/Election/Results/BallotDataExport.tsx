@@ -38,6 +38,14 @@ export const BallotDataExport = ({ election, results }: Props) => {
 
     const downloadCSV = () => {
         if (!ballots) return;
+        // Write-ins go in name/mark pairs after the race's candidates, as many pairs as the
+        // ballot with the most write-ins in that race needs (the upload reads the same layout)
+        const writeInPairs = new Map<string, number>();
+        ballots.forEach(ballot => ballot.votes.forEach(vote => {
+            const n = vote.scores.filter(s => s.write_in_name !== undefined).length;
+            writeInPairs.set(vote.race_id, Math.max(writeInPairs.get(vote.race_id) ?? 0, n));
+        }));
+        const prefixOf = (race: { title: string }) => election.races.length == 1 ? '' : `${race.title}!!`;
         const header = [
             { label: 'ballot_id', key: 'ballot_id' },
             { label: 'precinct', key: 'precinct' },
@@ -46,6 +54,10 @@ export const BallotDataExport = ({ election, results }: Props) => {
                     label: election.races.length == 1 ? c.candidate_name : `${race.title}!!${c.candidate_name}`,
                     key: `${race.race_id}-${c.candidate_id}`,
                 })),
+                ...Array.from({ length: writeInPairs.get(race.race_id) ?? 0 }, (_, i) => [
+                    { label: `${prefixOf(race)}write_in_${i + 1}`, key: `${race.race_id}-write_in_${i + 1}` },
+                    { label: `${prefixOf(race)}write_in_${i + 1}_mark`, key: `${race.race_id}-write_in_${i + 1}_mark` },
+                ]).flat(),
                 ...((race.voting_method == 'IRV' || race.voting_method == 'STV') ? [
                     { label: 'overvote_rank', key: 'overvote_rank' },
                     { label: 'has_duplicate_rank', key: 'has_duplicate_rank' },
@@ -59,7 +71,14 @@ export const BallotDataExport = ({ election, results }: Props) => {
                 precinct: ballot.precinct ?? '',
             };
             ballot.votes.forEach((vote) => {
+                let writeIn = 0;
                 vote.scores.forEach((score) => {
+                    if (score.write_in_name !== undefined) {
+                        writeIn++;
+                        row[`${vote.race_id}-write_in_${writeIn}`] = score.write_in_name;
+                        row[`${vote.race_id}-write_in_${writeIn}_mark`] = score.score ?? '';
+                        return;
+                    }
                     // null / undefined = the voter didn't score this candidate;
                     // keep it as a blank cell, distinct from an explicit 0.
                     row[`${vote.race_id}-${score.candidate_id}`] = score.score ?? '';
@@ -94,7 +113,8 @@ export const BallotDataExport = ({ election, results }: Props) => {
     };
 
     return (
-        <a onClick={fetchBallots}>
+        // starts loading on any click or key inside, so the menu has ballots by the time it opens
+        <div role="presentation" onClick={fetchBallots} onKeyDown={fetchBallots}>
             {/* A single MenuButton must stay mounted while the ballots load: swapping in a
                 second one on load unmounts the open menu mid-click. Only the items change.
                 (An array of items rather than a fragment, since Menu rejects fragment children.) */}
@@ -112,6 +132,6 @@ export const BallotDataExport = ({ election, results }: Props) => {
                     ]}
                 </MenuButton>
             </Box>
-        </a>
+        </div>
     );
 };

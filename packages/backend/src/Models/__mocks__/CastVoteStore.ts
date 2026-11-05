@@ -1,7 +1,8 @@
 import { ILoggingContext } from "../../Services/Logging/ILogger";
 import { IBallotStore } from "../IBallotStore";
 import { IElectionRollStore } from "../IElectionRollStore";
-import { CastVoteEvent, ImportBallotsEvent } from "../CastVoteStore";
+import { CastVoteEvent, DeleteUploadedBallotsEvent, ImportBallotsEvent } from "../CastVoteStore";
+import BallotsDB from "./Ballots";
 
 export default class CastVoteStore {
 
@@ -50,6 +51,14 @@ export default class CastVoteStore {
         for (const roll of event.rolls) {
             roll.submitted = true;
             await this._rollStore.update(roll, ctx, `Admin marks an imported voter as submitted`);
+        }
+    }
+
+    async deleteUploadedBallots(event: DeleteUploadedBallotsEvent, ctx: ILoggingContext): Promise<void> {
+        (this._ballotStore as unknown as BallotsDB).archiveWithAction(event.election_id, event.ballot_ids, event.action);
+        for (const roll of event.rolls) {
+            roll.submitted = false;
+            await this._rollStore.update(roll, ctx, `Admin deletes uploaded ballots`);
         }
     }
 

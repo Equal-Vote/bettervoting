@@ -4,7 +4,7 @@ import { NotFound } from '@curveball/http-errors';
 import { IElectionRequest } from '../../IRequest';
 import { Response, NextFunction } from 'express';
 import { ElectionRollAction } from '@equal-vote/star-vote-shared/domain_model/ElectionRoll';
-import { BallotAction } from '@equal-vote/star-vote-shared/domain_model/Ballot';
+import { BallotAction, isDeletedUpload, UPLOAD_DELETED_ACTION } from '@equal-vote/star-vote-shared/domain_model/Ballot';
 
 const className = 'election.Controllers';
 
@@ -49,6 +49,7 @@ export type HistoryEvent =
     | { type: 'ballots_milestone'; timestamp: string; count: number }
     | { type: 'ballots_edited_milestone'; timestamp: string; count: number }
     | { type: 'upload_ballots'; timestamp: string; count: number }
+    | { type: 'uploaded_ballots_deleted'; timestamp: string; count: number }
     | { type: 'voter_id_revealed'; timestamp: string };
 
 // The row shapes buildHistory needs — a structural subset of what the
@@ -141,16 +142,20 @@ export const buildHistory = (
     // Collect every version of every ballot, plus the admin-submit actions
     // recorded in their history arrays. Grouping by ballot_id (rather than
     // trusting row order) is what makes the first-cast vs edit split reliable.
-    const versionsByBallot = new Map<string, number[]>();
+    // A deleted upload ends that ballot id's life: if the admin uploads the id again, the
+    // new row is a new ballot, not an edit of the withdrawn one.
+    const versionsByBallot = new Map<string, { ms: number; deleted: boolean }[]>();
     const adminSubmitTimes: number[] = [];
+    const deleteTimes: number[] = [];
     const seenAdminSubmit = new Set<string>();
     for (const row of ballotRows) {
         const rowMs = parseUpdateMs(row.update_date);
+        const version = { ms: rowMs, deleted: isDeletedUpload(row.history as BallotAction[] | null) };
         const versions = versionsByBallot.get(row.ballot_id);
         if (versions === undefined) {
-            versionsByBallot.set(row.ballot_id, [rowMs]);
+            versionsByBallot.set(row.ballot_id, [version]);
         } else {
-            versions.push(rowMs);
+            versions.push(version);
         }
         // A ballot's history array is re-persisted on every version, so the same
         // admin-submit action shows up on multiple rows; dedupe per ballot.
@@ -162,6 +167,10 @@ export const buildHistory = (
                 seenAdminSubmit.add(key);
                 adminSubmitTimes.push(action.timestamp);
             }
+            // only ever appended once, to the row it archived
+            if (action?.action_type === UPLOAD_DELETED_ACTION && typeof action.timestamp === 'number') {
+                deleteTimes.push(action.timestamp);
+            }
         }
     }
 
@@ -169,14 +178,18 @@ export const buildHistory = (
     const castTimes: number[] = [];
     const editTimes: number[] = [];
     for (const versions of versionsByBallot.values()) {
-        versions.sort((a, b) => a - b);
-        castTimes.push(versions[0]);
-        editTimes.push(...versions.slice(1));
+        versions.sort((a, b) => a.ms - b.ms);
+        let startsLife = true;
+        for (const v of versions) {
+            (startsLife ? castTimes : editTimes).push(v.ms);
+            startsLife = v.deleted;
+        }
     }
 
     castTimes.sort((a, b) => a - b);
     editTimes.sort((a, b) => a - b);
     adminSubmitTimes.sort((a, b) => a - b);
+    deleteTimes.sort((a, b) => a - b);
 
     pairs.push(...emitMilestones('ballots_milestone', COUNT_MILESTONES, castTimes));
     pairs.push(...emitMilestones('ballots_edited_milestone', EDIT_MILESTONES, editTimes));
@@ -188,6 +201,15 @@ export const buildHistory = (
     for (const batch of clusterUploads(adminSubmitTimes)) {
         pairs.push({
             event: { type: 'upload_ballots', timestamp: truncateToDayIso(batch.startMs), count: batch.count },
+            rawMs: batch.startMs,
+        });
+    }
+
+    // Deleting every uploaded ballot is one admin action, stamped once for the whole batch.
+    // Day granularity for the same reason as uploads.
+    for (const batch of clusterUploads(deleteTimes)) {
+        pairs.push({
+            event: { type: 'uploaded_ballots_deleted', timestamp: truncateToDayIso(batch.startMs), count: batch.count },
             rawMs: batch.startMs,
         });
     }
