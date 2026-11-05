@@ -68,7 +68,7 @@ export function AllocatedScore(candidates: candidate[], votes: rawVote[], nWinne
     // let weightedSumsByRound = []
     let candidatesByRound: candidate[][] = []
     // run loop until specified number of winners are found
-    while (results.elected.length < nWinners) {
+    while (results.elected.length < nWinners && remainingCandidates.length > 0) {
         results.logs.push(`Round ${results.elected.length+1} of tabulation...`)
         // weight the scores
         let weighted_scores: ballotFrac[] = Array(scoresNorm.length);
@@ -90,7 +90,9 @@ export function AllocatedScore(candidates: candidate[], votes: rawVote[], nWinne
 
         candidatesByRound.push([...remainingCandidates])
         // get index of winner
-        let maxAndTies = indexOfMax(weighted_sums, summaryData.candidates);
+        // Only candidates who haven't won yet are eligible. Elected candidates' scores are zeroed, so without this
+        // an all-zero round (no remaining ballot weight on any remaining candidate) could re-elect a past winner.
+        let maxAndTies = indexOfMax(weighted_sums, summaryData.candidates, remainingCandidates);
         let w = maxAndTies.maxIndex;
         // add winner to winner list
         results.logs.push(`${summaryData.candidates[w].name} is scored highest with ${rounded(weighted_sums[w].mul(MAX_SCORE))} stars and is elected!`)
@@ -261,21 +263,16 @@ function findWeightOnSplit(cand_df: winner_scores[], split_point: typeof Fractio
     return weight_on_split;
 }
 
-function indexOfMax(arr: typeof Fraction[], candidates: candidate[]) {
-    if (arr.length === 0) {
-        return { maxIndex: -1, ties: [] };
-    }
-
-    let max = arr[0];
-    let maxIndex = 0;
-    let ties: candidate[] = [candidates[0]];
-    for (let i = 1; i < arr.length; i++) {
-        if (max.equals(arr[i])) {
-            ties.push(candidates[i]);
-        } else if (arr[i].compare(max) > 0) {
+function indexOfMax(arr: typeof Fraction[], candidates: candidate[], eligible: candidate[] = candidates) {
+    let maxIndex = -1;
+    let ties: candidate[] = [];
+    for (let i = 0; i < arr.length; i++) {
+        if (!eligible.includes(candidates[i])) continue;
+        if (maxIndex === -1 || arr[i].compare(arr[maxIndex]) > 0) {
             maxIndex = i;
-            max = arr[i];
             ties = [candidates[i]];
+        } else if (arr[i].equals(arr[maxIndex])) {
+            ties.push(candidates[i]);
         }
     }
     if (ties.length > 1) {

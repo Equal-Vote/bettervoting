@@ -172,6 +172,36 @@ describe("Allocated Score Tests", () => {
     //    expect(results.elected[1].name).toBe('Doug');
     //})
 
+    test("Never elects the same candidate twice, even when the last round is an all-zero tie", () => {
+        // Three seats, quota 3. Only the first two voters score Cal or Dee, and they are also two of Ana's
+        // three 5-star voters, so their weight is fully spent electing Ana. After Ben wins round 2, the
+        // remaining weight sits on ballots that score only Ana and Ben, so every candidate totals 0 in
+        // round 3. Ana is first in tie-break order, and used to be elected a second time here.
+        const candidates = ['Ana', 'Ben', 'Cal', 'Dee']
+        const votes = [
+            [5, 4, 3, 1],
+            [5, 4, 1, 2],
+            [4, 4, 0, 0],
+            [4, 3, 0, 0],
+            [3, 4, 0, 0],
+            [4, 4, 0, 0],
+            [3, 3, 0, 0],
+            [4, 5, 0, 0],
+            [5, 3, 0, 0],
+        ]
+        const results = AllocatedScore(...mapMethodInputs(candidates, votes), 3)
+        const elected = results.elected.map(c => c.name)
+        expect(new Set(elected).size).toBe(3);
+        // Cal and Dee tie at 0 in round 3; Cal is earlier in tie-break order
+        expect(elected).toStrictEqual(['Ana', 'Ben', 'Cal']);
+        expect(results.other.map(c => c.name)).toStrictEqual(['Dee']);
+    })
+
+    test("Fills every seat with a different candidate when there are no ballots", () => {
+        const results = AllocatedScore(...mapMethodInputs(['A', 'B', 'C'], []), 2)
+        expect(results.elected.map(c => c.name)).toStrictEqual(['A', 'B']);
+    })
+
     test("Test valid/invalid/under/bullet vote counts", () => {
         const candidates = ['Allison', 'Bill', 'Carmen']
         const votes = [
