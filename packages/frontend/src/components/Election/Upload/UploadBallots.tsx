@@ -120,50 +120,60 @@ const exampleCsv = (election: Election, columns: RaceColumns[]) =>
     [ballotCsvTemplateHeaders(election), ['P-0001', '', ...columns.flatMap(rc => exampleCells(rc, election.settings.max_rankings))]]
         .map(r => r.map(csvCell).join(',')).join('\n');
 
-// What goes in each column, built from this election's races
+// One row per column of the template, in the template's order, built from this election's races
+interface ColumnGuide { column: string, what: string, write: string, blank: string }
+
+function columnGuide(election: Election, columns: RaceColumns[], methodName: (rc: RaceColumns) => string): ColumnGuide[] {
+    const rows: ColumnGuide[] = [
+        { column: 'ballot_id', what: 'Your id for the paper ballot, for example the number printed on it', write: 'up to 64 characters, new to this election', blank: 'not allowed' },
+        { column: 'precinct', what: "The ballot's precinct", write: 'the precinct name', blank: 'no precinct (fine unless races are limited to precincts)' },
+    ];
+    for (const rc of columns) {
+        const rule = markRule(rc.race, election.settings.max_rankings);
+        const write = rc.race.voting_method === 'Plurality' ? `${rule.summary}; mark at most one per race` : rule.summary;
+        const race = `${rc.race.title} (${methodName(rc)})`;
+        rc.candidates.forEach((c, i) => rows.push({
+            column: c.header, what: `${rc.race.candidates[i].candidate_name} in ${race}`, write, blank: rule.blank,
+        }));
+        if (rc.race.enable_write_in) {
+            for (let n = 1; n <= TEMPLATE_WRITE_IN_PAIRS; n++) {
+                const h = rc.writeInHeaders(n);
+                rows.push({ column: h.name, what: `Write-in ${n} in ${race}: the name`, write: 'the name as written on the ballot', blank: 'nobody written in' });
+                rows.push({ column: h.mark, what: `Write-in ${n} in ${race}: its mark`, write, blank: `only allowed when ${h.name} is blank too` });
+            }
+        }
+    }
+    return rows;
+}
+
 const HowToFillIn = ({ election }: { election: Election }) => {
     const { t } = useSubstitutedTranslation(election.settings.term_type);
     const columns = ballotCsvColumns(election);
+    const rows = columnGuide(election, columns, rc => t(`methods.${methodValueToTextKey[rc.race.voting_method]}.short_name`));
     const anyWriteIns = columns.some(rc => rc.race.enable_write_in);
     return <Box>
         <Typography variant='h6' component='h3'>How to fill in the ballot file</Typography>
         <Typography variant='body2' sx={{ mb: 1 }}>
-            One row per paper ballot. <code>ballot_id</code> is your id for the ballot, for example the number printed on it:
-            required, up to 64 characters, and new to this election. <code>precinct</code> can be left blank unless races are limited to precincts.
-            Then one column per candidate:
+            One row per paper ballot, with these columns (the template has them in this order):
         </Typography>
         <Box sx={{ overflowX: 'auto' }}>
-            <Table size='small' aria-label='What to write for each race'>
+            <Table size='small' aria-label='What goes in each column'>
                 <TableHead><TableRow>
-                    <TableCell>Race</TableCell><TableCell>Voting method</TableCell><TableCell>In each candidate&apos;s column</TableCell><TableCell>A blank cell means</TableCell>
+                    <TableCell>Column</TableCell><TableCell>What it is</TableCell><TableCell>What to write</TableCell><TableCell>A blank cell means</TableCell>
                 </TableRow></TableHead>
                 <TableBody>
-                    {columns.map(rc => {
-                        const rule = markRule(rc.race, election.settings.max_rankings);
-                        return <TableRow key={rc.race.race_id}>
-                            <TableCell>
-                                {rc.race.title}
-                                <Typography variant='caption' component='div' color='text.secondary'>
-                                    {rc.candidates.map((c, i) => <span key={c.candidate_id}>{i > 0 && ', '}<code>{c.header}</code></span>)}
-                                    {rc.race.enable_write_in && <>, then write-in pairs</>}
-                                </Typography>
-                            </TableCell>
-                            <TableCell>{t(`methods.${methodValueToTextKey[rc.race.voting_method]}.short_name`)}</TableCell>
-                            <TableCell>
-                                {rule.summary}
-                                {rc.race.voting_method === 'Plurality' && ', and mark at most one'}
-                            </TableCell>
-                            <TableCell>{rule.blank}</TableCell>
-                        </TableRow>;
-                    })}
+                    {rows.map(r => <TableRow key={r.column}>
+                        <TableCell><code>{r.column}</code></TableCell>
+                        <TableCell>{r.what}</TableCell>
+                        <TableCell>{r.write}</TableCell>
+                        <TableCell>{r.blank}</TableCell>
+                    </TableRow>)}
                 </TableBody>
             </Table>
         </Box>
         {anyWriteIns && <Typography variant='body2' sx={{ mt: 1 }}>
-            Races that take write-ins have pairs of columns: <code>write_in_1</code> for the written-in name and <code>write_in_1_mark</code> for
-            its mark, which follows the same rule as the candidates. Leave both blank if nobody was written in.
-            The template has {TEMPLATE_WRITE_IN_PAIRS} pairs per race; add <code>write_in_3</code> and <code>write_in_3_mark</code> and so on for more.
-            Written-in names show up for review with the online write-ins.
+            For more write-ins on a ballot, add <code>write_in_{TEMPLATE_WRITE_IN_PAIRS + 1}</code> and <code>write_in_{TEMPLATE_WRITE_IN_PAIRS + 1}_mark</code> columns
+            and so on, up to 10 per race. Written-in names show up for review with the online write-ins.
         </Typography>}
         <Typography variant='body2' sx={{ mt: 1 }}>An example row that would upload:</Typography>
         <Box component='pre' sx={{ p: 1, bgcolor: 'action.hover', borderRadius: 1, overflowX: 'auto', fontSize: '0.8rem', m: 0 }}>

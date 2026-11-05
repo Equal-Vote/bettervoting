@@ -344,9 +344,11 @@ test.describe('Upload paper ballots', () => {
         await createDraftElection(context, request, 'open', true);
         await enableUploadsAndOpen(page);
         await page.goto(`/${electionId}/admin/upload_ballots`);
-        const guide = page.getByRole('table', { name: 'What to write for each race' });
-        await expect(guide).toContainText('a score from 0 to 5');
-        await expect(page.getByText('write_in_1_mark').first()).toBeVisible();
+        // one row per column of the template: ballot_id, precinct, 3 candidates, 2 write-in pairs
+        const guide = page.getByRole('table', { name: 'What goes in each column' });
+        await expect(guide.getByRole('row')).toHaveCount(1 + 2 + 3 + 4);
+        await expect(guide.getByRole('row', { name: /^Bob / })).toContainText('a score from 0 to 5');
+        await expect(guide.getByRole('row', { name: /^write_in_1_mark / })).toContainText('only allowed when write_in_1 is blank too');
 
         await fileInputs(page).nth(0).setInputFiles(csvFile('ballots.csv', [
             'ballot_id,precinct,Alice,Bob,Carol,write_in_1,write_in_1_mark',
