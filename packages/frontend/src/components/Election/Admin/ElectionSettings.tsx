@@ -2,7 +2,7 @@ import Grid from "@mui/material/Grid";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormControl from "@mui/material/FormControl";
 import { FormGroup, Radio, RadioGroup, Box, capitalize, Typography, ToggleButton, ToggleButtonGroup } from "@mui/material";
-import { DEFAULT_ALLOWED_SUBMIT_TYPES, ElectionSettings as IElectionSettings, TermType } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
+import { acceptsUploadedBallots, ElectionSettings as IElectionSettings, TermType } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
 import { Tip } from '~/components/styles';
 import { useSubstitutedTranslation, SwitchSetting } from '~/components/util';
 import useElection from '~/components/ElectionContextProvider';
@@ -73,16 +73,8 @@ export default function ElectionSettings() {
         async (v) => !!await updateElection(e => { e.is_public = v; })
     );
 
-    // allowed_submit_types is a list of channels rather than a boolean, so this
-    // can't use ElectionSwitchSetting either.
-    const allowedSubmitTypes = election.settings.allowed_submit_types ?? DEFAULT_ALLOWED_SUBMIT_TYPES;
-    const [paperBallots, setPaperBallots] = useOptimisticToggle(
-        allowedSubmitTypes.includes('submitted_via_admin'),
-        async (v) => !!await updateElection(e => {
-            const others = (e.settings.allowed_submit_types ?? DEFAULT_ALLOWED_SUBMIT_TYPES).filter(type => type !== 'submitted_via_admin');
-            e.settings.allowed_submit_types = v ? [...others, 'submitted_via_admin'] : others;
-        })
-    );
+    // How ballots come in (online, uploads, or both) is chosen under Manage Voters
+    const paperBallots = acceptsUploadedBallots(election.settings);
 
     // getOpenElections filters on settings.voter_access == 'open' in addition to
     // is_public, so on a voter-list election the flag would have no visible effect.
@@ -139,13 +131,6 @@ export default function ElectionSettings() {
                     />
                     <ElectionSwitchSetting settingKey="require_instruction_confirmation" />
                     <ElectionSwitchSetting settingKey="draggable_ballot" />
-                    <SwitchSetting
-                        label={t('election_settings.paper_ballots')}
-                        toggled={paperBallots}
-                        onToggle={setPaperBallots}
-                        disabled={election.state !== 'draft' || !!election.settings.ballot_updates}
-                        disabledMessage={election.settings.ballot_updates ? t('disabled_msgs.paper_ballots_with_ballot_updates') : undefined}
-                    />
                     {/* Note: this can't use ElectionSwitchSetting because we need to use the results from makePublicResultsRequest as the source of truth */}
                     <SwitchSetting
                         label={election.state === 'closed' || election.state === 'archived' ? t('election_settings.public_results') : t('election_settings.preliminary_results')}

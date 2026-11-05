@@ -12,9 +12,22 @@ If some of your voters vote on paper (or through another system), you can upload
 
 ## Turning uploads on
 
-Uploads have to be switched on while the election is still a draft: on the **Settings** page, turn on **Accept Uploaded Paper Ballots**. An **Upload Ballots** page then appears in the admin sidebar. The setting can't be changed once the election is finalized.
+Uploads are chosen while the election is still a draft. On the **Manage Voters** page, answer **How will votes be cast?** with one of these:
 
-Uploads can't be combined with **Allow Voters To Edit Vote**: while one is on, the other is turned off and can't be switched on. An uploaded ballot has no voter behind it to edit it.
+| Choice | What it means |
+|---|---|
+| Online only | The usual: voters vote on the election page, and nothing is uploaded. |
+| Online and uploaded paper ballots | Voters can vote online, and you can also upload paper ballots. |
+| Uploaded paper ballots only | Nobody can vote on the election page. Every ballot comes from your uploads. |
+
+With either upload choice, an **Upload Ballots** page appears in the admin sidebar. The choice can't be changed once the election is finalized.
+
+Without online voting, some voter options no longer apply:
+
+- With no voter list, there's no "limit to one vote per..." to set, because only the ballots you upload are counted.
+- With a voter list, the voter IDs must be ones you manage. You write the voter file yourself, so you need to know them, and BetterVoting-managed IDs (an email list) can't be used.
+
+Uploads can't be combined with **Allow Voters To Edit Vote** (under Settings): while one is on, the other can't be switched on. An uploaded ballot has no voter behind it to edit it.
 
 ## Trying it out in a draft
 
@@ -77,7 +90,7 @@ Every upload is all or nothing: if anything is wrong, no ballots are added and n
 - a mark is not a whole number, or not allowed by the race's voting method
 - the ballot file is missing a candidate column, or has a column that isn't a candidate
 - (voter list elections) the voter file is missing, has a different number of rows than the ballot file, repeats a voter, lists someone who isn't on the voter list or isn't approved, or lists someone who has already voted
-- the election is closed, or uploads weren't turned on for it
+- the election is closed, or it doesn't take uploaded ballots
 
 ## Keeping ballots secret
 

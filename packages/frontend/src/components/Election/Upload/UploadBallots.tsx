@@ -60,7 +60,7 @@ export default function UploadBallots() {
     const allowedTypes = election.settings.allowed_submit_types ?? DEFAULT_ALLOWED_SUBMIT_TYPES;
     if (!allowedTypes.includes('submitted_via_admin')) {
         return <Alert severity='info'>
-            Paper ballot uploads are turned off for this election. They can be turned on under Settings while the election is still a draft.
+            Paper ballot uploads are turned off for this election. They can be turned on under Manage Voters while the election is still a draft.
         </Alert>;
     }
     const isDraft = election.state === 'draft';

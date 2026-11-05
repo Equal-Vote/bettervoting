@@ -10,6 +10,7 @@ election_home:
   ended_time: '{{capital_election}} ended on {{datetime, datetime}}'
   vote: Vote
   or_view_results: or view results
+  no_online_voting: This {{election}} doesn't take {{votes}} online. Ballots are collected on paper and uploaded by the {{election}} admin.
   ballot_submitted: '{{capital_ballot}} Submitted'
   view_results: View Results
   drafted: This election is still being drafted
@@ -709,8 +710,7 @@ tabulation_logs:
 disabled_msgs:
     ballot_updates_when_open: Only supported when election uses email list
     is_public_when_voter_list: Only supported when anyone with the link can {{vote}}
-    ballot_updates_with_paper_ballots: Not available while uploaded paper ballots are accepted
-    paper_ballots_with_ballot_updates: Not available while voters can edit their vote
+    ballot_updates_with_paper_ballots: Not available while uploaded paper ballots are accepted (under Manage Voters)
 
 #######################################
 #### PRIORITY 4 : Info Bubbles ####
@@ -755,11 +755,12 @@ tips:
     description: Randomizes the order of candidates on the ballots.
 
   paper_ballots:
-    title: Accept Uploaded Paper Ballots
+    title: Uploaded Paper Ballots
     description: >
       Lets the {{election}} admin upload a CSV of paper ballots while the {{election}} is open
       (or test ballots while it's a draft, which are deleted when it's finalized).
-      If BetterVoting holds the voter list, a second CSV lists the voters who cast them.
+      With a voter list, a second CSV lists the voters who cast them.
+      Without online voting, nobody can vote on the {{election}} page.
       Can't be combined with letting voters edit their vote.
 
   ballot_updates:
@@ -1154,6 +1155,16 @@ admin_home:
   # finalize_voting_begins_now: Voting begins immediately.
   finalize_button: Finalize {{capital_election}}
 
+  ballot_channels:
+    question: How will {{votes}} be cast?
+    online: Online only
+    online_and_uploads: Online and uploaded paper ballots !tip(paper_ballots)
+    uploads_only: Uploaded paper ballots only !tip(paper_ballots)
+    with_ballot_updates: Uploads aren't available while voters can edit their vote (under Settings)
+    clear_email_list_first: To take uploads only, clear the voter list first. Uploads need voter IDs you manage, not an email list.
+    uploads_only_ids: Without online voting you upload the voter file yourself, so you manage the voter IDs.
+    uploads_only_no_limit: Without online voting there's no limit to set here. Only ballots you upload are counted.
+
   voter_authentication:
     form_label: Who can vote?
     help_text: Limit to one {{capital_vote}} per...
@@ -1221,8 +1232,6 @@ election_settings:
   require_instruction_confirmation: Confirm That Voter Read Instructions !tip(require_instruction_confirmation)
 
   draggable_ballot: Use Draggable Ballots for RCV !tip(draggable_ballot)
-
-  paper_ballots: Accept Uploaded Paper Ballots !tip(paper_ballots)
 
   is_public: Make {{capital_election}} Publicly Searchable !tip(is_public)
 

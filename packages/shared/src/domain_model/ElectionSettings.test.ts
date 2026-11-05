@@ -1,5 +1,6 @@
 import { describe, test, expect } from 'vitest';
-import { ElectionSettings, electionSettingsValidation } from "./ElectionSettings";
+import { ElectionSettings, electionSettingsValidation, getBallotChannels, setBallotChannels } from "./ElectionSettings";
+import { setVoterAuthenticationMode } from "./VoterAuthenticationMode";
 
 describe("electionSettingsValidation — allowed_submit_types", () => {
     test("accepts undefined (no field set, defaults apply)", () => {
@@ -69,5 +70,40 @@ describe("electionSettingsValidation — ballot updates and uploaded ballots", (
             allowed_submit_types: ["submitted_via_browser", "submitted_via_admin"],
         } as ElectionSettings);
         expect(err).toContain("cannot be combined with uploaded paper ballots");
+    });
+});
+
+describe("ballot channels", () => {
+    const base: ElectionSettings = { voter_access: "open", voter_authentication: {} };
+
+    test("round-trips each choice through allowed_submit_types", () => {
+        expect(getBallotChannels(base)).toBe("online");
+        for (const c of ["online", "online_and_uploads", "uploads_only"] as const) {
+            expect(getBallotChannels(setBallotChannels(base, c))).toBe(c);
+        }
+        expect(setBallotChannels(base, "uploads_only").allowed_submit_types).toEqual(["submitted_via_admin"]);
+    });
+
+    test("uploads only accepts no voter limit, or a voter list with ids the admin manages", () => {
+        const uploadsOnly = setBallotChannels(base, "uploads_only");
+        expect(electionSettingsValidation(setVoterAuthenticationMode(uploadsOnly, "open_open"))).toBeNull();
+        expect(electionSettingsValidation(setVoterAuthenticationMode(uploadsOnly, "closed_admin_managed_ids"))).toBeNull();
+    });
+
+    test("uploads only refuses an email list", () => {
+        const s = setVoterAuthenticationMode(setBallotChannels(base, "uploads_only"), "closed_bv_managed_ids");
+        expect(electionSettingsValidation(s)).toContain("need voter IDs you manage");
+    });
+
+    test("uploads only refuses a one-vote-per limit", () => {
+        for (const m of ["open_unique_cookie", "open_unique_keycloak", "open_unique_ip_address"] as const) {
+            const s = setVoterAuthenticationMode(setBallotChannels(base, "uploads_only"), m);
+            expect(electionSettingsValidation(s)).toContain("cannot limit voters");
+        }
+    });
+
+    test("online with uploads keeps every voter option", () => {
+        const s = setVoterAuthenticationMode(setBallotChannels(base, "online_and_uploads"), "closed_bv_managed_ids");
+        expect(electionSettingsValidation(s)).toBeNull();
     });
 });

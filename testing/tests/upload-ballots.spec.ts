@@ -63,11 +63,20 @@ const toggleSetting = async (page: Page, label: string, on: boolean) => {
     await expect(toggle).toBeChecked({ checked: on });
 };
 
-// Turns on "Accept Uploaded Paper Ballots" in Settings (draft only)
-const enableUploads = async (page: Page) => {
-    await page.goto(`/${electionId}/admin/settings`);
-    await toggleSetting(page, 'Accept Uploaded Paper Ballots', true);
+const ONLINE_AND_UPLOADS = 'Online and uploaded paper ballots';
+const UPLOADS_ONLY = 'Uploaded paper ballots only';
+
+// Picks how ballots come in, under Manage Voters (draft only)
+const chooseChannels = async (page: Page, label: string) => {
+    await page.goto(`/${electionId}/admin/voters`);
+    const radio = page.getByLabel(label);
+    const saved = page.waitForResponse(r => r.url().includes(`/Election/${electionId}/edit`) && r.ok());
+    await radio.click();
+    await saved;
+    await expect(radio).toBeChecked();
 };
+
+const enableUploads = (page: Page) => chooseChannels(page, ONLINE_AND_UPLOADS);
 
 const finalize = async (page: Page) => {
     await page.getByRole('link', { name: 'Publish & Share' }).click();
@@ -203,7 +212,7 @@ test.describe('Upload paper ballots', () => {
         await page.goto(`/${electionId}/admin/settings`);
         // editable ballots need an email list, so an open election never offers them
         await expect(page.getByLabel('Allow Voters To Edit Vote')).toBeDisabled();
-        await toggleSetting(page, 'Accept Uploaded Paper Ballots', true);
+        await enableUploads(page);
 
         await page.getByRole('link', { name: 'Upload Ballots' }).click();
         await page.waitForURL(`**/${electionId}/admin/upload_ballots`);
@@ -221,25 +230,28 @@ test.describe('Upload paper ballots', () => {
         await finalize(page);
         expect(await ballotCount(request)).toBe(0);
 
-        // once finalized, the upload setting is locked
-        await page.goto(`/${electionId}/admin/settings`);
-        await expect(page.getByLabel('Accept Uploaded Paper Ballots')).toBeChecked();
-        await expect(page.getByLabel('Accept Uploaded Paper Ballots')).toBeDisabled();
+        // once finalized, how ballots come in is locked
+        await page.goto(`/${electionId}/admin/voters`);
+        await expect(page.getByLabel(ONLINE_AND_UPLOADS)).toBeChecked();
+        await expect(page.getByLabel(ONLINE_AND_UPLOADS)).toBeDisabled();
     });
 
     test('editable ballots and uploads lock each other out', async ({ page, context, request }) => {
         // editable ballots are only offered on email list elections
         await createDraftElection(context, request, 'email');
         await page.goto(`/${electionId}/admin/settings`);
-        const uploads = page.getByLabel('Accept Uploaded Paper Ballots');
         const editable = page.getByLabel('Allow Voters To Edit Vote');
 
         await toggleSetting(page, 'Allow Voters To Edit Vote', true);
-        await expect(uploads).toBeDisabled();
-        await toggleSetting(page, 'Allow Voters To Edit Vote', false);
-        await expect(uploads).toBeEnabled();
+        await page.goto(`/${electionId}/admin/voters`);
+        await expect(page.getByLabel(ONLINE_AND_UPLOADS)).toBeDisabled();
+        await expect(page.getByLabel(UPLOADS_ONLY)).toBeDisabled();
+        await expect(page.getByText("Uploads aren't available while voters can edit their vote")).toBeVisible();
 
-        await toggleSetting(page, 'Accept Uploaded Paper Ballots', true);
+        await page.goto(`/${electionId}/admin/settings`);
+        await toggleSetting(page, 'Allow Voters To Edit Vote', false);
+        await enableUploads(page);
+        await page.goto(`/${electionId}/admin/settings`);
         await expect(editable).toBeDisabled();
 
         // the server refuses the combination too, whatever the page allows
@@ -249,5 +261,41 @@ test.describe('Upload paper ballots', () => {
         });
         expect(response.status()).toBe(400);
         expect(await response.text()).toContain('cannot be combined with uploaded paper ballots');
+    });
+
+    test('without online voting, voters get no ballot and the voter list uses admin ids', async ({ page, context, request }) => {
+        // starts as an email list: uploads only switches it to ids the admin manages
+        await createDraftElection(context, request, 'email');
+        await chooseChannels(page, UPLOADS_ONLY);
+        await expect(page.getByText('How would you like to identify your voters?')).toHaveCount(0);
+        await expect(page.getByText('so you manage the voter IDs')).toBeVisible();
+        const stored = (await (await request.get(`${API_BASE_URL}/Election/${electionId}`)).json()).election as Election;
+        expect(stored.settings.invitation).toBeUndefined();
+        expect(stored.settings.allowed_submit_types).toEqual(['submitted_via_admin']);
+
+        // the server refuses an email list without online voting, whatever the page allows
+        const refused = await request.post(`${API_BASE_URL}/Election/${electionId}/edit`, {
+            data: { Election: { ...stored, settings: { ...stored.settings, invitation: 'email' } }, expected_update_date: stored.update_date },
+        });
+        expect(refused.status()).toBe(400);
+        expect(await refused.text()).toContain('need voter IDs you manage');
+
+        await addVoters(request, ['1', '2', '3']);
+        await page.goto(`/${electionId}/admin`);
+        await finalize(page);
+
+        // voters have nothing to do on the election page
+        await page.goto(`/${electionId}`);
+        await expect(page.getByText("doesn't take votes online")).toBeVisible();
+        await expect(page.getByRole('link', { name: 'Vote', exact: true })).toHaveCount(0);
+        await page.goto(`/${electionId}/vote`);
+        await expect(page.getByText("doesn't take votes online")).toBeVisible();
+
+        await page.goto(`/${electionId}/admin/upload_ballots`);
+        await fileInputs(page).nth(0).setInputFiles(BALLOT_CSV);
+        await fileInputs(page).nth(1).setInputFiles(csvFile('voters.csv', ['voter_id', '2', '3', '1']));
+        await page.getByRole('button', { name: 'Upload ballots' }).click();
+        await expect(page.getByText('3 ballots uploaded and 3 voters marked as having voted.')).toBeVisible();
+        expect(await votedVoterIds(request)).toEqual(['1', '2', '3']);
     });
 });

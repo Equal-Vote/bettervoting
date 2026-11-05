@@ -26,6 +26,32 @@ export type InvitationType = typeof InvitationTypes[number];
 
 export const DEFAULT_ALLOWED_SUBMIT_TYPES: BallotSubmitType[] = ['submitted_via_browser', 'submitted_via_discord'];
 
+// The three ways an admin can choose for ballots to come in. They are stored as
+// allowed_submit_types (see castVoteController and importBallotsController, which
+// enforce it); this is the admin-facing view of that list.
+export const BallotChannelsArray = ['online', 'online_and_uploads', 'uploads_only'] as const;
+export type BallotChannels = typeof BallotChannelsArray[number];
+
+const CHANNEL_SUBMIT_TYPES: Record<BallotChannels, BallotSubmitType[]> = {
+  online: DEFAULT_ALLOWED_SUBMIT_TYPES,
+  online_and_uploads: [...DEFAULT_ALLOWED_SUBMIT_TYPES, 'submitted_via_admin'],
+  uploads_only: ['submitted_via_admin'],
+};
+
+export const acceptsOnlineBallots = (settings: ElectionSettings) =>
+  (settings.allowed_submit_types ?? DEFAULT_ALLOWED_SUBMIT_TYPES).includes('submitted_via_browser');
+export const acceptsUploadedBallots = (settings: ElectionSettings) =>
+  (settings.allowed_submit_types ?? DEFAULT_ALLOWED_SUBMIT_TYPES).includes('submitted_via_admin');
+
+export function getBallotChannels(settings: ElectionSettings): BallotChannels {
+  if (!acceptsUploadedBallots(settings)) return 'online';
+  return acceptsOnlineBallots(settings) ? 'online_and_uploads' : 'uploads_only';
+}
+
+export function setBallotChannels(settings: ElectionSettings, channels: BallotChannels): ElectionSettings {
+  return { ...settings, allowed_submit_types: [...CHANNEL_SUBMIT_TYPES[channels]] };
+}
+
 export interface ElectionSettings {
     voter_access?:         VoterAccess;  //   Who is able to vote in election?
     voter_authentication: authentication; // How will voters be authenticated?
@@ -58,6 +84,18 @@ function settingsCompatiblityValidation(settings: ElectionSettings): string {
         // no ballot of their own to edit, so the two never run in the same election.
         if (settings.allowed_submit_types?.includes('submitted_via_admin')) {
             errorMsg += 'Ballot updating cannot be combined with uploaded paper ballots.  ';
+        }
+    }
+    // Without online voting every ballot comes from the admin's upload, so limits on how
+    // voters reach the ballot mean nothing, and with a voter list the admin must know the
+    // voter ids to write the voter file. electionSettingsValidation has already checked
+    // that the mode is canonical before this runs.
+    if (!acceptsOnlineBallots(settings)) {
+        const mode = getVoterAuthenticationMode(settings);
+        if (mode === 'closed_bv_managed_ids') {
+            errorMsg += 'Elections without online voting need voter IDs you manage, not an email list.  ';
+        } else if (mode !== 'open_open' && mode !== 'closed_admin_managed_ids') {
+            errorMsg += 'Elections without online voting cannot limit voters by device, network or login.  ';
         }
     }
     return errorMsg;
