@@ -15,3 +15,7 @@ _Avoid_: Electorate, voter database
 **Roll Conflict**:
 An entry being added to a Voter Roll that matches an existing entry, or another entry in the same upload, by voter ID or by email. Emails match regardless of letter case. Conflicting entries are never added twice and never overwrite the existing entry; the admin is told about them and confirms before the rest are added.
 _Avoid_: Duplicate (too loose about which entry wins), collision
+
+**Voter Group**:
+A named subset of a Voter Roll. Each voter entry belongs to at most one Voter Group. A race can be limited to one or more Voter Groups, and a voter only sees the races open to their group. A race that isn't limited is open to every voter; a race limited to an empty set of groups is open to no one, which the admin is warned about. An election's list of Voter Groups is fixed once the election is finalized. The code calls this a "precinct".
+_Avoid_: Precinct (implies geography, which polls and organisations don't have), cluster, cohort
