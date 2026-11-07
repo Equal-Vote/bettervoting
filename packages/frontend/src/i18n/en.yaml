@@ -1271,10 +1271,7 @@ voters:
 
 # Table filters
 table:
-  no_filter_matches: 'Nothing matches your filters: {{filters}}'
-  search_filter: '{{label}} contains "{{value}}"'
-  group_filter: '{{label}} is {{value}}'
-  group_filter_empty: 'no {{label}} options selected'
+  no_filter_matches: Nothing matches your filters
 
 # Email Templates
 emails:
