@@ -5,7 +5,9 @@ import Logger from '../Services/Logging/Logger';
 import { logSafeHash } from '../Services/Logging/logSafeHash';
 import { BallotVotes, IBallotStore } from './IBallotStore';
 import { Kysely, sql, Transaction } from 'kysely';
+import { Conflict } from '@curveball/http-errors';
 import { Database } from './Database';
+import { nextVersionDate } from './versionDate';
 
 const tableName = 'ballotDB';
 const electionRollTableName = 'electionRollDB';
@@ -20,7 +22,7 @@ export default class BallotsDB implements IBallotStore {
     }
 
     async init(): Promise<IBallotStore> {
-        var appInitContext = Logger.createContext("appInit");
+        const appInitContext = Logger.createContext("appInit");
         Logger.debug(appInitContext, "BallotsDB.init");
         return this;
     }
@@ -36,18 +38,25 @@ export default class BallotsDB implements IBallotStore {
         return this.makeSubmitBallotsQuery(ballot, ctx, reason, db) as Promise<Ballot>
     }
 
-    async updateBallot(ballot: Ballot, ctx: ILoggingContext, reason: string, db?: Kysely<Database> | Transaction<Database>): Promise<Ballot> {
+    // Optimistic concurrency: only the head version whose update_date the caller
+    // read (`expected_update_date`) is demoted; anything else is a Conflict. The
+    // demoted row's own update_date is left alone — it is that version's
+    // timestamp, and the audit log orders ballot versions by it.
+    async updateBallot(ballot: Ballot, ctx: ILoggingContext, reason: string, expected_update_date: string, db?: Kysely<Database> | Transaction<Database>): Promise<Ballot> {
         Logger.debug(ctx, `${tableName}.update`);
         const executeWork = async (activeDb: Kysely<Database> | Transaction<Database>) => {
-            await activeDb.updateTable(tableName)
+            const demoted = await activeDb.updateTable(tableName)
                 .where('ballot_id', '=', ballot.ballot_id)
                 .where('election_id', '=', ballot.election_id)
                 .where('head', '=', true)
+                .where('update_date', '=', expected_update_date)
                 .set('head', false)
-                //TODO: replace with DB trigger
-                .set('update_date', Date.now().toString())
-                .execute();
-            return this.submitBallot(ballot, ctx, reason, activeDb);
+                .executeTakeFirst();
+            if (demoted.numUpdatedRows === BigInt(0)) {
+                throw new Conflict('Concurrent write detected, please try again');
+            }
+            // The new version's update_date must differ from the one it replaces.
+            return this.makeSubmitBallotsQuery(ballot, ctx, reason, activeDb, nextVersionDate(expected_update_date)) as Promise<Ballot>;
         };
 
         if (db) {
@@ -63,21 +72,22 @@ export default class BallotsDB implements IBallotStore {
     }
 
     private makeSubmitBallotsQuery(inputBallots: Ballot | Ballot[], ctx: ILoggingContext, reason: string,
-                                   db: Kysely<Database> | Transaction<Database> = this._postgresClient): Promise<Ballot[] | Ballot> {
-        let ballots = Array.isArray(inputBallots)? inputBallots : [inputBallots];
+                                   db: Kysely<Database> | Transaction<Database> = this._postgresClient,
+                                   update_date?: string): Promise<Ballot[] | Ballot> {
+        const ballots = Array.isArray(inputBallots)? inputBallots : [inputBallots];
 
         // Strip legacy fields (see Ballot.ts) so callers can't write them.
         const sanitizedBallots = ballots.map(b => {
             const { user_id: _user_id, ip_hash: _ip_hash, ...rest } = b;
             return {
                 ...rest,
-                update_date: Date.now().toString(), // Use now() because it doesn't change with time zone
+                update_date: update_date ?? Date.now().toString(), // Use now() because it doesn't change with time zone
                 head: true,
                 create_date: new Date().toISOString(),
             };
         });
 
-        let query = db
+        const query = db
             .insertInto(tableName)
             .values(sanitizedBallots)
             .returningAll()
