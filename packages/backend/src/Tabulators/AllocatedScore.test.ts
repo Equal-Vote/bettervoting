@@ -202,7 +202,7 @@ describe("Allocated Score Tests", () => {
         expect(results.elected.map(c => c.name)).toStrictEqual(['A', 'B']);
     })
 
-    test("Test valid/invalid/under/bullet vote counts", () => {
+    test("valid/invalid/under/bullet vote counts", () => {
         const candidates = ['Allison', 'Bill', 'Carmen']
         const votes = [
             [5, 5, 5],

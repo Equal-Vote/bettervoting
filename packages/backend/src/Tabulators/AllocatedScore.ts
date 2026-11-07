@@ -55,24 +55,24 @@ export function AllocatedScore(candidates: candidate[], votes: rawVote[], nWinne
     // Keep running elections rounds even if all seats have been filled to determine candidate order
 
     // Normalize scores array
-    let scoresNorm = tallyVotes.map(v => candidates.map(c => new Fraction(v.marks[c.id]).div(MAX_SCORE)))
+    const scoresNorm = tallyVotes.map(v => candidates.map(c => new Fraction(v.marks[c.id]).div(MAX_SCORE)))
 
     // Find number of voters and quota size
     const V = scoresNorm.length;
     const quota = new Fraction(V).div(nWinners);
     results.logs.push(`${nWinners} winners will represent ${V} voters, so winners will need to represent a quota of ${rounded(quota)} voters each.`)
-    let num_candidates = candidates.length
+    const num_candidates = candidates.length
 
     let ballot_weights: typeof Fraction[] = Array(V).fill(new Fraction(1));
 
     // let weightedSumsByRound = []
-    let candidatesByRound: candidate[][] = []
+    const candidatesByRound: candidate[][] = []
     // run loop until specified number of winners are found
     while (results.elected.length < nWinners && remainingCandidates.length > 0) {
         results.logs.push(`Round ${results.elected.length+1} of tabulation...`)
         // weight the scores
-        let weighted_scores: ballotFrac[] = Array(scoresNorm.length);
-        let weighted_sums: typeof Fraction[] = Array(num_candidates).fill(new Fraction(0));
+        const weighted_scores: ballotFrac[] = Array(scoresNorm.length);
+        const weighted_sums: typeof Fraction[] = Array(num_candidates).fill(new Fraction(0));
         scoresNorm.forEach((ballot, b) => {
             weighted_scores[b] = [];
             ballot.forEach((score, s) => {
@@ -92,8 +92,8 @@ export function AllocatedScore(candidates: candidate[], votes: rawVote[], nWinne
         // get index of winner
         // Only candidates who haven't won yet are eligible. Elected candidates' scores are zeroed, so without this
         // an all-zero round (no remaining ballot weight on any remaining candidate) could re-elect a past winner.
-        let maxAndTies = indexOfMax(weighted_sums, summaryData.candidates, remainingCandidates);
-        let w = maxAndTies.maxIndex;
+        const maxAndTies = indexOfMax(weighted_sums, summaryData.candidates, remainingCandidates);
+        const w = maxAndTies.maxIndex;
         // add winner to winner list
         results.logs.push(`${summaryData.candidates[w].name} is scored highest with ${rounded(weighted_sums[w].mul(MAX_SCORE))} stars and is elected!`)
         results.elected.push(summaryData.candidates[w]);
@@ -111,8 +111,8 @@ export function AllocatedScore(candidates: candidate[], votes: rawVote[], nWinne
         // remainingCandidates.splice(w, 1);
 
         // create arrays for sorting ballots
-        let cand_df: winner_scores[] = [];
-        let cand_df_sorted: winner_scores[] = [];
+        const cand_df: winner_scores[] = [];
+        const cand_df_sorted: winner_scores[] = [];
 
         weighted_scores.forEach((weighted_score, i) => {
             cand_df.push({
@@ -131,7 +131,7 @@ export function AllocatedScore(candidates: candidate[], votes: rawVote[], nWinne
             a.weighted_score < b.weighted_score ? 1 : -1
         );
 
-        let split_point = findSplitPoint(cand_df_sorted, quota);
+        const split_point = findSplitPoint(cand_df_sorted, quota);
 
         summaryData.splitPoints.push(split_point.valueOf());
 
@@ -152,7 +152,7 @@ export function AllocatedScore(candidates: candidate[], votes: rawVote[], nWinne
             });
         }
 
-        let weight_on_split = findWeightOnSplit(cand_df, split_point);
+        const weight_on_split = findWeightOnSplit(cand_df, split_point);
 
         // quota = spent_above + weight_on_split*new_weight
         // Only used for the log line below -- updateBallotWeights recomputes this
@@ -160,7 +160,7 @@ export function AllocatedScore(candidates: candidate[], votes: rawVote[], nWinne
         // exactly on the split point, so when it is zero there is no partially
         // represented ballot to describe. Dividing by it throws in fraction.js, which
         // used to 500 the results endpoint for any race with no ballots.
-        let new_weight = weight_on_split.compare(0) > 0 ? (quota.sub(spent_above)).div(weight_on_split) : new Fraction(0);
+        const new_weight = weight_on_split.compare(0) > 0 ? (quota.sub(spent_above)).div(weight_on_split) : new Fraction(0);
         results.logs.push(
             `The ${rounded(weight_on_split)} voters who gave ${summaryData.candidates[w].name} ${rounded(split_point.mul(MAX_SCORE))} stars are partially represented. `+
             `${percent(new_weight)} of their remaining vote will go toward ${summaryData.candidates[w].name} and ${percent(new Fraction(1).sub(new_weight))} will be preserved for future rounds.`)
@@ -233,7 +233,7 @@ function updateBallotWeights(
     split_point: typeof Fraction
 ) {
     if (weight_on_split.compare(0) > 0) {
-        let spent_value = quota.sub(spent_above).div(weight_on_split);
+        const spent_value = quota.sub(spent_above).div(weight_on_split);
         cand_df.forEach((c, i) => {
             if (c.weighted_score.equals(split_point)) {
                 cand_df[i].ballot_weight = cand_df[i].ballot_weight.mul( (new Fraction(1).sub(spent_value) ) );
