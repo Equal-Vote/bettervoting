@@ -49,7 +49,7 @@ export const makeDefaultElection = () => {
                 voter_id: true,
             },
             ballot_updates: false,
-            public_results: true,
+            public_results: false, // preliminary results are opt-in
             random_candidate_order: true,
             require_instruction_confirmation: false,
             draggable_ballot: false,

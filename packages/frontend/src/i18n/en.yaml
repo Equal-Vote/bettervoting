@@ -760,7 +760,7 @@ tips:
   public_results:
     title: Public Results
     description: >
-      Controls whether voters can see {{election}} results.
+      Controls whether voters can see {{election}} results. Off by default.
       When enabled during an open {{election}}, voters will see preliminary results after submitting their {{ballot}}.
       High-profile {{elections}} typically keep results hidden until the {{election}} closes.
     learn_link: https://docs.bettervoting.com/help/preliminary_results.html

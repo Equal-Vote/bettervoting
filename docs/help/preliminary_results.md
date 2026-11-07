@@ -10,6 +10,8 @@ grand_parent: Running an Election
 
 When an election has **Show Preliminary Results** turned on, the running tally is visible to anyone with the election link while voting is still happening. This is great for casual polls, transparent community decisions, and demos — but it changes how the election behaves in some ways that voters and admins should understand before turning it on.
 
+**Show Preliminary Results is off by default.** New elections hide the tally until the election is closed and the admin chooses to make the results public. If you want a live tally, turn the setting on deliberately in **Settings** after reading this page.
+
 This page is for both voters (so you know what other people can see when you vote) and admins (so you can make an informed choice about whether to enable it).
 
 ## What "Show Preliminary Results" actually shows
