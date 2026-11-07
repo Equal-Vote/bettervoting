@@ -248,7 +248,7 @@ electionsRouter.delete('/Election/:id', asyncHandler(deleteElection))
  * @swagger
  * /QueryElections:
  *   get:
- *     summary: Query Elections based on time range (sys-admin only)
+ *     summary: Query Elections based on time range (sys-admin only; currently disabled, always returns 401)
  *     tags: [Elections]
  *     requestBody:
  *       required: true
