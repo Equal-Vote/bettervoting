@@ -213,7 +213,6 @@ ballot_submitted:
   update_ballot_enabled_open: Możesz zaktualizować swoją kartę do głosowania, korzystając z linku w e-mailu z potwierdzeniem
   update_ballot_enabled_closed: Wybory zostały zakończone. Wszystkie karty do głosowania są ostateczne
   status: 'Status:'
-  precinct: 'Obwód:'
   ballot_id: 'ID karty do głosowania:'
   update_ballot: 'Aktualizuj kartę do głosowania:'
 
