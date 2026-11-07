@@ -619,6 +619,7 @@ export default function EnhancedTable(props: EnhancedTableProps) {
   );
 
 
+
   return (
     <Container>
       <Box sx={{ pt: 2, width: '100%', display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column" }}>
@@ -644,7 +645,10 @@ export default function EnhancedTable(props: EnhancedTableProps) {
                   <TableRow>
                     <TableCell colSpan={headCells.length} align="center" sx={{ py: 4 }}>
                       <Typography variant="body1" color="text.secondary">
-                        {props.emptyContent}
+                        {/* Rows exist but none are visible, so the filters hid them all */}
+                        {props.data?.length > 0
+                          ? t('table.no_filter_matches')
+                          : props.emptyContent}
                       </Typography>
                     </TableCell>
                   </TableRow>
