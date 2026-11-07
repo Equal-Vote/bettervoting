@@ -13,13 +13,14 @@ import useElection from '~/components/ElectionContextProvider';
 import { PrimaryButton, FileDropBox, Tip, UtilityButton } from '~/components/styles';
 import RaceDialog from './RaceDialog';
 import { Candidate } from '@equal-vote/star-vote-shared/domain_model/Candidate';
+import { Race as iRace } from '@equal-vote/star-vote-shared/domain_model/Race';
 import { getImage, postImage } from '../Candidates/PhotoUtil';
 
 interface RaceFormProps {
     raceIndex?: number,
     styling: 'Wizard' | 'Dialog',
-    onConfirm?: Function,
-    onCancel?: Function,
+    onConfirm?: (race: iRace) => void,
+    onCancel?: () => void,
     dialogOpen?: boolean,
 }
 
@@ -63,23 +64,32 @@ export default function RaceForm({
     )
 }
 
-const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=true}) => {
+type InnerRaceFormProps = Pick<ReturnType<typeof useEditRace>, 'setErrors' | 'errors' | 'editedRace' | 'applyRaceUpdate'> & { open?: boolean };
+
+const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=true}: InnerRaceFormProps) => {
     const flags = useFeatureFlags();
     const { election, t } = useElection()
     const isDisabled = election.state !== 'draft';
 
     const inputRefs = useRef([]);
+    // The empty "new candidate" slot's id is also its React key, so keep it stable until
+    // that slot is actually used. Otherwise any edit to another candidate (e.g. the name
+    // flushed on blur when you click into this slot) remounts the slot and drops the focus.
+    const newCandidateIdRef = useRef<string | null>(null);
     const ephemeralCandidates = useMemo(() => {
         // Get all existing candidate IDs
         const existingIds = new Set(editedRace.candidates.map(c => c.candidate_id));
 
         const hasCollision = (id: string) => existingIds.has(id);
 
-        const newId = makeUniqueIDSync(
-            ID_PREFIXES.CANDIDATE,
-            ID_LENGTHS.CANDIDATE,
-            hasCollision
-        );
+        if (newCandidateIdRef.current === null || hasCollision(newCandidateIdRef.current)) {
+            newCandidateIdRef.current = makeUniqueIDSync(
+                ID_PREFIXES.CANDIDATE,
+                ID_LENGTHS.CANDIDATE,
+                hasCollision
+            );
+        }
+        const newId = newCandidateIdRef.current;
 
         return [
             ...editedRace.candidates.filter(c => c.candidate_id !== NOTA_ID),
@@ -182,7 +192,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
         for(let i = 0; i < e.dataTransfer.files.length; i++){ 
             const f = e.dataTransfer.files[i];
 
-            const parts = f.name.split('\.');
+            const parts = f.name.split('.');
             parts.pop(); // drop extension
             names.push(parts.join('.'))
 
@@ -261,7 +271,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
                     candidate_id: NOTA_ID,
                     candidate_name: 'None of the Above',
                 }, newCandidateIndex)}} sx={{ml: 1}}>
-                    + Add "None of the Above"
+                    {'+ Add "None of the Above"'}
                 </UtilityButton>
                 <Tip name='nota'/>
             </Box>}
@@ -276,7 +286,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
     </Box>
 }
 
-const TitleAndDescription = ({setErrors, errors, editedRace, applyRaceUpdate, open}) => {
+const TitleAndDescription = ({setErrors, errors, editedRace, applyRaceUpdate, open}: InnerRaceFormProps) => {
     const [showDescription, setShowDescription] = useState(!!editedRace.description);
     const { election, t } = useElection()
     const isDisabled = election.state !== 'draft';
