@@ -25,7 +25,7 @@ Removing names isn't enough on its own, and BetterVoting doesn't stop there.
 
 If ballots came back in the order they were cast, a bad actor could try to infer the voter identity from that order.
 
-So **ballots are deliberately returned in a random order**, and the same protection applies to the anonymised ballot data that gets published with public results, which carries only a ballot ID, the election, the precinct, and the votes.
+So **ballots are deliberately returned in a random order**, and the same protection applies to the anonymised ballot data that gets published with public results, which carries only a ballot ID, the election, the voter group, and the votes.
 
 ## What this does and doesn't protect against
 

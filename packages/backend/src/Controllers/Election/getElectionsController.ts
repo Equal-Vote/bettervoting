@@ -166,7 +166,7 @@ const innerGetGlobalElectionStats = async (req: IRequest): Promise<GlobalElectio
 }
 
 const getGlobalElectionStats = async (req: IRequest, res: Response, _next: NextFunction) => {
-    res.json(innerGetGlobalElectionStats(req));
+    res.json(await innerGetGlobalElectionStats(req));
 }
 
 export {
