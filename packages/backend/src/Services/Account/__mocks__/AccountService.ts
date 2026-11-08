@@ -19,7 +19,7 @@ export default class AccountService {
 
     extractUserFromRequest  = (req:IRequest, customKey?:string) => {
         const token = customKey ? req.cookies.custom_id_token : req.cookies.id_token;
-        if (token) {
+        if (token){
             if (!this.verify){
                 return jwt.decode(token);
             }
@@ -29,9 +29,10 @@ export default class AccountService {
             const key = customKey ? customKey : this.privateKey;
             return AccountServiceUtils.extractUserFromRequest(req, token, key);
         }
-        // Mirrors the real AccountService: a temp_id cookie alone yields a TEMP_ID user.
+        // Mirror the real AccountService: with no id token, a temp_id cookie identifies a
+        // TEMP_ID user (jwt.decode(undefined) used to make this "no user" in tests).
         const tempId = req.cookies.temp_id;
-        if (tempId) {
+        if (tempId){
             return {
                 'typ': 'TEMP_ID',
                 'sub': tempId

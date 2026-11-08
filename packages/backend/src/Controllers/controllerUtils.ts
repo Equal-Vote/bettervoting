@@ -49,6 +49,15 @@ export function expectPermission(roles:roles[],permission:permission): void {
       }
 }
 
+// Temp owners (a temp_id cookie, req.user.typ === 'TEMP_ID') get the full owner role
+// during the temporary-access window, but finalizing is reserved for accounts: the
+// wizard already blocks it in the UI, and this keeps a direct POST from bypassing that.
+export function expectPermanentUser(user: IUser | undefined): void {
+    if (!user?.sub || user.typ === 'TEMP_ID') {
+        throw new Unauthorized("Create an account to finalize this election")
+    }
+}
+
 // All electionDB writes require an expected_update_date for optimistic concurrency
 // control; without it, concurrent edits would race the (election_id, head=true)
 // unique partial index and surface as opaque 500s instead of clean 409s.

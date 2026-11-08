@@ -111,15 +111,21 @@ export class TestHelper {
         return this.electionResponse(res);
     }
 
+    // extraCookies lets a temp owner send its `<election_id>_claim_key` cookie alongside temp_id.
     async finalizeElection(
         election_id: Uid,
-        userToken: string | null
+        userToken: string | null,
+        tempId: string | null = null,
+        extraCookies: Record<string, string> = {}
     ): Promise<ElectionResponse> {
-        const current = await this.fetchElectionById(election_id, userToken);
+        const current = await this.fetchElectionById(election_id, userToken, null, tempId, extraCookies);
         const res = await this.postRequest(
             `/API/Election/${election_id}/finalize`,
             { expected_update_date: current.election?.update_date },
-            userToken
+            userToken,
+            null,
+            tempId,
+            extraCookies
         );
         return this.electionResponse(res);
     }
