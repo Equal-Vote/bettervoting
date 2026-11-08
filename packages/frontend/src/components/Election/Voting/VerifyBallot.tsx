@@ -9,7 +9,6 @@ import useElection from "../../ElectionContextProvider";
 import { SecondaryButton } from "~/components/styles";
 import ShareButton from "../ShareButton";
 import { useSubstitutedTranslation } from "../../util";
-import { ballotIdsHidden } from "@equal-vote/star-vote-shared/domain_model/ElectionSettings";
 
 
 const VerifyBallot = () => {
@@ -17,18 +16,18 @@ const VerifyBallot = () => {
     const { ballot_id } = useParams();
     const { t } = useSubstitutedTranslation(election.settings.term_type);
 
-    // Mirrors the server: when ids are hidden only election staff may view a ballot.
-    const hidden = ballotIdsHidden(election.settings) && !userPermissions?.includes('canViewBallots');
+    // Mirrors the server: only election staff may view a ballot by id.
+    const canView = userPermissions?.includes('canViewBallots');
 
     const { data, isPending, makeRequest: fetchBallot } = useGetBallot(election.election_id, ballot_id);
     useEffect(() => {
-        if (ballot_id && !hidden) {
+        if (ballot_id && canView) {
             fetchBallot();
         }
-    }, [ballot_id, hidden]);
+    }, [ballot_id, canView]);
     return (
         <Container>
-            {hidden && <Typography align='center' sx={{ my: 4 }}>{t('ballot_submitted.ids_hidden')}</Typography>}
+            {!canView && <Typography align='center' sx={{ my: 4 }}>{t('ballot_submitted.lookup_staff_only')}</Typography>}
             {isPending && <div> Loading Data... </div>}
             {data?.ballot &&
                 <>

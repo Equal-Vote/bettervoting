@@ -5,7 +5,6 @@ import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
 import { expectPermission } from "../controllerUtils";
 import { permissions } from "@equal-vote/star-vote-shared/domain_model/permissions";
-import { ballotIdsHidden } from "@equal-vote/star-vote-shared/domain_model/ElectionSettings";
 
 const BallotModel = ServiceLocator.ballotsDb();
 
@@ -15,11 +14,9 @@ const getBallotByBallotID = async (req: IElectionRequest, res: Response, _next: 
     if (!ballot_id) {
         throw new BadRequest('No Ballot ID provided')
     }
-    // Voters aren't told their ballot id in this election, so a ballot id in
-    // the wild is a leak, not a receipt: only election staff may look one up.
-    if (ballotIdsHidden(req.election.settings)) {
-        expectPermission(req.user_auth.roles, permissions.canViewBallots)
-    }
+    // Only election staff may look up a ballot by id. If voters could, a ballot
+    // id would be a receipt proving how they voted (vote buying / coercion).
+    expectPermission(req.user_auth.roles, permissions.canViewBallots)
     Logger.debug(req, "getBallotByBallotID: " + ballot_id);
 
     const ballot = await BallotModel.getBallotByID(ballot_id, req);

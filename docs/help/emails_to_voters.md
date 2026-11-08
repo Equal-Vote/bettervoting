@@ -65,7 +65,7 @@ Before sending to real voters, use the **Test Email(s)** field at the top of the
 When a voter submits a ballot, BetterVoting automatically emails them a receipt if it knows their address — from your email list, from their signed-in account, or from the optional receipt-email box on the ballot submission screen. The receipt:
 
 - Thanks them for voting
-- Confirms the ballot was received. If you turned off **Hide Ballot IDs From Voters** (it is on by default), it instead links to a page where they can verify their ballot and check its status at any time
+- Confirms their ballot was received
 - If you enabled **Allow Voters To Edit Vote**, links to update their ballot while the election is open
 
 Receipts for ballots cast before the election was finalized are marked as test ballots, with the same warning that they will be removed at finalization.

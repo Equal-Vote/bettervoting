@@ -48,13 +48,6 @@ What the voter sees:
 
 - After submitting, the confirmation page shows an **Update Vote** button while the election is open.
 - The voter's email receipt contains a link they can use to return and update their ballot.
-- The ballot verification page tells voters whether updates are allowed: with updates off it says all ballots are final once submitted; with updates on it points to the receipt link, and once the election closes it says all ballots are final.
-
-Turning this on turns off **Hide Ballot IDs From Voters**, since the receipt then shows the voter their ballot.
-
-## Hide Ballot IDs From Voters
-
-On by default. Voters are never told their ballot ID: the receipt email only confirms the ballot was received, and the ballot lookup page is limited to election staff. This stops a voter from proving to anyone else how they voted (vote buying or coercion). Turn it off if you want voters to be able to check their own ballot afterwards, or to let them edit their vote; the two settings can't both be on.
 
 {: .important }
 > Vote editing is only available for elections that invite voters by **email list**. It is not permitted on open-access elections, because updating a ballot requires knowing reliably which voter it belongs to.

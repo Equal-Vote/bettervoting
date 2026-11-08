@@ -18,15 +18,10 @@ afterEach(() => {
     th.afterEach();
 });
 
-// A voter only ever learns their ballot id from the receipt email and the
-// /ballot/<id> page. hide_ballot_ids (the default) closes both.
-describe("Hide ballot IDs from voters", () => {
-    beforeAll(() => {
-        jest.clearAllMocks();
-    });
-
-    // Run the same voter flow for an election with ids hidden and one with
-    // them shown, then compare what leaked.
+// A voter must have no way to prove how they voted (vote buying / coercion):
+// the receipt never carries their ballot id, and only election staff can
+// look a ballot up by id. This holds even when ballot updates are allowed.
+describe("Voters can't prove how they voted", () => {
     async function voteAs(electionInput: Election, email: string) {
         emailService.clear();
         // public_results lets the admin list ballots (to learn the id) while the election is open.
@@ -50,6 +45,7 @@ describe("Hide ballot IDs from voters", () => {
 
         const cast = await th.submitBallotWithId(electionId, testInputs.Ballot1, null, voterId);
         expect(cast.statusCode).toBe(200);
+        expect(cast.body.ballot.ballot_id).toBeUndefined();
         const eventQueue: MockEventQueue = await th.eventQueue;
         await eventQueue.waitUntilJobsFinished();
 
@@ -61,8 +57,8 @@ describe("Hide ballot IDs from voters", () => {
         return { electionId, ballotId, receipt: receipt!, voterId };
     }
 
-    test("Default (hidden): cast response, receipt and lookup all withhold the id", async () => {
-        const { electionId, ballotId, receipt, voterId } = await voteAs(testInputs.EmailRollElection, 'hidden@email.com');
+    async function expectNoProof(electionInput: Election, email: string) {
+        const { electionId, ballotId, receipt, voterId } = await voteAs(electionInput, email);
 
         expect(receipt.text).not.toContain(ballotId);
         expect(receipt.html).not.toContain(ballotId);
@@ -70,44 +66,27 @@ describe("Hide ballot IDs from voters", () => {
 
         const asVoter = await th.getRequest(`/API/Election/${electionId}/ballot/${ballotId}`, null, null, voterId);
         expect(asVoter.statusCode).toBe(401);
+        const anonymous = await th.getRequest(`/API/Election/${electionId}/ballot/${ballotId}`, null);
+        expect(anonymous.statusCode).toBe(401);
 
         const asAdmin = await th.getRequest(`/API/Election/${electionId}/ballot/${ballotId}`, testInputs.user1token);
         expect(asAdmin.statusCode).toBe(200);
         expect(asAdmin.body.ballot.ballot_id).toBe(ballotId);
+        return { electionId, receipt, voterId };
+    }
+
+    test("Receipt and ballot lookup don't reveal the ballot", async () => {
+        await expectNoProof(testInputs.EmailRollElection, 'noproof@email.com');
         th.testComplete();
     });
 
-    test("hide_ballot_ids=false: receipt links to the ballot and anyone can look it up", async () => {
-        const shown = {
-            ...testInputs.EmailRollElection,
-            settings: { ...testInputs.EmailRollElection.settings, hide_ballot_ids: false },
-        } as Election;
-        const { electionId, ballotId, receipt, voterId } = await voteAs(shown, 'shown@email.com');
-
-        expect(receipt.html).toContain(`/${electionId}/ballot/${ballotId}`);
-
-        const asVoter = await th.getRequest(`/API/Election/${electionId}/ballot/${ballotId}`, null, null, voterId);
-        expect(asVoter.statusCode).toBe(200);
-        th.testComplete();
-    });
-
-    test("ballot_updates with ids hidden is rejected", async () => {
-        const conflicting = {
-            ...testInputs.EmailRollElection,
-            settings: { ...testInputs.EmailRollElection.settings, ballot_updates: true, hide_ballot_ids: true },
-        } as Election;
-        const response = await th.createElection(conflicting, testInputs.user1token);
-        expect(response.statusCode).toBe(400);
-        th.testComplete();
-    });
-
-    test("Legacy election with ballot_updates and no hide_ballot_ids still shows the id", async () => {
-        const legacy = {
+    test("Same with ballot updates on; the receipt still links to updating", async () => {
+        const updatable = {
             ...testInputs.EmailRollElection,
             settings: { ...testInputs.EmailRollElection.settings, ballot_updates: true },
         } as Election;
-        const { electionId, ballotId, receipt } = await voteAs(legacy, 'legacy@email.com');
-        expect(receipt.html).toContain(`/${electionId}/ballot/${ballotId}`);
+        const { electionId, receipt, voterId } = await expectNoProof(updatable, 'updatable@email.com');
+        expect(receipt.html).toContain(`/${electionId}/id/${voterId}`);
         th.testComplete();
     });
 });

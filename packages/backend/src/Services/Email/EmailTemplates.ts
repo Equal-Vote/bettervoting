@@ -1,7 +1,6 @@
 import { Ballot } from "@equal-vote/star-vote-shared/domain_model/Ballot"
 import { Election } from "@equal-vote/star-vote-shared/domain_model/Election"
 import { ElectionRoll } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll"
-import { ballotIdsHidden } from "@equal-vote/star-vote-shared/domain_model/ElectionSettings"
 import { Imsg } from "./IEmail"
 import { DateTime } from 'luxon'
 import { formatMarkdown, makeButton } from "@equal-vote/star-vote-shared/utils/formatMarkdown";
@@ -88,24 +87,24 @@ export function Blank(election: Election, voters: ElectionRoll[], url: string, e
   })
 }
 
-export function Receipt(election: Election, email: string, ballot: Ballot, url: string, roll?: ElectionRoll): Imsg {
-    const ballotVerifyUrl = `${url}/${election.election_id}/ballot/${ballot.ballot_id}`;
+export function Receipt(election: Election, email: string, _ballot: Ballot, url: string, roll?: ElectionRoll): Imsg {
+    // The verify link is disabled for now: it is the only place a voter learns
+    // their ballot id, which lets them prove how they voted (vote buying /
+    // coercion). Revisit after beta, likely as an election setting.
+    // const ballotVerifyUrl = `${url}/${election.election_id}/ballot/${_ballot.ballot_id}`;
     const ballotUpdateUrl = `${url}/${election.election_id}/id/${roll?.voter_id}`;
-    // The receipt is the only place a voter is ever told their ballot id, so
-    // when ids are hidden it just confirms the ballot was counted.
-    const showVerifyLink = !ballotIdsHidden(election.settings);
     return {
         ...emailSettings,
         to: email, // Change to your recipient
         from: process.env.FROM_EMAIL_ADDRESS ?? '',
         subject: `Ballot Receipt For ${election.title}`,
-        text: `${election.state === 'draft' ? '[⚠️Test Ballot]' : ''} Thank you for voting in ${election.title}, ${showVerifyLink ? `you can view your ballot and ballot status at \
-               ${ballotVerifyUrl}.` : 'your ballot has been received.'} ${election.settings.ballot_updates && roll ? `While the election is still open, you can update you ballot at ${ballotUpdateUrl}`: ''}`,
+        text: `${election.state === 'draft' ? '[⚠️Test Ballot]' : ''} Thank you for voting in ${election.title}, your ballot has been received. ${election.settings.ballot_updates && roll ? `While the election is still open, you can update you ballot at ${ballotUpdateUrl}`: ''}`,
         html: emailTemplate(`
-          <div>
+          <div> 
             ${election.state === 'draft' ? "<h3>⚠️This was cast as a test ballot. All test ballots will be removed once the election is finalized, and at that time you will need to vote again.⚠️</h3>" : ''}
             <p>Thank you for voting in ${sanitizeText(election.title)}!<p>
-            ${showVerifyLink ? `<p>You can <a clicktracking="off" href="${ballotVerifyUrl}">verify your ballot and ballot status</a> at any time.</p>` : '<p>Your ballot has been received.</p>'}
+            <p>Your ballot has been received.</p>
+            ${/* <p>You can <a clicktracking="off" href="${ballotVerifyUrl}">verify your ballot and ballot status</a> at any time.</p> */ ''}
             ${election.settings.ballot_updates && roll ? `<p>While the election is still open, you can <a clicktracking="off" href="${ballotUpdateUrl}">update your ballot</a></p>.` : ''}
           </div>    
         `),

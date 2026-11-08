@@ -212,11 +212,11 @@ ballot_submitted:
   update_ballot_disabled: This election does not support ballot updates. All ballots are final once submitted
   update_ballot_enabled_open: You can update your ballot using the link in your email receipt
   update_ballot_enabled_closed: The election has closed. All ballots are final
+  lookup_staff_only: To protect voters from being pressured to prove how they voted, individual ballots can only be looked up by {{election}} staff.
   status: 'Status:'
   precinct: 'Precinct:'
   ballot_id: 'Ballot ID:'
   update_ballot: 'Update Ballot:'
-  ids_hidden: This {{election}} does not share ballot IDs with voters, so individual ballots cannot be looked up here.
 
 # Localisation for numbers
 number:
@@ -755,11 +755,7 @@ tips:
 
   ballot_updates:
     title: Allow Voters To Update Ballot
-    description: Allow voters to change their vote while election is still open. Turning this on shows voters their ballot ID.
-
-  hide_ballot_ids:
-    title: Hide Ballot IDs From Voters
-    description: Voters are never told their ballot ID, so they can't prove how they voted to anyone else. The receipt email only confirms the ballot was received. Can't be combined with letting voters update their ballot.
+    description: Allow voters to change their vote while election is still open
 
   public_results:
     title: Public Results
@@ -1204,8 +1200,6 @@ election_settings:
   random_candidate_order: Randomize Candidate Order !tip(random_candidate_order)
 
   ballot_updates: Allow Voters To Edit Vote !tip(ballot_updates)
-
-  hide_ballot_ids: Hide Ballot IDs From Voters !tip(hide_ballot_ids)
 
   preliminary_results: Show Preliminary Results !tip(public_results)
 

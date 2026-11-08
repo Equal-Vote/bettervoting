@@ -38,17 +38,7 @@ export interface ElectionSettings {
     contact_email?: string; // Public contact email for voters to reach out to
     exhaust_on_N_repeated_skipped_marks?: number; // number of skipped ranks before exhausting
     draggable_ballot?: boolean; // Use draggable interface for IRV ballots
-    hide_ballot_ids?: boolean; // Never tell voters their ballot id (no receipt link, no /ballot/<id> page). Incompatible with ballot_updates
 }
-
-// Voters only ever learn their ballot id through the receipt email and the
-// /ballot/<id> page. Hidden by default; elections created before this setting
-// existed keep their old behaviour, which showed the id whenever ballot updates
-// were allowed.
-export function ballotIdsHidden(settings: ElectionSettings): boolean {
-    return settings.hide_ballot_ids ?? !settings.ballot_updates;
-}
-
 function settingsCompatiblityValidation(settings: ElectionSettings): string {
     let errorMsg = ''
     if (settings.ballot_updates) {
@@ -57,9 +47,6 @@ function settingsCompatiblityValidation(settings: ElectionSettings): string {
         }
         if (settings.invitation != 'email') {
             errorMsg += 'Ballot updating is only permitted on email list elections.  ';
-        }
-        if (settings.hide_ballot_ids === true) {
-            errorMsg += 'Ballot updating is not permitted when ballot IDs are hidden from voters.  ';
         }
     }
     return errorMsg;
@@ -108,9 +95,6 @@ export function electionSettingsValidation(obj:ElectionSettings): string | null 
   }
   if (obj.draggable_ballot && typeof obj.draggable_ballot !== 'boolean'){
     return "Invalid Draggable Ballot";
-  }
-  if (obj.hide_ballot_ids !== undefined && typeof obj.hide_ballot_ids !== 'boolean'){
-    return "Invalid Hide Ballot IDs";
   }
 
   const compatibilityError = settingsCompatiblityValidation(obj);

@@ -2,7 +2,7 @@ import Grid from "@mui/material/Grid";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormControl from "@mui/material/FormControl";
 import { FormGroup, Radio, RadioGroup, Box, capitalize, Typography, ToggleButton, ToggleButtonGroup } from "@mui/material";
-import { ElectionSettings as IElectionSettings, TermType, ballotIdsHidden } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
+import { ElectionSettings as IElectionSettings, TermType } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
 import { Tip } from '~/components/styles';
 import { useSubstitutedTranslation, SwitchSetting } from '~/components/util';
 import useElection from '~/components/ElectionContextProvider';
@@ -18,22 +18,19 @@ type ElectionSwitchSettingProps = {
     onToggle?: (newValue: boolean) => Promise<boolean>;
     label?: string;
     availableDuringElection?: boolean;
-    // Current value when it isn't simply !!election.settings[settingKey]
-    // (e.g. a setting whose default is true).
-    toggled?: boolean;
 }
 
 // Defined at module scope (not inside ElectionSettings) so its identity stays
 // stable across parent re-renders. If it were inline, every parent render
 // would create a new function reference and React would unmount/remount the
 // MUI Switch, eating its slide animation.
-function ElectionSwitchSetting({ settingKey, disabled, disabledMessage, onToggle: onToggleOverride, label, availableDuringElection=false, toggled}: ElectionSwitchSettingProps) {
+function ElectionSwitchSetting({ settingKey, disabled, disabledMessage, onToggle: onToggleOverride, label, availableDuringElection=false}: ElectionSwitchSettingProps) {
     const { election, updateElection } = useElection();
     const {t} = useSubstitutedTranslation(election.settings.term_type);
     const defaultOnToggle = async (v: boolean) => !! await updateElection(e => { (e.settings as unknown as Record<string, unknown>)[settingKey] = v; });
     const isDisabled = disabled ?? (election.state !== 'draft' && !availableDuringElection);
 
-    const [localToggled, setLocalToggled] = useOptimisticToggle(toggled ?? !!election.settings[settingKey], onToggleOverride ?? defaultOnToggle);
+    const [localToggled, setLocalToggled] = useOptimisticToggle(!!election.settings[settingKey], onToggleOverride ?? defaultOnToggle);
 
     return <SwitchSetting
         label={label ?? t(`election_settings.${settingKey}`)}
@@ -119,23 +116,7 @@ export default function ElectionSettings() {
                     </Box>
 
                     <ElectionSwitchSetting settingKey="random_candidate_order" />
-                    {/* ballot_updates and hide_ballot_ids are mutually exclusive (the server
-                        rejects both on), so turning one on turns the other off. */}
-                    <ElectionSwitchSetting
-                        settingKey="ballot_updates"
-                        onToggle={async (v) => !!await updateElection(e => {
-                            e.settings.ballot_updates = v;
-                            if (v) e.settings.hide_ballot_ids = false;
-                        })}
-                    />
-                    <ElectionSwitchSetting
-                        settingKey="hide_ballot_ids"
-                        toggled={ballotIdsHidden(election.settings)}
-                        onToggle={async (v) => !!await updateElection(e => {
-                            e.settings.hide_ballot_ids = v;
-                            if (v) e.settings.ballot_updates = false;
-                        })}
-                    />
+                    <ElectionSwitchSetting settingKey="ballot_updates" />
                     <ElectionSwitchSetting settingKey="require_instruction_confirmation" />
                     <ElectionSwitchSetting settingKey="draggable_ballot" />
                     {/* Note: this can't use ElectionSwitchSetting because we need to use the results from makePublicResultsRequest as the source of truth */}
