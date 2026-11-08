@@ -25,24 +25,6 @@ export async function expectValidElectionFromRequest(req:IRequest):Promise<Elect
     return inputElection;
 }
 
-// A "permanent" owner is a signed-in (keycloak or custom-key) user. AccountService sets
-// typ: 'TEMP_ID' when the user is only identified by the unverified temp_id cookie; those
-// ids lose admin access after TEMPORARY_ACCESS_HOURS, and an election created with no user
-// at all has no owner.
-export function hasPermanentOwner(user: IUser | undefined): boolean {
-    return !!user?.sub && user.typ !== 'TEMP_ID';
-}
-
-// Write-ins only count once an election admin approves them (see setWriteInResultsController),
-// so an election nobody will ever be able to administer must not enable them: every write-in
-// vote would be silently dropped.
-export function expectWriteInsAllowed(election: Election, user: IUser | undefined): void {
-    const hasWriteIns = (election.races ?? []).some((race) => race.enable_write_in);
-    if (hasWriteIns && !hasPermanentOwner(user)) {
-        throw new BadRequest("Write-in candidates require a signed-in election owner");
-    }
-}
-
 export function expectPermission(roles:roles[],permission:permission): void {
         if (!roles.some( (role) => permission.includes(role))){
             throw new Unauthorized("Does not have permission")
@@ -55,6 +37,20 @@ export function expectPermission(roles:roles[],permission:permission): void {
 export function expectPermanentUser(user: IUser | undefined): void {
     if (!user?.sub || user.typ === 'TEMP_ID') {
         throw new Unauthorized("Create an account to finalize this election")
+    }
+}
+
+// Write-ins only count once an election admin approves them (see setWriteInResultsController),
+// so an election with write-ins must end up with a signed-in owner. Drafts are fine: finalizing
+// already requires a signed-in user (expectPermanentUser above). This closes the other route,
+// creating the election already finalized, as the wizard's ownerless "Publish Now" does;
+// otherwise nobody could ever approve a write-in and every write-in vote would be dropped.
+export function expectOwnerForWriteIns(election: Election, user: IUser | undefined): void {
+    const hasWriteIns = (election.races ?? []).some((race) => race.enable_write_in);
+    if (!hasWriteIns || election.state === 'draft') return;
+    expectPermanentUser(user);
+    if (election.owner_id !== user?.sub) {
+        throw new BadRequest("Elections with write-in candidates must be owned by the signed-in user who creates them");
     }
 }
 

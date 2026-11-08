@@ -76,7 +76,7 @@ Why limit rankings at all? With a large candidate field, a full ranking grid bec
 
 ## Write-in candidates
 
-Write-ins are enabled **per race**, not per election: in the race editor, click **+ Add Write-in** under the candidate list while the election is a draft. A "Write-in" entry appears at the bottom of the candidate list to show voters will have the option. Write-ins require the election creator to be signed in, because an administrator has to approve them before they count (see below), and only a signed-in creator keeps admin access to the election.
+Write-ins are enabled **per race**, not per election: in the race editor, click **+ Add Write-in** under the candidate list while the election is a draft. A "Write-in" entry appears at the bottom of the candidate list to show voters will have the option. Write-ins aren't offered in the quick-start wizard, so choose **Customize in editor** there if you want them. Because an administrator has to approve write-ins before they count (see below), an election with write-ins needs a signed-in owner: you'll have to sign in before you can finalize it.
 
 **What the voter sees:** below the candidate list, the ballot shows a *Write-in Candidates* box. The voter types a name, clicks **Add**, and the name appears as a new row on the ballot to be scored, ranked, or approved exactly like any listed candidate. 
 

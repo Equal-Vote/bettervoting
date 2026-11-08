@@ -894,7 +894,6 @@ editable_ballots:
 race_form:
   candidates_title: '{{capital_candidates}}'
   description_title: Description (Optional)
-  sign_in_for_write_ins: Sign in to enable write-in candidates
 
 # Landing Page -> New Election Wizard
 wizard:

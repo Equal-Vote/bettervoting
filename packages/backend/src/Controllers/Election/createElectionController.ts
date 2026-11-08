@@ -4,7 +4,7 @@ import ServiceLocator from "../../ServiceLocator";
 import Logger from "../../Services/Logging/Logger";
 import { InternalServerError, BadRequest } from "@curveball/http-errors";
 import { ILoggingContext } from "../../Services/Logging/ILogger";
-import { expectValidElectionFromRequest, expectWriteInsAllowed } from "../controllerUtils";
+import { expectValidElectionFromRequest, expectOwnerForWriteIns } from "../controllerUtils";
 import { Response, NextFunction } from "express";
 
 const ElectionsModel = ServiceLocator.electionsDb();
@@ -13,7 +13,7 @@ const failMsgPrfx = "CATCH:  create error election err: ";
 async function createElectionController(req: IRequest, res: Response, _next: NextFunction) {
     Logger.info(req, "Create Election Controller");
     const inputElection = await expectValidElectionFromRequest(req);
-    expectWriteInsAllowed(inputElection, req.user);
+    expectOwnerForWriteIns(inputElection, req.user);
 
     const resElection = await createAndCheckElection(inputElection, req);
 

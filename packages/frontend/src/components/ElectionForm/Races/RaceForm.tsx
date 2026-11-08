@@ -10,7 +10,6 @@ import { RaceErrors, useEditRace } from './useEditRace';
 import { makeUniqueIDSync, ID_PREFIXES, ID_LENGTHS, NOTA_ID, makeWriteInCandidateId, isWriteInCandidate } from '@equal-vote/star-vote-shared/utils/makeID';
 import VotingMethodSelector from './VotingMethodSelector';
 import useElection from '~/components/ElectionContextProvider';
-import useAuthSession from '~/components/AuthSessionContextProvider';
 import { PrimaryButton, FileDropBox, Tip, UtilityButton } from '~/components/styles';
 import RaceDialog from './RaceDialog';
 import { Candidate } from '@equal-vote/star-vote-shared/domain_model/Candidate';
@@ -28,6 +27,9 @@ interface RaceFormProps {
 // The slice of useEditRace() that the inner form sections need.
 type InnerRaceFormProps = Pick<ReturnType<typeof useEditRace>, 'setErrors' | 'errors' | 'editedRace' | 'applyRaceUpdate'> & {
     open?: boolean,
+    // The wizard has no write-in option: its "Publish Now" makes an ownerless election, and
+    // write-ins need an owner to approve them. Write-ins are set up in the full editor.
+    allowWriteIns?: boolean,
 }
 
 export const RACE_FORM_GAP = 0;
@@ -61,7 +63,7 @@ export default function RaceForm({
                 </RaceDialog>
             }
             {styling == 'Wizard' && <>
-                <InnerRaceForm {...editRace}/>
+                <InnerRaceForm {...editRace} allowWriteIns={false}/>
                 <Box sx={{ mt: 3, display: "flex", flexDirection: "row", justifyContent: "flex-end", gap: 1 }}>
                     <PrimaryButton onClick={() => editRace.validateRace() && onConfirm(editRace.editedRace)}>Next</PrimaryButton>
                 </Box>
@@ -70,14 +72,10 @@ export default function RaceForm({
     )
 }
 
-const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=true}: InnerRaceFormProps) => {
+const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=true, allowWriteIns=true}: InnerRaceFormProps) => {
     const flags = useFeatureFlags();
     const { election, t } = useElection()
-    const authSession = useAuthSession();
     const isDisabled = election.state !== 'draft';
-    // Write-ins only count once an admin approves them, and only a signed-in owner keeps
-    // admin access; the backend rejects write-ins on elections without one.
-    const canEnableWriteIns = authSession.isLoggedIn();
 
     const inputRefs = useRef([]);
     const ephemeralCandidates = useMemo(() => {
@@ -259,17 +257,13 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
                     </SortableList.Item>
                 )}
             />
-            {election.state == 'draft' && !editedRace.enable_write_in && <Box sx={{display: 'flex', alignItems: 'center', flexWrap: 'wrap'}}>
+            {allowWriteIns && election.state == 'draft' && !editedRace.enable_write_in && <Box>
                 <UtilityButton
                     onClick={() => applyRaceUpdate((race) => { race.enable_write_in = true; })}
-                    disabled={!canEnableWriteIns}
                     sx={{ml: 1}}
                 >
                     + Add Write-in
                 </UtilityButton>
-                {!canEnableWriteIns && <Typography variant='caption' color='text.secondary' sx={{ml: 1}}>
-                    {t('race_form.sign_in_for_write_ins')}
-                </Typography>}
             </Box>}
             {flags.isSet('NOTA') && election.state == 'draft' && !editedRace.candidates.some((c) => c.candidate_id === NOTA_ID) && <Box>
                 <UtilityButton onClick={()=>{onEditCandidate({
