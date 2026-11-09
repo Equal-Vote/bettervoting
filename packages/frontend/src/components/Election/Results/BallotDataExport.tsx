@@ -40,7 +40,7 @@ export const BallotDataExport = ({ election, results }: Props) => {
         if (!ballots) return;
         const header = [
             { label: 'ballot_id', key: 'ballot_id' },
-            { label: 'precinct', key: 'precinct' },
+            { label: 'voter_group', key: 'voter_group' },
             ...election.races.map((race) => [
                 ...race.candidates.map((c) => ({
                     label: election.races.length == 1 ? c.candidate_name : `${race.title}!!${c.candidate_name}`,
@@ -56,7 +56,7 @@ export const BallotDataExport = ({ election, results }: Props) => {
         const rows = ballots.map((ballot) => {
             const row: Record<string, string | number> = {
                 ballot_id: ballot.ballot_id,
-                precinct: ballot.precinct ?? '',
+                voter_group: ballot.precinct ?? '',
             };
             ballot.votes.forEach((vote) => {
                 vote.scores.forEach((score) => {
@@ -94,24 +94,22 @@ export const BallotDataExport = ({ election, results }: Props) => {
     };
 
     return (
-        <a onClick={fetchBallots}>
-            {/* A single MenuButton must stay mounted while the ballots load: swapping in a
-                second one on load unmounts the open menu mid-click. Only the items change.
-                (An array of items rather than a fragment, since Menu rejects fragment children.) */}
-            <Box sx={{ m: 1, maxWidth: '400px' }}>
-                <MenuButton label={"Download"} >
-                    {!ballots ? <MenuItem disabled>Loading Ballots...</MenuItem> : [
-                        <MenuItem key="csv" id={"download-csv"} onClick={downloadCSV}>
-                            <BorderAll sx={{ marginRight: 1 }} />
-                            Download CSV
-                        </MenuItem>,
-                        <MenuItem key="json" onClick={downloadJson}>
-                            <DataObject sx={{ marginRight: 1 }} />
-                            Download JSON
-                        </MenuItem>,
-                    ]}
-                </MenuButton>
-            </Box>
-        </a>
+        // A single MenuButton must stay mounted while the ballots load: swapping in a
+        // second one on load unmounts the open menu mid-click. Only the items change.
+        // (An array of items rather than a fragment, since Menu rejects fragment children.)
+        <Box onClick={fetchBallots} sx={{ m: 1, maxWidth: '400px' }}>
+            <MenuButton label={"Download"} >
+                {!ballots ? <MenuItem disabled>Loading Ballots...</MenuItem> : [
+                    <MenuItem key="csv" id={"download-csv"} onClick={downloadCSV}>
+                        <BorderAll sx={{ marginRight: 1 }} />
+                        Download CSV
+                    </MenuItem>,
+                    <MenuItem key="json" onClick={downloadJson}>
+                        <DataObject sx={{ marginRight: 1 }} />
+                        Download JSON
+                    </MenuItem>,
+                ]}
+            </MenuButton>
+        </Box>
     );
 };
