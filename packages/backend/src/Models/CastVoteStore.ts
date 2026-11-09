@@ -68,7 +68,7 @@ export default class CastVoteStore {
                         // OCC missed: someone updated this roll since we read it.
                         // Distinguish "they already voted" (submitted=true on the winning
                         // head row) from a true concurrent edit (admin state change,
-                        // sendInvites email_data update, etc.).
+                        // sendEmails email_data update, etc.).
                         const winningHead = await trx.selectFrom('electionRollDB')
                             .where('election_id', '=', event.roll.election_id)
                             .where('voter_id', '=', event.roll.voter_id)
