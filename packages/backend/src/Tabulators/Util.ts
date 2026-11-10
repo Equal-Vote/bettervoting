@@ -5,9 +5,11 @@ import { candidate, genericResults, genericSummaryData, rawVote, roundResults, v
 // papers over that mismatch. Reworking the typing is out of scope for a lint pass.
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const Fraction = require('fraction.js');
+// Augments the global Intl namespace, which has to be done with a namespace declaration.
+// eslint-disable-next-line @typescript-eslint/no-namespace
 declare namespace Intl {
   class ListFormat {
-    constructor(locales?: string | string[], options?: {});
+    constructor(locales?: string | string[], options?: object);
     public format: (items: string[]) => string;
   }
 }
@@ -34,8 +36,8 @@ export const makeAbstentionTest = (markAllEqualAsAbstention:boolean = false) => 
 type StatTestPair = Readonly<[string, (vote: rawVote) => boolean]>;
 
 const filterInitialVotes = (rawVotes: rawVote[], candidateIds: string[], tests: StatTestPair[]): [vote[], {[key: string]: number}] => {
-	let tallyVotes: vote[] = [];
-	let summaryStats: {[key: string]: number} = {};
+	const tallyVotes: vote[] = [];
+	const summaryStats: {[key: string]: number} = {};
 
   tests.forEach(([statName, _statTest]) => {
     summaryStats[statName] = 0;
@@ -45,7 +47,7 @@ const filterInitialVotes = (rawVotes: rawVote[], candidateIds: string[], tests: 
   rawVotes.forEach(rawVote => {
     // using a classic loop so that I can return out of it
     for(let i = 0; i < tests.length; i++){
-      let [statName, statTest] = tests[i];
+      const [statName, statTest] = tests[i];
       if(statTest(rawVote)){
         summaryStats[statName] = (summaryStats[statName] ?? 0)+1;
         return;
@@ -86,29 +88,26 @@ export const sortCandidates = <CandidateType extends candidate>(
       }
     }
     if(Array.isArray(candidate[field])){
-      // @ts-ignore: typescript doesn't know candidate[field] is an array
       return tryInversion(candidate[field].at(subIndex ?? -1))
     }else{
-      // @ts-ignore: we know that candidate[field] is a number or Fraction, even if typescript doesn't
       return tryInversion(candidate[field]);
     }
   }
 
   const cmpr = (a: CandidateType, b: CandidateType, fieldIndex: number = 0, subIndex: number = -1): number => {
     if(fieldIndex >= fields.length) return 0;
-    let aa = evalField(a, fields[fieldIndex], subIndex);
-    let bb = evalField(b, fields[fieldIndex], subIndex);
+    const aa = evalField(a, fields[fieldIndex], subIndex);
+    const bb = evalField(b, fields[fieldIndex], subIndex);
     if(typeof aa == typeof Fraction){
-      // @ts-ignore: typescript doesn't know aa is an Fraction
-      let diff = aa.sub(bb).mul(-1);
+      const diff = aa.sub(bb).mul(-1);
       if(!diff.equals(0)) return diff.valueOf();
     }else{
-      let diff = -(aa - bb);
+      const diff = -(aa - bb);
       if(diff != 0) return diff;
     }
     if(Array.isArray(a[fields[fieldIndex]]) && subIndex != 0){
-      // @ts-ignore - we just established that it's an array, not sure why typescript is confused
-      let l = a[fields[fieldIndex]].length;
+      // @ts-expect-error - we just established that it's an array, not sure why typescript is confused
+      const l = a[fields[fieldIndex]].length;
       return cmpr(a, b, fieldIndex, (subIndex-1+l)%l)
     }else{
       return cmpr(a, b, fieldIndex+1);
@@ -117,13 +116,13 @@ export const sortCandidates = <CandidateType extends candidate>(
 
   const winRound = (c: CandidateType) => {
     if(roundResults == undefined) return -1;
-    let i = roundResults.findIndex(r => r.winners.map(w => w.id).includes(c.id))
+    const i = roundResults.findIndex(r => r.winners.map(w => w.id).includes(c.id))
     if(i == -1) return 999999; // I can't do infinity because Infinity can't equal Infinity for comparison purposes
     return i;
   }
 
   candidates.sort((a, b) => {
-    let wDiff = winRound(a) - winRound(b);
+    const wDiff = winRound(a) - winRound(b);
     if(wDiff != 0) return wDiff;
     return cmpr(a, b);
   });
@@ -166,7 +165,6 @@ export const getSummaryData = <CandidateType extends candidate, SummaryType exte
   // Totaled score measures for each candidate
   if(candidates.every(c => 'score' in c)){ // using every to make typescript happy
     candidates.forEach(c => {
-      // @ts-ignore - We know `score` is present even if typescript doesn't
       c.score = tallyVotes.reduce((score, vote) => score + vote.marks[c.id], 0)
     })   
   }
@@ -174,7 +172,6 @@ export const getSummaryData = <CandidateType extends candidate, SummaryType exte
   // Compute copeland score based on matrix
   if(candidates.every(c => 'copelandScore' in c)){ // using every to make typescript happy
     candidates.forEach(c => {
-      // @ts-ignore - We know `copelandScore` is present even if typescript doesn't
       c.copelandScore = candidates.reduce(
         (prev, other) => {
           // self
@@ -193,7 +190,6 @@ export const getSummaryData = <CandidateType extends candidate, SummaryType exte
   // Compute fiveStarCount
   if(candidates.every(c => 'fiveStarCount' in c)){ // using every to make typescript happy
     candidates.forEach(c => {
-      // @ts-ignore - We know `fiveStarCount` is present even if typescript doesn't
       c.fiveStarCount = tallyVotes.reduce((count, v) => v.marks[c.id] === 5 ? count+1 : count, 0)
     });
   }
@@ -229,7 +225,7 @@ export const runBlocTabulator = <CandidateType extends candidate, SummaryType ex
   let remainingCandidates: CandidateType[] = [...results.summaryData.candidates];
 
   for(let w = 0; w < nWinners; w++){
-    let roundResults = singleWinnerCallback(remainingCandidates, results.summaryData);
+    const roundResults = singleWinnerCallback(remainingCandidates, results.summaryData);
 
     results.elected.push(...roundResults.winners);
     results.roundResults.push(roundResults);
@@ -257,7 +253,7 @@ export const runBlocTabulator = <CandidateType extends candidate, SummaryType ex
         .sort(([_, a]: [candidate, number[]], [__, b] : [candidate, number[]]) => {
           const compare = (a: number[], b: number[], i: number): number => {
             if(i > a.length || i > b.length) return 0;
-            let diff = -(a[i] - b[i]);
+            const diff = -(a[i] - b[i]);
             return diff == 0 ? compare(a, b, i+1) : diff;
           };
           return compare(a, b, 0)
