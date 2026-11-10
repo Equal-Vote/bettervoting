@@ -252,9 +252,11 @@ export const runBlocTabulator = <CandidateType extends candidate, SummaryType ex
         .map((c: CandidateType) => ([c, evaluate(c, results.roundResults)] as [CandidateType, number[]]))
         .sort(([_, a]: [candidate, number[]], [__, b] : [candidate, number[]]) => {
           const compare = (a: number[], b: number[], i: number): number => {
-            if(i > a.length || i > b.length) return 0;
-            const diff = -(a[i] - b[i]);
-            return diff == 0 ? compare(a, b, i+1) : diff;
+            if(i >= a.length || i >= b.length) return 0;
+            // Compare with === first: keys can be -Infinity, and -Infinity - -Infinity is NaN,
+            // which sort() treats as "equal" and would skip the remaining keys (#1776).
+            if(a[i] === b[i]) return compare(a, b, i+1);
+            return b[i] - a[i];
           };
           return compare(a, b, 0)
         }) 

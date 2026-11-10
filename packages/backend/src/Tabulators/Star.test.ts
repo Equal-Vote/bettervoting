@@ -34,7 +34,7 @@ describe("STAR Tests", () => {
             [5, 2, 2],
             [2, 2, 4]]
         const results = Star(...mapMethodInputs(candidates, votes), 1)
-        expect(results.roundResults[0].logs.map(l => l.key)).toContain('tabulation_logs.star.pairwise_advance_to_runoff');
+        expect(results.roundResults[0].tieBreakType).toBe('head_to_head');
         expect(results.elected[0].name).toBe('Robot');
         expect(results.roundResults[0].runner_up[0].name).toBe('Angel');
         expect(results.summaryData.candidates.map(c => c.name)).toEqual(['Robot', 'Angel', 'Blacksmith']);
