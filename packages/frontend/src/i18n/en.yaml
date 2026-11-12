@@ -105,7 +105,7 @@ ballot:
       right_title: 'Best'
     rcv: 
       instruction_bullets:
-        - Rank the {{candidates}} in order of preference. (1st, 2nd, 3rd, etc.)
+        - Rank the {{candidates}} in order of preference. For example, rank your top choice as 1st.
         - Ranking {{candidates}} equally is not allowed.
         - '{{capital_candidates}} left blank are ranked last'
       footer_single_winner: > 
@@ -117,7 +117,7 @@ ballot:
       right_title: 'Worst'
     stv: 
       instruction_bullets:
-        - Rank the {{candidates}} in order of preference. (1st, 2nd, 3rd, etc.)
+        - Rank the {{candidates}} in order of preference. For example, rank your top choice as 1st.
         - Ranking {{candidates}} equally is not allowed.
         - '{{capital_candidates}} left blank are ranked last'
       footer_multi_winner: ''
@@ -125,7 +125,7 @@ ballot:
       right_title: 'Worst'
     ranked_robin:
       instruction_bullets:
-        - Rank the {{candidates}} in order of preference.
+        - Rank the {{candidates}} in order of preference. For example, rank your top choice(s) as 1st.
         - Equal ranks are allowed
         - '{{capital_candidates}} left blank are ranked last'
       footer_single_winner: |
