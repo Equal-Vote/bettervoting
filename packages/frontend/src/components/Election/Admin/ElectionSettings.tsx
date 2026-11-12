@@ -129,6 +129,19 @@ export default function ElectionSettings() {
                             color: 'primary.contrastText',
                             '&:hover': { backgroundColor: 'primary.dark' },
                         },
+                        // Disabled chips (the election has left draft, or no race is ranked)
+                        // must still be readable: MUI's own disabled colour is very faint and
+                        // drops the border between chips.
+                        '&.Mui-disabled': {
+                            border: '1px solid',
+                            borderColor: 'action.disabled',
+                            color: 'text.secondary',
+                        },
+                        '&.Mui-selected.Mui-disabled': {
+                            backgroundColor: 'text.secondary',
+                            borderColor: 'text.secondary',
+                            color: 'common.white',
+                        },
                     },
                 }}
             >
@@ -237,7 +250,7 @@ export default function ElectionSettings() {
                                 />
                             )}
                             {!hasRankedRace && <>
-                                <Box sx={{ opacity: 0.5 }}>{rankLimit}</Box>
+                                {rankLimit}
                                 <FormHelperText sx={{ mt: 0, ml: SECONDARY_INDENT, fontStyle: 'italic' }}>
                                     {t('election_settings.not_used.max_rankings')}
                                 </FormHelperText>
