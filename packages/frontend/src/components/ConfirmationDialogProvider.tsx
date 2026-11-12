@@ -34,7 +34,7 @@ export interface ConfirmTextField {
 
 interface ConfirmData {
     title: string
-    message: string
+    message: React.ReactNode
     cancel?: string
     submit?: string
     dismissable?: boolean
@@ -54,7 +54,7 @@ const ConfirmDialog = createContext<confirmContext>(null);
 type DialogState = {
     isOpen: boolean
     title: string
-    message: string
+    message: React.ReactNode
     submit: string | null
     cancel: string | null
     dismissable: boolean

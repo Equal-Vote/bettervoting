@@ -1,12 +1,13 @@
+import { ReactNode } from 'react';
 import { AUDIT_NOTE_MAX_LENGTH, electionHasAuditLog } from '@equal-vote/star-vote-shared/domain_model/AuditLog';
 import useConfirm from '../../ConfirmationDialogProvider';
 import useElection from '../../ElectionContextProvider';
 
 type AuditConfirmOptions = {
     title: string
-    // The action's own confirmation text, if it has one. The public-audit-log
-    // notice is appended as a second paragraph.
-    message?: string
+    // The action's own confirmation text, if it has one. The audit-log notice is
+    // appended as a second paragraph.
+    message?: ReactNode
     cancel?: string
     submit?: string
 }
@@ -17,23 +18,23 @@ type AuditConfirmOptions = {
 export type AuditConfirmResult = { audit_note?: string } | null
 
 /**
- * Confirmation step for an admin action that will appear in the election's
- * public audit log: tells the admin so, and offers an optional explanation that
- * is stored with the entry.
- *
- * Elections created before the audit-log cutoff have no *public* log; it is
- * still kept and shown to the election's admins, so the dialog still appears
- * but says so instead of calling the entry public.
+ * Confirmation step for an admin action that will appear in the election's audit
+ * log: says who can see the log (everyone, or only the election's admins when the
+ * election was created before the cutoff), links to it, and offers an optional
+ * explanation that is stored with the entry.
  */
 export default function useAuditConfirm() {
     const { election, t } = useElection();
     const confirm = useConfirm();
 
     return async ({ title, message, cancel, submit }: AuditConfirmOptions): Promise<AuditConfirmResult> => {
-        const notice = t(electionHasAuditLog(election) ? 'audit_confirm.notice' : 'audit_confirm.notice_admin_only');
+        const notice = t(electionHasAuditLog(election) ? 'audit_confirm.notice' : 'audit_confirm.notice_admin_only', {
+            history_url: `/${election.election_id}/history`,
+            newWindow: true,
+        });
         const result = await confirm({
             title,
-            message: message ? `${message}\n\n${notice}` : notice,
+            message: message ? <>{message}{'\n\n'}{notice}</> : notice,
             cancel,
             submit,
             textField: {

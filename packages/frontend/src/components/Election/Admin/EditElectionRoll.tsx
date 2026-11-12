@@ -128,8 +128,6 @@ const EditElectionRoll = ({ roll, fetchRolls }:Props) => {
     }
 
     const handleConfirmReveal = async () => {
-        // Break-glass: confirm, explain that it is logged publicly, and take an
-        // optional reason that is stored with the audit entry.
         const audit = await auditConfirm(t('audit_confirm.reveal_voter_id'));
         if (!audit) return;
         const result = await revealVoterId.makeRequest({ email: roll.email, ...audit });

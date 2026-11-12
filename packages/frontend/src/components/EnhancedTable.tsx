@@ -42,6 +42,9 @@ interface HeadCell {
   label: string;
   numeric: boolean;
   isDate?: boolean;
+  // Sort this column by the row's own value for this key (a number) instead of by the
+  // text the cell displays.
+  sortKey?: string;
   filterType?: 'search' | 'groups';
   filterGroups?: {
     [key: string]: boolean
@@ -297,8 +300,9 @@ const headCellPool = {
     id: 'history_when',
     numeric: false,
     disablePadding: false,
-    // Deliberately not isDate: the formatted value is already lexicographically
-    // sortable, which keeps the ordering correct in every locale.
+    // Day-only and exact times don't sort against each other as text, so sort by the
+    // event's position in the server's chronological list (see ElectionHistoryView).
+    sortKey: 'position',
     label: 'When (UTC)',
     filterType: 'search',
     formatter: (_, event) => formatHistoryTimestamp(event),
@@ -610,7 +614,10 @@ export default function EnhancedTable(props: EnhancedTableProps) {
 
   const visibleRows = useMemo(
     () => {
-      const sortedRows = stableSort(filteredRows, getComparator(order, orderBy, headCellPool[orderBy].isDate === true));
+      const sortKey = headCellPool[orderBy].sortKey;
+      const sortedRows = sortKey
+        ? [...(filteredRows as { raw: Record<string, number> }[])].sort((a, b) => (order === 'desc' ? -1 : 1) * (a.raw[sortKey] - b.raw[sortKey]))
+        : stableSort(filteredRows, getComparator(order, orderBy, headCellPool[orderBy].isDate === true));
       const isSearching = headCells.some((col, colInd) => col.filterType === 'search' && filters[colInd]);
       let orderedRows = sortedRows;
       if (isSearching) {
