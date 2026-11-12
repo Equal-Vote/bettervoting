@@ -3,7 +3,6 @@ import 'dotenv/config';
 import testInputs from "./testInputs";
 import { TestHelper } from "./TestHelper";
 import ServiceLocator from "../ServiceLocator";
-import MockAccountService from "../Services/Account/__mocks__/AccountService";
 
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
@@ -12,7 +11,7 @@ import crypto from "crypto";
 const th = new TestHelper();
 // ServiceLocator is jest.mock()'d (see setupTests.ts), so accountService() actually
 // returns the mock AccountService, which has a `verify` toggle the real class lacks.
-const accountService = ServiceLocator.accountService() as unknown as MockAccountService;
+const accountService = ServiceLocator.accountService() as unknown as { verify: boolean };
 accountService.verify = true;
 
 afterEach(() => {
@@ -45,7 +44,7 @@ describe("Election with custom auth key", () => {
         sub: 'Alice1234',
      }, customKey.privateKey, { algorithm: 'RS256' });
 
-     var electionId = "";
+     let electionId = "";
 
     test("sanity: jwt can be verified", async()=> {
         const user = jwt.verify(user1TokenCustomSigned, customKey.publicKey);
