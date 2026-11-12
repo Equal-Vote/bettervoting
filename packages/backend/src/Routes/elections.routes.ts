@@ -18,8 +18,6 @@ import {
     getElections,
     getGlobalElectionStats,
     getSandboxResults,
-    sendInvitationController,
-    sendInvitationsController,
     setOpenState,
     setPublicResults,
     sendEmailsController,
@@ -252,7 +250,7 @@ electionsRouter.delete('/Election/:id', asyncHandler(deleteElection))
  * @swagger
  * /QueryElections:
  *   get:
- *     summary: Query Elections based on time range (sys-admin only)
+ *     summary: Query Elections based on time range (sys-admin only; currently disabled, always returns 401)
  *     tags: [Elections]
  *     requestBody:
  *       required: true
@@ -683,29 +681,7 @@ electionsRouter.post('/Election/:id/setOpenState', asyncHandler(setOpenState))
 
 /** 
  * @swagger
- * /Election/{id}/sendInvites:
- *   post:
- *     summary: Send invitations for an election
- *     tags: [Elections]
- *     security:
- *      - ApiKeyAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: string
- *         required: true
- *         description: The election ID
- *     responses:
- *       200:
- *         description: Invitations sent
- *       404:
- *         description: Election not found */
-electionsRouter.post('/Election/:id/sendInvites', asyncHandler(sendInvitationsController))
-
-/** 
- * @swagger
- * /Election/{id}/sendInvites:
+ * /Election/{id}/sendEmails:
  *   post:
  *     summary: Send invitations for an election
  *     tags: [Elections]
@@ -724,42 +700,6 @@ electionsRouter.post('/Election/:id/sendInvites', asyncHandler(sendInvitationsCo
  *       404:
  *         description: Election not found */
 electionsRouter.post('/Election/:id/sendEmails', asyncHandler(sendEmailsController))
-
-/** 
- * @swagger
- * /Election/{id}/sendInvite/{voter_id}:
- *   post:
- *     summary: Send an invitation to a specific voter
- *     tags: [Elections]
- *     security:
- *      - ApiKeyAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: string
- *         required: true
- *         description: The election ID
- *       - in: path
- *         name: voter_id
- *         schema:
- *           type: string
- *         required: true
- *         description: The voter ID
- *     responses:
- *       200:
- *         description: Invitation sent
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 electionRollEntry:
- *                   type: object
- *                   $ref: '#/components/schemas/ElectionRoll'
- *       404:
- *         description: Election or voter not found */
-electionsRouter.post('/Election/:id/sendInvite/:voter_id', asyncHandler(sendInvitationController))
 
  /** 
  * @swagger

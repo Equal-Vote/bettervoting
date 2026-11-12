@@ -259,8 +259,8 @@ async function handleSendEmailEvent(job: { id: string; data: email_request_event
         timestamp: Date.now(),
     }
 
-    // The email has already gone out; see sendInvitesController for why this is
-    // retried from a fresh read rather than written from the row read above.
+    // The email has already gone out, so its record must land even if the roll changed
+    // underneath us: updateRollWithRetry re-reads and re-applies this on conflict.
     try {
         await updateRollWithRetry(
             election.election_id,
