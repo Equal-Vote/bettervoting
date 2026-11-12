@@ -1219,6 +1219,13 @@ election_settings:
 
   max_rankings: Set Number Of Rankings Allowed !tip(max_rankings)
 
+  # Settings that do nothing for this election's voting methods, shown greyed out at the bottom
+  not_used:
+    title: Not used by this {{election}}
+    description: These settings only affect certain voting methods, and none of your {{races}} use them.
+    draggable_ballot: Only used by Ranked Choice Voting (RCV) {{races}}.
+    max_rankings: Only used by ranked {{races}} (Ranked Choice Voting, Single Transferable Vote, or Ranked Robin).
+
   contact_email: Election Support Email !tip(contact_email)
 
 voter_groups_dialog:
