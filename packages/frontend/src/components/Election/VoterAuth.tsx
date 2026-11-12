@@ -3,7 +3,7 @@ import { useParams } from "react-router";
 import Typography from '@mui/material/Typography';
 import TextField from "@mui/material/TextField";
 import Box from '@mui/material/Box';
-import { FormHelperText } from "@mui/material"
+import { FormHelperText, Link } from "@mui/material"
 import { useCookie } from "../../hooks/useCookie";
 import useAuthSession from "../AuthSessionContextProvider";
 import useElection from "../ElectionContextProvider";
@@ -60,7 +60,7 @@ const VoterAuth = () => {
           {!isAuthorized && missingEmail && emailRequired &&
             <Box sx={{ display: 'flex', justifyContent: 'center' }}>
               <Typography align='center' gutterBottom variant="h5" component="h5">
-                You must <a onClick={authSession.openLogin} style={{ cursor: 'pointer', color: 'inherit', textDecoration: 'underline' }}>log in </a> to access this election
+                You must <Link component="button" type="button" onClick={authSession.openLogin} sx={{ font: 'inherit', color: 'inherit', textDecorationColor: 'inherit', verticalAlign: 'baseline' }}>log in</Link> to access this election
               </Typography>
             </Box>
           }

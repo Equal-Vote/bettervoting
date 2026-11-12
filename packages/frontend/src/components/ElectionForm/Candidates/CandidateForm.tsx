@@ -93,7 +93,7 @@ const CandidatePhotoDialog = ({ onEditCandidate, candidate, open, handleClose }:
 
 
 
-const LinkDialog = ({ onEditCandidate, candidate, open, handleClose }) => {
+const LinkDialog = ({ onEditCandidate, candidate, open, handleClose }: CandidatePhotoDialogProps) => {
     const onApplyEditCandidate = (updateFunc) => {
         const newCandidate = { ...candidate }
         updateFunc(newCandidate)
@@ -183,7 +183,7 @@ interface CandidateFormProps {
     electionState: string
 }
 
-export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled, special, inputRef, onKeyDown}: CandidateFormProps) => {
+const CandidateForm = ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled, special, inputRef, onKeyDown}: CandidateFormProps) => {
     const [open, setOpen] = useState(false);
     const [linkOpen, setLinkOpen] = useState(false);
     // Track hover and focus so the UI (actions + textarea underline) appears on hover or when the textbox is focused
@@ -276,3 +276,5 @@ export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled
         </Paper >
     )
 }
+
+export default CandidateForm

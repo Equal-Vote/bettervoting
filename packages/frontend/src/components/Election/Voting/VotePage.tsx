@@ -115,7 +115,7 @@ const VotePage = () => {
   const { data: rollData, makeRequest: fetchRoll } = useGetRoll(election.election_id, voterId);
   const [receiptEmail, setReceiptEmail] = useState(undefined);
   const [inputEmail, setInputEmail] = useState(undefined);
-  useEffect(() => { voterId && fetchRoll() }, [voterId]);
+  useEffect(() => { if (voterId) fetchRoll() }, [voterId]);
   useEffect(() => { setReceiptEmail(rollData?.electionRollEntry?.email ?? authSession.getIdField('email')) }, [authSession, rollData]);
   const [currentPage, setCurrentPage] = useState(0)
   const setInstructionsRead = () => {
