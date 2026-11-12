@@ -6,7 +6,7 @@ import {  Box, Button, Container, Input, Typography } from '@mui/material';
 import { DateTime } from 'luxon';
 import { dateToLocalLuxonDate } from '../ElectionForm/Details/useEditElectionDetails';
 
-export default () => {
+const QueryTool = () => {
     const navigate = useNavigate();
 
     const { data, isPending, makeRequest: fetchElections } = useQueryElections();
@@ -76,3 +76,5 @@ export default () => {
         />
     </Container>
 }
+
+export default QueryTool

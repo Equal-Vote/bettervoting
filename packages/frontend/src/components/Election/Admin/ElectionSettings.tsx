@@ -4,12 +4,14 @@ import FormControl from "@mui/material/FormControl";
 import { FormGroup, Radio, RadioGroup, Box, capitalize, Typography, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { acceptsUploadedBallots, ElectionSettings as IElectionSettings, TermType } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
 import { Tip } from '~/components/styles';
-import { useSubstitutedTranslation, SwitchSetting } from '~/components/util';
+import { useSubstitutedTranslation, SwitchSetting, SECONDARY_INDENT } from '~/components/util';
 import useElection from '~/components/ElectionContextProvider';
 import useOptimisticToggle from "~/hooks/useOptimisticToggle";
 import { AdminPageNavigation } from '../Sidebar';
 import { useSetPublicResults } from '~/hooks/useAPI';
 import DialogTextField from '~/components/DialogTextField';
+import useFeatureFlags from '~/components/FeatureFlagContextProvider';
+import VoterGroupGrid from './VoterGroupGrid';
 
 type ElectionSwitchSettingProps = {
     settingKey: keyof IElectionSettings;
@@ -80,6 +82,7 @@ export default function ElectionSettings() {
     // is_public, so on a voter-list election the flag would have no visible effect.
     const browsable = election.settings.voter_access === 'open';
     const emailList = election.settings.invitation === 'email' && election.settings.voter_access !== 'open';
+    const flags = useFeatureFlags();
 
     // Inclusive [min_rankings, max_rankings] — drives the rank-limit selector below.
     const rankOptions = Array.from({ length: max_rankings - min_rankings + 1 }, (_, i) => min_rankings + i);
@@ -104,7 +107,7 @@ export default function ElectionSettings() {
                             {t('wizard.term_question')}
                             <Tip name='polls_vs_elections'/>
                         </Typography>
-                        <RadioGroup row>
+                        <RadioGroup row sx={{ ml: SECONDARY_INDENT }}>
                             {['poll', 'election'].map( (type, i) =>
                                 <FormControlLabel
                                     key={i}
@@ -147,8 +150,9 @@ export default function ElectionSettings() {
                         disabledMessage={browsable ? undefined : t('disabled_msgs.is_public_when_voter_list')}
                     />
                     {/* max_rankings is set for every election (defaulting to default_rankings),
-                        so this is always shown rather than gated behind a toggle. Kept last so the
-                        settings read as radios, then toggles, then the rank-limit selector. */}
+                        so this is always shown rather than gated behind a toggle. Kept after the toggles so the
+                        settings read as radios, then toggles, then the rank-limit selector. Voter
+                        groups go last because the grid under them can get large. */}
                     <Box sx={{ py: 1 }}>
                         <Typography component='div' sx={{ fontWeight: 500, mb: 1 }}>
                             {t('tips.max_rankings.title')}
@@ -167,7 +171,7 @@ export default function ElectionSettings() {
                             sx={{
                                 // Indent only the buttons (not the label above) so they read
                                 // as nested under the heading.
-                                ml: { xs: 0, sm: 4 },
+                                ml: SECONDARY_INDENT,
                                 flexWrap: 'wrap',
                                 gap: 1,
                                 // Detach the grouped border-radius/border-collapse so buttons
@@ -202,11 +206,24 @@ export default function ElectionSettings() {
                             ))}
                         </ToggleButtonGroup>
                     </Box>
+                    {flags.isSet('PRECINCTS') && (
+                        <Box sx={{ py: 0.5 }}>
+                            {/* Voter groups are assigned per row of the voter list, so they
+                                mean nothing on an election anyone with the link can vote in. */}
+                            <ElectionSwitchSetting
+                                settingKey="voter_groups_enabled"
+                                label={t('election_settings.voter_groups')}
+                                disabled={election.state !== 'draft' || browsable}
+                                disabledMessage={browsable ? t('disabled_msgs.voter_groups_when_open') : undefined}
+                            />
+                            {election.settings.voter_groups_enabled && !browsable && (
+                                <Box sx={{ ml: SECONDARY_INDENT }}><VoterGroupGrid /></Box>
+                            )}
+                        </Box>
+                    )}
                 </FormGroup>
             </FormControl>
         </Grid>
-
-
 
         <AdminPageNavigation />
     </>

@@ -70,6 +70,8 @@ export interface ElectionSettings {
     exhaust_on_N_repeated_skipped_marks?: number; // number of skipped ranks before exhausting
     draggable_ballot?: boolean; // Use draggable interface for IRV ballots
     allowed_submit_types?: BallotSubmitType[]; // Which submission channels are allowed for this election
+    voter_groups?: string[]; // Named voter groups for this election (FF_PRECINCTS)
+    voter_groups_enabled?: boolean; // Whether voter groups are active (FF_PRECINCTS)
 }
 function settingsCompatiblityValidation(settings: ElectionSettings): string {
     let errorMsg = ''
@@ -156,6 +158,13 @@ export function electionSettingsValidation(obj:ElectionSettings): string | null 
     if (!obj.allowed_submit_types.every((t: string) => validTypes.includes(t))) {
       return "Invalid Allowed Submit Types value";
     }
+  }
+  if (obj.voter_groups_enabled !== undefined && typeof obj.voter_groups_enabled !== 'boolean'){
+    return "Invalid Voter Groups Enabled";
+  }
+  if (obj.voter_groups !== undefined) {
+    if (!Array.isArray(obj.voter_groups)) return "Invalid Voter Groups";
+    if (obj.voter_groups.some(g => typeof g !== 'string')) return "Invalid Voter Group Name";
   }
 
   const compatibilityError = settingsCompatiblityValidation(obj);
