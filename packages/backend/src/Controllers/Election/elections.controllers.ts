@@ -154,6 +154,12 @@ async function updateElectionStateIfNeeded(req:IRequest, election:Election):Prom
                 stateChange = true;
                 election.state = 'closed';
                 stateChangeMsg = `Election ${election.election_id} transitioning to Closed From ${election.state} (end time = ${election.end_time})`;
+                // Same write as the close, so there is no moment where the election
+                // is closed but the results it promised are still hidden.
+                if (election.settings.publish_results_on_close === true) {
+                    election.settings.public_results = true;
+                    stateChangeMsg += ', publishing results';
+                }
             }
         }
     }

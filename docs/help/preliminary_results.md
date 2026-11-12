@@ -10,7 +10,9 @@ grand_parent: Running an Election
 
 When an election has **Show Preliminary Results** turned on, the running tally is visible to anyone with the election link while voting is still happening. This is great for casual polls, transparent community decisions, and demos — but it changes how the election behaves in some ways that voters and admins should understand before turning it on.
 
-**Show Preliminary Results is off by default.** New elections hide the tally until the election is closed and the admin chooses to make the results public. If you want a live tally, turn the setting on deliberately in **Settings** after reading this page.
+**Show Preliminary Results is off by default.** New elections hide the tally while voting is open. If you want a live tally, turn on **Show Preliminary Results** on the **Publish & Share** page after reading this page.
+
+**Publishing the final results is a separate step.** Once an election is closed, the same switch on **Publish & Share** reads **Publish Results**, and turning it on makes the results public. If your election has start and end times, you can tick **Publish results when the election ends** next to them while setting it up, and the results are published at the moment it closes without you doing anything. An election you close by hand never publishes on its own.
 
 This page is for both voters (so you know what other people can see when you vote) and admins (so you can make an informed choice about whether to enable it).
 
@@ -22,7 +24,7 @@ When the setting is on:
 - The tally updates as ballots come in. A new ballot changes the numbers immediately.
 - After the election closes, the same view becomes the final results.
 
-When the setting is off, the tally is hidden from everyone (both admins and voters) until the election is closed and the admin chooses to publish.
+When the setting is off, the tally is hidden from everyone (both admins and voters) until the election is closed and the results are published.
 
 ## What admins can see during an election
 

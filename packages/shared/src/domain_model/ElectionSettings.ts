@@ -38,6 +38,9 @@ export interface ElectionSettings {
     contact_email?: string; // Public contact email for voters to reach out to
     exhaust_on_N_repeated_skipped_marks?: number; // number of skipped ranks before exhausting
     draggable_ballot?: boolean; // Use draggable interface for IRV ballots
+    // Turn public_results on when the election closes at its end time. Only scheduled
+    // elections close that way; closing one by hand never publishes on its own.
+    publish_results_on_close?: boolean;
     voter_groups?: string[]; // Named voter groups for this election (FF_PRECINCTS)
     voter_groups_enabled?: boolean; // Whether voter groups are active (FF_PRECINCTS)
 }
@@ -97,6 +100,9 @@ export function electionSettingsValidation(obj:ElectionSettings): string | null 
   }
   if (obj.draggable_ballot && typeof obj.draggable_ballot !== 'boolean'){
     return "Invalid Draggable Ballot";
+  }
+  if (obj.publish_results_on_close !== undefined && typeof obj.publish_results_on_close !== 'boolean'){
+    return "Invalid Publish Results On Close";
   }
   if (obj.voter_groups_enabled !== undefined && typeof obj.voter_groups_enabled !== 'boolean'){
     return "Invalid Voter Groups Enabled";

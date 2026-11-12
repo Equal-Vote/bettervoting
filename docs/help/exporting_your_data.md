@@ -24,7 +24,7 @@ Ballot data follows the visibility of your results:
 
 | Situation | Who can download |
 |---|---|
-| Results are public (the **Show Preliminary Results** / **Make Results Public** setting is on) | Anyone with the election link — no sign-in needed |
+| Results are public (the **Show Preliminary Results** / **Publish Results** switch on Publish & Share is on) | Anyone with the election link — no sign-in needed |
 | Results not public, election **closed** | The election's owner, admins, and auditors |
 | Results not public, election still open | No one — ballot data is locked until the election closes |
 

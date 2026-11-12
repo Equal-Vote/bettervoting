@@ -1086,6 +1086,8 @@ admin_home:
   header_start_time: Your {{election}} will open on {{datetime, datetime}}
   header_end_time: Your {{election}} will end on {{datetime, datetime}}
   header_ended_time: Your {{election}} ended on {{datetime, datetime}}
+  results_publish_on_close: Results will be published when the {{election}} ends.
+  results_hidden_on_close: Results will stay hidden when the {{election}} ends, until you publish them here.
 
   time_start_to_end: '{{datetime, datetime}} - {{datetime2, datetime}}'
   time_only_start: Starts on {{datetime, datetime}}
@@ -1188,6 +1190,7 @@ election_details:
   title: '{{capital_election}} Title'
   description: '{{capital_election}} Description'
   enable_times: Enable Start/End Times?
+  publish_results_on_close: Publish results when the {{election}} ends
   time_zone: Time Zone
   start_date: Start Date
   end_date: End Date
@@ -1205,7 +1208,7 @@ election_settings:
 
   preliminary_results: Show Preliminary Results !tip(public_results)
 
-  public_results: Make Results Public !tip(public_results)
+  public_results: Publish Results !tip(public_results)
 
   voter_groups: Set Voter Groups !tip(voter_groups)
 
