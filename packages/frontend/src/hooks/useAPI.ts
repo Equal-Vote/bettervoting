@@ -7,7 +7,7 @@ import { ElectionResults } from "@equal-vote/star-vote-shared/domain_model/ITabu
 import { Ballot, NewBallot, AnonymizedBallot, NewBallotWithVoterID, BallotSubmitStatus } from "@equal-vote/star-vote-shared/domain_model/Ballot";
 import { email_request_data } from "@equal-vote/star-vote-backend/src/Controllers/Election/sendEmailController"
 import { WriteInCandidate, WriteInData } from "@equal-vote/star-vote-shared/domain_model/WriteIn";
-import { DeleteUploadedBallotsResponse, ImportBallotsRequest, ImportBallotsResponse } from "@equal-vote/star-vote-shared/domain_model/BallotImport";
+import { DeleteUploadedBallotsResponse, ImportBallotsRequest, ImportBallotsResponse, UploadedBallotsSummary } from "@equal-vote/star-vote-shared/domain_model/BallotImport";
 
 export const useGetElection = (electionID: string | undefined) => {
     return useFetch<undefined, {
@@ -191,6 +191,10 @@ export const useUploadBallots = (election_id: string | undefined) => {
 // the upload page shows errors beside the files, so neither of these shows an error snackbar
 export const useImportBallots = (election_id: string | undefined) => {
     return useFetch<ImportBallotsRequest, ImportBallotsResponse>(`/API/Election/${election_id}/importBallots`, 'post', null, false)
+}
+
+export const useGetUploadedBallots = (election_id: string | undefined) => {
+    return useFetch<undefined, UploadedBallotsSummary>(`/API/Election/${election_id}/uploadedBallots`, 'get', null, false)
 }
 
 export const useDeleteUploadedBallots = (election_id: string | undefined) => {

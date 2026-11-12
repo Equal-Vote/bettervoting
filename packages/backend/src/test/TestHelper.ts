@@ -269,6 +269,10 @@ export class TestHelper {
         );
     }
 
+    async fetchUploadedBallots(electionId: Uid, userToken: string | null): Promise<SupertestResponse> {
+        return this.getRequest(`/API/Election/${electionId}/uploadedBallots`, userToken);
+    }
+
     async deleteUploadedBallots(electionId: Uid, userToken: string | null): Promise<SupertestResponse> {
         return this.postRequest(`/API/Election/${electionId}/deleteUploadedBallots`, {}, userToken);
     }

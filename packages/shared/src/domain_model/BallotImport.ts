@@ -62,6 +62,12 @@ export interface ImportBallotsResponse {
     voters_marked: number;  // roll rows marked as submitted (0 in 'anonymous' mode)
 }
 
+// What deleteUploadedBallots would withdraw right now (GET /Election/:id/uploadedBallots)
+export interface UploadedBallotsSummary {
+    uploaded: number;         // uploaded ballots currently in the election
+    voters_marked: number;    // roll rows an upload marked as having voted
+}
+
 export interface DeleteUploadedBallotsResponse {
     deleted: number;          // uploaded ballots withdrawn
     voters_unmarked: number;  // roll rows the uploads had marked, now back to not voted

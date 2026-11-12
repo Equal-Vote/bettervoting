@@ -7,6 +7,7 @@ import {
     uploadBallotsController,
     importBallotsController,
     deleteUploadedBallotsController,
+    getUploadedBallotsController,
     getWriteInNamesController,
 } from '../Controllers/Ballot';
 import {
@@ -317,6 +318,31 @@ ballotRouter.post('/Election/:id/importBallots', asyncHandler(importBallotsContr
  *       409:
  *         description: Something changed during the deletion, nothing was deleted */
 ballotRouter.post('/Election/:id/deleteUploadedBallots', asyncHandler(deleteUploadedBallotsController))
+
+/**
+ * @swagger
+ * /Election/{id}/uploadedBallots:
+ *   get:
+ *     summary: Count the uploaded ballots an election currently holds
+ *     description: What deleteUploadedBallots would withdraw. Owner or system admin only.
+ *     tags: [Ballots]
+ *     security:
+ *      - ApiKeyAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The election ID
+ *     responses:
+ *       200:
+ *         description: The counts
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UploadedBallotsSummary' */
+ballotRouter.get('/Election/:id/uploadedBallots', asyncHandler(getUploadedBallotsController))
 
 /**
  * @swagger

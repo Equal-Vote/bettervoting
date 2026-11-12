@@ -264,6 +264,26 @@ describe("Import ballots — election with a voter list (two lists: ballots and 
         th.testComplete();
     });
 
+    test("reports how many uploaded ballots there are to delete, to admins only", async () => {
+        const id = await createIdRollElection();
+        const before = await th.fetchUploadedBallots(id, testInputs.user1token);
+        expect(before.statusCode).toBe(200);
+        expect(before.body).toEqual({ uploaded: 0, voters_marked: 0 });
+
+        const res = await th.importBallots(id, {
+            race_order: RACE_ORDER, ballots: [ballot('C1'), ballot('C2')],
+            voter_ids: testInputs.IDRoll.map(r => r.voter_id),
+        }, testInputs.user1token);
+        expect(res.statusCode).toBe(200);
+        expect((await th.fetchUploadedBallots(id, testInputs.user1token)).body).toEqual({ uploaded: 2, voters_marked: 2 });
+
+        expect((await th.deleteUploadedBallots(id, testInputs.user1token)).statusCode).toBe(200);
+        expect((await th.fetchUploadedBallots(id, testInputs.user1token)).body).toEqual({ uploaded: 0, voters_marked: 0 });
+
+        expect((await th.fetchUploadedBallots(id, testInputs.user2token)).statusCode).toBe(401);
+        th.testComplete();
+    });
+
     test("only the owner or a system admin may import", async () => {
         const id = await createIdRollElection();
         const res = await th.importBallots(id, {

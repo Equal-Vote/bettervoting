@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
     Alert, Box, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider,
     Link, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography,
@@ -16,7 +16,7 @@ import useElection from "~/components/ElectionContextProvider";
 import useConfirm from "~/components/ConfirmationDialogProvider";
 import { PrimaryButton, SecondaryButton } from "~/components/styles";
 import { useSubstitutedTranslation } from "~/components/util";
-import { useDeleteUploadedBallots, useImportBallots } from "~/hooks/useAPI";
+import { useDeleteUploadedBallots, useGetUploadedBallots, useImportBallots } from "~/hooks/useAPI";
 import {
     ballotCsvColumns,
     ballotCsvLayoutProblem,
@@ -224,6 +224,9 @@ export default function UploadBallots() {
     const election = useElection().election as Election;
     const importBallots = useImportBallots(election.election_id);
     const deleteUploads = useDeleteUploadedBallots(election.election_id);
+    // how many uploaded ballots there are to delete; refreshed after every upload and delete
+    const { data: uploads, makeRequest: refreshUploads } = useGetUploadedBallots(election.election_id);
+    useEffect(() => { refreshUploads(); }, [election.election_id]);
     const confirm = useConfirm();
     const [ballotFile, setBallotFile] = useState<Loaded<ParsedBallotCsv> | null>(null);
     const [voterFile, setVoterFile] = useState<Loaded<ParsedVoterCsv> | null>(null);
@@ -251,6 +254,8 @@ export default function UploadBallots() {
     }
     const layoutProblem = ballotCsvLayoutProblem(election);
     const busy = importBallots.isPending || deleteUploads.isPending;
+    // only when the count is known: if it couldn't be fetched, the delete stays available
+    const nothingToDelete = !!uploads && uploads.uploaded === 0 && uploads.voters_marked === 0;
 
     const downloadTemplate = () => {
         const url = URL.createObjectURL(new Blob([ballotCsvTemplate(election)], { type: 'text/csv;charset=utf-8;' }));
@@ -292,6 +297,7 @@ export default function UploadBallots() {
                 : `${res.imported} ballots uploaded.`);
         setBallotFile(null);
         setVoterFile(null);
+        refreshUploads();
     };
 
     const onDelete = async () => {
@@ -302,6 +308,7 @@ export default function UploadBallots() {
         setLastResult(res.deleted === 0
             ? 'There were no uploaded ballots to delete.'
             : `${res.deleted} uploaded ballots deleted${res.voters_unmarked > 0 ? ` and ${res.voters_unmarked} voters marked as not having voted` : ''}.`);
+        refreshUploads();
     };
 
     const picked = () => { setLastResult(null); setFailed(null); };
@@ -362,7 +369,8 @@ export default function UploadBallots() {
         <Typography variant='body2'>
             Delete every uploaded ballot, then upload corrected files. The same ballot ids can be used again.
         </Typography>
-        <SecondaryButton disabled={busy} onClick={() => setDeleteOpen(true)}>Delete all uploaded ballots</SecondaryButton>
+        {nothingToDelete && <Typography variant='body2' color='text.secondary'>No ballots have been uploaded to this election.</Typography>}
+        <SecondaryButton disabled={busy || nothingToDelete} onClick={() => setDeleteOpen(true)}>Delete all uploaded ballots</SecondaryButton>
         <DeleteUploadsDialog open={deleteOpen} onClose={() => setDeleteOpen(false)} onConfirm={onDelete} pending={deleteUploads.isPending} />
     </Stack>;
 }

@@ -18,6 +18,7 @@ import {
     normalizeVoterKey,
     ROLL_UPLOAD_ACTION,
     ROLL_UPLOAD_DELETED_ACTION,
+    UploadedBallotsSummary,
     validateImportBallotsRequest,
 } from '@equal-vote/star-vote-shared/domain_model/BallotImport';
 import ServiceLocator from "../../ServiceLocator";
@@ -154,6 +155,26 @@ async function importBallotsController(req: IElectionRequest, res: Response, _ne
     Logger.debug(req, `Import Ballots Controller done: ${ballots.length} ballots, ${rolls.length} voters marked`);
 }
 
+// The uploaded ballots an election currently holds, and the voters those uploads marked
+const findUploads = async (req: IElectionRequest, electionId: string) => {
+    const ballots = await BallotModel.getBallotsByElectionID(electionId, req);
+    const uploaded = ballots.filter(b => b.head !== false && !isDeletedUpload(b.history)
+        && (b.history ?? []).some(a => a.action_type === ADMIN_SUBMIT_TYPE));
+    const rolls = ((await ElectionRollModel.getRollsByElectionID(electionId, req)) ?? [])
+        .filter(r => r.submitted && r.history?.at(-1)?.action_type === ROLL_UPLOAD_ACTION);
+    return { uploaded, rolls };
+};
+
+// GET /Election/:id/uploadedBallots — how many uploaded ballots there are to delete, so
+// the upload page only offers the delete when there is something to withdraw.
+async function getUploadedBallotsController(req: IElectionRequest, res: Response, _next: NextFunction) {
+    expectPermission(req.user_auth.roles, permissions.canUploadBallots);
+    if (req.election == null) throw new BadRequest("Invalid election Id");
+    const { uploaded, rolls } = await findUploads(req, req.election.election_id);
+    const response: UploadedBallotsSummary = { uploaded: uploaded.length, voters_marked: rolls.length };
+    res.status(200).json(response);
+}
+
 // POST /Election/:id/deleteUploadedBallots — the undo for uploads. Every uploaded ballot
 // is withdrawn and every voter an upload marked goes back to not having voted; online
 // ballots are untouched. Nothing is hard-deleted: the ballot rows are archived with a
@@ -168,11 +189,7 @@ async function deleteUploadedBallotsController(req: IElectionRequest, res: Respo
         throw new BadRequest(`Uploaded ballots can only be deleted while the election is a draft or open (state is '${election.state}')`);
     }
 
-    const ballots = await BallotModel.getBallotsByElectionID(election.election_id, req);
-    const uploaded = ballots.filter(b => b.head !== false && !isDeletedUpload(b.history)
-        && (b.history ?? []).some(a => a.action_type === ADMIN_SUBMIT_TYPE));
-    const rolls = ((await ElectionRollModel.getRollsByElectionID(election.election_id, req)) ?? [])
-        .filter(r => r.submitted && r.history?.at(-1)?.action_type === ROLL_UPLOAD_ACTION);
+    const { uploaded, rolls } = await findUploads(req, election.election_id);
 
     const now = Date.now();
     const actor = req.user?.username ?? req.user?.email ?? '';
@@ -209,4 +226,5 @@ async function deleteUploadedBallotsController(req: IElectionRequest, res: Respo
 export {
     importBallotsController,
     deleteUploadedBallotsController,
+    getUploadedBallotsController,
 }
