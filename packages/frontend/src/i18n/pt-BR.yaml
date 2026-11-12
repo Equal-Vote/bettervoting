@@ -82,8 +82,8 @@ ballot:
         Como o RCV é contado: As cédulas são contadas em rodadas de eliminação. Em cada rodada, seu voto vai para o candidato que você classificou mais alto,
         se possível. Se nenhum candidato tiver a maioria dos votos restantes, o candidato com menos votos é eliminado.
         Se seu voto não puder ser transferido, ele não será contado nas rodadas posteriores. Se um candidato tiver a maioria dos votos restantes em uma rodada, ele é eleito.
-      left_title: ''
-      right_title: ''
+      left_title: 'Melhor'
+      right_title: 'Pior'
     ranked_robin:
       instruction_bullets:
         - Classifique os {{candidates}} em ordem de preferência.
@@ -92,8 +92,8 @@ ballot:
       footer_single_winner: |
         {{capital_candidates}} são comparados em confrontos diretos.
         Um {{candidate}} vence um confronto se for classificado mais alto que o oponente por mais eleitores.
-      left_title: ''
-      right_title: ''
+      left_title: 'Melhor'
+      right_title: 'Pior'
     choose_one:
       instruction_bullets:
         - Preencha o círculo ao lado do seu favorito

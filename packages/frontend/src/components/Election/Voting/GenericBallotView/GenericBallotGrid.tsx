@@ -130,15 +130,16 @@ export default function GenericBallotGrid({
                 />
             )}
 
-            {/* HEADING TITLES (i.e. worst best for STAR )*/}
+            {/* HEADING TITLES (worst/best over the STAR columns, best/worst over the rank columns) */}
             {leftTitle != '' && <>
                 {/* 1 px / 100 px is a hack to make sure the titles don't affect the other boxes in the column */}
                 <Box sx={{ width: '1px', margin: 'auto', gridArea: makeArea(1, 2) }}>
                     <Typography align='center' className="columnDescriptor" sx={{ width: '100px', transform: 'translate(-50%)' }}>{leftTitle}</Typography>
                 </Box>
-                <Box sx={{ width: '1px', margin: 'auto', gridArea: makeArea(1, 1 + columns.length) }}>
+                {/* with a single column (a ranked race with one candidate) both titles would land on it */}
+                {columns.length > 1 && <Box sx={{ width: '1px', margin: 'auto', gridArea: makeArea(1, 1 + columns.length) }}>
                     <Typography align='center' className="columnDescriptor" sx={{ width: '100px', transform: 'translate(-50%)' }}>{rightTitle}</Typography>
-                </Box>
+                </Box>}
             </>}
 
             {/* HEADINGS (i.e. stars, ranks, etc) */}
