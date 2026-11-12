@@ -12,7 +12,7 @@ import useAuthSession from '../../AuthSessionContextProvider';
 import { AdminPageNavigation } from '../Sidebar';
 import useOptimisticToggle from '~/hooks/useOptimisticToggle';
 
-export default () => {
+export default function PublishAndShare() {
     const authSession = useAuthSession()
     const { t, election, refreshElection: fetchElection, permissions, enqueueWrite } = useElection()
 
