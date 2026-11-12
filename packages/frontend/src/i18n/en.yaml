@@ -56,10 +56,7 @@ audit_confirm:
     title: Hide Preliminary Results?
   reveal_voter_id:
     title: Obtain Unique Voting URL
-    message: |
-      This action reveals the unique voting link for the voter. This should only be done if the voter is unable to acquire their voting link through their email inbox.
-
-      This action will create a permanent audit log entry and record who performed this action. Would you like to proceed?
+    message: This action reveals the unique voting link for the voter. This should only be done if the voter is unable to acquire their voting link through their email inbox.
     submit: Confirm
 
 # Ballot (ex. https://bettervoting.com/j87vqp/vote)

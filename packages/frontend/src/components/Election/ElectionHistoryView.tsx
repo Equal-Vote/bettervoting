@@ -49,6 +49,7 @@ const ElectionHistoryView = () => {
                 {hasAuditLog && !error && (
                     <EnhancedTable
                         title={t('election_history.title')}
+                        hideTitle
                         headKeys={['history_event', 'history_description', 'history_note', 'history_when']}
                         data={events}
                         defaultSortBy='history_when'
