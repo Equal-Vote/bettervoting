@@ -5,6 +5,7 @@ import TextField from "@mui/material/TextField";
 import Typography from '@mui/material/Typography';
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle, FormHelperText, IconButton, Paper } from '@mui/material';
 import {getImage, postImage} from './PhotoUtil';
+import { usePhotoUploadGuard } from './usePhotoUploadGuard';
 import CloseIcon from '@mui/icons-material/Close';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import { CandidatePhoto, FileDropBox, PrimaryButton, SecondaryButton } from '../../styles';
@@ -28,9 +29,12 @@ const CandidatePhotoDialog = ({ onEditCandidate, candidate, open, handleClose }:
 
     const inputRef = useRef(null)
 
+    const { canUpload, onUploadError } = usePhotoUploadGuard()
+
     const saveImage = async (photoFile) => {
+        if (!canUpload()) return;
         const image = await getImage(photoFile);
-        const response = await postImage(image)
+        const response = await postImage(image, onUploadError)
         if(response) onApplyEditCandidate((candidate) => { candidate.photo_filename = response.photo_filename })
     }
 

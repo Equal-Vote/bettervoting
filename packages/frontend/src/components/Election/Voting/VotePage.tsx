@@ -3,7 +3,7 @@ import BallotPageSelector from "./BallotPageSelector";
 import { useParams } from "react-router";
 import React from 'react'
 import { useNavigate } from "react-router";
-import { Box, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Step, StepLabel, Stepper, SvgIcon, TextField, Typography } from "@mui/material";
+import { Box, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Step, StepLabel, Stepper, SvgIcon, Typography } from "@mui/material";
 import { NewBallot } from "@equal-vote/star-vote-shared/domain_model/Ballot";
 import { Vote } from "@equal-vote/star-vote-shared/domain_model/Vote";
 import { Score } from "@equal-vote/star-vote-shared/domain_model/Score";
@@ -114,9 +114,10 @@ const VotePage = () => {
   const voterId = atob(useCookie('voter_id', '')[0]);
   const { data: rollData, makeRequest: fetchRoll } = useGetRoll(election.election_id, voterId);
   const [receiptEmail, setReceiptEmail] = useState(undefined);
-  const [inputEmail, setInputEmail] = useState(undefined);
   useEffect(() => { if (voterId) fetchRoll() }, [voterId]);
-  useEffect(() => { setReceiptEmail(rollData?.electionRollEntry?.email ?? authSession.getIdField('email')) }, [authSession, rollData]);
+  // Display only: the server decides where the receipt goes (the voter's roll entry, or the
+  // verified email of the signed-in account) and ignores any address sent by the client.
+  useEffect(() => { setReceiptEmail(rollData?.electionRollEntry?.email ?? (authSession.hasVerifiedEmail() ? authSession.getIdField('email') : undefined)) }, [authSession, rollData]);
   const [currentPage, setCurrentPage] = useState(0)
   const setInstructionsRead = () => {
     pages[currentPage].instructionsRead = true;
@@ -232,7 +233,7 @@ const VotePage = () => {
       status: 'submitted',
     }
     // post ballot, if response ok navigate back to election home
-    if (!(await postBallot({ ballot, receiptEmail: receiptEmail ?? inputEmail}))) {
+    if (!(await postBallot({ ballot }))) {
       return
     }
     navigate(`/${id}/thanks`)
@@ -336,11 +337,9 @@ const VotePage = () => {
           <DialogContentText>
 
             {!receiptEmail &&
-              <TextField id="receipt-email" label={t('ballot.dialog_email_placeholder')} fullWidth type="text" value={inputEmail} sx={{
-                            mx: { xs: 0, },
-                            my: { xs: 1 },
-                            boxShadow: 2,
-                        }} onChange={(e) => setInputEmail(e.target.value)} slotProps={{ htmlInput: { "aria-label": "Receipt Email" } }}/>}
+              <Typography id="receipt-email-hint" variant="body2" sx={{ my: 1 }}>
+                {t(authSession.isLoggedIn() ? 'ballot.dialog_no_receipt_unverified' : 'ballot.dialog_no_receipt_signed_out')}
+              </Typography>}
             {receiptEmail && <Typography>{`Receipt will be sent to ${receiptEmail}`}</Typography>}
             {pages.map((page, pageIndex) => (
               <Box key={pageIndex}>

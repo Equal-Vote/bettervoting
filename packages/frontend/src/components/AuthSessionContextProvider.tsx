@@ -26,6 +26,9 @@ const authConfig = keycloakAuthConfig;
 
 export interface IAuthSession {
     isLoggedIn: () => boolean
+    // Signed in AND the identity provider has verified the account's email address. The
+    // backend requires this for sending emails, uploading images, and voting by account email.
+    hasVerifiedEmail: () => boolean
     openLogin: () => void
     openLogout: () => void
     getIdField: (fieldName: string) => string | null
@@ -42,6 +45,12 @@ export function AuthSessionContextProvider({ children }: { children: React.React
     const isLoggedIn = () => {
         // the backend uses the idToken to determine if the user is logged in, so it's a more accurate reference point
         return idToken !== null
+    }
+
+    const hasVerifiedEmail = () => {
+        if (!idToken) return false
+        const claims = jwt_decode<{ email?: string, email_verified?: boolean }>(idToken);
+        return !!claims.email && claims.email_verified === true
     }
 
     const openLogin = () => {
@@ -158,6 +167,7 @@ export function AuthSessionContextProvider({ children }: { children: React.React
         <AuthSessionContext.Provider
             value={{
                 isLoggedIn: isLoggedIn,
+                hasVerifiedEmail: hasVerifiedEmail,
                 openLogin: openLogin,
                 openLogout: openLogout,
                 getIdField: getIdField,

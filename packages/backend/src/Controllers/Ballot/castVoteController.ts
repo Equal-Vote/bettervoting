@@ -17,6 +17,7 @@ import { permissions } from "@equal-vote/star-vote-shared/domain_model/permissio
 import { OrderedVoteFormatError, orderedVotesToVotes } from "@equal-vote/star-vote-shared/domain_model/OrderedVoteCodec";
 import { makeUniqueID, ID_LENGTHS, ID_PREFIXES } from "@equal-vote/star-vote-shared/utils/makeID";
 import { getErrorMessage } from '../../errorUtils';
+import { getVerifiedEmail } from "../verifiedEmail";
 
 const ElectionsModel = ServiceLocator.electionsDb();
 const BallotModel = ServiceLocator.ballotsDb();
@@ -116,7 +117,7 @@ async function makeBallotEvent(req: IElectionRequest, targetElection: Election, 
         requestId: req.contextId ? req.contextId : randomUUID(),
         inputBallot: inputBallot as Ballot,
         roll: roll || undefined,
-        userEmail: undefined,
+        userEmail: undefined as string | undefined,
         isBallotUpdate: !!updatableBallot,
     }
 }
@@ -235,7 +236,7 @@ async function castVoteController(req: IElectionRequest, res: Response, _next: N
 
     const event = await makeBallotEvent(req, targetElection, req.body.ballot, 'submitted_via_browser')
 
-    event.userEmail = event.roll?.email ?? AccountService.extractUserFromRequest(req)?.email ?? req.body.receiptEmail;
+    event.userEmail = receiptRecipient(req, targetElection, event.roll?.email);
 
     const ctx = Logger.createContext(event.requestId);
     try {
@@ -269,6 +270,19 @@ async function castVoteController(req: IElectionRequest, res: Response, _next: N
     Logger.debug(req, "CastVoteController done, saved event to store");
 };
 
+
+// Who gets the receipt email. The server never mails an address the caller typed in
+// (the old `receiptEmail` body field let anyone make us email arbitrary people). It uses:
+//  - the roll's email on a closed election, where an election official entered it; or
+//  - the verified email of the voter's own BetterVoting account.
+// On open elections the roll's email is whatever identity the request presented, which on
+// an auth_key election is signed by the election's creator, so it is not used.
+function receiptRecipient(req: IElectionRequest, election: Election, rollEmail: string | undefined): string | undefined {
+    if (election.settings.voter_access === 'closed' && rollEmail) return rollEmail;
+    // Read the account from the id_token directly: on auth_key elections req.user is the
+    // election-key identity, not the BetterVoting account.
+    return getVerifiedEmail(AccountService.extractUserFromRequest(req)) ?? undefined;
+}
 
 async function handleCastVoteEvent(job: { id: string; data: CastVoteEvent; }):Promise<void> {
     const event = job.data;

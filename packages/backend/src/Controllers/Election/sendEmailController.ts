@@ -14,6 +14,7 @@ import { Response, NextFunction } from 'express';
 import { Imsg } from '../../Services/Email/IEmail';
 import { logSafeHash } from '../../Services/Logging/logSafeHash';
 import { getErrorMessage } from '../../errorUtils';
+import { expectVerifiedAccount } from '../verifiedEmail';
 
 const ElectionRollModel = ServiceLocator.electionRollDb();
 const ElectionModel = ServiceLocator.electionsDb();
@@ -65,6 +66,10 @@ const makeTestRoll = (election_id: string, email: string) => <ElectionRoll>{
 const sendEmailsController = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     Logger.info(req, `${className}.sendEmails ${req.election.election_id}`);
     expectPermission(req.user_auth.roles, permissions.canSendEmails)
+    // Holding the role is not enough: a temp owner (not signed in), an account whose email
+    // is unverified, or an identity signed by the election's own auth_key could otherwise
+    // use our mail server to reach arbitrary addresses with nobody accountable for it.
+    const senderEmail = expectVerifiedAccount(req, 'send emails');
 
     const electionId = req.election.election_id;
     const election = req.election
@@ -170,7 +175,7 @@ const sendEmailsController = async (req: IElectionRequest, res: Response, _next:
                 election: undefined,
                 url: url,
                 voter_id: roll.voter_id,
-                sender: req.user?.email ?? '',
+                sender: senderEmail,
                 email: email_request.email,
                 message_id: message_id,
                 test_email: email_request.target == 'test' ? (roll.email ?? '') : ''

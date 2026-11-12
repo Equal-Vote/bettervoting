@@ -175,10 +175,9 @@ ballotRouter.get('/Election/:id/ballot/:ballot_id', asyncHandler(getBallotByBall
  *            ballot:
  *              type: object
  *              $ref: '#/components/schemas/NewBallot'
- *            recieptEmail:
- *              oneOf:
- *               - type: string
- *               - type: null 
+ *     description: >
+ *       A receipt is emailed to the address on the voter's roll entry (closed elections)
+ *       or to the verified email of the signed-in account. The caller cannot choose the address.
  *     responses:
  *       200:
  *         description: Vote cast

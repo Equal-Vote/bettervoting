@@ -9,20 +9,31 @@ import jwt from "jsonwebtoken";
 export default {
     user1token : jwt.sign({ 
         email: 'Alice@email.com',
+        email_verified: true,
         sub: 'Alice1234',
     
     }, "privateKey"),
     
     user2token : jwt.sign({ 
         email: 'Bob@email.com',
+        email_verified: true,
         sub: 'Bob2345',
     
     }, "privateKey"),
 
     user3token : jwt.sign({ 
         email: 'Carl@email.com',
+        email_verified: true,
         sub: 'Carl3456',
     
+    }, "privateKey"),
+
+    // Signed in, but Keycloak has not verified the address. Uses Alice's email to show
+    // that an unverified claim on someone else's address gets none of their powers.
+    unverifiedUserToken : jwt.sign({
+        email: 'Alice@email.com',
+        email_verified: false,
+        sub: 'Mallory9999',
     }, "privateKey"),
 
     user4tempId: 'tempDanny4567',

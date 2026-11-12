@@ -139,7 +139,15 @@ The verified JWT's claims populate `req.user`. Useful claim conventions:
 | Claim | Used by |
 |---|---|
 | `sub` | The user ID associated with the request. |
-| `email` | Treated as a verified email by downstream code that reads `req.user.email`. Set this only if your integration has actually verified the email. |
+| `email` | Used as the caller's email (voter identity in the one-vote-per-account-email mode, and roles granted by email) **only if the token also carries `email_verified: true`**. |
+| `email_verified` | Set to `true` only if your integration has actually verified the email. Without it the `email` claim is ignored. |
+
+Some things are never available to an `auth_key` identity, whatever it claims,
+because they use BetterVoting's own resources on the say-so of whoever created
+the election: **sending election emails** (`/Election/{id}/sendEmails`) is
+refused, and vote receipts on these elections are only sent to the roll's
+address on a closed election or to the verified email of a voter who is signed
+in to a BetterVoting account.
 
 ## Worked example (Python)
 

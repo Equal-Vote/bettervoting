@@ -23,6 +23,7 @@ One thing to know up front: **BetterVoting hosts the election, but the election 
 | `Invalid Voter ID` | The ID you entered isn't on this election's voter list. | Re-enter it exactly as it was given to you, then contact the organiser. |
 | `You are not authorized to vote in this election` | You're signed in, but your email address isn't on the voter list. | Contact the organiser and confirm which address they registered. |
 | `You must log in to access this election` | This election requires a signed-in, email-verified account. | Click the log in link in that message and sign in. |
+| `Verify your email address to vote` | You're signed in, but the email address on your account hasn't been verified. | Log out and log back in; you'll be sent a verification link. Then return to the election. |
 | `Voter ID Required for closed elections` | You submitted without entering a voter ID. | Enter your voter ID on the election page, or open your unique voting link. |
 | `Voter ID does not match saved voter roll` | The ID you supplied doesn't match the voter record. | Check for typos and extra spaces; contact the organiser. |
 | `Email does not match saved election roll` | You're signed in with a different email than the one on the voter list. | Sign in with the registered address, or ask the organiser to update it. |

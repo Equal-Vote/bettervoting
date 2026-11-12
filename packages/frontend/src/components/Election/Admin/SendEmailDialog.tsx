@@ -100,6 +100,11 @@ const SendEmailDialog = ({open, onClose, onSubmit, targetedEmail=undefined, elec
     >
         <DialogTitle>Prepare Email Blast</DialogTitle>
         <DialogContent>
+            {!authSession.hasVerifiedEmail() &&
+                <Alert severity='warning' sx={{ mb: 2 }}>
+                    {t(authSession.isLoggedIn() ? 'verified_email.send_unverified' : 'verified_email.send_sign_in')}
+                </Alert>
+            }
             <Box sx={{ display: "flex", flexDirection: "row" }}>
                 <Box sx={{ width: templateChosen ? 0 : sizes,
                     height: 'auto',
@@ -133,6 +138,7 @@ const SendEmailDialog = ({open, onClose, onSubmit, targetedEmail=undefined, elec
                             <LabelledTextField label='Test Email(s)' fullWidth value={testEmails} setter={setTestEmails}/>
                             {/* 56px is to align with text box */}
                             <SecondaryButton
+                                disabled={!authSession.hasVerifiedEmail()}
                                 sx={{height: '56px', mt: 'auto', mb: 0, maxWidth: '200px'}}
                                 onClick={() => sendEmails.makeRequest({
                                     target: 'test',
@@ -174,7 +180,7 @@ const SendEmailDialog = ({open, onClose, onSubmit, targetedEmail=undefined, elec
                 </Alert>}
                 <Box sx={{ display: "flex", flexDirection: "row-reverse", gap: 2 }}>
                     <PrimaryButton
-                        disabled={!templateChosen}
+                        disabled={!templateChosen || !authSession.hasVerifiedEmail()}
                         onClick={() => {
                             setTemplateChosen(false)
                             onSubmit({

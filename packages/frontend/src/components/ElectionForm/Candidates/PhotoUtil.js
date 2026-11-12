@@ -31,7 +31,9 @@ export async function getImage(
     })
 }
 
-export const postImage = async (image) => {
+// Returns the server's JSON on success, or false on failure. On failure, onError (if given)
+// is called with the server's explanation, e.g. "Verify your email address to upload images".
+export const postImage = async (image, onError = undefined) => {
     const url = '/API/images'
     const fileOfBlob = new File([image], 'image.jpg', { type: "image/jpeg" });
     const formData = new FormData()
@@ -42,6 +44,13 @@ export const postImage = async (image) => {
     }
     const response = await fetch(url, options)
     if (!response.ok) {
+        let message = undefined
+        try {
+            message = (await response.json())?.error
+        } catch {
+            // non-JSON error body; fall back to the caller's generic message
+        }
+        if (onError) onError(message)
         return false
     }
     return await response.json()

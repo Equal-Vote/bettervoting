@@ -11,6 +11,7 @@ import { getOrCreateElectionRoll, checkForMissingAuthenticationData, getVoterAut
 import { ElectionRoll } from '@equal-vote/star-vote-shared/domain_model/ElectionRoll';
 import { sharedConfig } from '@equal-vote/star-vote-shared/config';
 import { hashString } from '../controllerUtils';
+import { getVerifiedEmail } from '../verifiedEmail';
 import { Conflict } from '@curveball/http-errors';
 
 const ElectionsModel =  ServiceLocator.electionsDb();
@@ -62,6 +63,7 @@ const electionSpecificAuth = async (req: IElectionRequest, res: Response, next: 
     }
     const user = accountService.extractUserFromRequest(req, electionKey);
     req.user = user;
+    req.electionKeyAuth = true;
     return next();
 }
 
@@ -101,14 +103,19 @@ const electionPostAuthMiddleware = async (req: IElectionRequest, res: Response, 
           if((req.election.owner_id == req.user.sub && req.user.typ !== 'TEMP_ID') || tempUserAuth){
             req.user_auth.roles.push(roles.owner)
           }
-          if (req.election.admin_ids && req.election.admin_ids.includes(req.user.email as string)){
-            req.user_auth.roles.push(roles.admin)
-          }
-          if (req.election.audit_ids && req.election.audit_ids.includes(req.user.email as string)){
-            req.user_auth.roles.push(roles.auditor)
-          }
-          if (req.election.credential_ids && req.election.credential_ids.includes(req.user.email as string)){
-            req.user_auth.roles.push(roles.credentialer)
+          // Roles granted by email only go to a caller whose email is verified; otherwise
+          // anyone could register an account under an admin's address and inherit the role.
+          const verifiedEmail = getVerifiedEmail(req.user);
+          if (verifiedEmail !== null) {
+            if (req.election.admin_ids && req.election.admin_ids.includes(verifiedEmail)){
+              req.user_auth.roles.push(roles.admin)
+            }
+            if (req.election.audit_ids && req.election.audit_ids.includes(verifiedEmail)){
+              req.user_auth.roles.push(roles.auditor)
+            }
+            if (req.election.credential_ids && req.election.credential_ids.includes(verifiedEmail)){
+              req.user_auth.roles.push(roles.credentialer)
+            }
           }
         }
         req.user_auth.permissions = getPermissions(req.user_auth.roles)
