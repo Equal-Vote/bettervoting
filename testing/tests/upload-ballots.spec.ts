@@ -108,7 +108,7 @@ const fileInputs = (page: Page) => page.locator('input[type="file"]');
 
 // Three ballots that Bob wins under STAR
 const BALLOT_CSV = csvFile('ballots.csv', [
-    'ballot_id,precinct,Alice,Bob,Carol',
+    'ballot_id,voter_group,Alice,Bob,Carol',
     'P-001,,1,5,0',
     'P-002,,2,5,0',
     'P-003,,0,4,5',
@@ -344,14 +344,14 @@ test.describe('Upload paper ballots', () => {
         await createDraftElection(context, request, 'open', true);
         await enableUploadsAndOpen(page);
         await page.goto(`/${electionId}/admin/upload_ballots`);
-        // one row per column of the template: ballot_id, precinct, 3 candidates, 2 write-in pairs
+        // one row per column of the template: ballot_id, voter_group, 3 candidates, 2 write-in pairs
         const guide = page.getByRole('table', { name: 'What goes in each column' });
         await expect(guide.getByRole('row')).toHaveCount(1 + 2 + 3 + 4);
         await expect(guide.getByRole('row', { name: /^Bob / })).toContainText('a score from 0 to 5');
         await expect(guide.getByRole('row', { name: /^write_in_1_mark / })).toContainText('only allowed when write_in_1 is blank too');
 
         await fileInputs(page).nth(0).setInputFiles(csvFile('ballots.csv', [
-            'ballot_id,precinct,Alice,Bob,Carol,write_in_1,write_in_1_mark',
+            'ballot_id,voter_group,Alice,Bob,Carol,write_in_1,write_in_1_mark',
             'P-001,,1,5,0,,',
             'P-002,,9,5,0,,',
             'P-003,,0,4,5,Zed,',
@@ -363,7 +363,7 @@ test.describe('Upload paper ballots', () => {
         await expect(page.getByRole('button', { name: 'Upload ballots' })).toBeDisabled();
 
         await fileInputs(page).nth(0).setInputFiles(csvFile('ballots.csv', [
-            'ballot_id,precinct,Alice,Bob,Carol,write_in_1,write_in_1_mark',
+            'ballot_id,voter_group,Alice,Bob,Carol,write_in_1,write_in_1_mark',
             'P-001,,1,5,0,,',
             'P-002,,2,5,0,,',
             'P-003,,0,4,5,Zed,3',

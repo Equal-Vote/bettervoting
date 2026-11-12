@@ -126,7 +126,7 @@ interface ColumnGuide { column: string, what: string, write: string, blank: stri
 function columnGuide(election: Election, columns: RaceColumns[], methodName: (rc: RaceColumns) => string): ColumnGuide[] {
     const rows: ColumnGuide[] = [
         { column: 'ballot_id', what: 'Your id for the paper ballot, for example the number printed on it', write: 'up to 64 characters, new to this election', blank: 'not allowed' },
-        { column: 'precinct', what: "The ballot's precinct", write: 'the precinct name', blank: 'no precinct (fine unless races are limited to precincts)' },
+        { column: 'voter_group', what: "The ballot's voter group", write: 'the voter group name', blank: 'no voter group (fine unless races are limited to voter groups)' },
     ];
     for (const rc of columns) {
         const rule = markRule(rc.race, election.settings.max_rankings);

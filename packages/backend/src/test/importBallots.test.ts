@@ -234,6 +234,36 @@ describe("Import ballots — election with a voter list (two lists: ballots and 
         th.testComplete();
     });
 
+    test("voter groups: an unknown group, or any group when groups are off, rejects the import", async () => {
+        const groupsOn = await createElection(withSettings(testInputs.IDRollElection, {
+            ...PAPER_ENABLED, voter_groups_enabled: true, voter_groups: ['North', 'South'],
+        }));
+        expect((await th.submitElectionRoll(groupsOn, testInputs.IDRoll, testInputs.user1token)).statusCode).toBe(200);
+        const voter_ids = [testInputs.IDRoll[0].voter_id];
+
+        const unknown = await th.importBallots(groupsOn, {
+            race_order: RACE_ORDER, ballots: [{ ...ballot('G1'), precinct: 'Nroth' }], voter_ids,
+        }, testInputs.user1token);
+        expect(unknown.statusCode).toBe(400);
+        expect(unknown.body.error).toContain('Unknown voter groups: "Nroth"');
+        expect(await fetchBallots(groupsOn)).toHaveLength(0);
+
+        // matched without regard to case, stored with the election's spelling
+        const known = await th.importBallots(groupsOn, {
+            race_order: RACE_ORDER, ballots: [{ ...ballot('G1'), precinct: 'north' }], voter_ids,
+        }, testInputs.user1token);
+        expect(known.statusCode).toBe(200);
+        expect((await fetchBallots(groupsOn))[0].precinct).toBe('North');
+
+        const groupsOff = await createIdRollElection();
+        const off = await th.importBallots(groupsOff, {
+            race_order: RACE_ORDER, ballots: [{ ...ballot('G1'), precinct: 'North' }], voter_ids,
+        }, testInputs.user1token);
+        expect(off.statusCode).toBe(400);
+        expect(off.body.error).toContain('Voter groups are not enabled');
+        th.testComplete();
+    });
+
     test("only the owner or a system admin may import", async () => {
         const id = await createIdRollElection();
         const res = await th.importBallots(id, {

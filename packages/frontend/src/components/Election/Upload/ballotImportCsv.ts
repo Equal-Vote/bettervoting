@@ -20,7 +20,9 @@ import { computeRaceOrder } from "./uploadUtils";
 //
 // Ballot CSV: the same layout as the results page's CSV export, so an exported
 // file can be re-imported unchanged:
-//   ballot_id, [precinct], one column per candidate, [write-in pairs]
+//   ballot_id, [voter_group], one column per candidate, [write-in pairs]
+// (`precinct` is the old name of the voter_group column; exports made before the rename
+// use it, so it is still read.)
 // Candidate columns are headed by the candidate's name, or `Race Title!!Candidate Name`
 // when the election has more than one race (accepted in single-race elections too).
 // A race that takes write-ins adds pairs of columns, `write_in_1` (the name) and
@@ -53,7 +55,9 @@ export interface ParsedVoterCsv {
 // Columns the export writes for ranked races. They are accepted and ignored on import.
 // Papa renames repeated headers to name_1, name_2, ...
 const DERIVED_COLUMN = /^(overvote_rank|has_duplicate_rank)(_\d+)?$/;
-const RESERVED_COLUMNS = ['ballot_id', 'precinct'];
+const VOTER_GROUP_COLUMN = 'voter_group';
+const LEGACY_VOTER_GROUP_COLUMN = 'precinct';
+const RESERVED_COLUMNS = ['ballot_id', VOTER_GROUP_COLUMN, LEGACY_VOTER_GROUP_COLUMN];
 const WRITE_IN_COLUMN = /^write_in_(\d+)(_mark)?$/;
 const SEPARATOR = '!!';
 
@@ -105,7 +109,7 @@ export function ballotCsvLayoutProblem(election: Election): string | null {
 }
 
 export function ballotCsvTemplateHeaders(election: Election): string[] {
-    return ['ballot_id', 'precinct', ...ballotCsvColumns(election).flatMap(rc => [
+    return ['ballot_id', VOTER_GROUP_COLUMN, ...ballotCsvColumns(election).flatMap(rc => [
         ...rc.candidates.map(c => c.header),
         ...(rc.race.enable_write_in
             ? Array.from({ length: TEMPLATE_WRITE_IN_PAIRS }, (_, i) => rc.writeInHeaders(i + 1)).flatMap(h => [h.name, h.mark])
@@ -137,7 +141,7 @@ interface ResolvedRace {
 
 function resolveHeaders(election: Election, headers: string[]): { races: ResolvedRace[], problems: CsvProblem[] } {
     const columns = ballotCsvColumns(election);
-    const used = new Set<string>(['ballot_id', 'precinct']);
+    const used = new Set<string>(RESERVED_COLUMNS);
     const problems: CsvProblem[] = [];
     const missing: string[] = [];
     const races = columns.map(rc => {
@@ -240,7 +244,7 @@ export function parseBallotCsv(text: string, election: Election): ParseResult<Pa
                 columnsOfWriteIns.push(slot.mark!);
             }
         }
-        const precinct = row.precinct?.trim();
+        const precinct = (row[VOTER_GROUP_COLUMN] ?? row[LEGACY_VOTER_GROUP_COLUMN])?.trim();
         writeInColumns.push(columnsOfWriteIns);
         ballots.push({
             ballot_id: (row.ballot_id ?? '').trim(),

@@ -33,10 +33,10 @@ const messages = (res: ReturnType<typeof parseBallotCsv>) => problemsOf(res).map
 
 describe('ballotCsvTemplate', () => {
     it('uses the export headers, with write-in pairs for races that take them', () => {
-        expect(ballotCsvTemplate(singleRace)).toBe('ballot_id,precinct,Alice,Bob');
-        expect(ballotCsvTemplate(twoRaces)).toBe('ballot_id,precinct,Mayor!!Alice,Mayor!!Bob,Council!!Cy,Council!!Di');
+        expect(ballotCsvTemplate(singleRace)).toBe('ballot_id,voter_group,Alice,Bob');
+        expect(ballotCsvTemplate(twoRaces)).toBe('ballot_id,voter_group,Mayor!!Alice,Mayor!!Bob,Council!!Cy,Council!!Di');
         expect(ballotCsvTemplate(withWriteIns)).toBe(
-            'ballot_id,precinct,Mayor!!Alice,Mayor!!Bob,Measure!!Yes,Measure!!No,'
+            'ballot_id,voter_group,Mayor!!Alice,Mayor!!Bob,Measure!!Yes,Measure!!No,'
             + 'Measure!!write_in_1,Measure!!write_in_1_mark,Measure!!write_in_2,Measure!!write_in_2_mark');
     });
 });
@@ -47,6 +47,17 @@ describe('published formats stay readable', () => {
     it('reads a template-based file from the first release', () => {
         const res = parseBallotCsv('ballot_id,precinct,Mayor!!Alice,Mayor!!Bob,Council!!Cy,Council!!Di\nP-0001,,5,0,1,2\n', twoRaces);
         expect(res.ok).toBe(true);
+    });
+
+    it('reads a results export made after precinct was renamed to voter_group', () => {
+        const csv = [
+            'ballot_id,voter_group,Mayor!!Alice,Mayor!!Bob,Council!!Cy,Council!!Di,overvote_rank,has_duplicate_rank',
+            'b-1,North,5,1,1,2,,FALSE',
+        ].join('\r\n');
+        const res = parseBallotCsv(csv, twoRaces);
+        expect(res.ok).toBe(true);
+        if (!res.ok) return;
+        expect(res.value.ballots[0].precinct).toBe('North');
     });
 
     it('reads a results export, including the derived ranked columns', () => {

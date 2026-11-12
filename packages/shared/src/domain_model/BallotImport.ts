@@ -154,6 +154,32 @@ export interface ImportProblem {
 }
 
 /** Turns an import row into Votes, write-ins included, the way an online ballot stores them. */
+// The voter group an imported ballot is stored with: the election's own spelling of the
+// group the row names (matched without regard to case, like the voter list does), or
+// undefined when the row names none. The row's field is still called precinct.
+export function importRowVoterGroup(election: Election, row: ImportBallotRow): string | undefined {
+    const raw = (row.precinct ?? '').trim();
+    if (raw === '') return undefined;
+    return (election.settings.voter_groups ?? []).find(g => g.toLowerCase() === raw.toLowerCase()) ?? raw;
+}
+
+// Same rules as adding voters to the list (addElectionRollController): a ballot may only
+// name a voter group when the election uses them, and only one the election defines.
+function validateVoterGroups(election: Election, body: ImportBallotsRequest): string | null {
+    const named = body.ballots
+        .map((row, i) => ({ i, raw: (row.precinct ?? '').trim() }))
+        .filter(r => r.raw !== '');
+    if (named.length === 0) return null;
+    if (election.settings.voter_groups_enabled !== true) {
+        return `Voter groups are not enabled for this election (${describeRows('ballot', named.map(r => r.i))})`;
+    }
+    const known = new Set((election.settings.voter_groups ?? []).map(g => g.toLowerCase()));
+    const unknown = named.filter(r => !known.has(r.raw.toLowerCase()));
+    if (unknown.length === 0) return null;
+    const names = [...new Set(unknown.map(r => `"${r.raw}"`))].join(', ');
+    return `Unknown voter groups: ${names} (${describeRows('ballot', unknown.map(r => r.i))})`;
+}
+
 export function importRowToVotes(row: ImportBallotRow, raceOrder: RaceCandidateOrder[]): Vote[] {
     const votes = orderedVotesToVotes(row.orderedVotes, raceOrder);
     for (const w of row.write_ins ?? []) {
@@ -310,7 +336,9 @@ export function validateImportBallotsRequest(election: Election, body: ImportBal
         if (row && row.precinct !== undefined && row.precinct !== null && typeof row.precinct !== 'string') badPrecincts.push(i);
     });
     if (badIds.length > 0) return `Missing or invalid ballot_id (1-${IMPORT_BALLOT_ID_MAX_LENGTH} characters) at ${describeRows('ballot', badIds)}`;
-    if (badPrecincts.length > 0) return `Invalid precinct at ${describeRows('ballot', badPrecincts)}`;
+    if (badPrecincts.length > 0) return `Invalid voter group at ${describeRows('ballot', badPrecincts)}`;
+    const voterGroupError = validateVoterGroups(election, body);
+    if (voterGroupError) return voterGroupError;
 
     const seenIds = new Map<string, number>();
     const dupes: number[] = [];
@@ -338,7 +366,7 @@ export function validateImportBallotsRequest(election: Election, body: ImportBal
         try {
             ballot = {
                 election_id: election.election_id,
-                precinct: row.precinct || undefined,
+                precinct: importRowVoterGroup(election, row),
                 votes: importRowToVotes(row, body.race_order),
             };
         } catch (err: unknown) {

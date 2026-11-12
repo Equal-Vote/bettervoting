@@ -61,14 +61,14 @@ The ballot file has the same layout as the CSV you can download from the results
 | Column | Meaning |
 |---|---|
 | `ballot_id` | Your id for the paper ballot, for example the number printed on it. Required, up to 64 characters, and must not already be used in this election. |
-| `precinct` | Optional. Only needed if your races are limited to certain precincts. |
+| `voter_group` | Optional. Only needed if your races are limited to certain [voter groups](voter_groups.md). Files that call this column `precinct` (its old name) are also accepted. |
 | One column per candidate | The mark for that candidate (see below). Leave the cell blank if the candidate was not marked. |
 | Write-in pairs | Only for races that take write-ins (see below). |
 
 With a single race, each candidate column is headed by the candidate's name (or `Race Title!!Candidate Name`, which also works). With more than one race, headers are `Race Title!!Candidate Name`.
 
 ```
-ballot_id,precinct,Alice,Bob,Carol
+ballot_id,voter_group,Alice,Bob,Carol
 P-0001,,5,0,3
 ```
 
@@ -88,7 +88,7 @@ A choose-one race with more than one candidate marked is refused. Leave the race
 A race that takes write-ins has pairs of columns after its candidates: `write_in_1` for the written-in name and `write_in_1_mark` for its mark, then `write_in_2` and `write_in_2_mark`, and so on (with the `Race Title!!` prefix when there is more than one race). The mark follows the same rule as the candidates. Leave both blank if nobody was written in. The template has two pairs per race; add more columns if a ballot has more write-ins, up to 10.
 
 ```
-ballot_id,precinct,Measure!!Yes,Measure!!No,Measure!!write_in_1,Measure!!write_in_1_mark
+ballot_id,voter_group,Measure!!Yes,Measure!!No,Measure!!write_in_1,Measure!!write_in_1_mark
 P-0001,,1,,Pat Writein,1
 ```
 
