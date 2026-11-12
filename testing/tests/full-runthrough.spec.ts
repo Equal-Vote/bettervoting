@@ -115,6 +115,15 @@ test('Full Runthrough', async ({ page }) => {
 	await page.getByRole('button', { name: 'Finalize Poll'}).click();
 	await page.getByRole('button', { name: 'Submit'}).click();
 
+	// Results are hidden by default while voting is open, and this test reads the winner
+	// off the results page, so turn preliminary results on (still on Publish & Share)
+	const published = page.waitForResponse(response =>
+		response.url().endsWith(`/API/Election/${electionId}/setPublicResults`) &&
+		response.request().method() === 'POST'
+	);
+	await page.getByRole('switch', { name: /Show Preliminary Results/ }).check();
+	expect((await (await published).json()).election.settings.public_results).toBe(true);
+
 	// Vote
 	await page.getByRole('link', { name: 'Live Ballot' }).click();
 	const vote = async (page) => {
