@@ -39,7 +39,7 @@ const getElectionResults = async (req: IElectionRequest, res: Response, _next: N
         }
     )
 
-    let results: ElectionResults[] = []
+    const results: ElectionResults[] = []
     for (let race_index = 0; race_index < election.races.length; race_index++) {
         const race = election.races[race_index]
         const projection = projections[race_index]
@@ -95,7 +95,7 @@ const getElectionResults = async (req: IElectionRequest, res: Response, _next: N
         results[race_index] = {
             ...tabulationResult,
             perm,
-            // @ts-ignore - roundResults is a complicated type but we're just returning a slightly modified version of the original so the type should be consistent
+            // @ts-expect-error - roundResults is a complicated type but we're just returning a slightly modified version of the original so the type should be consistent
             roundResults: tabulationResult.roundResults.map(rr => ({
                 ...rr,
                 logs: rr.logs.map(log => {
