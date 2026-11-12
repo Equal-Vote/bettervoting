@@ -33,7 +33,7 @@ export async function getOrCreateElectionRoll(req: IRequest, election: Election,
     // Get all election roll entries that match any of the voter authentication fields
     // This is an odd way of going about this, rather than getting a roll that matches all three we get all that match any of the fields and
     // check the output for a number of edge cases.
-    var electionRollEntries = null
+    let electionRollEntries = null
     if ((require_ip_hash || email || voter_id)) {
         electionRollEntries = await ElectionRollModel.getElectionRoll(String(election.election_id), voter_id, email, require_ip_hash, ctx);
     }

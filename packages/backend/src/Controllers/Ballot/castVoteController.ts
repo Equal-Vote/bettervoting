@@ -147,7 +147,7 @@ async function uploadBallotsController(req: IElectionRequest, res: Response, _ne
         throw new BadRequest(errMsg);
     }
  
-    let events = await Promise.all(
+    const events = await Promise.all(
         req.body.ballots.map(({ballot, voter_id} : {ballot: OrderedNewBallot, voter_id: string}) =>
             makeBallotEvent(
                 req,
@@ -165,7 +165,7 @@ async function uploadBallotsController(req: IElectionRequest, res: Response, _ne
         )
     );
 
-    let output = events.map((event, i) => ({
+    const output = events.map((event, i) => ({
         voter_id: req.body.ballots[i].voter_id,
         success: !('error' in event),
         message: ('error' in event)? event.error : 'Success'
@@ -233,7 +233,7 @@ async function castVoteController(req: IElectionRequest, res: Response, _next: N
         throw new BadRequest("Election is not open");
     }
 
-    let event = await makeBallotEvent(req, targetElection, req.body.ballot, 'submitted_via_browser')
+    const event = await makeBallotEvent(req, targetElection, req.body.ballot, 'submitted_via_browser')
 
     event.userEmail = event.roll?.email ?? AccountService.extractUserFromRequest(req)?.email ?? req.body.receiptEmail;
 
