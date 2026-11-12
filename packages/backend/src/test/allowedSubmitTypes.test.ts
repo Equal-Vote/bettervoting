@@ -3,6 +3,8 @@ import 'dotenv/config';
 import { Election } from "@equal-vote/star-vote-shared/domain_model/Election";
 import { ElectionSettings } from "@equal-vote/star-vote-shared/domain_model/ElectionSettings";
 import { Race } from "@equal-vote/star-vote-shared/domain_model/Race";
+import { BallotSubmitType } from "@equal-vote/star-vote-shared/domain_model/Ballot";
+import crypto from "crypto";
 import testInputs from "./testInputs";
 import { TestHelper } from "./TestHelper";
 
@@ -72,7 +74,7 @@ describe("allowed_submit_types enforcement — admin ballot import", () => {
     });
 
     test("import is rejected by default (no allowed_submit_types field set)", async () => {
-        // Default is ['submitted_via_browser', 'submitted_via_discord'] — admin is not included.
+        // Default is ['submitted_via_browser'] — admin is not included.
         const elec = makeElection(undefined);
         const created = await th.createElection(elec, testInputs.user1token);
         expect(created.statusCode).toBe(200);
@@ -131,6 +133,48 @@ describe("allowed_submit_types enforcement — admin ballot import", () => {
         expect(secondImport.statusCode).toBe(400);
         expect(secondImport.body.error).toContain("Already voted");
 
+        th.testComplete();
+    });
+});
+
+describe("allowed_submit_types — the integration channel needs an auth_key", () => {
+    const INTEGRATION: BallotSubmitType[] = ["submitted_via_browser", "submitted_via_integration"];
+    const { publicKey } = crypto.generateKeyPairSync("rsa", {
+        modulusLength: 2048,
+        publicKeyEncoding: { type: "spki", format: "pem" },
+        privateKeyEncoding: { type: "pkcs8", format: "pem" },
+    });
+
+    test("creating an election that allows it without an auth_key is refused", async () => {
+        const created = await th.createElection(makeElection(INTEGRATION), testInputs.user1token);
+        expect(created.statusCode).toBe(400);
+        expect(JSON.stringify(created.err)).toContain("auth_key");
+        th.testComplete();
+    });
+
+    test("creating an election that allows it with an auth_key is accepted", async () => {
+        const created = await th.createElection({ ...makeElection(INTEGRATION), auth_key: publicKey }, testInputs.user1token);
+        expect(created.statusCode).toBe(200);
+        expect(created.election.settings.allowed_submit_types).toEqual(INTEGRATION);
+        th.testComplete();
+    });
+
+    test("editing a draft without an auth_key to allow it is refused", async () => {
+        const created = await th.createElection({ ...makeElection(undefined), state: "draft" }, testInputs.user1token);
+        expect(created.statusCode).toBe(200);
+        const edited = await th.editElection({
+            ...created.election,
+            settings: { ...created.election.settings, allowed_submit_types: INTEGRATION },
+        }, testInputs.user1token);
+        expect(edited.statusCode).toBe(400);
+        expect(JSON.stringify(edited.err)).toContain("auth_key");
+        th.testComplete();
+    });
+
+    test("an election with no allowed_submit_types set takes online ballots only", async () => {
+        const created = await th.createElection(makeElection(undefined), testInputs.user1token);
+        expect(created.statusCode).toBe(200);
+        expect(created.election.settings.allowed_submit_types).toBeUndefined();
         th.testComplete();
     });
 });

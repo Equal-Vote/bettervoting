@@ -21,7 +21,7 @@ describe("electionSettingsValidation — allowed_submit_types", () => {
         const settings: ElectionSettings = {
             voter_access: "open",
             voter_authentication: {},
-            allowed_submit_types: ["submitted_via_browser", "submitted_via_admin", "submitted_via_discord"],
+            allowed_submit_types: ["submitted_via_browser", "submitted_via_admin", "submitted_via_integration"],
         } as ElectionSettings;
         expect(electionSettingsValidation(settings)).toBeNull();
     });

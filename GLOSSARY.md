@@ -9,7 +9,7 @@ The canonical trio of ways a visitor can support the project — Volunteer, Dona
 _Avoid_: Contribute (same destination as Volunteer, not a distinct Support Action)
 
 **Submission Channel**:
-The mechanism by which a ballot enters an election. Three channels are defined: **Online (browser)** (`submitted_via_browser`) — a voter submits directly through the web UI; **Paper ballots (admin upload)** (`submitted_via_admin`) — an election owner or system admin bulk-uploads ballots collected on paper; **Discord** (`submitted_via_discord`) — reserved for the future, not yet implemented. An election's allowed channels are configured via the `allowed_submit_types` field on `ElectionSettings`. This is a per-election policy decision, locked once the election leaves draft.
+The mechanism by which a ballot enters an election. Three channels are defined: **Online (browser)** (`submitted_via_browser`) — a voter submits directly through the web UI; **Paper ballots (admin upload)** (`submitted_via_admin`) — an election owner or system admin bulk-uploads ballots collected on paper; **Integration** (`submitted_via_integration`) — an external service such as a discord bot submits ballots signed with the key matching the election's `auth_key`; reserved for the future, not yet implemented, and only an election with an `auth_key` can allow it. By default an election allows only the online channel. An election's allowed channels are configured via the `allowed_submit_types` field on `ElectionSettings`. This is a per-election policy decision, locked once the election leaves draft.
 _Distinct from Ballot Source_ (see below).
 
 **Paper Ballots**:

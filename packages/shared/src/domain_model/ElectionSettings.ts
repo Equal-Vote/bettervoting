@@ -24,7 +24,7 @@ export type VoterAccess = typeof VoterAcessArray[number];
 export const InvitationTypes = ['email', 'address'] as const;
 export type InvitationType = typeof InvitationTypes[number];
 
-export const DEFAULT_ALLOWED_SUBMIT_TYPES: BallotSubmitType[] = ['submitted_via_browser', 'submitted_via_discord'];
+export const DEFAULT_ALLOWED_SUBMIT_TYPES: BallotSubmitType[] = ['submitted_via_browser'];
 
 // The three ways an admin can choose for ballots to come in. They are stored as
 // allowed_submit_types (see castVoteController and importBallotsController, which
@@ -42,6 +42,8 @@ export const acceptsOnlineBallots = (settings: ElectionSettings) =>
   (settings.allowed_submit_types ?? DEFAULT_ALLOWED_SUBMIT_TYPES).includes('submitted_via_browser');
 export const acceptsUploadedBallots = (settings: ElectionSettings) =>
   (settings.allowed_submit_types ?? DEFAULT_ALLOWED_SUBMIT_TYPES).includes('submitted_via_admin');
+export const acceptsIntegrationBallots = (settings: ElectionSettings) =>
+  (settings.allowed_submit_types ?? DEFAULT_ALLOWED_SUBMIT_TYPES).includes('submitted_via_integration');
 
 export function getBallotChannels(settings: ElectionSettings): BallotChannels {
   if (!acceptsUploadedBallots(settings)) return 'online';

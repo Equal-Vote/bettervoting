@@ -3,7 +3,10 @@ import { Race } from "./Race";
 import { Uid } from "./Uid";
 import { OrderedVote, Vote } from "./Vote";
 
-export const BALLOT_SUBMIT_TYPES = ['submitted_via_browser', 'submitted_via_admin', 'submitted_via_discord'] as const;
+// submitted_via_integration is for ballots sent by an external service (a discord bot,
+// say) that holds the private key matching the election's auth_key. Nothing submits
+// through it yet; electionValidation only lets an election with an auth_key allow it.
+export const BALLOT_SUBMIT_TYPES = ['submitted_via_browser', 'submitted_via_admin', 'submitted_via_integration'] as const;
 export type BallotSubmitType = typeof BALLOT_SUBMIT_TYPES[number];
 // An admin withdrew every uploaded ballot (deleteUploadedBallotsController). The ballot row
 // is archived (head=false) with this action appended, so the withdrawal stays in the
