@@ -18,10 +18,14 @@ const getElectionResults = async (req: IElectionRequest, res: Response, _next: N
 
     Logger.info(req, `getElectionResults: ${electionId}`);
 
+    // Until results are published nobody gets them, the election's admins included: an
+    // admin who could read the outcome first could decide what to do with the election
+    // knowing it. The exception is a draft, whose ballots are test ballots that its
+    // admins preview. getAnonymizedBallotsByElectionID follows the same rule.
     if (!election.settings.public_results) {
-        if (election.state == 'open') {
-            const msg = `Preliminary results not enabled for election ${electionId}`;
-            Logger.error(req, msg);
+        if (election.state !== 'draft') {
+            const msg = `Results have not been published for election ${electionId}`;
+            Logger.info(req, msg);
             throw new Forbidden(msg);
         }
         expectPermission(req.user_auth.roles, permissions.canViewPreliminaryResults)

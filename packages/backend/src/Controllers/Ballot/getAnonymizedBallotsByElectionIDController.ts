@@ -37,12 +37,14 @@ async function* anonymizedBallotJsonChunks(ballots: AsyncIterable<Ballot>): Asyn
 }
 
 export const getAnonymizedBallotsByElectionID = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
-    var electionId = req.election.election_id;
+    const electionId = req.election.election_id;
     Logger.debug(req, "getAnonymizedBallotsByElectionID: " + electionId);
     const election = req.election;
+    // Same rule as getElectionResults: ballots are served once results are published,
+    // and before that only a draft's test ballots, to its admins.
     if (!election.settings.public_results) {
-        if (election.state !== 'closed') {
-            const msg = `Ballot access only permited when public results are enabled or election has closed`;
+        if (election.state !== 'draft') {
+            const msg = `Ballot access only permitted once results have been published`;
             Logger.info(req, msg);
             throw new Unauthorized(msg)
         }
