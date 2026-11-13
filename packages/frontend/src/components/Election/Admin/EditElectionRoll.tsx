@@ -38,7 +38,6 @@ const EditElectionRoll = ({ roll, fetchRolls }:Props) => {
     useEffect(() => {
         if (roll.voter_id) lookup.makeRequest({ voter_id: roll.voter_id })
         else if (roll.email) lookup.makeRequest({ email: roll.email })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [roll.voter_id, roll.email])
     const { setSnack } = useSnackbar();
 

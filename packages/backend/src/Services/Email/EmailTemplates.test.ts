@@ -18,7 +18,7 @@ test.each(['Alice?#', 'a/b\\c', '100%real', 'a%23b', 'a"&<>b', '00Ab C'])('email
         receipt,
     ];
     for (const message of messages) {
-        const href = message.html!.match(/href="([^"]*\/id\/[^\"]*)"/)?.[1];
+        const href = message.html!.match(/href="([^"]*\/id\/[^"]*)"/)?.[1];
         expect(href).toBeDefined();
         const url = new URL(href!);
         expect(url.origin).toBe(origin);
