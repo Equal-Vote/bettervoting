@@ -11,7 +11,7 @@ type RollInput = { voter_id?: string; email?: string; precinct?: string };
 
 function request(electionRoll: RollInput[], invitation = 'none') {
     return {
-        election: { election_id: 'normalization-test', settings: { invitation, voter_access: 'closed' } },
+        election: { election_id: 'normalization-test', settings: { invitation, voter_access: 'closed', voter_groups_enabled: true, voter_groups: ['North'] } },
         user_auth: { roles: [roles.owner] },
         user: { email: 'admin@example.com' },
         body: { electionRoll },
