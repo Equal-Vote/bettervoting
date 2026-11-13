@@ -100,7 +100,7 @@ export const useRevealVoterId = (election_id: string) => {
 }
 
 export const useGetRoll = (electionId: string, voterId) => {
-    return useFetch<undefined, {electionRollEntry: ElectionRoll} >(`/API/Election/${electionId}/rolls/${voterId}`, 'get')
+    return useFetch<undefined, {electionRollEntry: ElectionRoll} >(`/API/Election/${electionId}/rolls/${encodeURIComponent(voterId)}`, 'get')
 }
 
 export const usePutElectionRoles = (election_id: string) => {

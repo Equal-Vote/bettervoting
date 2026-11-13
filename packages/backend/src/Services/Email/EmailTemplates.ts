@@ -23,7 +23,7 @@ export function makeEmails(election: Election, voters: ElectionRoll[], url: stri
         return formatMarkdown(body, {
             allowButtons: true,
             buttonContext: {
-                voteUrl: `${url}/${election.election_id}${election.settings.voter_authentication.voter_id ? '/id/' + voter_id : ''}`,
+                voteUrl: `${url}/${election.election_id}${election.settings.voter_authentication.voter_id ? '/id/' + encodeURIComponent(voter_id) : ''}`,
                 electionHomeUrl: `${url}/${election.election_id}`
             }
         });
@@ -57,7 +57,7 @@ export function Blank(election: Election, voters: ElectionRoll[], url: string, e
 
 export function Receipt(election: Election, email: string, ballot: Ballot, url: string, roll?: ElectionRoll): Imsg {
     const ballotVerifyUrl = `${url}/${election.election_id}/ballot/${ballot.ballot_id}`;
-    const ballotUpdateUrl = `${url}/${election.election_id}/id/${roll?.voter_id}`;
+    const ballotUpdateUrl = `${url}/${election.election_id}/id/${encodeURIComponent(roll?.voter_id ?? '')}`;
     return {
         ...emailSettings,
         to: email, // Change to your recipient

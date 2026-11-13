@@ -69,6 +69,14 @@ The election admin manages the list of voter IDs externally and distributes the 
 
 (`invitation` is absent — that's what distinguishes this from `closed_bv_managed_ids`.)
 
+#### Admin-supplied ID handling
+
+The add-roll endpoint trims leading and trailing whitespace before storing IDs and checking for duplicates, including duplicates within the same upload. Case, leading zeros, and internal spaces remain significant. Existing records are not rewritten. A blank ID cell is treated as missing: an otherwise-empty row is ignored, while a row with other voter data receives a generated ID.
+
+URL punctuation such as `?`, `#`, `/`, and `%` is allowed. Encode each voter ID with `encodeURIComponent` when inserting it into a voting link or API path; do not store the URL-encoded value or decode an already-decoded route parameter again.
+
+New IDs must be printable Latin-1 because voter cookies currently use `btoa`/`atob`. The endpoint rejects control characters and characters outside Latin-1. It also rejects `.` and `..` (browser path normalization) and IDs containing `%2F`, case-insensitively (the current router interprets that literal sequence as a slash). These restrictions prevent importing credentials that cannot round-trip through authentication.
+
 ## Unrestricted (open-access) Elections
 
 ### One vote per device → `open_unique_cookie`
