@@ -67,14 +67,6 @@ export const useEditElection = (election_id: string | undefined) => {
     return useFetch<{ Election: Election, expected_update_date: string }, { election: Election }>(`/API/Election/${election_id}/edit`, 'post')
 }
 
-export const useSendInvites = (electionID: string | undefined) => {
-    return useFetch<undefined, SendPlan>(
-        `/API/Election/${electionID}/sendInvites`,
-        'post',
-        describeQueuedSend,
-    )
-}
-
 // A send request returns a plan, not a confirmation: the emails are scheduled
 // and released at the configured rate, so "Emails Sent!" would be false and
 // would invite a retry. Say what was queued and how long it will take.
@@ -91,14 +83,6 @@ export const useSendEmails = (electionID: string | undefined) => {
         `/API/Election/${electionID}/sendEmails`,
         'post',
         describeQueuedSend,
-    )
-}
-
-export const useSendInvite = (election_id: string, voter_id: string | undefined) => {
-    return useFetch<undefined, object>(
-        `/API/Election/${election_id}/sendInvite/${voter_id}`,
-        'post',
-        'Email Invitation Sent!',
     )
 }
 

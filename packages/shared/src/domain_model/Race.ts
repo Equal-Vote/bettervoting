@@ -24,7 +24,7 @@ export interface Race {
     voting_method:  VotingMethod; //voting method to be used
     num_winners:    number; // number of winners
     candidates:     Candidate[]; // list of candidates
-    precincts?:     String[]; // list of precincts that vote in this election, if null then open to all precincts
+    precincts?:     string[]; // list of precincts that vote in this election, if null then open to all precincts
     enable_write_in?: boolean; //Allow voters to write in candidates
     write_in_candidates?: WriteInCandidate[]
 }

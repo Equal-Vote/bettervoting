@@ -29,6 +29,11 @@ export function isWriteInCandidate(candidateId: string): boolean {
   return candidateId.startsWith(ID_PREFIXES.CANDIDATE_WRITE_IN);
 }
 
+// Inverse of makeWriteInCandidateId: recovers the name encoded in a write-in candidate id
+export function writeInCandidateName(candidateId: string): string {
+  return candidateId.slice(ID_PREFIXES.CANDIDATE_WRITE_IN.length + 1);
+}
+
 // Removing vowels to avoid spelling real words in IDS (especially don't want curse words)
 // also removing o/0 and 1/l to avoid confusion if someone was manually copying the 
 // https://stackoverflow.com/questions/956556/is-it-irrational-to-sanitize-random-character-strings-for-curse-words

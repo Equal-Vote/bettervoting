@@ -1,5 +1,5 @@
-require("dotenv").config();
-const request = require("supertest");
+import 'dotenv/config';
+import request from "supertest";
 import makeApp from "../app";
 import { MockEventQueue } from "../Services/EventQueue/MockEventQueue";
 import { TestHelper } from "./TestHelper";
@@ -17,7 +17,7 @@ afterEach(() => {
 // still has un-started jobs. The mock queue's pause() holds jobs in the pending
 // state, which is exactly what a paced send looks like from the guard's side.
 describe("Send in-flight guard", () => {
-    var electionId = "";
+    let electionId = "";
     const campaign = { target: "all", email: { subject: "hi", body: "vote please" } };
     const send = () => request(app)
         .post(`/API/Election/${electionId}/sendEmails`)
@@ -51,17 +51,6 @@ describe("Send in-flight guard", () => {
         expect(r.statusCode).toBe(400);
         expect(r.body.error).toMatch(/still in progress/);
         expect(r.body.error).toMatch(/emails remaining/);
-        th.testComplete();
-    });
-
-    test("A pending campaign also blocks invites (cross-queue)", async () => {
-        const r = await request(app)
-            .post(`/API/Election/${electionId}/sendInvites`)
-            .set("Cookie", ["id_token=" + testInputs.user1token])
-            .set("Accept", "application/json")
-            .send({});
-        expect(r.statusCode).toBe(400);
-        expect(r.body.error).toMatch(/still in progress/);
         th.testComplete();
     });
 

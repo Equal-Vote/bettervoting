@@ -1,6 +1,7 @@
 import { useState, useRef, KeyboardEvent } from 'react';
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, TextField, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
+import { SECONDARY_INDENT } from './util';
 
 /**
  * Click-to-edit field: displays a value with an edit affordance, opens a
@@ -119,6 +120,7 @@ export default function DialogTextField({
                 <Typography
                     component='div'
                     sx={{
+                        ml: SECONDARY_INDENT,
                         wordBreak: 'break-word',
                         ...(isEmpty ? { color: 'primary.main', fontStyle: 'italic' } : {}),
                     }}
@@ -143,16 +145,15 @@ export default function DialogTextField({
             fullWidth
             maxWidth='sm'
             aria-label={label}
-            // autoFocus alone races the Dialog's open transition + focus trap, which can
+            // autoFocus races the Dialog's open transition + focus trap, which can
             // leave focus on the dialog instead of the input (needing a second click).
             // Focus the field once the enter transition finishes, and select existing
             // text so the value is ready to overwrite.
-            slotProps={{ transition: { onEntered: () => inputRef.current?.select() } }}
+            slotProps={{ transition: { onEntered: () => { inputRef.current?.focus(); inputRef.current?.select(); } } }}
         >
             <DialogTitle>{label}</DialogTitle>
             <DialogContent>
                 <TextField
-                    autoFocus
                     fullWidth
                     value={draft}
                     type={type}

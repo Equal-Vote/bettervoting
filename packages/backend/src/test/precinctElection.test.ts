@@ -12,7 +12,7 @@ afterEach(() => {
 });
 
 describe("Multi Race Precinct Election", () => {
-    var electionRes: Election;
+    let electionRes: Election;
     test("responds with 200 status", async () => {
         const response = await th.createElection(
             testInputs.PrecinctElection,
@@ -31,7 +31,7 @@ describe("Multi Race Precinct Election", () => {
     test("Add Voter Roll", async () => {
         const response = await th.submitElectionRoll(
             electionRes.election_id,
-            testInputs.EmailWithPrecinctRoll,
+            testInputs.IDWithPrecinctRoll,
             testInputs.user1token
         );
         expect(response.statusCode).toBe(200);
@@ -39,9 +39,10 @@ describe("Multi Race Precinct Election", () => {
     });
     test("Voter 1 fetches election, gets both races", async () => {
         // Tests that voter only recieves races they can vote for
-        const response = await th.fetchElectionById(
+        const response = await th.fetchElectionByIdWithVoterId(
             electionRes.election_id,
-            testInputs.user1token
+            testInputs.user1token,
+            'AliceID'
         );
         expect(response.statusCode).toBe(200);
         expect(response.election.races.length).toBe(2)
@@ -50,9 +51,10 @@ describe("Multi Race Precinct Election", () => {
     });
     test("Voter 2 fetches election, gets only first race", async () => {
         // Tests that voter only recieves races they can vote for
-        const response = await th.fetchElectionById(
+        const response = await th.fetchElectionByIdWithVoterId(
             electionRes.election_id,
-            testInputs.user2token
+            testInputs.user2token,
+            'BobID'
         );
         expect(response.statusCode).toBe(200);
         expect(response.election.races.length).toBe(2)
@@ -63,32 +65,134 @@ describe("Multi Race Precinct Election", () => {
     });
     test("Voter 1 submits valid ballot in precinct 0", async () => {
         // Tests that a voter can cast a ballot for all races with their precinct
-        const response = await th.submitBallot(
+        const response = await th.submitBallotWithId(
             electionRes.election_id,
             testInputs.Precinct0Ballot,
-            testInputs.user1token
+            testInputs.user1token,
+            'AliceID'
         );
         expect(response.statusCode).toBe(200);
         th.testComplete();
     });
     test("Voter 2 submits invalid ballot in precinct 0", async () => {
         // Tests that a voter can't cast ballot with races without their precinct
-        const response = await th.submitBallot(
+        const response = await th.submitBallotWithId(
             electionRes.election_id,
             testInputs.Precinct0Ballot,
-            testInputs.user2token
+            testInputs.user2token,
+            'BobID'
         );
         expect(response.statusCode).toBe(400);
         th.testComplete();
     });
     test("Voter 2 submits valid ballot in precinct 1", async () => {
         // Tests that a voter can cast a ballot for all races with their precinct
-        const response = await th.submitBallot(
+        const response = await th.submitBallotWithId(
             electionRes.election_id,
             testInputs.Precinct1Ballot,
-            testInputs.user2token
+            testInputs.user2token,
+            'BobID'
         );
         expect(response.statusCode).toBe(200);
+        th.testComplete();
+    });
+})
+
+describe("Voter Groups On - Race Filtering", () => {
+    let groupsElectionRes: Election;
+    test("Create voter groups election", async () => {
+        const response = await th.createElection(testInputs.VoterGroupsElection, testInputs.user1token);
+        expect(response.statusCode).toBe(200);
+        expect(response.election.races.length).toBe(3);
+        groupsElectionRes = response.election;
+        th.testComplete();
+    });
+    test("Add voter roll: AliceID=No group, BobID=Ward 1", async () => {
+        const response = await th.submitElectionRoll(
+            groupsElectionRes.election_id,
+            testInputs.VoterGroupsRoll,
+            testInputs.user1token
+        );
+        expect(response.statusCode).toBe(200);
+        th.testComplete();
+    });
+    test("No group voter gets races open to all and races with No group ticked", async () => {
+        // AliceID has precinct '' (No group); should see Race 0 (open) and Race 1 (No group), not Race 2 (Ward 1)
+        // Regression: the old truthiness check (voterPrecinct && ...) blocked '' from matching
+        const response = await th.fetchElectionByIdWithVoterId(groupsElectionRes.election_id, testInputs.user1token, 'AliceID');
+        expect(response.statusCode).toBe(200);
+        expect(response.precinctFilteredElection.races.length).toBe(2);
+        const raceIds = response.precinctFilteredElection.races.map((r) => r.race_id);
+        expect(raceIds).toContain('0');
+        expect(raceIds).toContain('1');
+        expect(raceIds).not.toContain('2');
+        th.testComplete();
+    });
+    test("Named group voter gets races open to all and their group races only", async () => {
+        // BobID has precinct 'Ward 1'; should see Race 0 (open) and Race 2 (Ward 1), not Race 1 (No group)
+        const response = await th.fetchElectionByIdWithVoterId(groupsElectionRes.election_id, testInputs.user2token, 'BobID');
+        expect(response.statusCode).toBe(200);
+        expect(response.precinctFilteredElection.races.length).toBe(2);
+        const raceIds = response.precinctFilteredElection.races.map((r) => r.race_id);
+        expect(raceIds).toContain('0');
+        expect(raceIds).not.toContain('1');
+        expect(raceIds).toContain('2');
+        th.testComplete();
+    });
+})
+
+describe("Voter Groups Off - Race Filtering Disabled", () => {
+    let groupsOffElectionRes: Election;
+    test("Create election with voter_groups_enabled false", async () => {
+        const response = await th.createElection(testInputs.VoterGroupsOffElection, testInputs.user1token);
+        expect(response.statusCode).toBe(200);
+        groupsOffElectionRes = response.election;
+        th.testComplete();
+    });
+    test("Voter gets all races when voter_groups_enabled is false, regardless of race precincts", async () => {
+        // Race 1 has precincts: ['Ward 1']. With voter_groups_enabled: false, the voter
+        // (auto-enrolled, precinct undefined) must still see both races.
+        const response = await th.fetchElectionById(groupsOffElectionRes.election_id, testInputs.user1token);
+        expect(response.statusCode).toBe(200);
+        expect(response.precinctFilteredElection.races.length).toBe(2);
+        th.testComplete();
+    });
+})
+
+describe("Open Voter Access - Race Filtering Disabled", () => {
+    let openAccessElectionRes: Election;
+    test("Create election with voter groups on but no voter roll", async () => {
+        const response = await th.createElection(
+            { ...testInputs.VoterGroupsElection, settings: { ...testInputs.VoterGroupsElection.settings, voter_access: 'open' } },
+            testInputs.user1token
+        );
+        expect(response.statusCode).toBe(200);
+        openAccessElectionRes = response.election;
+        th.testComplete();
+    });
+    test("Voter gets all races when anyone with the link can vote, even with voter_groups_enabled true", async () => {
+        // Voter groups live on voter roll entries, so they're ignored when voter_access is 'open'
+        const response = await th.fetchElectionById(openAccessElectionRes.election_id, testInputs.user1token);
+        expect(response.statusCode).toBe(200);
+        expect(response.precinctFilteredElection.races.length).toBe(3);
+        th.testComplete();
+    });
+})
+
+describe("Closed Election - No Race Filtering", () => {
+    let closedElectionRes: Election;
+    test("Create closed election with voter_groups_enabled true", async () => {
+        const response = await th.createElection(testInputs.ClosedVoterGroupsElection, testInputs.user1token);
+        expect(response.statusCode).toBe(200);
+        expect(response.election.races.length).toBe(2);
+        closedElectionRes = response.election;
+        th.testComplete();
+    });
+    test("Voter gets all races in closed election regardless of voter groups setting", async () => {
+        // State is 'closed'; race filtering must not apply even when voter_groups_enabled is true
+        const response = await th.fetchElectionById(closedElectionRes.election_id, testInputs.user1token);
+        expect(response.statusCode).toBe(200);
+        expect(response.precinctFilteredElection.races.length).toBe(2);
         th.testComplete();
     });
 })

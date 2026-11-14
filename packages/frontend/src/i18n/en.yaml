@@ -213,7 +213,7 @@ ballot_submitted:
   update_ballot_enabled_open: You can update your ballot using the link in your email receipt
   update_ballot_enabled_closed: The election has closed. All ballots are final
   status: 'Status:'
-  precinct: 'Precinct:'
+  voter_group: 'Voter Group:'
   ballot_id: 'Ballot ID:'
   update_ballot: 'Update Ballot:'
 
@@ -709,6 +709,7 @@ tabulation_logs:
 disabled_msgs:
     ballot_updates_when_open: Only supported when election uses email list
     is_public_when_voter_list: Only supported when anyone with the link can {{vote}}
+    voter_groups_when_open: Only supported when {{election}} uses a voter list
 
 #######################################
 #### PRIORITY 4 : Info Bubbles ####
@@ -765,8 +766,9 @@ tips:
     learn_link: https://docs.bettervoting.com/help/preliminary_results.html
 
   voter_groups:
-    title: Enable Voter Groups
-    description: Allow different voter groups access to different races within a larger election (ex. districts within jurisdiction).
+    title: Set Voter Groups
+    description: "Split your voters into groups (for example, wards or departments) and choose which {{races}} each group sees. Each voter only sees the {{races}} open to their group."
+    learn_link: https://docs.bettervoting.com/help/voter_groups.html
 
   email_list:
     title: $t(wizard.email_list_title)
@@ -1161,6 +1163,7 @@ admin_home:
     message: Once your first voters have been added, your voter list settings will be locked in for this election. Would you like to continue?
 
   clear_voter_roll_button: Clear Voter List
+  voter_turnout: '{{voted}} of {{total}} voters have voted ({{percent}})'
   clear_voter_roll_confirm:
     title: Confirm Clearing Voter List
     message: This removes all {{voter_count}} voters from your election and unlocks your voter list settings so you can change them. You'll need to add your voters again afterwards. Would you like to continue?
@@ -1204,7 +1207,7 @@ election_settings:
 
   public_results: Make Results Public !tip(public_results)
 
-  voter_groups: Enable Voter Groups !tip(voter_groups)
+  voter_groups: Set Voter Groups !tip(voter_groups)
 
   custom_email_invite: Customize Emails To Voters !tip(custom_email_invite)
 
@@ -1217,7 +1220,30 @@ election_settings:
   max_rankings: Set Number Of Rankings Allowed !tip(max_rankings)
 
   contact_email: Election Support Email !tip(contact_email)
-  
+
+voter_groups_dialog:
+  title: Voter Groups
+  add_group_label: New group name
+  edit_button: Edit groups
+  add_button: Add groups
+  voter_count_one: "{{group}} (1 voter)"
+  voter_count_other: "{{group}} ({{count}} voters)"
+  delete_tooltip: Delete group
+  cant_delete: Can't delete a group that has voters
+  empty_name: Group name can't be empty
+  duplicate_name: A group with this name already exists
+voter_group_grid:
+  instruction: Check the boxes to choose which {{races}} each group can see.
+  no_group: No group
+  voter_count_one: '{{count}} voter'
+  voter_count_other: '{{count}} voters'
+  warning_empty_row: >-
+    No voter group can see "{{title}}". Check at least one group for this {{race}}.
+  warning_empty_col_named: >-
+    Voters in "{{group}}" would see no {{races}}. Check at least one {{race}} for this group.
+  warning_empty_col_no_group: >-
+    Voters with no group would see no {{races}}. Check at least one {{race}} for No group.
+
 # Admin Home -> Add/Edit Race
 edit_race:
   how_many_winners: How many winners?
@@ -1267,6 +1293,10 @@ voters:
     invite: "{{capital_election}} Invitation Template"
     receipt: "Voter Receipt Template"
     blank: Empty Template
+
+# Table filters
+table:
+  no_filter_matches: Nothing matches your filters
 
 # Email Templates
 emails:
