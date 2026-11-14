@@ -16,9 +16,13 @@ import { SecondaryButton } from '../../styles';
 
 const ViewElectionResults = () => {
     const flags = useFeatureFlags();
-    const { election } = useElection();
+    const { election, permissions } = useElection();
     const { data, isPending, makeRequest: getResults } = useGetResults(election.election_id)
-    useEffect(() => { election.settings.public_results && getResults() }, [election.settings.public_results])
+    // A draft's results are test results, shown to its admins whatever the setting says
+    // (the Preview Results page); the server applies the same rule.
+    const showResults = election.settings.public_results === true
+        || (election.state === 'draft' && !!permissions?.includes('canViewPreliminaryResults'));
+    useEffect(() => { if (showResults) getResults() }, [showResults])
     const {t} = useSubstitutedTranslation(election.settings.term_type);
 
     return (
@@ -46,14 +50,14 @@ const ViewElectionResults = () => {
             </Typography>
 
             {isPending && <div> {t("results.loading_election")} </div>}
-            {!election.settings.public_results && (
+            {!showResults && (
               <>
                 The election admins have not released the results yet. Feel free
                 to swing back later 😊.
               </>
             )}
 
-            {election.settings.public_results && data?.results.map((results, race_index) => (
+            {showResults && data?.results.map((results, race_index) => (
                 <Results
                     key={`results-${race_index}`}
                     race={election.races[race_index]}

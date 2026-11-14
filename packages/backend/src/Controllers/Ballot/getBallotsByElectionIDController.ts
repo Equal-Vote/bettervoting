@@ -9,12 +9,12 @@ import { Response, NextFunction } from 'express';
 const BallotModel = ServiceLocator.ballotsDb();
 
 const getBallotsByElectionID = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
-    var electionId = req.election.election_id;
+    const electionId = req.election.election_id;
     Logger.debug(req, "getBallotsByElectionID: " + electionId);
 
     expectPermission(req.user_auth.roles, permissions.canViewBallots)
-    if (!req.election.settings.public_results && req.election.state !== 'closed') {
-        const msg = `Ballot access only permited when public results are enabled or election has closed`;
+    if (!req.election.settings.public_results && req.election.state !== 'draft') {
+        const msg = `Ballot access only permitted once results have been published`;
         Logger.info(req, msg);
         throw new Unauthorized(msg)
     }

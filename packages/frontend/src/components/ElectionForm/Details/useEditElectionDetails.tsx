@@ -105,6 +105,7 @@ export const useEditElectionDetails = () => {
             election.start_time = editedElection.start_time
             election.end_time = editedElection.end_time
             election.settings.time_zone = editedElection.settings.time_zone
+            election.settings.publish_results_on_close = editedElection.settings.publish_results_on_close
         })
 
         if (!success) return

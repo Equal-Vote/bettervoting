@@ -4,7 +4,7 @@ import { Typography } from "@mui/material";
 import { PrimaryButton } from "../../styles";
 import { useNavigate } from 'react-router-dom';
 import ShareButton from "../ShareButton";
-import { useFinalizeElection, useSetOpenState } from "../../../hooks/useAPI";
+import { useFinalizeElection, useSetOpenState, useSetPublicResults } from "../../../hooks/useAPI";
 import { SwitchSetting } from '../../util';
 import useConfirm from '../../ConfirmationDialogProvider';
 import useElection from '../../ElectionContextProvider';
@@ -12,13 +12,14 @@ import useAuthSession from '../../AuthSessionContextProvider';
 import { AdminPageNavigation } from '../Sidebar';
 import useOptimisticToggle from '~/hooks/useOptimisticToggle';
 
-export default () => {
+export default function PublishAndShare() {
     const authSession = useAuthSession()
     const { t, election, refreshElection: fetchElection, permissions, enqueueWrite } = useElection()
 
     const { makeRequest: finalize } = useFinalizeElection(election.election_id)
 
     const { makeRequest: setOpenState } = useSetOpenState(election.election_id)
+    const { makeRequest: setPublicResultsRequest } = useSetPublicResults(election.election_id)
 
     const navigate = useNavigate()
 
@@ -105,6 +106,14 @@ export default () => {
         return !!res;
     });
     
+    // The server's answer is the source of truth, and this write doesn't go through
+    // updateElection, so refetch to fold the new value into the election context.
+    const [publicResults, setPublicResults] = useOptimisticToggle(election.settings.public_results ?? false, async (toggled) => {
+        const res = await enqueueWrite(expected_update_date => setPublicResultsRequest({ public_results: toggled, expected_update_date }));
+        if (res) await fetchElection();
+        return !!res && res.election?.settings?.public_results === toggled;
+    });
+
     const hasScheduledTimes = !!(election.start_time || election.end_time);
     const canEditState = permissions?.includes('canEditElectionState') ?? false;
 
@@ -126,6 +135,19 @@ export default () => {
                 )}
                 {election.state === 'finalized' && election.start_time && (
                     <Typography variant="body2">{t('admin_home.header_start_time', {datetime: election.start_time})}</Typography>
+                )}
+                {/* One stored value, public_results, named for what turning it on does right now:
+                    a running tally while votes can still come in, the final results once closed */}
+                <SwitchSetting
+                    label={election.state === 'closed' ? t('election_settings.public_results') : t('election_settings.preliminary_results')}
+                    toggled={publicResults}
+                    onToggle={setPublicResults}
+                    disabled={!canEditState}
+                />
+                {election.state !== 'closed' && election.end_time && (
+                    <Typography variant="body2">
+                        {t(election.settings.publish_results_on_close === true ? 'admin_home.results_publish_on_close' : 'admin_home.results_hidden_on_close')}
+                    </Typography>
                 )}
             </Box>
         )}

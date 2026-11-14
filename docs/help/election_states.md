@@ -83,9 +83,9 @@ You can archive an election from any state, so archiving is also how you shelve 
 
 There are two ways an election changes state, and **which one applies depends on whether you set dates**.
 
-**If you set a start and end time**, BetterVoting handles the transitions for you. The election opens when the start time arrives and closes when the end time passes. You can't open or close it by hand — if you try, you'll see *"Cannot open or close an election with scheduled start and end times."*
+**If you set a start and end time**, BetterVoting handles the transitions for you. The election opens when the start time arrives and closes when the end time passes. You can't open or close it by hand — if you try, you'll see *"Cannot open or close an election with scheduled start and end times."* If you ticked **Publish results when the election ends**, the results are published as it closes; otherwise they stay hidden until you publish them from Publish & Share.
 
-**If you didn't set times**, nothing happens automatically, and you open and close the election yourself from the Publish & Share screen. Note that finalizing an election with no start time opens it straight away.
+**If you didn't set times**, nothing happens automatically, and you open and close the election yourself from the Publish & Share screen. Closing it does not publish the results; that is a second switch on the same screen. Note that finalizing an election with no start time opens it straight away.
 
 {: .note }
 > **An election with no end time will not close by itself.** It stays open until you close it manually. If you want voting to stop at a particular moment, set an end time.
