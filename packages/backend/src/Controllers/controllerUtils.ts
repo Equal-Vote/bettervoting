@@ -40,6 +40,20 @@ export function expectPermanentUser(user: IUser | undefined): void {
     }
 }
 
+// Write-ins only count once an election admin approves them (see setWriteInResultsController),
+// so an election with write-ins must end up with a signed-in owner. Drafts are fine: finalizing
+// already requires a signed-in user (expectPermanentUser above). This closes the other route,
+// creating the election already finalized, as the wizard's ownerless "Publish Now" does;
+// otherwise nobody could ever approve a write-in and every write-in vote would be dropped.
+export function expectOwnerForWriteIns(election: Election, user: IUser | undefined): void {
+    const hasWriteIns = (election.races ?? []).some((race) => race.enable_write_in);
+    if (!hasWriteIns || election.state === 'draft') return;
+    expectPermanentUser(user);
+    if (election.owner_id !== user?.sub) {
+        throw new BadRequest("Elections with write-in candidates must be owned by the signed-in user who creates them");
+    }
+}
+
 // All electionDB writes require an expected_update_date for optimistic concurrency
 // control; without it, concurrent edits would race the (election_id, head=true)
 // unique partial index and surface as opaque 500s instead of clean 409s.

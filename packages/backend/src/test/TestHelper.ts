@@ -92,9 +92,11 @@ export class TestHelper {
         election: Election,
         userToken: string | null,
         customToken: string | null = null,
-        tempId: string | null = null
+        tempId: string | null = null,
+        // e.g. the `${election_id}_claim_key` cookie a temp owner needs for edit access
+        extraCookies: Record<string, string> = {}
     ): Promise<ElectionResponse> {
-        const current = await this.fetchElectionById(election.election_id, userToken, customToken, tempId);
+        const current = await this.fetchElectionById(election.election_id, userToken, customToken, tempId, extraCookies);
         const res = await this.postRequest(
             `/API/Election/${election.election_id}/edit`,
             {
@@ -103,7 +105,8 @@ export class TestHelper {
             },
             userToken,
             customToken,
-            tempId
+            tempId,
+            extraCookies
         );
         return this.electionResponse(res);
     }
