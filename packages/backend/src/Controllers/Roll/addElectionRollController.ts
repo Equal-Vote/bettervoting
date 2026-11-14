@@ -24,6 +24,12 @@ const addElectionRoll = async (req: IElectionRequest & { body: { electionRoll: E
     expectPermission(req.user_auth.roles, permissions.canAddToElectionRoll)
     Logger.info(req, `${className}.addElectionRoll ${req.election.election_id}`);
 
+    // Match voter lookup semantics before filtering, duplicate checks, and storage.
+    req.body.electionRoll = req.body.electionRoll.map((rollInput: ElectionRollInput) => ({
+        ...rollInput,
+        voter_id: rollInput.voter_id?.trim(),
+    }));
+
     // Filter out empty roll entries (where all fields are empty)
     req.body.electionRoll = req.body.electionRoll.filter((rollInput: ElectionRollInput) => {
         return rollInput.voter_id?.trim() || rollInput.email?.trim() || rollInput.precinct?.trim();
@@ -35,6 +41,25 @@ const addElectionRoll = async (req: IElectionRequest & { body: { electionRoll: E
         if (hasVoterId) {
             throw new BadRequest('Cannot create voters with voter_id when using email invitations');
         }
+    }
+
+    const seenVoterIds = new Set<string>();
+    for (const rollInput of req.body.electionRoll) {
+        if (!rollInput.voter_id) continue;
+        // Voter cookies currently use btoa/atob, which only support Latin-1.
+        // Exclude controls even when btoa can encode them.
+        if (/[^\x20-\x7e\xa0-\xff]/.test(rollInput.voter_id)) {
+            throw new BadRequest('Voter IDs must use Latin-1 characters and cannot contain control characters');
+        }
+        // Browsers resolve dot-only path segments; React Router decodes literal
+        // %2F a second time. Neither can round-trip through our /id/:voter_id route.
+        if (rollInput.voter_id === '.' || rollInput.voter_id === '..' || /%2f/i.test(rollInput.voter_id)) {
+            throw new BadRequest('Voter IDs cannot be "." or "..", or contain "%2F"');
+        }
+        if (seenVoterIds.has(rollInput.voter_id)) {
+            throw new BadRequest('Some submitted voters have duplicate voter IDs');
+        }
+        seenVoterIds.add(rollInput.voter_id);
     }
 
     const history = [{
@@ -82,7 +107,7 @@ const addElectionRoll = async (req: IElectionRequest & { body: { electionRoll: E
     }
 
     // Generate all IDs in parallel first
-    const idPromises: Promise<string>[] = req.body.electionRoll.map((rollInput: ElectionRollInput) =>
+    const idPromises: (string | Promise<string>)[] = req.body.electionRoll.map((rollInput: ElectionRollInput) =>
         rollInput.voter_id || makeUniqueID(
             ID_PREFIXES.VOTER,
             ID_LENGTHS.VOTER,
