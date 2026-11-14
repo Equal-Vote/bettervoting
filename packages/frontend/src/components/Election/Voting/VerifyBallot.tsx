@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { Fragment, useEffect } from "react"
 import Grid from "@mui/material/Grid";
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
@@ -9,12 +9,16 @@ import useElection from "../../ElectionContextProvider";
 import { SecondaryButton } from "~/components/styles";
 import ShareButton from "../ShareButton";
 import { useSubstitutedTranslation } from "../../util";
+import { isWriteInCandidate, writeInCandidateName } from "@equal-vote/star-vote-shared/utils/makeID";
+import useFeatureFlags from "../../FeatureFlagContextProvider";
+
 
 
 const VerifyBallot = () => {
     const { election, permissions: userPermissions } = useElection()
     const { ballot_id } = useParams();
     const { t } = useSubstitutedTranslation(election.settings.term_type);
+    const flags = useFeatureFlags();
 
     // Mirrors the server: only election staff may view a ballot by id.
     const canView = userPermissions?.includes('canViewBallots');
@@ -60,9 +64,9 @@ const VerifyBallot = () => {
                                     <Box sx={{fontWeight: 'bold', m: 1, display: 'inline'}}>{t('ballot_submitted.ballot_id')}</Box>
                                     <Box sx={{fontWeight: 'regular', m: 1, display: 'inline'}}>{`${data.ballot.ballot_id}`}</Box>
                             </Typography>
-                            {data.ballot.precinct &&
+                            {flags.isSet('PRECINCTS') && data.ballot.precinct &&
                                 <Typography component="div" align='left' variant="body1">
-                                    <Box sx={{fontWeight: 'bold', m: 1, display: 'inline'}}>{t('ballot_submitted.precinct')}</Box>
+                                    <Box sx={{fontWeight: 'bold', m: 1, display: 'inline'}}>{t('ballot_submitted.voter_group')}</Box>
                                     <Box sx={{fontWeight: 'regular', m: 1, display: 'inline'}}>{`${data.ballot.precinct}`}</Box>
                                 </Typography>
                             }
@@ -78,8 +82,10 @@ const VerifyBallot = () => {
                             </Typography >
                     </Grid>
                     <Divider sx={{my: 4}}/>
-                    {data.ballot.votes.map((vote, v) => (
-                        <>
+                    {data.ballot.votes.map((vote, v) => {
+                        const race = election.races.find(r => r.race_id == vote.race_id);
+                        return (
+                        <Fragment key={vote.race_id}>
 
                             <Typography key={`title_${v}`} align='left' variant="h6" component="h6">
                                 {election.races[v].title}
@@ -97,7 +103,9 @@ const VerifyBallot = () => {
                                             <TableRow key={s} >
                                                 <TableCell component="th" scope="row">
                                                     <Typography variant="h6" component="h6">
-                                                        {election.races.find(r => r.race_id == vote.race_id).candidates[s].candidate_name}
+                                                        {race?.candidates.find(c => c.candidate_id === score.candidate_id)?.candidate_name
+                                                            ?? score.write_in_name
+                                                            ?? (isWriteInCandidate(score.candidate_id) ? writeInCandidateName(score.candidate_id) : score.candidate_id)}
                                                     </Typography>
                                                 </TableCell>
                                                 <TableCell >
@@ -110,8 +118,9 @@ const VerifyBallot = () => {
                                     </TableBody>
                                 </Table>
                             </TableContainer>
-                        </>
-                    ))}
+                        </Fragment>
+                        )
+                    })}
                 </Grid>
             </>}
         </Container>

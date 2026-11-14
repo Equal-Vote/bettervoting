@@ -11,7 +11,6 @@
 
 // const msg = Invitation(election,voter,'https://localhost:3000')
 // EmailService.sendEmails(msg)
-// EmailService.sendInvitations(election,voter,'https://localhost:3000')
 
 /* eslint-disable @typescript-eslint/no-require-imports -- standalone CJS script, run directly with `node` */
 require('dotenv').config()

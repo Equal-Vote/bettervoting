@@ -2,7 +2,6 @@ import { Ballot } from "@equal-vote/star-vote-shared/domain_model/Ballot"
 import { Election } from "@equal-vote/star-vote-shared/domain_model/Election"
 import { ElectionRoll } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll"
 import { Imsg } from "./IEmail"
-import { DateTime } from 'luxon'
 import { formatMarkdown, makeButton } from "@equal-vote/star-vote-shared/utils/formatMarkdown";
 import sanitizeHtml from 'sanitize-html';
 
@@ -17,7 +16,6 @@ const emailSettings: Partial<Imsg> = {
     } : undefined
 }
 
-const formatTime = (time: string | Date, tz: string) => DateTime.fromJSDate(new Date(time)).setZone(tz).toLocaleString(DateTime.DATETIME_FULL);
 const sanitizeText = (text: string) => text ? sanitizeHtml(text, { allowedTags: [], allowedAttributes: {} }) : text;
 
 export function makeEmails(election: Election, voters: ElectionRoll[], url: string, email_subject: string, email_body: string, test_email: boolean): Imsg[] {
@@ -39,36 +37,6 @@ export function makeEmails(election: Election, voters: ElectionRoll[], url: stri
         html: emailTemplate(`
             ${election.state === 'draft' ? `<h3>⚠️This ${election.settings.term_type} is still in test mode. All ballots during test mode will be removed once the election is finalized, and at that time you will need to vote again.⚠️</h3>` : ''}
             ${processEmailBody(email_body, voter.voter_id)}
-        `)
-    })
-}
-
-export function Invites(election: Election, voters: ElectionRoll[], url: string, email_subject?: string, email_body?: string): Imsg[] {
-    return voters.map((voter) => <Imsg>{
-        ...emailSettings,
-        to: voter.email, // Change to your recipient
-        from: process.env.FROM_EMAIL_ADDRESS ?? '',
-        subject: email_subject ?? `Invitation to Vote In ${election.title}`,
-        text: `${election.state === 'draft' ? `[⚠️Test ${election.settings.term_type}]` : ''} ${email_body ?? '' }  You have been invited to vote in ${election.title} ${url}/${election.election_id}`,
-        html: emailTemplate(`
-          ${election.state === 'draft' ? `<h3>⚠️This ${election.settings.term_type} is still in test mode. All ballots during test mode will be removed once the election is finalized, and at that time you will need to vote again.⚠️</h3>` : ''}
-          ${email_body ? formatMarkdown(email_body) : '' }
-          <p>You have been invited to vote in the "${sanitizeText(election.title)}" ${election.settings.term_type}.</p>
-          ${election.description ?
-            `<p>Election ${formatMarkdown(election.description)}<p>` : ''
-          }
-          ${(election.start_time && election.settings.time_zone) ?
-            `<p>Voting will begin on ${formatTime(election.start_time, election.settings.time_zone)}.<p>` : ''
-          }
-          ${(election.end_time && election.settings.time_zone) ?
-            `<p><b>Voting ends on ${formatTime(election.end_time, election.settings.time_zone)}!</b><p>` : ''
-          }
-
-          <p>Click the button to vote:</p>
-
-          ${makeButton('Vote', `${url}/${election.election_id}${election.settings.voter_authentication.voter_id ? '/id/' + voter.voter_id : ''}`)}
-
-          <p>This link is unique to you, be careful not to share this email with others</p>
         `)
     })
 }
