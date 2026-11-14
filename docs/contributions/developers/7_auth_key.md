@@ -37,7 +37,10 @@ In practice that means:
 Voter-side flows (casting ballots, viewing public results) do **not** use
 `auth_key`. Voters continue to authenticate via the standard mechanisms
 described in [Voter Authentication Modes](6_voter_authentication_modes.html).
-`auth_key` is for **owner-equivalent** operations only.
+`auth_key` is for **owner-equivalent** operations only. For what "owner"
+means on the platform side — including why API-created elections usually
+have `owner_id: null` and what that prevents — see
+[Election Ownership, Temporary Access and Claim Keys](8_election_ownership.html).
 
 ## Why this exists
 

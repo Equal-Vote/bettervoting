@@ -1,27 +1,30 @@
 import ServiceLocator from '../../ServiceLocator';
 import Logger from '../../Services/Logging/Logger';
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
-import { expectPermission, expectUpdateDate } from "../controllerUtils";
+import { expectPermanentUser, expectPermission, expectUpdateDate } from "../controllerUtils";
 import { BadRequest } from "@curveball/http-errors";
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
 import { innerDeleteAllBallotsForElectionID } from '../Ballot';
 
-var ElectionsModel = ServiceLocator.electionsDb();
+const ElectionsModel = ServiceLocator.electionsDb();
 
 const className = "election.Controllers";
 
 const finalizeElection = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     Logger.info(req, `${className}.finalize ${req.election.election_id}`);
     expectPermission(req.user_auth.roles, permissions.canEditElectionState)
+    // Temp owners hold canEditElectionState during their access window, but finalizing
+    // needs an account (the UI says "create a free account to finalize"); enforce it here too.
+    expectPermanentUser(req.user)
 
     if (req.election.state !== 'draft') {
-        var msg = "Election already finalized";
+        const msg = "Election already finalized";
         Logger.info(req, msg);
         throw new BadRequest(msg)
     }
 
-    var failMsg = "Failed to update Election";
+    const failMsg = "Failed to update Election";
     // Use a finalized copy for the OC-protected update; leave req.election in draft state
     // so the subsequent ballot-deletion's draft-state guard still passes.
     // Every election gets a max_rankings limit; default any election that never set one
