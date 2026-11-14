@@ -1,5 +1,5 @@
 import { ElectionRoll } from "./ElectionRoll";
-import { ElectionSettings, electionSettingsValidation } from "./ElectionSettings";
+import { ElectionSettings, electionSettingsValidation, acceptsIntegrationBallots } from "./ElectionSettings";
 import { ElectionState, validElectionStates } from "./ElectionStates";
 import { Race } from "./Race";
 import { Uid } from "./Uid";
@@ -141,6 +141,11 @@ export function electionValidation(obj:Election): string | null {
     if (!obj.auth_key.includes('-----BEGIN PUBLIC KEY-----')) {
       return "auth_key must be a PEM-encoded RS256 public key";
     }
+  }
+  // An integration ballot is one signed with the private key matching auth_key, so an
+  // election without an auth_key has no way to receive one.
+  if (acceptsIntegrationBallots(obj.settings) && !obj.auth_key) {
+    return "Only an election with an auth_key can allow ballots submitted via integration";
   }
   if (obj.claim_key_hash && typeof obj.claim_key_hash !== 'string'){
     return "Invalid Claim Key Hash";

@@ -2,7 +2,7 @@ import Grid from "@mui/material/Grid";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormControl from "@mui/material/FormControl";
 import { FormGroup, Radio, RadioGroup, Box, capitalize, Typography, ToggleButton, ToggleButtonGroup } from "@mui/material";
-import { ElectionSettings as IElectionSettings, TermType } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
+import { acceptsUploadedBallots, ElectionSettings as IElectionSettings, TermType } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
 import { Tip } from '~/components/styles';
 import { useSubstitutedTranslation, SwitchSetting, SECONDARY_INDENT } from '~/components/util';
 import useElection from '~/components/ElectionContextProvider';
@@ -75,9 +75,13 @@ export default function ElectionSettings() {
         async (v) => !!await updateElection(e => { e.is_public = v; })
     );
 
+    // How ballots come in (online, uploads, or both) is chosen under Manage Voters
+    const paperBallots = acceptsUploadedBallots(election.settings);
+
     // getOpenElections filters on settings.voter_access == 'open' in addition to
     // is_public, so on a voter-list election the flag would have no visible effect.
     const browsable = election.settings.voter_access === 'open';
+    const emailList = election.settings.invitation === 'email' && election.settings.voter_access !== 'open';
     const flags = useFeatureFlags();
 
     // Inclusive [min_rankings, max_rankings] — drives the rank-limit selector below.
@@ -119,7 +123,15 @@ export default function ElectionSettings() {
                     </Box>
 
                     <ElectionSwitchSetting settingKey="random_candidate_order" />
-                    <ElectionSwitchSetting settingKey="ballot_updates" />
+                    {/* Editable ballots need an email list, and never run together with uploaded
+                        ballots (settingsCompatiblityValidation in shared refuses both). Turning it
+                        off is always allowed in a draft, so an older election can get out of it. */}
+                    <ElectionSwitchSetting
+                        settingKey="ballot_updates"
+                        disabled={election.state !== 'draft' || (!election.settings.ballot_updates && (!emailList || paperBallots))}
+                        disabledMessage={!emailList ? t('disabled_msgs.ballot_updates_when_open')
+                            : paperBallots ? t('disabled_msgs.ballot_updates_with_paper_ballots') : undefined}
+                    />
                     <ElectionSwitchSetting settingKey="require_instruction_confirmation" />
                     <ElectionSwitchSetting settingKey="draggable_ballot" />
                     {/* Note: this can't use ElectionSwitchSetting because we need to use the results from makePublicResultsRequest as the source of truth */}

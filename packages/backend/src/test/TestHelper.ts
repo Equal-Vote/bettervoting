@@ -1,5 +1,6 @@
-import { Ballot, NewBallot } from "@equal-vote/star-vote-shared/domain_model/Ballot";
+import { Ballot, NewBallot, OrderedNewBallot, RaceCandidateOrder } from "@equal-vote/star-vote-shared/domain_model/Ballot";
 import { Election } from "@equal-vote/star-vote-shared/domain_model/Election";
+import { ImportBallotsRequest } from "@equal-vote/star-vote-shared/domain_model/BallotImport";
 import { Uid } from "@equal-vote/star-vote-shared/domain_model/Uid";
 import { VoterAuth } from "@equal-vote/star-vote-shared/domain_model/VoterAuth";
 import makeApp from "../app";
@@ -42,7 +43,7 @@ export class TestHelper {
     public emailService: EmailService;
     public eventQueue: Promise<MockEventQueue>;
 
-    private ctx = Logger.createContext("testHelper");
+    public ctx = Logger.createContext("testHelper");
 
     constructor() {
         this.emailService = ServiceLocator.emailService();
@@ -241,6 +242,46 @@ export class TestHelper {
 
         r = this.addUserTokenVoterIdCookie(r, userToken, voterId, customToken, null);
         return r.send({ ballot: ballot });
+    }
+
+    async uploadBallots(
+        electionId: Uid,
+        ballots: Array<{ ballot: OrderedNewBallot; voter_id: string }>,
+        raceOrder: RaceCandidateOrder[],
+        userToken: string | null
+    ): Promise<SupertestResponse> {
+        return this.postRequest(
+            `/API/Election/${electionId}/uploadBallots`,
+            { ballots, race_order: raceOrder },
+            userToken
+        );
+    }
+
+    async importBallots(
+        electionId: Uid,
+        body: Partial<ImportBallotsRequest>,
+        userToken: string | null
+    ): Promise<SupertestResponse> {
+        return this.postRequest(
+            `/API/Election/${electionId}/importBallots`,
+            body,
+            userToken
+        );
+    }
+
+    async fetchUploadedBallots(electionId: Uid, userToken: string | null): Promise<SupertestResponse> {
+        return this.getRequest(`/API/Election/${electionId}/uploadedBallots`, userToken);
+    }
+
+    async deleteUploadedBallots(electionId: Uid, userToken: string | null): Promise<SupertestResponse> {
+        return this.postRequest(`/API/Election/${electionId}/deleteUploadedBallots`, {}, userToken);
+    }
+
+    async fetchBallots(
+        electionId: Uid,
+        userToken: string | null
+    ): Promise<SupertestResponse> {
+        return this.getRequest(`/API/Election/${electionId}/ballots`, userToken);
     }
 
     async submitElectionRoll(

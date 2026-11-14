@@ -159,6 +159,27 @@ describe("election audit log", () => {
         ]);
     });
 
+    test("deleting uploads is one event, and a re-uploaded id is a new ballot, not an edit", () => {
+        const elections = [electionRow('draft', day(0)), electionRow('finalized', day(1))];
+        const upload = day(2, 9);
+        const deletedAt = day(3, 9);
+        const ballots = [
+            // uploaded, then withdrawn: the archived row carries both actions
+            ...['u0', 'u1'].map((id, i) => ballotRow(id, upload + i * 1000, [
+                { action_type: 'submitted_via_admin', timestamp: upload + i * 1000 },
+                { action_type: 'deleted_via_admin', timestamp: deletedAt },
+            ])),
+            // the corrected file reuses u0
+            ballotRow('u0', day(4, 9), [{ action_type: 'submitted_via_admin', timestamp: day(4, 9) }]),
+        ];
+
+        const { events } = buildHistory(elections, ballots, []);
+
+        expect(only(events, 'uploaded_ballots_deleted').map(e => [e.count, e.timestamp])).toEqual([[2, dayIso(3)]]);
+        expect(only(events, 'upload_ballots').map(e => e.count)).toEqual([2, 1]);
+        expect(only(events, 'ballots_edited_milestone')).toEqual([]);
+    });
+
     test("collapses an admin bulk upload into a single event with an exact count", () => {
         const elections = [electionRow('draft', day(0)), electionRow('finalized', day(1))];
         // 4 admin-submitted ballots stamped seconds apart, as a real upload is.

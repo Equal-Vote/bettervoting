@@ -10,6 +10,7 @@ election_home:
   ended_time: '{{capital_election}} ended on {{datetime, datetime}}'
   vote: Vote
   or_view_results: or view results
+  no_online_voting: This {{election}} doesn't take {{votes}} online. Ballots are collected on paper and uploaded by the {{election}} admin.
   ballot_submitted: '{{capital_ballot}} Submitted'
   view_results: View Results
   drafted: This election is still being drafted
@@ -32,6 +33,7 @@ election_history:
     preliminary_off: Preliminary results disabled
     ballots_milestone: 'Ballots cast reached {{count}}'
     upload_ballots: 'An admin uploaded {{count}} ballot(s)'
+    uploaded_ballots_deleted: 'An admin deleted {{count}} uploaded ballot(s)'
     edits_milestone: 'Ballot edits reached {{count}}'
     voter_revealed: An admin used the break-glass tool to reveal a voter ID
 
@@ -501,7 +503,7 @@ landing_page:
     - title: Multi-Race Elections
       text: Setup multi-race elections for when there are multiple issues or positions to vote on.
     - title: Paper Ballots
-      text: Use [a template](https://docs.google.com/presentation/d/1va-XEsUy0VI0jCTAHrQ_f9HNKex3VK9cm7WfF6jhUYM/edit) to create your paper ballots. Those ballots can then be hand tallied or manually uploaded and tallied automatically. Upload CSV feature coming soon.
+      text: Use [a template](https://docs.google.com/presentation/d/1va-XEsUy0VI0jCTAHrQ_f9HNKex3VK9cm7WfF6jhUYM/edit) to create your paper ballots. Those ballots can then be hand tallied, or uploaded as a CSV and tallied automatically.
     - title: Secure Elections
       text: Offers a spectrum of security options including email verification, voter IDs, imported email lists, and direct voting links.
     - title: Accessible Polls
@@ -709,6 +711,7 @@ tabulation_logs:
 disabled_msgs:
     ballot_updates_when_open: Only supported when election uses email list
     is_public_when_voter_list: Only supported when anyone with the link can {{vote}}
+    ballot_updates_with_paper_ballots: Not available while uploaded paper ballots are accepted (under Manage Voters)
     voter_groups_when_open: Only supported when {{election}} uses a voter list
 
 #######################################
@@ -752,6 +755,15 @@ tips:
   random_candidate_order:
     title: Randomize Candidate Order
     description: Randomizes the order of candidates on the ballots.
+
+  paper_ballots:
+    title: Uploaded Paper Ballots
+    description: >
+      Lets the {{election}} admin upload a CSV of paper ballots while the {{election}} is open
+      (or test ballots while it's a draft, which are deleted when it's finalized).
+      With a voter list, a second CSV lists the voters who cast them.
+      Without online voting, nobody can vote on the {{election}} page.
+      Can't be combined with letting voters edit their vote.
 
   ballot_updates:
     title: Allow Voters To Update Ballot
@@ -1145,6 +1157,16 @@ admin_home:
   # finalize_voting_begins_later: Voting begins after your specified start time.
   # finalize_voting_begins_now: Voting begins immediately.
   finalize_button: Finalize {{capital_election}}
+
+  ballot_channels:
+    question: How will {{votes}} be cast?
+    online: Online only
+    online_and_uploads: Online and uploaded paper ballots !tip(paper_ballots)
+    uploads_only: Uploaded paper ballots only !tip(paper_ballots)
+    with_ballot_updates: Uploads aren't available while voters can edit their vote (under Settings)
+    clear_email_list_first: To take uploads only, clear the voter list first. Uploads need voter IDs you manage, not an email list.
+    uploads_only_ids: Without online voting you upload the voter file yourself, so you manage the voter IDs.
+    uploads_only_no_limit: Without online voting there's no limit to set here. Only ballots you upload are counted.
 
   voter_authentication:
     form_label: Who can vote?

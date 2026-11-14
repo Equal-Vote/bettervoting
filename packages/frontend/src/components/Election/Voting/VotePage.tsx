@@ -20,6 +20,7 @@ import DraftWarning from "../DraftWarning";
 import SupportBlurb from "../SupportBlurb";
 import ElectionStateWarning from "../ElectionStateWarning"
 import WriteInSection from "./WriteInSection"
+import { acceptsOnlineBallots } from "@equal-vote/star-vote-shared/domain_model/ElectionSettings";
 import { NOTA_ID, makeWriteInCandidateId, isWriteInCandidate } from "@equal-vote/star-vote-shared/utils/makeID";
 
 // I'm using the icon codes instead of an import because there was padding I couldn't get rid of
@@ -115,7 +116,7 @@ const VotePage = () => {
   const { data: rollData, makeRequest: fetchRoll } = useGetRoll(election.election_id, voterId);
   const [receiptEmail, setReceiptEmail] = useState(undefined);
   const [inputEmail, setInputEmail] = useState(undefined);
-  useEffect(() => { voterId && fetchRoll() }, [voterId]);
+  useEffect(() => { if (voterId) fetchRoll() }, [voterId]);
   useEffect(() => { setReceiptEmail(rollData?.electionRollEntry?.email ?? authSession.getIdField('email')) }, [authSession, rollData]);
   const [currentPage, setCurrentPage] = useState(0)
   const setInstructionsRead = () => {
@@ -240,6 +241,11 @@ const VotePage = () => {
 
   const {t} = useSubstitutedTranslation(election.settings.term_type)
 
+
+  // the election home page shows no Vote button then, but the URL can still be typed in
+  if(!acceptsOnlineBallots(election.settings)){
+    return <Container disableGutters={true} maxWidth="sm"><Typography sx={{ p: 2 }}>{t('election_home.no_online_voting')}</Typography></Container>
+  }
 
   if(pages.length == 0){
     return <Container disableGutters={true} maxWidth="sm"><h3>No races created for election</h3></Container>

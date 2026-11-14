@@ -1,3 +1,4 @@
+import { ReactNode } from 'react';
 import Container from '@mui/material/Container';
 import ViewElectionRolls from "./ViewElectionRolls";
 import { Routes, Route, useParams } from 'react-router-dom'
@@ -10,8 +11,9 @@ import useElection from '~/components/ElectionContextProvider';
 import TemporaryAccessWarning from '../TemporaryAccessWarning';
 import ElectionSettings from './ElectionSettings';
 import PublishAndShare from './PublishAndShare';
+import UploadBallots from '../Upload/UploadBallots';
 
-const AdminPage = ({title, children}) => {
+const AdminPage = ({title, children}: {title: string, children: ReactNode}) => {
     const {election} = useElection();
     return <Box sx={{ width: '100%', maxWidth: 800, margin: 'auto', display: "flex", justifyContent: "flex-start", alignItems: "flex-start", flexDirection: "column", gap: 4 }}>
         <Box sx={{ml: 0, mr: 'auto'}}>
@@ -34,6 +36,7 @@ const Admin = () => {
                 <Route path='/roles' element={<EditRoles />} />
                 <Route path='/writeins/:raceId' element={<WriteInApproval />} />
                 <Route path='/settings' element={<AdminPage title='Settings'><ElectionSettings/></AdminPage>} />
+                <Route path='/upload_ballots' element={<AdminPage title='Upload Ballots'><UploadBallots/></AdminPage>} />
                 <Route path='/publish' element={<AdminPage title='Publish & Share'><PublishAndShare/></AdminPage>} />
             </Routes>
         </Container>

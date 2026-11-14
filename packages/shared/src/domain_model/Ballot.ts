@@ -3,6 +3,19 @@ import { Race } from "./Race";
 import { Uid } from "./Uid";
 import { OrderedVote, Vote } from "./Vote";
 
+// submitted_via_integration is for ballots sent by an external service (a discord bot,
+// say) that holds the private key matching the election's auth_key. Nothing submits
+// through it yet; electionValidation only lets an election with an auth_key allow it.
+export const BALLOT_SUBMIT_TYPES = ['submitted_via_browser', 'submitted_via_admin', 'submitted_via_integration'] as const;
+export type BallotSubmitType = typeof BALLOT_SUBMIT_TYPES[number];
+// An admin withdrew every uploaded ballot (deleteUploadedBallotsController). The ballot row
+// is archived (head=false) with this action appended, so the withdrawal stays in the
+// election history and the ballot id can be uploaded again.
+export const UPLOAD_DELETED_ACTION = 'deleted_via_admin' as const;
+export type BallotActionType = BallotSubmitType | typeof UPLOAD_DELETED_ACTION;
+export const isDeletedUpload = (history?: BallotAction[] | null) =>
+    (history ?? []).some(a => a?.action_type === UPLOAD_DELETED_ACTION);
+
 export interface NewBallotWithVoterID {
     voter_id: string;
     ballot: OrderedNewBallot;
@@ -27,7 +40,7 @@ export interface RaceCandidateOrder {
     candidate_id_order: Uid[];
 }
 
-export type NewBallot = PartialBy<Ballot,'ballot_id'|'create_date'|'update_date'|'head'>;
+export type NewBallot = PartialBy<Ballot,'ballot_id'|'create_date'|'update_date'|'head'|'election_id'|'status'|'date_submitted'>;
 
 export interface OrderedNewBallot extends PartialBy<NewBallot,'votes'> {
     orderedVotes: OrderedVote[]
@@ -41,7 +54,7 @@ export interface AnonymizedBallot {
 }
 
 export interface BallotAction {
-    action_type:string;
+    action_type: BallotActionType;
     actor:Uid;
     timestamp:number;
 }
