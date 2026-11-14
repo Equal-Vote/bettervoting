@@ -163,18 +163,25 @@ const ViewElectionRolls = () => {
                 </RadioGroup>
             </Box>}
 
-            <HeadToHeadChart
-                leftOnly={true}
-                leftName={'Voted'}
-                rightName={''}
-                leftVotes={submittedCount}
-                rightVotes={0}
-                total={electionRollData.length}
-                equalContent={{
-                    title: 'Election Votes',
-                    description: 'Percentage of voters who have cast a vote'
-                }}
-            />
+            {/* Turnout so far. Skipped until there's a voter list, since there's no turnout to chart yet */}
+            {electionRollData.length > 0 &&
+                <HeadToHeadChart
+                    leftOnly={true}
+                    leftName={t('admin_home.voter_turnout', {
+                        voted: submittedCount,
+                        total: electionRollData.length,
+                        percent: `${Math.round(100 * submittedCount / electionRollData.length)}%`,
+                    })}
+                    rightName={''}
+                    leftVotes={submittedCount}
+                    rightVotes={0}
+                    total={electionRollData.length}
+                    equalContent={{
+                        title: 'Election Votes',
+                        description: 'Percentage of voters who have cast a vote'
+                    }}
+                />
+            }
 
             {voterAccess == 'open' && <ElectionAuthForm />}
             {voterAccess == 'closed' && <>

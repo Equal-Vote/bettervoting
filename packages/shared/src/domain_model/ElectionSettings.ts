@@ -38,6 +38,8 @@ export interface ElectionSettings {
     contact_email?: string; // Public contact email for voters to reach out to
     exhaust_on_N_repeated_skipped_marks?: number; // number of skipped ranks before exhausting
     draggable_ballot?: boolean; // Use draggable interface for IRV ballots
+    voter_groups?: string[]; // Named voter groups for this election (FF_PRECINCTS)
+    voter_groups_enabled?: boolean; // Whether voter groups are active (FF_PRECINCTS)
 }
 function settingsCompatiblityValidation(settings: ElectionSettings): string {
     let errorMsg = ''
@@ -95,6 +97,13 @@ export function electionSettingsValidation(obj:ElectionSettings): string | null 
   }
   if (obj.draggable_ballot && typeof obj.draggable_ballot !== 'boolean'){
     return "Invalid Draggable Ballot";
+  }
+  if (obj.voter_groups_enabled !== undefined && typeof obj.voter_groups_enabled !== 'boolean'){
+    return "Invalid Voter Groups Enabled";
+  }
+  if (obj.voter_groups !== undefined) {
+    if (!Array.isArray(obj.voter_groups)) return "Invalid Voter Groups";
+    if (obj.voter_groups.some(g => typeof g !== 'string')) return "Invalid Voter Group Name";
   }
 
   const compatibilityError = settingsCompatiblityValidation(obj);

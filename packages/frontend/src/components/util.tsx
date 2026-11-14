@@ -1,4 +1,5 @@
 import { Box, Button, Divider, FormControlLabel, FormHelperText, Link, Switch, TextField, Typography } from "@mui/material";
+import { SxProps, Theme } from "@mui/material/styles";
 import { DateTime } from "luxon";
 import { useTranslation } from "react-i18next";
 import { SecondaryButton, Tip } from "./styles";
@@ -8,7 +9,7 @@ import { AddCircleOutlineRounded, ArrowForwardIos } from "@mui/icons-material";
 import { getEntry } from "@equal-vote/star-vote-shared/domain_model/Util";
 import { createHash } from "crypto-browserify";
 import RemoveCircleOutlineRoundedIcon from '@mui/icons-material/RemoveCircleOutlineRounded';
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 // Holds a local copy of `value` for fast keystrokes, flushing to parent on blur.
 export const useLocalState = <T,>(value: T, onFlush: (v: T) => void): [T, (v: T) => void, () => void] => {
@@ -26,8 +27,8 @@ const rLink = /\[([^\]]*?)\]\(([^)]*?)\)/;
 const rBold = /\*\*(.*?)\*\*/;
 const rTip = / !tip\((.*)\)/;
 
-export const AddIcon = ({prefix=false}) => <AddCircleOutlineRounded sx={{mr: (prefix? 1 : 0)}}/>
-export const MinusIcon = ({prefix=false}) => <RemoveCircleOutlineRoundedIcon sx={{mr: (prefix? 1 : 0)}}/>
+export const AddIcon = ({prefix=false}: {prefix?: boolean}) => <AddCircleOutlineRounded sx={{mr: (prefix? 1 : 0)}}/>
+export const MinusIcon = ({prefix=false}: {prefix?: boolean}) => <RemoveCircleOutlineRoundedIcon sx={{mr: (prefix? 1 : 0)}}/>
 
 export type StringObject = {[key: string]: string};
 export type NumberObject = {[key: string]: number};
@@ -45,7 +46,14 @@ declare namespace Intl {
   }
 }
 
-export const TransitionBox = ({enabled, sx={}, absolute=false, children}) => {
+type TransitionBoxProps = {
+  enabled: boolean;
+  sx?: SxProps<Theme>;
+  absolute?: boolean;
+  children?: ReactNode;
+};
+
+export const TransitionBox = ({enabled, sx={}, absolute=false, children}: TransitionBoxProps) => {
   const [exiting, setExiting] = useState(false);
 
   useEffect(() => {
@@ -55,15 +63,14 @@ export const TransitionBox = ({enabled, sx={}, absolute=false, children}) => {
     setTimeout(() => setExiting(false), 400);
   }, [enabled])
 
-  return <Box sx={{
+  return <Box sx={[{
     opacity: enabled ? 1 : 0,
     top: enabled ? 0 : (exiting ? -20 : 20),
     pointerEvents: enabled ? 'auto' : 'none',
     transition: 'opacity 0.2s, top 0.2s',
     position: absolute? 'absolute' : 'relative',
     width: '100%',
-    ...sx,
-  }}> {children} </Box>
+  }, ...(Array.isArray(sx) ? sx : [sx])]}> {children} </Box>
 }
 
 // converts the candiate from ITabulator.ts to (capital C) Candidate
@@ -205,12 +212,11 @@ export const useSubstitutedTranslation = (electionTermType = 'election', v = {})
   const vKey = JSON.stringify(v);
 
   const values = useMemo(() => processValues({
-    // Ignoring "error TS2698: Spread types may only be created from object types." since we know they'll return objects
-    // @ts-ignore
+    // @ts-expect-error TS2698: t() is typed as returning a string, but these keys resolve to objects
     ...t('keyword'),
-    // @ts-ignore
+    // @ts-expect-error TS2698: see above
     ...t(`keyword.${electionTermType}`),
-    // @ts-ignore
+    // @ts-expect-error TS2698: see above
     ...t(`keyword.${methodKey}`),
     ...v, formatParams: {
       datetime: dt,
@@ -220,7 +226,6 @@ export const useSubstitutedTranslation = (electionTermType = 'election', v = {})
         timeZoneName: undefined, timeZone: timeZone,
       },
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [t, electionTermType, methodKey, vKey])
 
   const applySymbols = (txt, v) => {
@@ -390,6 +395,11 @@ export const getLocalTimeZoneShort = () => {
   return DateTime.local().offsetNameShort
 }
 
+// Left margin (theme spacing units: 8px on phones, 32px otherwise) for content that
+// sits under a setting's label — its value, options, or disabled message — so it
+// reads as nested. Smaller on phones so nested content keeps most of the width.
+export const SECONDARY_INDENT = { xs: 1, sm: 4 };
+
 export interface SwitchSettingProps {
   label: string
   toggled: boolean
@@ -432,7 +442,7 @@ export function SwitchSetting({ label, toggled, onToggle, disabled=false, disabl
         sx={{ display: 'flex', justifyContent: 'space-between', width: {xs: '100%', md: 400}, py: 0.5, mx: 0, gap: 2, opacity: disabled ? 0.5 : 1 }}
       />
       {disabled && disabledMessage && (
-        <FormHelperText sx={{ mb: 2, mt: 0, fontStyle: 'italic', textAlign: 'center' }}>
+        <FormHelperText sx={{ mb: 2, mt: 0, ml: SECONDARY_INDENT, fontStyle: 'italic' }}>
           {disabledMessage}
         </FormHelperText>
       )}

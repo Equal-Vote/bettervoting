@@ -12,6 +12,8 @@
 .idea
 .gitattributes
 .claude/**
+!.claude/skills/
+!.claude/skills/**
 .playwright-mcp/**
 
 # Generated build artifacts
