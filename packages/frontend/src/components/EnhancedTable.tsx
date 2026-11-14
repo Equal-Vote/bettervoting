@@ -42,6 +42,9 @@ interface HeadCell {
   label: string;
   numeric: boolean;
   isDate?: boolean;
+  // Sort this column by the row's own value for this key (a number) instead of by the
+  // text the cell displays.
+  sortKey?: string;
   filterType?: 'search' | 'groups';
   filterGroups?: {
     [key: string]: boolean
@@ -284,12 +287,22 @@ const headCellPool = {
     filterType: 'search',
     formatter: (_, event, t) => describeHistoryEvent(event, t),
   },
+  history_note: {
+    id: 'history_note',
+    numeric: false,
+    disablePadding: false,
+    // The optional explanation the admin entered when taking the action
+    label: 'Explanation',
+    filterType: 'search',
+    formatter: (_, event) => ('audit_note' in event && event.audit_note) || '',
+  },
   history_when: {
     id: 'history_when',
     numeric: false,
     disablePadding: false,
-    // Deliberately not isDate: the formatted value is already lexicographically
-    // sortable, which keeps the ordering correct in every locale.
+    // Day-only and exact times don't sort against each other as text, so sort by the
+    // event's position in the server's chronological list (see ElectionHistoryView).
+    sortKey: 'position',
     label: 'When (UTC)',
     filterType: 'search',
     formatter: (_, event) => formatHistoryTimestamp(event),
@@ -298,6 +311,9 @@ const headCellPool = {
 
 interface EnhancedTableProps {
   title: string,
+  // Don't show the title above the table (the page already has it as a heading); it
+  // still names the table for screen readers.
+  hideTitle?: boolean,
   headKeys: HeadKey[]
   data: any[] // we'll use a formatter to convert it to TableData
   voteCounts?: NumberObject,
@@ -601,7 +617,10 @@ export default function EnhancedTable(props: EnhancedTableProps) {
 
   const visibleRows = useMemo(
     () => {
-      const sortedRows = stableSort(filteredRows, getComparator(order, orderBy, headCellPool[orderBy].isDate === true));
+      const sortKey = headCellPool[orderBy].sortKey;
+      const sortedRows = sortKey
+        ? [...(filteredRows as { raw: Record<string, number> }[])].sort((a, b) => (order === 'desc' ? -1 : 1) * (a.raw[sortKey] - b.raw[sortKey]))
+        : stableSort(filteredRows, getComparator(order, orderBy, headCellPool[orderBy].isDate === true));
       const isSearching = headCells.some((col, colInd) => col.filterType === 'search' && filters[colInd]);
       let orderedRows = sortedRows;
       if (isSearching) {
@@ -625,11 +644,12 @@ export default function EnhancedTable(props: EnhancedTableProps) {
       <Box sx={{ pt: 2, width: '100%', display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column" }}>
         {props.isPending && <Typography align='center' variant="h3" component="h2"> {props.pendingMessage} </Typography>}
         {!props.isPending && <Paper elevation={8} sx={{ width: '100%', mb: 2 }}>
-          <EnhancedTableToolbar numSelected={selected.length} tableTitle={props.title} />
+          {!props.hideTitle && <EnhancedTableToolbar numSelected={selected.length} tableTitle={props.title} />}
           <TableContainer>
             <Table
               sx={{ minWidth: 750 }}
-              aria-labelledby="tableTitle"
+              aria-labelledby={props.hideTitle ? undefined : 'tableTitle'}
+              aria-label={props.hideTitle ? props.title : undefined}
               size={dense ? 'small' : 'medium'}
             >
               <EnhancedTableHead

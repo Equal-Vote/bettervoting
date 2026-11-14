@@ -1,6 +1,7 @@
 import { PartialBy } from "./Election";
 import { Uid } from "./Uid";
 import { emailRegex } from "./Util";
+import { AUDIT_NOTE_MAX_LENGTH } from "./AuditLog";
 // Election roll contains information about the voter's ID and ballot status to ensure only
 // authorized voters submit a single ballot
 export interface ElectionRoll {
@@ -41,9 +42,13 @@ export interface ElectionRollAction {
     action_type:string;
     actor:Uid;
     timestamp:number;
+    // Optional admin explanation, only on actions that surface in the public
+    // audit log (currently the voter-ID reveal). See AuditLog.ts.
+    audit_note?: string;
     // DEPRECATED: no longer written. Historical rows still carry the raw SendGrid
     // response here; sanitizeHistory strips it before any client sees it. Delivery
     // data lives in emailEventsDB. Kept on the type so existing rows still parse.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     email_data?: any;
 }
 function electionRollActionValidation(obj:ElectionRollAction): string | null {
@@ -58,6 +63,9 @@ function electionRollActionValidation(obj:ElectionRollAction): string | null {
     }
     if (typeof obj.timestamp !== 'number'){
         return "Invalid Timestamp";
+    }
+    if (obj.audit_note !== undefined && (typeof obj.audit_note !== 'string' || obj.audit_note.length > AUDIT_NOTE_MAX_LENGTH)){
+        return "Invalid Audit Note";
     }
     return null;
 }
@@ -98,7 +106,7 @@ export function electionRollValidation(obj:ElectionRoll): string | null {
         return "Invalid State";
     }
     if (obj.history) {
-        for (let action of obj.history){
+        for (const action of obj.history){
             const error = electionRollActionValidation(action);
             if (error){
                 return error;

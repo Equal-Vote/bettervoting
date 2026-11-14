@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import Grid from "@mui/material/Grid";
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
-import { Box, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, Paper } from "@mui/material";
+import { Box, IconButton, Paper } from "@mui/material";
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import PermissionHandler from "../../PermissionHandler";
 import { useApproveRoll, useFlagRoll, useLookupVoter, useInvalidateRoll, useRevealVoterId, useSendEmails, useUnflagRoll } from "../../../hooks/useAPI";
@@ -11,18 +11,19 @@ import useFeatureFlags from "../../FeatureFlagContextProvider";
 import { ElectionRollResponse } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll";
 import SendEmailDialog from "./SendEmailDialog";
 import useSnackbar from "~/components/SnackbarContext";
-import { PrimaryButton, SecondaryButton } from "~/components/styles";
+import { SecondaryButton } from "~/components/styles";
 import RollActivityTable from "./RollActivityTable";
+import useAuditConfirm from "./useAuditConfirm";
 
 type Props = {
     roll: ElectionRollResponse,
     fetchRolls: () => Promise<void>,
   }
 const EditElectionRoll = ({ roll, fetchRolls }:Props) => {
-    const { election, permissions } = useElection()
+    const { election, permissions, t } = useElection()
     const flags = useFeatureFlags();
+    const auditConfirm = useAuditConfirm();
     const [dialogOpen, setDialogOpen] = useState(false);
-    const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
     const [revealedVoterId, setRevealedVoterId] = useState<string | null>(null);
 
     const approve = useApproveRoll(election.election_id)
@@ -38,7 +39,6 @@ const EditElectionRoll = ({ roll, fetchRolls }:Props) => {
     useEffect(() => {
         if (roll.voter_id) lookup.makeRequest({ voter_id: roll.voter_id })
         else if (roll.email) lookup.makeRequest({ email: roll.email })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [roll.voter_id, roll.email])
     const { setSnack } = useSnackbar();
 
@@ -104,7 +104,7 @@ const EditElectionRoll = ({ roll, fetchRolls }:Props) => {
 
     const onCopyVotingUrl = async () => {
         if (requiresRevealFlow) {
-            setConfirmDialogOpen(true);
+            await handleConfirmReveal();
             return;
         }
 
@@ -128,8 +128,9 @@ const EditElectionRoll = ({ roll, fetchRolls }:Props) => {
     }
 
     const handleConfirmReveal = async () => {
-        setConfirmDialogOpen(false);
-        const result = await revealVoterId.makeRequest({ email: roll.email });
+        const audit = await auditConfirm(t('audit_confirm.reveal_voter_id'));
+        if (!audit) return;
+        const result = await revealVoterId.makeRequest({ email: roll.email, ...audit });
         if (result && result.voter_id) {
             setRevealedVoterId(result.voter_id);
             navigator.clipboard.writeText(window.location.origin+'/'+election.election_id+'/id/'+result.voter_id);
@@ -261,35 +262,6 @@ const EditElectionRoll = ({ roll, fetchRolls }:Props) => {
                 onSubmit={onSendEmail}
                 targetedEmail={roll.email}
             />
-
-            {requiresRevealFlow &&
-                <Dialog
-                    open={confirmDialogOpen}
-                    onClose={() => setConfirmDialogOpen(false)}
-                >
-                    <DialogTitle>Obtain Unique Voting URL</DialogTitle>
-                    <DialogContent>
-                        <DialogContentText>
-                            This action reveals the unique voting link for the voter. This should only be done if the voter is unable to acquire their voting link through their email inbox.
-                        </DialogContentText>
-                        <DialogContentText sx={{ mt: 2 }}>
-                            This action will create a permanent audit log entry and record who performed this action.
-                        </DialogContentText>
-                        <DialogContentText sx={{ mt: 2, fontWeight: 'bold' }}>
-                            Would you like to proceed?
-                        </DialogContentText>
-                    </DialogContent>
-                    <DialogActions>
-                        <SecondaryButton onClick={() => setConfirmDialogOpen(false)}>
-                            Cancel
-                        </SecondaryButton>
-                        {/* eslint-disable-next-line jsx-a11y/no-autofocus */}
-                        <PrimaryButton onClick={handleConfirmReveal} autoFocus>
-                            Confirm
-                        </PrimaryButton>
-                    </DialogActions>
-                </Dialog>
-            }
         </Container>
     )
 }

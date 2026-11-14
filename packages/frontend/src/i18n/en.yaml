@@ -17,7 +17,11 @@ election_home:
 
 election_history:
   title: Election Audit Log
-  subtitle: A public record of everything that has happened to this election since it was finalized.
+  subtitle: A record of everything that has happened to this {{election}} since it was finalized.
+  # Exactly one of these two is shown, depending on whether the election was created
+  # before or after public audit logs were introduced
+  public: This log is public.
+  admin_only: Only this {{election}}'s admins can see this log.
   ladder_note: 'Note: ballot counts are reported only at specific milestones (1, 5, 10, 25, 50, 100, 250, ...) to protect voter privacy, and ballot edits use a finer ladder (1, 2, 5, 10, 25, ...). Ballot-related events are reported to day-level precision for the same reason.'
   link: Audit Log
   loading: Loading audit log…
@@ -34,6 +38,26 @@ election_history:
     upload_ballots: 'An admin uploaded {{count}} ballot(s)'
     edits_milestone: 'Ballot edits reached {{count}}'
     voter_revealed: An admin used the break-glass tool to reveal a voter ID
+
+# Confirmation shown before any admin action that is recorded in the public audit log
+audit_confirm:
+  notice: This action will be recorded in the {{election}}'s [audit log]({{history_url}}). This log is public, but you may add an explanation with the entry.
+  # Elections created before the audit-log cutoff: the log exists but is only shown to the election's admins
+  notice_admin_only: This action will be recorded in the {{election}}'s [audit log]({{history_url}}). Only this {{election}}'s admins can see this log, but you may add an explanation with the entry.
+  note_label: Explanation (optional)
+  note_placeholder: e.g. Board approved the final candidate list on Monday
+  open:
+    title: Open {{capital_election}}?
+  close:
+    title: Close {{capital_election}}?
+  preliminary_on:
+    title: Publish Preliminary Results?
+  preliminary_off:
+    title: Hide Preliminary Results?
+  reveal_voter_id:
+    title: Obtain Unique Voting URL
+    message: This action reveals the unique voting link for the voter. This should only be done if the voter is unable to acquire their voting link through their email inbox.
+    submit: Confirm
 
 # Ballot (ex. https://bettervoting.com/j87vqp/vote)
 ballot:

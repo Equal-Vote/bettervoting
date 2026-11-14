@@ -83,7 +83,7 @@ Work through these in order:
 3. **Deliver the link directly.** Open the voter's entry and select **Obtain Unique Voting URL**. After you confirm, the voter's unique voting link is copied to your clipboard, and you can pass it to them over any channel you trust.
 
 {: .note }
-> Obtaining a voter's unique URL creates a permanent entry in the election's audit log recording who retrieved it and when. This keeps the escape hatch transparent: anyone reviewing the election later can see exactly which links were handed out manually. In elections using an ID list instead of an email list, the button is simply **Copy Unique Voting URL** and copies the link directly.
+> Obtaining a voter's unique URL creates a permanent entry in the election's audit log. This keeps the escape hatch transparent: anyone who can see the audit log can see that a link was handed out manually. The confirmation dialog lets you add an optional explanation (for example, "voter's invitation bounced"), which is shown next to the entry. In elections using an ID list instead of an email list, the button is simply **Copy Unique Voting URL** and copies the link directly.
 
 {: .warning }
 > A unique voting URL is that voter's ballot access — anyone holding it can vote as that voter. Deliver it privately, and remind the voter not to forward it.

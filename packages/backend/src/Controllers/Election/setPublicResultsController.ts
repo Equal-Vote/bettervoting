@@ -2,12 +2,13 @@ import ServiceLocator from '../../ServiceLocator';
 import Logger from '../../Services/Logging/Logger';
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { expectPermission, expectUpdateDate } from "../controllerUtils";
+import { parseAuditNote } from "../auditNote";
 import { BadRequest } from "@curveball/http-errors";
 import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
 
-var ElectionsModel = ServiceLocator.electionsDb();
+const ElectionsModel = ServiceLocator.electionsDb();
 
 const className = "election.Controllers";
 
@@ -22,7 +23,7 @@ const setPublicResults = async (req: IElectionRequest, res: Response, _next: Nex
     election.settings.public_results = public_results
 
     const expected_update_date = expectUpdateDate(req);
-    const updatedElection = await ElectionsModel.updateElection(election, req, `Publish Results`, expected_update_date);
+    const updatedElection = await ElectionsModel.updateElection(election, req, `Publish Results`, expected_update_date, parseAuditNote(req));
     if (!updatedElection) {
         const failMsg = 'could not update public_results setting'
         Logger.info(req, failMsg);

@@ -10,6 +10,7 @@ import useOptimisticToggle from "~/hooks/useOptimisticToggle";
 import { AdminPageNavigation } from '../Sidebar';
 import { useSetPublicResults } from '~/hooks/useAPI';
 import DialogTextField from '~/components/DialogTextField';
+import useAuditConfirm from './useAuditConfirm';
 import useFeatureFlags from '~/components/FeatureFlagContextProvider';
 import VoterGroupGrid from './VoterGroupGrid';
 
@@ -52,12 +53,16 @@ export default function ElectionSettings() {
     const {t} = useSubstitutedTranslation(election.settings.term_type, {min_rankings, max_rankings});
 
     const { makeRequest: makePublicResultsRequest } = useSetPublicResults(election.election_id)
+    const auditConfirm = useAuditConfirm()
 
     const [publicResults, setPublicResults] = useOptimisticToggle(
         election.settings.public_results ?? false,
         async (v) => {
+            // Returning false reverts the switch to its committed value.
+            const audit = await auditConfirm(t(v ? 'audit_confirm.preliminary_on' : 'audit_confirm.preliminary_off'));
+            if (!audit) return false;
             const res = await enqueueWrite(expected_update_date =>
-                makePublicResultsRequest({ public_results: v, expected_update_date })
+                makePublicResultsRequest({ public_results: v, expected_update_date, ...audit })
             );
             // updateElection updates the context as a side effect of building its
             // request body, but this write doesn't go through it, so the context
