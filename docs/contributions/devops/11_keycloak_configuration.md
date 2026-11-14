@@ -21,6 +21,13 @@ Here's how we copy the prod configuration to be used as the development configur
 5. Set verifyEmail to false
 6. Upload to Arend's Software directory on google drive
 
+Production runs with `verifyEmail` **on**, and the backend depends on it: it only trusts an
+email address when the id token carries `email_verified: true` (the "email verified" mapper
+in the `email` client scope). An account without a verified email can't send election emails,
+upload images, vote in "one vote per user" elections, or use roles granted to its address.
+In a dev realm with `verifyEmail` off, mark your test user's email as verified in the Keycloak
+admin console (Users → the user → Email verified) to exercise those features.
+
 The remainder of the article is pretty stale
 
 ## Keycloak Overview

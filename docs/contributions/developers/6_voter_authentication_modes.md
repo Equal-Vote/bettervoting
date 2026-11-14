@@ -84,10 +84,11 @@ A cookie is set in the voter's browser to prevent revoting. This is the default 
 
 ### One vote per user → `open_unique_keycloak`
 
-Voter must present a Keycloak-issued JWT (the `id_token` cookie) and the email claim from that token is used as the voter identity. Authentication path:
+Voter must present a Keycloak-issued JWT (the `id_token` cookie) and the email claim from that token is used as the voter identity, but only when the token also carries `email_verified: true`. Authentication path:
 
 - `getUser` middleware (`packages/backend/src/Controllers/User/auth.controllers.ts`) calls `AccountService.extractUserFromRequest`, which reads the `id_token` cookie and verifies the JWT against Keycloak's public key with `algorithms: ['RS256']` (`AccountServiceUtils.ts:14-18`). Signature failure throws `Unauthorized`.
-- `voterRollUtils.ts:124` rejects the request if `req.user?.email` is falsy, so an unauthenticated session (no token, or only a `temp_id` cookie which carries no email) cannot vote in this mode.
+- `checkForMissingAuthenticationData` in `voterRollUtils.ts` rejects the request unless `getVerifiedEmail(req.user)` (`Controllers/verifiedEmail.ts`) returns an address. An unauthenticated session (no token, or only a `temp_id` cookie which carries no email) gets `Email Validation Required`; a signed-in account whose email is unverified, or whose token has no `email_verified` claim at all, gets `Email Verification Required` and the voting page tells the voter to verify their address.
+- The same helper is the only way backend code should read a caller's email as an identity. It also gates roles granted by email (admin, auditor, credentialer). `expectVerifiedAccount` in the same file gates sending election emails and uploading images, which additionally require a BetterVoting account rather than a temp id or an election's own `auth_key` identity.
 
 ```json
 {

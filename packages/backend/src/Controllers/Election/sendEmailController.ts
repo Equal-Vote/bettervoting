@@ -14,11 +14,12 @@ import { Response, NextFunction } from 'express';
 import { Imsg } from '../../Services/Email/IEmail';
 import { logSafeHash } from '../../Services/Logging/logSafeHash';
 import { getErrorMessage } from '../../errorUtils';
+import { expectVerifiedAccount } from '../verifiedEmail';
 
-var ElectionRollModel = ServiceLocator.electionRollDb();
-var ElectionModel = ServiceLocator.electionsDb();
-var EmailService = ServiceLocator.emailService();
-var EmailEventsDB = ServiceLocator.emailEventsDb();
+const ElectionRollModel = ServiceLocator.electionRollDb();
+const ElectionModel = ServiceLocator.electionsDb();
+const EmailService = ServiceLocator.emailService();
+const EmailEventsDB = ServiceLocator.emailEventsDb();
 const EventQueue = ServiceLocator.eventQueue();
 
 const className = "election.Controllers";
@@ -65,6 +66,10 @@ const makeTestRoll = (election_id: string, email: string) => <ElectionRoll>{
 const sendEmailsController = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     Logger.info(req, `${className}.sendEmails ${req.election.election_id}`);
     expectPermission(req.user_auth.roles, permissions.canSendEmails)
+    // Holding the role is not enough: a temp owner (not signed in), an account whose email
+    // is unverified, or an identity signed by the election's own auth_key could otherwise
+    // use our mail server to reach arbitrary addresses with nobody accountable for it.
+    const senderEmail = expectVerifiedAccount(req, 'send emails');
 
     const electionId = req.election.election_id;
     const election = req.election
@@ -170,7 +175,7 @@ const sendEmailsController = async (req: IElectionRequest, res: Response, _next:
                 election: undefined,
                 url: url,
                 voter_id: roll.voter_id,
-                sender: req.user?.email ?? '',
+                sender: senderEmail,
                 email: email_request.email,
                 message_id: message_id,
                 test_email: email_request.target == 'test' ? (roll.email ?? '') : ''
@@ -178,11 +183,11 @@ const sendEmailsController = async (req: IElectionRequest, res: Response, _next:
         )
     })
 
-    var failMsg = "Failed to send invitations";
+    const failMsg = "Failed to send invitations";
     Logger.info(req, `${className}.sendEmails enqueuing ${describeSendPlan(Jobs.length)}`);
     try {
         await (await EventQueue).publishBatch(SendEmailEventQueue, Jobs, { spacingMs: emailSendSpacingMs() });
-    } catch (err: any) {
+    } catch (err: unknown) {
         const msg = `Could not send invitations`;
         Logger.error(req, `${msg}: ${getErrorMessage(err)}`);
         throw new InternalServerError(failMsg)
@@ -218,7 +223,7 @@ async function handleSendEmailEvent(job: { id: string; data: email_request_event
     }
     // await sendEmail(ctx, event.election, electionRoll, event.sender, event.url)
     // TODO: I think this will always give a single element array, we can probably simplify this and be less generalized
-    let emails: Imsg[] = makeEmails(election, [electionRoll], event.url, event.email.subject, event.email.body, event.test_email != '');
+    const emails: Imsg[] = makeEmails(election, [electionRoll], event.url, event.email.subject, event.email.body, event.test_email != '');
 
     let emailResponse;
     try{

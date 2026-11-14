@@ -11,6 +11,9 @@ type p = keyof typeof permissions
 export interface IUser {
     sub?: string;
     email?: string;
+    // Set by Keycloak (and optionally by an election's own auth_key signer). Read it
+    // through getVerifiedEmail (Controllers/verifiedEmail.ts), never directly.
+    email_verified?: boolean;
     typ?: string;
     username?: string;
     [key: string]: unknown;
@@ -20,6 +23,9 @@ export interface IRequest extends Request {
     contextId?: string;
     logPrefix?: string;
     user?: IUser;
+    // True when the election has an auth_key, so req.user (if any) came from a token
+    // signed by that election's key rather than from a BetterVoting account.
+    electionKeyAuth?: boolean;
 }
 
 export interface IElectionRequest extends IRequest {

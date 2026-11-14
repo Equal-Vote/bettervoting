@@ -3,7 +3,7 @@ import { useParams } from "react-router";
 import Typography from '@mui/material/Typography';
 import TextField from "@mui/material/TextField";
 import Box from '@mui/material/Box';
-import { FormHelperText } from "@mui/material"
+import { Alert, AlertTitle, FormHelperText, Link } from "@mui/material"
 import { useCookie } from "../../hooks/useCookie";
 import useAuthSession from "../AuthSessionContextProvider";
 import useElection from "../ElectionContextProvider";
@@ -11,7 +11,7 @@ import { PrimaryButton } from "../styles";
 
 const VoterAuth = () => {
   const authSession = useAuthSession()
-  const { election, voterAuth, refreshElection } = useElection()
+  const { election, voterAuth, refreshElection, t } = useElection()
   const { voter_id } = useParams();
   // TODO: maybe we should reconsider useCookie here? this has the potential of inserting the voter id on a different election
   // Cookies don't support special charaters so we b64 everything we store in there
@@ -44,13 +44,27 @@ const VoterAuth = () => {
 
   const isAuthorized = voterAuth?.authorized_voter
   const missingEmail = voterAuth?.required === "Email Validation Required"
+  // Signed in, but the account's email address was never verified (must match the backend's
+  // EMAIL_VERIFICATION_REQUIRED in voterRollUtils.ts).
+  const unverifiedEmail = voterAuth?.required === "Email Verification Required"
   const missingVoterID = voterAuth?.required === "Voter ID Required"
 
   return (
     <Box sx={{ p: 1, flexGrow: 1 }}>
       {isOpen &&
         <>
-          {!isAuthorized && !missingEmail && emailRequired &&
+          {!isAuthorized && unverifiedEmail && emailRequired &&
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+              <Alert severity="warning" sx={{ maxWidth: '600px' }}>
+                <AlertTitle>{t('verified_email.vote_title')}</AlertTitle>
+                {t('verified_email.vote_description')}{' '}
+                <Link component="button" type="button" onClick={authSession.openLogout} sx={{ font: 'inherit', verticalAlign: 'baseline' }}>{t('verified_email.log_out')}</Link>
+                {' · '}
+                <Link href={authSession.accountUrl} target="_blank" rel="noreferrer">{t('verified_email.account_settings')}</Link>
+              </Alert>
+            </Box>
+          }
+          {!isAuthorized && !missingEmail && !unverifiedEmail && emailRequired &&
             <Box sx={{ display: 'flex', justifyContent: 'center' }}>
               <Typography align='center' variant="h5" component="h5">
                 You are not authorized to vote in this election
@@ -60,7 +74,7 @@ const VoterAuth = () => {
           {!isAuthorized && missingEmail && emailRequired &&
             <Box sx={{ display: 'flex', justifyContent: 'center' }}>
               <Typography align='center' gutterBottom variant="h5" component="h5">
-                You must <a onClick={authSession.openLogin} style={{ cursor: 'pointer', color: 'inherit', textDecoration: 'underline' }}>log in </a> to access this election
+                You must <Link component="button" type="button" onClick={authSession.openLogin} sx={{ font: 'inherit', color: 'inherit', textDecorationColor: 'inherit', verticalAlign: 'baseline' }}>log in</Link> to access this election
               </Typography>
             </Box>
           }

@@ -26,6 +26,7 @@ import {
     setWriteInResults,
 } from '../Controllers/Election';
 import {upload, uploadImageController} from '../Controllers/uploadImageController';
+import { requireVerifiedAccount } from '../Controllers/verifiedEmail';
 import asyncHandler from 'express-async-handler';
 
 /**
@@ -665,6 +666,10 @@ electionsRouter.post('/Election/:id/setOpenState', asyncHandler(setOpenState))
  *     responses:
  *       200:
  *         description: Invitations sent
+ *       401:
+ *         description: Not signed in, or no permission to send emails for this election
+ *       403:
+ *         description: Signed in, but the account's email is not verified
  *       404:
  *         description: Election not found */
 electionsRouter.post('/Election/:id/sendEmails', asyncHandler(sendEmailsController))
@@ -724,8 +729,10 @@ electionsRouter.post('/Election/:id/sendEmails', asyncHandler(sendEmailsControll
  * @swagger
  * /images:
  *   post:
- *     summary: Upload an image
+ *     summary: Upload an image (requires a signed-in account with a verified email)
  *     tags: [Elections]
+ *     security:
+ *      - ApiKeyAuth: []
  *     requestBody:
  *       content:
  *         multipart/form-data:
@@ -747,8 +754,13 @@ electionsRouter.post('/Election/:id/sendEmails', asyncHandler(sendEmailsControll
  *                   oneOf: 
  *                     - string
  *                     - null
+ *       401:
+ *         description: Not signed in
+ *       403:
+ *         description: Signed in, but the account's email is not verified
  */
-electionsRouter.post('/images',upload.single("file"), asyncHandler(uploadImageController))
+// The account check runs before multer so an unqualified caller's upload is never read.
+electionsRouter.post('/images', requireVerifiedAccount('upload images'), upload.single("file"), asyncHandler(uploadImageController))
 
 /**
  * @swagger

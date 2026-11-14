@@ -57,6 +57,8 @@ ballot:
   dialog_submit_title: Submit {{capital_ballot}}?
   dialog_send_receipt: Send Ballot Receipt Email?
   dialog_email_placeholder: Receipt Email (Optional)
+  dialog_no_receipt_signed_out: No receipt will be emailed. To get an email receipt, sign in with a verified email address before voting.
+  dialog_no_receipt_unverified: No receipt will be emailed, because the email address on your account has not been verified.
   dialog_cancel: Cancel
   dialog_submit: Submit
   dialog_abstention: Abstained - All candidates were left blank or marked the same
@@ -1293,6 +1295,18 @@ voters:
     invite: "{{capital_election}} Invitation Template"
     receipt: "Voter Receipt Template"
     blank: Empty Template
+
+# Messages for things that need a signed-in account with a verified email address
+verified_email:
+  vote_title: Verify your email address to vote
+  vote_description: This {{election}} gives one vote to each account email address, and the address on your account has not been verified yet. Log out and log back in to be sent a verification link, or check your account settings, then return to this page.
+  log_out: Log out
+  account_settings: Account settings
+  send_sign_in: Sign in with a verified email address to send emails to voters.
+  send_unverified: The email address on your account has not been verified. Verify it (log out and back in to be sent a link) before sending emails to voters.
+  photo_sign_in: Sign in with a verified email address to add photos.
+  photo_unverified: The email address on your account has not been verified. Verify it (log out and back in to be sent a link) before adding photos.
+  photo_failed: The photo could not be uploaded.
 
 # Table filters
 table:

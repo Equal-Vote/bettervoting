@@ -15,6 +15,7 @@ import RaceDialog from './RaceDialog';
 import { Candidate } from '@equal-vote/star-vote-shared/domain_model/Candidate';
 import { Race as iRace } from '@equal-vote/star-vote-shared/domain_model/Race';
 import { getImage, postImage } from '../Candidates/PhotoUtil';
+import { usePhotoUploadGuard } from '../Candidates/usePhotoUploadGuard';
 
 interface RaceFormProps {
     raceIndex?: number,
@@ -67,6 +68,7 @@ export default function RaceForm({
 type InnerRaceFormProps = Pick<ReturnType<typeof useEditRace>, 'setErrors' | 'errors' | 'editedRace' | 'applyRaceUpdate'> & { open?: boolean };
 
 const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=true}: InnerRaceFormProps) => {
+    const { canUpload, onUploadError } = usePhotoUploadGuard();
     const flags = useFeatureFlags();
     const { election, t } = useElection()
     const isDisabled = election.state !== 'draft';
@@ -184,6 +186,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
     }
 
     const handlePhotoDrop = async (e) =>  {
+        if (!canUpload()) return;
         // load file data
         const names = []
         const promises = []
@@ -196,11 +199,13 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
             parts.pop(); // drop extension
             names.push(parts.join('.'))
 
-            promises.push(getImage(URL.createObjectURL(f)).then(img => postImage(img)))
+            promises.push(getImage(URL.createObjectURL(f)).then(img => postImage(img, onUploadError)))
         }
 
-        // get photos
-        const photos = (await Promise.all(promises)).map(res => res.photo_filename);
+        // get photos; if the server refused any of them, don't add photo-less candidates
+        const responses = await Promise.all(promises);
+        if (responses.some(res => !res)) return;
+        const photos = responses.map(res => res.photo_filename);
 
         // create candidates
         const existingIds = new Set(editedRace.candidates.map(c => c.candidate_id));
