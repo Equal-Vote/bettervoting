@@ -1,7 +1,7 @@
 import Grid from "@mui/material/Grid";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormControl from "@mui/material/FormControl";
-import { FormGroup, Radio, RadioGroup, Box, capitalize, Typography, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import { FormGroup, FormHelperText, Radio, RadioGroup, Box, capitalize, Typography, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { ElectionSettings as IElectionSettings, TermType } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
 import { Tip } from '~/components/styles';
 import { useSubstitutedTranslation, SwitchSetting, SECONDARY_INDENT } from '~/components/util';
@@ -83,6 +83,83 @@ export default function ElectionSettings() {
     // Inclusive [min_rankings, max_rankings] — drives the rank-limit selector below.
     const rankOptions = Array.from({ length: max_rankings - min_rankings + 1 }, (_, i) => min_rankings + i);
 
+    // Two settings only do something for certain voting methods. When no race uses those
+    // methods they move to a greyed-out section at the bottom of the page, so nobody
+    // wonders what they do to an election they don't apply to.
+    const hasRcvRace = election.races.some(race => race.voting_method === 'IRV');
+    const hasRankedRace = election.races.some(race => ['IRV', 'STV', 'RankedRobin'].includes(race.voting_method));
+
+    // max_rankings is set for every election (defaulting to default_rankings), so there
+    // is no toggle in front of it.
+    const rankLimit = (
+        <Box sx={{ py: 1 }}>
+            <Typography component='div' sx={{ fontWeight: 500, mb: 1 }}>
+                {t('tips.max_rankings.title')}
+                <Tip name='max_rankings' values={{ min_rankings, max_rankings }} />
+            </Typography>
+            <ToggleButtonGroup
+                value={election.settings.max_rankings ?? default_rankings}
+                exclusive
+                disabled={election.state !== 'draft' || !hasRankedRace}
+                aria-label='Rank Limit'
+                // Ignore null: clicking the active button would otherwise deselect
+                // it. max_rankings must stay set, so we never let it become undefined.
+                onChange={(_, v: number | null) => {
+                    if (v !== null) updateElection(e => e.settings.max_rankings = v);
+                }}
+                sx={{
+                    // Indent only the buttons (not the label above) so they read
+                    // as nested under the heading.
+                    ml: SECONDARY_INDENT,
+                    flexWrap: 'wrap',
+                    gap: 1,
+                    // Detach the grouped border-radius/border-collapse so buttons
+                    // render as standalone chips that wrap cleanly on mobile.
+                    '& .MuiToggleButtonGroup-grouped': {
+                        m: 0,
+                        border: '1px solid',
+                        borderColor: 'primary.main',
+                        borderRadius: 1,
+                        // Default ToggleButton text is text.secondary (gray) and
+                        // reads as disabled; use the accent color so it looks active.
+                        color: 'primary.main',
+                        fontWeight: 600,
+                        '&.Mui-selected': {
+                            backgroundColor: 'primary.main',
+                            color: 'primary.contrastText',
+                            '&:hover': { backgroundColor: 'primary.dark' },
+                        },
+                        // Disabled chips (the election has left draft, or no race is ranked)
+                        // must still be readable: MUI's own disabled colour is very faint and
+                        // drops the border between chips.
+                        '&.Mui-disabled': {
+                            border: '1px solid',
+                            borderColor: 'action.disabled',
+                            color: 'text.secondary',
+                        },
+                        '&.Mui-selected.Mui-disabled': {
+                            backgroundColor: 'text.secondary',
+                            borderColor: 'text.secondary',
+                            color: 'common.white',
+                        },
+                    },
+                }}
+            >
+                {rankOptions.map((n) => (
+                    <ToggleButton
+                        key={n}
+                        value={n}
+                        aria-label={`${n} ranks`}
+                        // Snug single-digit chip; 44px tall keeps a mobile touch target.
+                        sx={{ minWidth: 40, minHeight: 44, px: 0, py: 0.5 }}
+                    >
+                        {n}
+                    </ToggleButton>
+                ))}
+            </ToggleButtonGroup>
+        </Box>
+    );
+
     return <>
         <Grid size={12} sx={{ m: 0, my: 0, p: 1 }}>
             <FormControl disabled={election.state !== 'draft'} component="fieldset" variant="standard" sx={{width: '100%'}}>
@@ -121,7 +198,7 @@ export default function ElectionSettings() {
                     <ElectionSwitchSetting settingKey="random_candidate_order" />
                     <ElectionSwitchSetting settingKey="ballot_updates" />
                     <ElectionSwitchSetting settingKey="require_instruction_confirmation" />
-                    <ElectionSwitchSetting settingKey="draggable_ballot" />
+                    {hasRcvRace && <ElectionSwitchSetting settingKey="draggable_ballot" />}
                     {/* Note: this can't use ElectionSwitchSetting because we need to use the results from makePublicResultsRequest as the source of truth */}
                     <SwitchSetting
                         label={election.state === 'closed' || election.state === 'archived' ? t('election_settings.public_results') : t('election_settings.preliminary_results')}
@@ -137,63 +214,7 @@ export default function ElectionSettings() {
                         disabled={election.state !== 'draft' || !browsable}
                         disabledMessage={browsable ? undefined : t('disabled_msgs.is_public_when_voter_list')}
                     />
-                    {/* max_rankings is set for every election (defaulting to default_rankings),
-                        so this is always shown rather than gated behind a toggle. Kept after the toggles so the
-                        settings read as radios, then toggles, then the rank-limit selector. Voter
-                        groups go last because the grid under them can get large. */}
-                    <Box sx={{ py: 1 }}>
-                        <Typography component='div' sx={{ fontWeight: 500, mb: 1 }}>
-                            {t('tips.max_rankings.title')}
-                            <Tip name='max_rankings' values={{ min_rankings, max_rankings }} />
-                        </Typography>
-                        <ToggleButtonGroup
-                            value={election.settings.max_rankings ?? default_rankings}
-                            exclusive
-                            disabled={election.state !== 'draft'}
-                            aria-label='Rank Limit'
-                            // Ignore null: clicking the active button would otherwise deselect
-                            // it. max_rankings must stay set, so we never let it become undefined.
-                            onChange={(_, v: number | null) => {
-                                if (v !== null) updateElection(e => e.settings.max_rankings = v);
-                            }}
-                            sx={{
-                                // Indent only the buttons (not the label above) so they read
-                                // as nested under the heading.
-                                ml: SECONDARY_INDENT,
-                                flexWrap: 'wrap',
-                                gap: 1,
-                                // Detach the grouped border-radius/border-collapse so buttons
-                                // render as standalone chips that wrap cleanly on mobile.
-                                '& .MuiToggleButtonGroup-grouped': {
-                                    m: 0,
-                                    border: '1px solid',
-                                    borderColor: 'primary.main',
-                                    borderRadius: 1,
-                                    // Default ToggleButton text is text.secondary (gray) and
-                                    // reads as disabled; use the accent color so it looks active.
-                                    color: 'primary.main',
-                                    fontWeight: 600,
-                                    '&.Mui-selected': {
-                                        backgroundColor: 'primary.main',
-                                        color: 'primary.contrastText',
-                                        '&:hover': { backgroundColor: 'primary.dark' },
-                                    },
-                                },
-                            }}
-                        >
-                            {rankOptions.map((n) => (
-                                <ToggleButton
-                                    key={n}
-                                    value={n}
-                                    aria-label={`${n} ranks`}
-                                    // Snug single-digit chip; 44px tall keeps a mobile touch target.
-                                    sx={{ minWidth: 40, minHeight: 44, px: 0, py: 0.5 }}
-                                >
-                                    {n}
-                                </ToggleButton>
-                            ))}
-                        </ToggleButtonGroup>
-                    </Box>
+                    {hasRankedRace && rankLimit}
                     {flags.isSet('PRECINCTS') && (
                         <Box sx={{ py: 0.5 }}>
                             {/* Voter groups are assigned per row of the voter list, so they
@@ -207,6 +228,33 @@ export default function ElectionSettings() {
                             {election.settings.voter_groups_enabled && !browsable && (
                                 <Box sx={{ ml: SECONDARY_INDENT }}><VoterGroupGrid /></Box>
                             )}
+                        </Box>
+                    )}
+                    {(!hasRcvRace || !hasRankedRace) && (
+                        <Box
+                            role='group'
+                            aria-label={t('election_settings.not_used.title')}
+                            sx={{ mt: 3, p: 2, borderRadius: 1, backgroundColor: 'action.hover', color: 'text.secondary' }}
+                        >
+                            <Typography component='div' sx={{ fontWeight: 600 }}>
+                                {t('election_settings.not_used.title')}
+                            </Typography>
+                            <Typography variant='body2' sx={{ mb: 1 }}>
+                                {t('election_settings.not_used.description')}
+                            </Typography>
+                            {!hasRcvRace && (
+                                <ElectionSwitchSetting
+                                    settingKey="draggable_ballot"
+                                    disabled
+                                    disabledMessage={t('election_settings.not_used.draggable_ballot')}
+                                />
+                            )}
+                            {!hasRankedRace && <>
+                                {rankLimit}
+                                <FormHelperText sx={{ mt: 0, ml: SECONDARY_INDENT, fontStyle: 'italic' }}>
+                                    {t('election_settings.not_used.max_rankings')}
+                                </FormHelperText>
+                            </>}
                         </Box>
                     )}
                 </FormGroup>
