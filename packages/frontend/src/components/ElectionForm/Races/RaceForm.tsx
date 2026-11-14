@@ -72,8 +72,6 @@ export default function RaceForm({
     )
 }
 
-type InnerRaceFormProps = Pick<ReturnType<typeof useEditRace>, 'setErrors' | 'errors' | 'editedRace' | 'applyRaceUpdate'> & { open?: boolean } & {allowWriteIns?: boolean};
-
 const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=true, allowWriteIns=true}: InnerRaceFormProps) => {
     const flags = useFeatureFlags();
     const { election, t } = useElection()
