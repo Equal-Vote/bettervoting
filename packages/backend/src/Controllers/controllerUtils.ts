@@ -1,4 +1,4 @@
-import { IRequest } from "../IRequest"
+import { IRequest, IUser } from "../IRequest"
 import { Election, electionValidation } from "@equal-vote/star-vote-shared/domain_model/Election";
 import Logger from "../Services/Logging/Logger"
 import { BadRequest, Unauthorized } from "@curveball/http-errors";
@@ -29,6 +29,15 @@ export function expectPermission(roles:roles[],permission:permission): void {
         if (!roles.some( (role) => permission.includes(role))){
             throw new Unauthorized("Does not have permission")
       }
+}
+
+// Temp owners (a temp_id cookie, req.user.typ === 'TEMP_ID') get the full owner role
+// during the temporary-access window, but finalizing is reserved for accounts: the
+// wizard already blocks it in the UI, and this keeps a direct POST from bypassing that.
+export function expectPermanentUser(user: IUser | undefined): void {
+    if (!user?.sub || user.typ === 'TEMP_ID') {
+        throw new Unauthorized("Create an account to finalize this election")
+    }
 }
 
 // All electionDB writes require an expected_update_date for optimistic concurrency
