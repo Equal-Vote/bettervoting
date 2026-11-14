@@ -17,6 +17,10 @@ const ResultsTable = ({ className='', data, winningRows=1 }: ResultsTableProps) 
         marginRight: "auto",
         maxHeight: 600,
         width: "100%",
+        // Starts the chain that gives the frozen first column an opaque
+        // background to sit on: the surrounding Paper's colour is handed down
+        // through the table to the sticky cells (see .resultTable in index.css).
+        background: "inherit",
       }}
     >
       <table className={c} style={{minWidth: '100%'}}>

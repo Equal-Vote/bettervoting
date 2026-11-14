@@ -141,6 +141,31 @@ code {
   border: 1px solid black;
 }
 
+/* Keep the candidate column in view while the round columns scroll under it.
+   A sticky cell needs an opaque background or the scrolling columns show
+   through, so the background is inherited down from the surrounding Paper —
+   which is themed, unlike a hard-coded white. The per-table highlight rules
+   below are more specific than this one, so a highlighted row keeps its own
+   colour across the frozen column too. */
+.resultTable,
+.resultTable thead,
+.resultTable tbody,
+.resultTable tr {
+  background: inherit;
+}
+
+.resultTable th:first-child,
+.resultTable td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: inherit;
+}
+
+.resultTable thead th:first-child {
+  z-index: 2;
+}
+
 .starScoreTable tr:nth-child(1) > td{
   background: var(--brand-gold);
 }
