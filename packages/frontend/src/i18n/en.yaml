@@ -105,7 +105,7 @@ ballot:
       right_title: 'Best'
     rcv: 
       instruction_bullets:
-        - Rank the {{candidates}} in order of preference. (1st, 2nd, 3rd, etc.)
+        - Rank the {{candidates}} in order of preference. For example, rank your top choice as 1st.
         - Ranking {{candidates}} equally is not allowed.
         - '{{capital_candidates}} left blank are ranked last'
       footer_single_winner: > 
@@ -113,26 +113,26 @@ ballot:
         if possible. If no candidate has a majority of remaining votes the candidate with the fewest votes is eliminated. 
         If your vote is unable to transfer, it will not be counted in later rounds. If a candidate has a majority of remaining votes 
         in a round, they are elected.
-      left_title: ''
-      right_title: ''
+      left_title: 'Best'
+      right_title: 'Worst'
     stv: 
       instruction_bullets:
-        - Rank the {{candidates}} in order of preference. (1st, 2nd, 3rd, etc.)
+        - Rank the {{candidates}} in order of preference. For example, rank your top choice as 1st.
         - Ranking {{candidates}} equally is not allowed.
         - '{{capital_candidates}} left blank are ranked last'
       footer_multi_winner: ''
-      left_title: ''
-      right_title: ''
+      left_title: 'Best'
+      right_title: 'Worst'
     ranked_robin:
       instruction_bullets:
-        - Rank the {{candidates}} in order of preference.
+        - Rank the {{candidates}} in order of preference. For example, rank your top choice(s) as 1st.
         - Equal ranks are allowed
         - '{{capital_candidates}} left blank are ranked last'
       footer_single_winner: |
         {{capital_candidates}} are compared in one-on-one match-ups.
         A {{candidate}} wins a match-up if they are ranked higher than the opponent by more voters
-      left_title: ''
-      right_title: ''
+      left_title: 'Best'
+      right_title: 'Worst'
     choose_one:
       instruction_bullets:
         - Fill in the bubble next to your favorite

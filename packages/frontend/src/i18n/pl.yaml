@@ -109,16 +109,16 @@ ballot:
         jeśli to możliwe, do najwyżej uszeregowanego przez Ciebie kandydata. Jeśli żaden kandydat nie ma większości pozostałych głosów,
         odpada kandydat z najmniejszą liczbą głosów. Jeśli Twojego głosu nie można przenieść, nie będzie on liczony w kolejnych rundach.
         Kandydat, który w danej rundzie zdobędzie większość pozostałych głosów, zostaje wybrany.
-      left_title: ''
-      right_title: ''
+      left_title: 'Najlepiej'
+      right_title: 'Najgorzej'
     stv:
       instruction_bullets:
         - Uszereguj według swoich preferencji — {{candidates}} otrzymują pozycje 1., 2., 3. itd.
         - Nadawanie równych pozycji nie jest dozwolone ({{candidates}} muszą mieć różne pozycje).
         - '{{capital_candidates}} pozostawieni bez pozycji trafiają na koniec'
       footer_multi_winner: ''
-      left_title: ''
-      right_title: ''
+      left_title: 'Najlepiej'
+      right_title: 'Najgorzej'
     ranked_robin:
       instruction_bullets:
         - Uszereguj według swoich preferencji — {{candidates}} otrzymują kolejne pozycje.
@@ -127,8 +127,8 @@ ballot:
       footer_single_winner: |
         {{capital_candidates}} rywalizują w pojedynkach jeden na jeden.
         Pojedynek wygrywa {{candidate}} z wyższą pozycją u większej liczby głosujących
-      left_title: ''
-      right_title: ''
+      left_title: 'Najlepiej'
+      right_title: 'Najgorzej'
     choose_one:
       instruction_bullets:
         - Zaznacz pole obok swojego faworyta
