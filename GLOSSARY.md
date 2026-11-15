@@ -19,3 +19,23 @@ _Avoid_: Duplicate (too loose about which entry wins), collision
 **Voter Group**:
 A named subset of a Voter Roll. Each voter entry belongs to at most one Voter Group. A race can be limited to one or more Voter Groups, and a voter only sees the races open to their group. A race that isn't limited is open to every voter; a race limited to an empty set of groups is open to no one, which the admin is warned about. An election's list of Voter Groups is fixed once the election is finalized. The code calls this a "precinct".
 _Avoid_: Precinct (implies geography, which polls and organisations don't have), cluster, cohort
+
+**Entitlement**:
+A paid-for (or granted) increase to something an election is allowed, such as its voter limit. An election's total for a kind of entitlement is its free-tier default plus every entitlement it has been given.
+_Avoid_: Credit, upgrade
+
+**Line Item**:
+One line of a purchase: a kind of entitlement, a quantity, and the Unit Price and Unit Entitlement that each unit of that quantity carries. A line's totals are always its unit values times its quantity.
+_Avoid_: Cart item, order line
+
+**Unit Price**:
+What one unit of a Line Item costs, in cents. On a Line Item, and anywhere a purchase meets Stripe, "amount" means money in cents and never a count of voters or other entitlement.
+_Avoid_: Unit cents, price per block
+
+**Unit Entitlement**:
+How much entitlement one unit of a Line Item grants, e.g. 200 voters per Voter Block.
+_Avoid_: Entitlement amount (reads as money)
+
+**Voter Block**:
+The unit a voter-limit increase is bought in: a fixed number of voters (currently 200) at a fixed Unit Price. A purchase's quantity counts Voter Blocks, never voters.
+_Avoid_: Additional voters (names the effect, not the unit), voter pack

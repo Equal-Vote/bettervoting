@@ -15,10 +15,11 @@ export interface CatalogPriceData {
 
 // A line in the itemized cart: what the frontend shows in its confirmation and posts to
 // POST /Election/:id/CheckoutSession, which checks it against the catalog.
+// Every unit_* field is per unit; the line's totals are that times quantity.
 export interface CartLineItem {
     entitlement_type: EntitlementType;
     quantity: number;
-    entitlement_amount: number; // total granted by this line, e.g. voters (not blocks)
+    unit_entitlement: number; // entitlement each unit grants, e.g. voters per block
     unit_amount: number; // cents per unit
 }
 
@@ -30,31 +31,33 @@ export interface ItemizeState {
 
 export interface CatalogProduct {
     entitlement_type: EntitlementType;
-    name: string;
-    description: string;
+    name: string; // names the unit being bought, so Stripe's "Qty" reads naturally
     image?: string; // absolute URL; Stripe shows it on the hosted checkout page
+    unit_entitlement: number; // entitlement each unit grants
     unit_amount: number; // cents per unit
-    entitlementAmount: (quantity: number) => number;
-    priceData: () => CatalogPriceData;
+    entitlementLabel: string; // what the entitlement raises, e.g. "voter limit"
+    // Built per line so the description can state the line's total effect
+    priceData: (quantity: number) => CatalogPriceData;
     // How many units the election needs to cover its state; 0 when it needs none
     quantityNeeded: (state: ItemizeState, entitlements: ElectionEntitlements) => number;
 }
 
 const { BLOCK_SIZE, PRICE_PER_BLOCK_CENTS } = pricingConfig;
 
-const voterLimitBlock: CatalogProduct = {
+const voterBlock: CatalogProduct = {
     entitlement_type: 'voter_limit',
-    name: `${BLOCK_SIZE} Additional Voters`,
-    description: `Raises this election's voter limit by ${BLOCK_SIZE} voters.`,
+    name: `Add Voters`,
+    unit_entitlement: BLOCK_SIZE,
     unit_amount: PRICE_PER_BLOCK_CENTS,
-    entitlementAmount: (quantity) => quantity * BLOCK_SIZE,
-    priceData() {
+    entitlementLabel: 'voter limit',
+    priceData(quantity) {
+        const blocks = quantity === 1 ? '1 block' : `${quantity} blocks`;
         return {
             currency: 'usd',
             unit_amount: this.unit_amount,
             product_data: {
                 name: this.name,
-                description: this.description,
+                description: `Adds ${quantity * this.unit_entitlement} voters to your election's voter limit (${blocks} of ${this.unit_entitlement}).`,
                 ...(this.image ? { images: [this.image] } : {}),
             },
         };
@@ -66,7 +69,7 @@ const voterLimitBlock: CatalogProduct = {
 // One entry per product, keyed by the entitlement type it grants.
 // Fulfillment isn't per product: every product's effect is entitlement rows.
 export const productCatalog: Record<EntitlementType, CatalogProduct> = {
-    voter_limit: voterLimitBlock,
+    voter_limit: voterBlock,
 };
 
 export function getCatalogProduct(entitlement_type: unknown): CatalogProduct | undefined {
@@ -79,7 +82,7 @@ export function catalogLineItem(product: CatalogProduct, quantity: number): Cart
     return {
         entitlement_type: product.entitlement_type,
         quantity,
-        entitlement_amount: product.entitlementAmount(quantity),
+        unit_entitlement: product.unit_entitlement,
         unit_amount: product.unit_amount,
     };
 }

@@ -4,13 +4,14 @@ import { EntitlementType } from "./Entitlement";
 export type TransactionStatus = 'pending' | 'complete' | 'expired';
 
 // A cart line item as submitted to Stripe Checkout Session creation — a full
-// snapshot of the Stripe price_data, plus the entitlement it grants once paid.
-// The entitlement is resolved at checkout time so a pricing change between
-// checkout and payment can't alter what the customer receives.
+// snapshot of the Stripe price_data (which holds the unit_amount), plus the
+// entitlement each unit grants once paid. Both are resolved at checkout time so a
+// pricing change between checkout and payment can't alter what the customer
+// receives. Fulfillment grants quantity × unit_entitlement.
 export interface TransactionLineItem {
     entitlement_type: EntitlementType;
-    entitlement_amount: number;
     quantity: number;
+    unit_entitlement: number;
     price_data: unknown;
 }
 

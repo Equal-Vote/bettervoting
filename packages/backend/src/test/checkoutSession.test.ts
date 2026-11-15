@@ -26,7 +26,7 @@ const postCheckout = (election_id: string, body: object, token: string | null = 
     th.postRequest(`/API/Election/${election_id}/CheckoutSession`, body, token);
 
 // 3 blocks of 200 voters at $10.00 each, as the catalog prices them
-const validLine = { entitlement_type: 'voter_limit', quantity: 3, entitlement_amount: 600, unit_amount: 1000 };
+const validLine = { entitlement_type: 'voter_limit', quantity: 3, unit_entitlement: 200, unit_amount: 1000 };
 
 describe("POST /Election/:id/CheckoutSession", () => {
     test("creates a Stripe session, records a pending transaction, and returns the checkout URL", async () => {
@@ -45,9 +45,13 @@ describe("POST /Election/:id/CheckoutSession", () => {
             metadata: { election_id: id, user_id: 'Alice1234' },
             line_items: [{
                 quantity: 3,
-                price_data: { currency: 'usd', unit_amount: 1000, product_data: { name: '200 Additional Voters' } },
+                price_data: { currency: 'usd', unit_amount: 1000, product_data: {
+                    name: 'Voter Block (200 voters)',
+                    description: "Adds 600 voters to your election's voter limit (3 blocks of 200).",
+                } },
             }],
         });
+        expect(session.params.custom_text?.submit).toEqual({ message: `${testInputs.IDRollElection.title}: voter limit goes from 100 to 700.` });
         expect(session.params.custom_text?.after_submit).toMatchObject({ message: expect.stringMatching(/not tax-deductible/) });
         expect(session.params.success_url).toContain(`/${id}/admin`);
         expect(session.params.success_url).toContain('{CHECKOUT_SESSION_ID}');
@@ -60,11 +64,25 @@ describe("POST /Election/:id/CheckoutSession", () => {
             status: 'pending',
             line_items: [{
                 entitlement_type: 'voter_limit',
-                entitlement_amount: 600,
                 quantity: 3,
+                unit_entitlement: 200,
                 price_data: session.params.line_items?.[0].price_data,
             }],
         });
+        th.testComplete();
+    });
+
+    test("the submit message starts from the election's current limit, including past purchases", async () => {
+        const id = await createElection();
+        await ServiceLocator.entitlementsDb().insert([{
+            election_id: id, type: 'voter_limit', amount: 200, source: 'purchase', created_date: new Date().toISOString(),
+        }], ctx, undefined as never);
+
+        const response = await postCheckout(id, { line_items: [validLine] });
+
+        expect(response.statusCode).toBe(200);
+        const [session] = stripe().createdSessions;
+        expect(session.params.custom_text?.submit).toEqual({ message: expect.stringMatching(/voter limit goes from 300 to 900\.$/) });
         th.testComplete();
     });
 
@@ -85,9 +103,9 @@ describe("POST /Election/:id/CheckoutSession", () => {
             ['a missing cart', {}],
             ['an unknown type', { line_items: [{ ...validLine, entitlement_type: 'donation' }] }],
             ['a null line', { line_items: [null] }],
-            ['a non-integer quantity', { line_items: [{ ...validLine, quantity: 1.5, entitlement_amount: 300, unit_amount: 1000 }] }],
-            ['a zero quantity', { line_items: [{ ...validLine, quantity: 0, entitlement_amount: 0 }] }],
-            ['an entitlement_amount that is the number of blocks, not voters', { line_items: [{ ...validLine, entitlement_amount: 3 }] }],
+            ['a non-integer quantity', { line_items: [{ ...validLine, quantity: 1.5 }] }],
+            ['a zero quantity', { line_items: [{ ...validLine, quantity: 0 }] }],
+            ['a unit_entitlement that is the line total, not per unit', { line_items: [{ ...validLine, unit_entitlement: 600 }] }],
             ['a stale unit price', { line_items: [{ ...validLine, unit_amount: 500 }] }],
         ])("%s", async (_name, body) => {
             const id = await createElection();

@@ -11,20 +11,20 @@ describe("itemize", () => {
 
     test("one voter over the limit needs one block", () => {
         expect(itemize({ roll_count: 101 }, { voter_limit: 100 })).toEqual([
-            { entitlement_type: 'voter_limit', quantity: 1, entitlement_amount: 200, unit_amount: 1000 },
+            { entitlement_type: 'voter_limit', quantity: 1, unit_entitlement: 200, unit_amount: 1000 },
         ]);
     });
 
     test("an exact multiple of the block size needs no extra block", () => {
         expect(itemize({ roll_count: 500 }, { voter_limit: 100 })).toEqual([
-            { entitlement_type: 'voter_limit', quantity: 2, entitlement_amount: 400, unit_amount: 1000 },
+            { entitlement_type: 'voter_limit', quantity: 2, unit_entitlement: 200, unit_amount: 1000 },
         ]);
     });
 
     test("counts blocks from the current limit, including past purchases", () => {
         // limit 300 (100 free + 200 bought), roll 701 → 401 over → 3 blocks
         expect(itemize({ roll_count: 701 }, { voter_limit: 300 })).toEqual([
-            { entitlement_type: 'voter_limit', quantity: 3, entitlement_amount: 600, unit_amount: 1000 },
+            { entitlement_type: 'voter_limit', quantity: 3, unit_entitlement: 200, unit_amount: 1000 },
         ]);
     });
 });

@@ -572,9 +572,11 @@ electionsRouter.post('/Election/:id/finalize',asyncHandler(finalizeElection))
  *                     quantity:
  *                       type: integer
  *                       example: 3
- *                     entitlement_amount:
+ *                       description: Number of units (e.g. voter blocks)
+ *                     unit_entitlement:
  *                       type: integer
- *                       example: 600
+ *                       description: Entitlement each unit grants (e.g. voters per block)
+ *                       example: 200
  *                     unit_amount:
  *                       type: integer
  *                       description: Price per unit in cents
