@@ -1,4 +1,8 @@
-import { cartTotal, checkoutSummary, entitlementsAfter, itemize } from '@equal-vote/star-vote-shared/domain_model/ProductCatalog';
+import { CartLineItem, cartTotal, checkoutSummary, entitlementsAfter, itemize } from '@equal-vote/star-vote-shared/domain_model/ProductCatalog';
+
+// `quantity` blocks of 100 voters at $6.00 each
+const voterBlocks = (quantity: number): CartLineItem =>
+    ({ entitlement_type: 'voter_limit', quantity, unit_entitlement: 100, unit_amount: 600 });
 
 // Pure unit tests for the shared catalog's itemize: given an election's roll count and its
 // current entitlements, it returns the line items needed to cover the roll.
@@ -52,11 +56,11 @@ describe("cartTotal", () => {
     test("sums every line's quantity times its unit price, in cents", () => {
         expect(cartTotal([])).toBe(0);
         expect(cartTotal([
-            { entitlement_type: 'voter_limit', quantity: 256, unit_entitlement: 100, unit_amount: 600 },
+            voterBlocks(256),
         ])).toBe(153600);
         expect(cartTotal([
-            { entitlement_type: 'voter_limit', quantity: 2, unit_entitlement: 100, unit_amount: 600 },
-            { entitlement_type: 'voter_limit', quantity: 1, unit_entitlement: 100, unit_amount: 600 },
+            voterBlocks(2),
+            voterBlocks(1),
         ])).toBe(1800);
     });
 });
@@ -65,7 +69,7 @@ describe("entitlementsAfter", () => {
     test("is the current entitlements plus what each line grants", () => {
         // 100 free + 200 bought, buying 5 more blocks of 100 → 800
         expect(entitlementsAfter({ voter_limit: 300 }, [
-            { entitlement_type: 'voter_limit', quantity: 5, unit_entitlement: 100, unit_amount: 600 },
+            voterBlocks(5),
         ])).toEqual({ voter_limit: 800 });
     });
 
@@ -75,7 +79,7 @@ describe("entitlementsAfter", () => {
 
     test("doesn't modify the entitlements it's given", () => {
         const current = { voter_limit: 100 };
-        entitlementsAfter(current, [{ entitlement_type: 'voter_limit', quantity: 1, unit_entitlement: 100, unit_amount: 600 }]);
+        entitlementsAfter(current, [voterBlocks(1)]);
         expect(current).toEqual({ voter_limit: 100 });
     });
 });
