@@ -25,9 +25,10 @@ export default class TransactionsDB {
             .execute();
     }
 
-    async getByStripeSessionId(stripe_checkout_session_id: string, ctx: ILoggingContext): Promise<Transaction | null> {
+    // Pass trx to read inside a DB transaction, e.g. the row just completed by completeIfPending
+    async getByStripeSessionId(stripe_checkout_session_id: string, ctx: ILoggingContext, trx?: KyselyTransaction<Database>): Promise<Transaction | null> {
         Logger.debug(ctx, `${tableName}.getByStripeSessionId`);
-        const result = await this._postgresClient
+        const result = await (trx ?? this._postgresClient)
             .selectFrom(tableName)
             .where('stripe_checkout_session_id', '=', stripe_checkout_session_id)
             .selectAll()
@@ -62,6 +63,7 @@ export default class TransactionsDB {
             .updateTable(tableName)
             .set({ status: 'expired' })
             .where('stripe_checkout_session_id', '=', stripe_checkout_session_id)
+            .where('status', '=', 'pending') // never un-complete a paid transaction
             .execute();
     }
 }

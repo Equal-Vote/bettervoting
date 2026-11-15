@@ -19,6 +19,7 @@ import swagger from './OpenApi/swagger.json';
 
 import { getUserToken, getUser } from './Controllers/User';
 import { sendGridWebhookController } from './Controllers/sendGridWebhookController';
+import { stripeWebhookController } from './Controllers/stripeWebhookController';
 import asyncHandler from 'express-async-handler';
 import './socketHandler';
 
@@ -51,8 +52,9 @@ export default function makeApp() {
 
     const frontendPath = '../../../../packages/frontend/build/';
 
-    // SendGrid webhook must be registered before express.json() to preserve the raw body for signature verification
+    // Webhooks must be registered before express.json() to preserve the raw body for signature verification
     app.post('/API/SendGridWebhook', express.raw({ type: 'application/json' }), sendGridWebhookController);
+    app.post('/API/StripeWebhook', express.raw({ type: 'application/json' }), asyncHandler(stripeWebhookController));
 
     // 500kb (up from the 100kb default) so bulk uploads of voters/ballots fit in a reasonably sized batch
     app.use(express.json({ limit: '500kb' }));
