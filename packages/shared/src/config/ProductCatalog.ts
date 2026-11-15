@@ -35,7 +35,8 @@ export interface CatalogProduct {
     image?: string; // absolute URL; Stripe shows it on the hosted checkout page
     unit_entitlement: number; // entitlement each unit grants
     unit_amount: number; // cents per unit
-    entitlementLabel: string; // what the entitlement raises, e.g. "voter limit"
+    // Checkout copy for this product's effect on the election, e.g. "Increase voter limit from 100 to 700"
+    describeChange: (from: number, to: number) => string;
     // Built per line so the description can state the line's total effect
     priceData: (quantity: number) => CatalogPriceData;
     // How many units the election needs to cover its state; 0 when it needs none
@@ -46,10 +47,10 @@ const { BLOCK_SIZE, PRICE_PER_BLOCK_CENTS } = pricingConfig;
 
 const voterBlock: CatalogProduct = {
     entitlement_type: 'voter_limit',
-    name: `Add Voters`,
+    name: `Increase Voter Limit`,
     unit_entitlement: BLOCK_SIZE,
     unit_amount: PRICE_PER_BLOCK_CENTS,
-    entitlementLabel: 'voter limit',
+    describeChange: (from, to) => `Increase voter limit from ${from} to ${to}`,
     priceData(quantity) {
         const blocks = quantity === 1 ? '1 block' : `${quantity} blocks`;
         return {
@@ -57,7 +58,7 @@ const voterBlock: CatalogProduct = {
             unit_amount: this.unit_amount,
             product_data: {
                 name: this.name,
-                description: `Adds ${quantity * this.unit_entitlement} voters to your election's voter limit (${blocks} of ${this.unit_entitlement}).`,
+                description: `Adds ${quantity * this.unit_entitlement} voters (${blocks} of ${this.unit_entitlement}) to your election's voter limit\n.`,
                 ...(this.image ? { images: [this.image] } : {}),
             },
         };
@@ -93,4 +94,28 @@ export function itemize(state: ItemizeState, entitlements: ElectionEntitlements)
         .map(product => ({ product, quantity: product.quantityNeeded(state, entitlements) }))
         .filter(({ quantity }) => quantity > 0)
         .map(({ product, quantity }) => catalogLineItem(product, quantity));
+}
+
+// Shown on Stripe's checkout page after the customer pays, and on the receipt
+export const PAYMENT_DISCLAIMER = 'This payment is a program service fee to Equal Vote. It is not tax-deductible.';
+
+// Long titles are cut so the message stays well inside Stripe's custom_text limit
+const MAX_TITLE_LENGTH = 200;
+
+// The checkout's summary line, shown by Stripe's Pay button: which election the purchase is
+// for, and where each entitlement ends up, e.g. 'Increase voter limit from 100 to 700 for election "Board Election 2027".'
+// `entitlements` is the election's current state, so "from" can be stale if another checkout is paid in between.
+export function checkoutSummary(
+    title: string,
+    lineItems: Pick<CartLineItem, 'entitlement_type' | 'quantity' | 'unit_entitlement'>[],
+    entitlements: ElectionEntitlements,
+): string {
+    const added: Partial<Record<EntitlementType, number>> = {};
+    lineItems.forEach(({ entitlement_type, quantity, unit_entitlement }) => {
+        added[entitlement_type] = (added[entitlement_type] ?? 0) + quantity * unit_entitlement;
+    });
+    const changes = (Object.entries(added) as [EntitlementType, number][]).map(([type, amount]) =>
+        productCatalog[type].describeChange(entitlements[type], entitlements[type] + amount));
+    const shortTitle = title.length > MAX_TITLE_LENGTH ? `${title.slice(0, MAX_TITLE_LENGTH - 1)}…` : title;
+    return `${changes.join('; ')} for election "${shortTitle}".`;
 }

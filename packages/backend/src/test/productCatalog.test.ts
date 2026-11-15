@@ -1,8 +1,8 @@
-import { itemize } from '@equal-vote/star-vote-shared/config';
+import { checkoutSummary, itemize } from '@equal-vote/star-vote-shared/config';
 
 // Pure unit tests for the shared catalog's itemize: given an election's roll count and its
 // current entitlements, it returns the line items needed to cover the roll.
-// Expected values are worked by hand from the spec: 200 voters per block, $10.00 per block.
+// Expected values are worked by hand from the spec: 100 voters per block, $6.00 per block.
 describe("itemize", () => {
     test("returns no line items when the roll fits within the voter limit", () => {
         expect(itemize({ roll_count: 100 }, { voter_limit: 100 })).toEqual([]);
@@ -11,20 +11,39 @@ describe("itemize", () => {
 
     test("one voter over the limit needs one block", () => {
         expect(itemize({ roll_count: 101 }, { voter_limit: 100 })).toEqual([
-            { entitlement_type: 'voter_limit', quantity: 1, unit_entitlement: 200, unit_amount: 1000 },
+            { entitlement_type: 'voter_limit', quantity: 1, unit_entitlement: 100, unit_amount: 600 },
         ]);
     });
 
     test("an exact multiple of the block size needs no extra block", () => {
         expect(itemize({ roll_count: 500 }, { voter_limit: 100 })).toEqual([
-            { entitlement_type: 'voter_limit', quantity: 2, unit_entitlement: 200, unit_amount: 1000 },
+            { entitlement_type: 'voter_limit', quantity: 4, unit_entitlement: 100, unit_amount: 600 },
         ]);
     });
 
     test("counts blocks from the current limit, including past purchases", () => {
-        // limit 300 (100 free + 200 bought), roll 701 → 401 over → 3 blocks
+        // limit 300 (100 free + 200 bought), roll 701 → 401 over → 5 blocks
         expect(itemize({ roll_count: 701 }, { voter_limit: 300 })).toEqual([
-            { entitlement_type: 'voter_limit', quantity: 3, unit_entitlement: 200, unit_amount: 1000 },
+            { entitlement_type: 'voter_limit', quantity: 5, unit_entitlement: 100, unit_amount: 600 },
         ]);
+    });
+});
+
+describe("checkoutSummary", () => {
+    const line = { entitlement_type: 'voter_limit' as const, quantity: 3, unit_entitlement: 200 };
+
+    test("names the election and where its voter limit ends up", () => {
+        expect(checkoutSummary('Board Election 2027', [line], { voter_limit: 100 }))
+            .toBe('Increase voter limit from 100 to 700 for election "Board Election 2027".');
+    });
+
+    test("adds up lines of the same type into one change", () => {
+        expect(checkoutSummary('Poll', [line, { ...line, quantity: 1 }], { voter_limit: 300 }))
+            .toBe('Increase voter limit from 300 to 1100 for election "Poll".');
+    });
+
+    test("cuts a long title", () => {
+        const summary = checkoutSummary('x'.repeat(500), [line], { voter_limit: 100 });
+        expect(summary).toBe(`Increase voter limit from 100 to 700 for election "${'x'.repeat(199)}…".`);
     });
 });

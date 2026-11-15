@@ -2,8 +2,7 @@ import { Response, NextFunction } from 'express';
 import { BadRequest } from '@curveball/http-errors';
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { TransactionLineItem } from '@equal-vote/star-vote-shared/domain_model/Transaction';
-import { ElectionEntitlements, EntitlementType } from '@equal-vote/star-vote-shared/domain_model/Entitlement';
-import { CatalogPriceData, catalogLineItem, getCatalogProduct, productCatalog } from '@equal-vote/star-vote-shared/config';
+import { PAYMENT_DISCLAIMER, CatalogPriceData, catalogLineItem, checkoutSummary, getCatalogProduct } from '@equal-vote/star-vote-shared/config';
 import ServiceLocator from '../../ServiceLocator';
 import Logger from '../../Services/Logging/Logger';
 import { IElectionRequest } from '../../IRequest';
@@ -15,13 +14,8 @@ const StripeService = ServiceLocator.stripeService();
 
 const className = 'election.Controllers';
 
-const DISCLAIMER = 'This payment is a program service fee to Equal Vote. It is not tax-deductible.';
-
 // The catalog's snapshot of a line: what's sent to Stripe and stored on the transaction
 type CheckoutLineItem = TransactionLineItem & { price_data: CatalogPriceData };
-
-// Long titles are cut so the submit message stays well inside Stripe's custom_text limit
-const MAX_TITLE_LENGTH = 200;
 
 // Checks the itemized cart against the catalog. A line whose unit_entitlement or unit_amount
 // doesn't exactly match the catalog means the client's pricing is stale.
@@ -53,21 +47,6 @@ function expectValidCart(line_items: unknown): CheckoutLineItem[] {
     });
 }
 
-// Shown by the Pay button: which election this is for, and where each limit ends up.
-// "from" is read now, so a second checkout paid in between can make it stale; what's granted is still right.
-function submitMessage(title: string, lineItems: CheckoutLineItem[], entitlements: ElectionEntitlements): string {
-    const added: Partial<Record<EntitlementType, number>> = {};
-    lineItems.forEach(({ entitlement_type, quantity, unit_entitlement }) => {
-        added[entitlement_type] = (added[entitlement_type] ?? 0) + quantity * unit_entitlement;
-    });
-    const changes = (Object.entries(added) as [EntitlementType, number][]).map(([type, amount]) => {
-        const from = entitlements[type];
-        return `${productCatalog[type].entitlementLabel} goes from ${from} to ${from + amount}`;
-    });
-    const shortTitle = title.length > MAX_TITLE_LENGTH ? `${title.slice(0, MAX_TITLE_LENGTH - 1)}…` : title;
-    return `${shortTitle}: ${changes.join('; ')}.`;
-}
-
 const createCheckoutSession = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     const election_id = req.election.election_id;
     Logger.info(req, `${className}.createCheckoutSession ${election_id}`);
@@ -87,8 +66,8 @@ const createCheckoutSession = async (req: IElectionRequest, res: Response, _next
         client_reference_id: election_id,
         metadata: { election_id, user_id },
         custom_text: {
-            submit: { message: submitMessage(req.election.title, lineItems, entitlements) },
-            after_submit: { message: DISCLAIMER },
+            submit: { message: checkoutSummary(req.election.title, lineItems, entitlements) },
+            after_submit: { message: PAYMENT_DISCLAIMER },
         },
         success_url: `${returnUrl}?checkout_session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${returnUrl}?checkout=cancelled`,
