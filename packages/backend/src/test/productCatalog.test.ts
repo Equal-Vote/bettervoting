@@ -1,4 +1,4 @@
-import { checkoutSummary, itemize } from '@equal-vote/star-vote-shared/domain_model/ProductCatalog';
+import { cartTotal, checkoutSummary, entitlementsAfter, itemize } from '@equal-vote/star-vote-shared/domain_model/ProductCatalog';
 
 // Pure unit tests for the shared catalog's itemize: given an election's roll count and its
 // current entitlements, it returns the line items needed to cover the roll.
@@ -45,5 +45,37 @@ describe("checkoutSummary", () => {
     test("cuts a long title", () => {
         const summary = checkoutSummary('x'.repeat(500), [line], { voter_limit: 100 });
         expect(summary).toBe(`Increase voter limit from 100 to 700 for election "${'x'.repeat(199)}…".`);
+    });
+});
+
+describe("cartTotal", () => {
+    test("sums every line's quantity times its unit price, in cents", () => {
+        expect(cartTotal([])).toBe(0);
+        expect(cartTotal([
+            { entitlement_type: 'voter_limit', quantity: 256, unit_entitlement: 100, unit_amount: 600 },
+        ])).toBe(153600);
+        expect(cartTotal([
+            { entitlement_type: 'voter_limit', quantity: 2, unit_entitlement: 100, unit_amount: 600 },
+            { entitlement_type: 'voter_limit', quantity: 1, unit_entitlement: 100, unit_amount: 600 },
+        ])).toBe(1800);
+    });
+});
+
+describe("entitlementsAfter", () => {
+    test("is the current entitlements plus what each line grants", () => {
+        // 100 free + 200 bought, buying 5 more blocks of 100 → 800
+        expect(entitlementsAfter({ voter_limit: 300 }, [
+            { entitlement_type: 'voter_limit', quantity: 5, unit_entitlement: 100, unit_amount: 600 },
+        ])).toEqual({ voter_limit: 800 });
+    });
+
+    test("an empty cart changes nothing", () => {
+        expect(entitlementsAfter({ voter_limit: 100 }, [])).toEqual({ voter_limit: 100 });
+    });
+
+    test("doesn't modify the entitlements it's given", () => {
+        const current = { voter_limit: 100 };
+        entitlementsAfter(current, [{ entitlement_type: 'voter_limit', quantity: 1, unit_entitlement: 100, unit_amount: 600 }]);
+        expect(current).toEqual({ voter_limit: 100 });
     });
 });

@@ -102,6 +102,23 @@ export function itemize(state: ItemizeState, entitlements: ElectionEntitlements)
         .map(({ product, quantity }) => catalogLineItem(product, quantity));
 }
 
+// What a cart costs, in cents
+export function cartTotal(lineItems: Pick<CartLineItem, 'quantity' | 'unit_amount'>[]): number {
+    return lineItems.reduce((total, { quantity, unit_amount }) => total + quantity * unit_amount, 0);
+}
+
+// The election's entitlements once a cart is paid for and fulfilled
+export function entitlementsAfter(
+    entitlements: ElectionEntitlements,
+    lineItems: Pick<CartLineItem, 'entitlement_type' | 'quantity' | 'unit_entitlement'>[],
+): ElectionEntitlements {
+    const after = { ...entitlements };
+    lineItems.forEach(({ entitlement_type, quantity, unit_entitlement }) => {
+        after[entitlement_type] += quantity * unit_entitlement;
+    });
+    return after;
+}
+
 // The checkout's summary line, shown by Stripe's Pay button: which election the purchase is
 // for, and where each entitlement ends up, e.g. 'Increase voter limit from 100 to 700 for election "Board Election 2027".'
 // `entitlements` is the election's current state, so "from" can be stale if another checkout is paid in between.

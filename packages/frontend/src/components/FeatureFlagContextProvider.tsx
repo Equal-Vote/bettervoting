@@ -54,6 +54,8 @@ const flagDefinitions = {
 	NOTA: 'Enables the "None of the Above" option when creating races',
 	AUDIT_LOG:
 		'Shows the link to an election\'s public audit log on the results page. The /history page and its API are live regardless — this only controls whether voters are pointed at them',
+	PAYMENTS:
+		'Pay-at-finalize: shows the itemized cost on Publish & Share and takes payment through Stripe Checkout when an election needs a higher voter limit',
 };
 
 export function FeatureFlagContextProvider({ children }: { children: React.ReactNode }) {
