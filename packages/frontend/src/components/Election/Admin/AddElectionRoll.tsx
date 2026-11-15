@@ -8,19 +8,21 @@ import Box from '@mui/material/Box';
 import { Checkbox, FormGroup, FormControlLabel } from '@mui/material';
 import Papa from "papaparse";
 import LinearProgress from "@mui/material/LinearProgress";
+import { pricingConfig } from '@equal-vote/star-vote-shared/config';
+import { ElectionEntitlements } from '@equal-vote/star-vote-shared/domain_model/Entitlement';
+import { itemize } from '@equal-vote/star-vote-shared/domain_model/ProductCatalog';
+import { formatCount } from '@equal-vote/star-vote-shared/utils/numberFormat';
 import { useGetRolls } from "../../../hooks/useAPI";
 import useElection from "../../ElectionContextProvider";
 import useSnackbar from "../../SnackbarContext";
 import useFeatureFlags from "../../FeatureFlagContextProvider";
-import { pricingConfig } from '@equal-vote/star-vote-shared/config';
 import { PrimaryButton, SecondaryButton } from "~/components/styles";
 import useConfirm from '../../ConfirmationDialogProvider';
 import { findRollConflicts, uploadRollsBatched, RollInput } from './rollUploadUtils';
-import { ElectionEntitlements } from '@equal-vote/star-vote-shared/domain_model/Entitlement';
-import { itemize } from '@equal-vote/star-vote-shared/domain_model/ProductCatalog';
-import useCheckout from './Payments/useCheckout';
+import { useCheckout } from './Payments/useCheckout';
 import UploadPaymentDialog, { UploadPayment } from './Payments/UploadPaymentDialog';
-import { AddVotersPricingNote, PaymentReceivedBanner } from './Payments/PricingNotes';
+import AddVotersPricingNote from './Payments/AddVotersPricingNote';
+import PaymentReceivedBanner from './Payments/PaymentReceivedBanner';
 
 
 interface AddElectionRollProps {
@@ -80,13 +82,13 @@ const AddElectionRoll = ({ onClose, onUploadingChange, paymentReceived = false }
     // The voter limit is hit either by the pre-upload check below or by the server's 402 Payment Required response
     // (e.g. if the roll grew since we fetched it). With payments on, both open the upload payment dialog, priced for
     // roll + upload; checkout runs before any (more) voters are added. With payments off, explain the limit instead.
-    const onPaymentRequired = (message: string, uploadCount: number, rollCount: number, currentEntitlements: ElectionEntitlements | undefined) => {
+    const onPaymentRequired = (message: string, uploadCount: number, alreadyAdded: number, rollCount: number, currentEntitlements: ElectionEntitlements | undefined) => {
         const lineItems = currentEntitlements ? itemize({ roll_count: rollCount }, currentEntitlements) : []
         if (!paymentsEnabled || lineItems.length === 0) {
             showError(message)
             return
         }
-        setUploadPayment({ uploadCount, rollCount, entitlements: currentEntitlements, lineItems })
+        setUploadPayment({ uploadCount, alreadyAdded, rollCount, entitlements: currentEntitlements, lineItems })
     }
 
     // Shared by the text field and the csv upload
@@ -114,8 +116,8 @@ const AddElectionRoll = ({ onClose, onUploadingChange, paymentReceived = false }
             if (election.state !== 'draft' && election.settings.voter_access == 'closed'
                 && voterLimit !== undefined && requestedVoterCount > voterLimit) {
                 onPaymentRequired(
-                    `This election is limited to ${voterLimit} voters, and this upload would bring it to ${requestedVoterCount}.`,
-                    uploadCount, requestedVoterCount, entitlements)
+                    `This election is limited to ${formatCount(voterLimit)} voters, and this upload would bring it to ${formatCount(requestedVoterCount)}.`,
+                    uploadCount, 0, requestedVoterCount, entitlements)
                 return
             }
 
@@ -185,7 +187,7 @@ const AddElectionRoll = ({ onClose, onUploadingChange, paymentReceived = false }
                 const fresh = await refreshElection()
                 const freshRolls = await getRolls.makeRequest()
                 if (!fresh || !freshRolls) return // useFetch already reported the error
-                onPaymentRequired(message, remaining, freshRolls.electionRoll.length + remaining, fresh.entitlements)
+                onPaymentRequired(message, remaining, result.uploaded, freshRolls.electionRoll.length + remaining, fresh.entitlements)
                 return
             }
             if (result.aborted) {

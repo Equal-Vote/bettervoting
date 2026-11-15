@@ -10,7 +10,8 @@ import useElection from '~/components/ElectionContextProvider';
 import TemporaryAccessWarning from '../TemporaryAccessWarning';
 import ElectionSettings from './ElectionSettings';
 import PublishAndShare from './PublishAndShare';
-import CheckoutReturn, { isCheckoutReturn } from './Payments/CheckoutReturn';
+import CheckoutReturn from './Payments/CheckoutReturn';
+import { isCheckoutReturn } from './Payments/paymentsUtils';
 
 const AdminPage = ({title, children}: {title: string, children: React.ReactNode}) => {
     const {election} = useElection();

@@ -16,8 +16,8 @@ import { PrimaryButton, SecondaryButton } from "~/components/styles";
 import ElectionAuthForm from "~/components/ElectionForm/Details/ElectionAuthForm";
 import useConfirm from "~/components/ConfirmationDialogProvider";
 import { AdminPageNavigation } from '../Sidebar';
-import { PAYMENT_RECEIVED_PARAM } from "./Payments/CheckoutReturn";
-import { FinalizeCostLink } from "./Payments/PricingNotes";
+import { PAYMENT_RECEIVED_PARAM } from "./Payments/paymentsUtils";
+import FinalizeCostLink from "./Payments/FinalizeCostLink";
 import HeadToHeadChart from "../../../components/Election/Results/components/HeadToHeadChart";
 
 const ViewElectionRolls = () => {
@@ -33,7 +33,8 @@ const ViewElectionRolls = () => {
     const navigate = useNavigate();
     const location = useLocation();
     // Back from paying for an over-limit upload (see CheckoutReturn): reopen Add Voters to re-submit the list
-    const paymentReceived = flags.isSet('PAYMENTS') && new URLSearchParams(location.search).has(PAYMENT_RECEIVED_PARAM)
+    const paymentsEnabled = flags.isSet('PAYMENTS')
+    const paymentReceived = paymentsEnabled && new URLSearchParams(location.search).has(PAYMENT_RECEIVED_PARAM)
     const [addRollPage, setAddRollPage] = useState(paymentReceived)
     const [uploadingRolls, setUploadingRolls] = useState(false)
     // refetch on close since an upload may have partially succeeded
@@ -171,7 +172,7 @@ const ViewElectionRolls = () => {
                 </RadioGroup>
             </Box>}
 
-            {flags.isSet('PAYMENTS') && election.state === 'draft' && voterAccess === 'closed' && data &&
+            {paymentsEnabled && election.state === 'draft' && voterAccess === 'closed' && data &&
                 <FinalizeCostLink voterCount={electionRollData.length} />
             }
             {/* Turnout so far. Skipped until there's a voter list, since there's no turnout to chart yet */}

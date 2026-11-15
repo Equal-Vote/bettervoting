@@ -3,6 +3,7 @@ import { Box } from "@mui/material";
 import { Typography } from "@mui/material";
 import { PrimaryButton } from "../../styles";
 import { useLocation, useNavigate } from 'react-router-dom';
+import { itemize } from '@equal-vote/star-vote-shared/domain_model/ProductCatalog';
 import ShareButton from "../ShareButton";
 import { useEffect, useState } from "react";
 import { useGetRolls, useSetOpenState } from "../../../hooks/useAPI";
@@ -12,11 +13,12 @@ import useElection from '../../ElectionContextProvider';
 import useAuthSession from '../../AuthSessionContextProvider';
 import { AdminPageNavigation } from '../Sidebar';
 import useOptimisticToggle from '~/hooks/useOptimisticToggle';
-import useFeatureFlags from '../../FeatureFlagContextProvider';
-import { itemize } from '@equal-vote/star-vote-shared/domain_model/ProductCatalog';
-import useFinalizeAndInvite from './useFinalizeAndInvite';
-import useCheckout from './Payments/useCheckout';
-import { FINALIZE_COST_ID, FinalizeCostSection, FinalizeDialog } from './Payments/FinalizeCost';
+import useFeatureFlags from '~/components/FeatureFlagContextProvider';
+import { useFinalizeAndInvite } from './useFinalizeAndInvite';
+import { useCheckout } from './Payments/useCheckout';
+import FinalizeCostSection from './Payments/FinalizeCostSection';
+import FinalizeDialog from './Payments/FinalizeDialog';
+import { FINALIZE_COST_ID } from './Payments/paymentsUtils';
 
 export default function PublishAndShare() {
     const authSession = useAuthSession()
@@ -39,6 +41,8 @@ export default function PublishAndShare() {
     // What finalizing costs: the cost section and the Finalize dialog both show this
     const showCost = paymentsEnabled && checkVoterLimit && rollCount !== undefined
     const lineItems = showCost ? itemize({ roll_count: rollCount }, entitlements) : []
+    // Until the roll is priced, Finalize can't know whether to confirm or proceed to payment
+    const pricingPending = paymentsEnabled && checkVoterLimit && rollCount === undefined
 
     // Publish & Share#finalize-cost (linked from Manage Voters and Add Voters) scrolls to the cost once it's rendered
     const location = useLocation()
@@ -111,7 +115,7 @@ export default function PublishAndShare() {
         }
         <Grid size={12} sx={{ p: 1, pt: 0, display: 'flex', alignItems: 'center' }}>
             <PrimaryButton
-                disabled={election.title.length === 0 || election.races.length === 0 || !hasPermission('canEditElectionState') || !authSession.isLoggedIn()}
+                disabled={election.title.length === 0 || election.races.length === 0 || !hasPermission('canEditElectionState') || !authSession.isLoggedIn() || pricingPending}
                 fullWidth
                 onClick={() => finalizeElection()}
                 sx={{mt: 2}}

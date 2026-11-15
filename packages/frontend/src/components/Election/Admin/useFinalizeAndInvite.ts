@@ -8,7 +8,7 @@ export type FinalizeOutcome = 'failed' | 'invite' | 'done';
 
 // The finalize call, then the existing prompt offering to email voters when invitations go out now.
 // Shared by Publish & Share and the return from Stripe.
-export default function useFinalizeAndInvite() {
+export function useFinalizeAndInvite() {
     const { t, election, refreshElection, enqueueWrite } = useElection();
     const { makeRequest: finalize } = useFinalizeElection(election.election_id);
     const emailConfirm = useConfirm();
