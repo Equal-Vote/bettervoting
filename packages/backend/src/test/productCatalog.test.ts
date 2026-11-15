@@ -1,4 +1,4 @@
-import { checkoutSummary, itemize } from '@equal-vote/star-vote-shared/config';
+import { checkoutSummary, itemize } from '@equal-vote/star-vote-shared/domain_model/ProductCatalog';
 
 // Pure unit tests for the shared catalog's itemize: given an election's roll count and its
 // current entitlements, it returns the line items needed to cover the roll.

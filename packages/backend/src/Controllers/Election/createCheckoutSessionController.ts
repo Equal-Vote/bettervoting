@@ -2,7 +2,7 @@ import { Response, NextFunction } from 'express';
 import { BadRequest } from '@curveball/http-errors';
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { TransactionLineItem } from '@equal-vote/star-vote-shared/domain_model/Transaction';
-import { PAYMENT_DISCLAIMER, CatalogPriceData, catalogLineItem, checkoutSummary, getCatalogProduct } from '@equal-vote/star-vote-shared/config';
+import { PAYMENT_DISCLAIMER, CatalogPriceData, catalogLineItem, checkoutSummary, getCatalogProduct } from '@equal-vote/star-vote-shared/domain_model/ProductCatalog';
 import ServiceLocator from '../../ServiceLocator';
 import Logger from '../../Services/Logging/Logger';
 import { IElectionRequest } from '../../IRequest';

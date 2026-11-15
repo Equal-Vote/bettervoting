@@ -33,9 +33,9 @@ What one unit of a Line Item costs, in cents. On a Line Item, and anywhere a pur
 _Avoid_: Unit cents, price per block
 
 **Unit Entitlement**:
-How much entitlement one unit of a Line Item grants, e.g. 200 voters per Voter Block.
+How much entitlement one unit of a Line Item grants, such as the number of voters in a Voter Block.
 _Avoid_: Entitlement amount (reads as money)
 
 **Voter Block**:
-The unit a voter-limit increase is bought in: a fixed number of voters (currently 200) at a fixed Unit Price. A purchase's quantity counts Voter Blocks, never voters.
+The unit a voter-limit increase is bought in: a fixed number of voters at a fixed Unit Price. A purchase's quantity counts Voter Blocks, never voters.
 _Avoid_: Additional voters (names the effect, not the unit), voter pack

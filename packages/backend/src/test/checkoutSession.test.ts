@@ -47,7 +47,7 @@ describe("POST /Election/:id/CheckoutSession", () => {
                 quantity: 3,
                 price_data: { currency: 'usd', unit_amount: 600, product_data: {
                     name: 'Increase Voter Limit',
-                    description: "Adds 300 voters (3 blocks of 100) to your election's voter limit\n.",
+                    description: "Adds 300 voters (3 blocks of 100) to your election's voter limit.",
                 } },
             }],
         });

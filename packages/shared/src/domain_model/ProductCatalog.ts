@@ -1,5 +1,13 @@
-import { ElectionEntitlements, EntitlementType } from "../domain_model/Entitlement";
-import { pricingConfig } from "./PricingConfig";
+import { ElectionEntitlements, EntitlementType } from "./Entitlement";
+import { pricingConfig } from "../config/PricingConfig";
+
+const { BLOCK_SIZE, PRICE_PER_BLOCK_CENTS } = pricingConfig;
+
+// Shown on Stripe's checkout page after the customer pays, and on the receipt
+export const PAYMENT_DISCLAIMER = 'This payment is a program service fee to Equal Vote. It is not tax-deductible.';
+
+// Long titles are cut so the checkout summary stays well inside Stripe's custom_text limit
+const MAX_TITLE_LENGTH = 200;
 
 // The Stripe Checkout `line_items[].price_data` shape the catalog produces. Declared here
 // (rather than imported from the stripe package) so the frontend can use the catalog too.
@@ -43,8 +51,6 @@ export interface CatalogProduct {
     quantityNeeded: (state: ItemizeState, entitlements: ElectionEntitlements) => number;
 }
 
-const { BLOCK_SIZE, PRICE_PER_BLOCK_CENTS } = pricingConfig;
-
 const voterBlock: CatalogProduct = {
     entitlement_type: 'voter_limit',
     name: `Increase Voter Limit`,
@@ -58,7 +64,7 @@ const voterBlock: CatalogProduct = {
             unit_amount: this.unit_amount,
             product_data: {
                 name: this.name,
-                description: `Adds ${quantity * this.unit_entitlement} voters (${blocks} of ${this.unit_entitlement}) to your election's voter limit\n.`,
+                description: `Adds ${quantity * this.unit_entitlement} voters (${blocks} of ${this.unit_entitlement}) to your election's voter limit.`,
                 ...(this.image ? { images: [this.image] } : {}),
             },
         };
@@ -95,12 +101,6 @@ export function itemize(state: ItemizeState, entitlements: ElectionEntitlements)
         .filter(({ quantity }) => quantity > 0)
         .map(({ product, quantity }) => catalogLineItem(product, quantity));
 }
-
-// Shown on Stripe's checkout page after the customer pays, and on the receipt
-export const PAYMENT_DISCLAIMER = 'This payment is a program service fee to Equal Vote. It is not tax-deductible.';
-
-// Long titles are cut so the message stays well inside Stripe's custom_text limit
-const MAX_TITLE_LENGTH = 200;
 
 // The checkout's summary line, shown by Stripe's Pay button: which election the purchase is
 // for, and where each entitlement ends up, e.g. 'Increase voter limit from 100 to 700 for election "Board Election 2027".'
