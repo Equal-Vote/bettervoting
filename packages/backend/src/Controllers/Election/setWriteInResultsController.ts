@@ -8,7 +8,7 @@ import { Response, NextFunction } from 'express';
 import { WriteInCandidate } from '@equal-vote/star-vote-shared/domain_model/WriteIn';
 import { trimLower } from '@equal-vote/star-vote-shared/domain_model/Util';
 
-var ElectionsModel = ServiceLocator.electionsDb();
+const ElectionsModel = ServiceLocator.electionsDb();
 
 const MAX_WRITE_IN_CANDIDATES = 100;
 const MAX_CANDIDATE_NAME_LENGTH = 100;

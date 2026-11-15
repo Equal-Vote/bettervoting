@@ -98,7 +98,7 @@ export function electionRollValidation(obj:ElectionRoll): string | null {
         return "Invalid State";
     }
     if (obj.history) {
-        for (let action of obj.history){
+        for (const action of obj.history){
             const error = electionRollActionValidation(action);
             if (error){
                 return error;

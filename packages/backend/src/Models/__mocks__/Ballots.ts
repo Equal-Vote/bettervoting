@@ -8,14 +8,14 @@ export default class BallotsDB implements IBallotStore {
 
     constructor() {}
     submitBallot(ballot: Ballot, _ctx:ILoggingContext, _reason:string): Promise<Ballot> {
-        var copy = JSON.parse(JSON.stringify(ballot));
+        const copy = JSON.parse(JSON.stringify(ballot));
         copy.head = true; // the real store always inserts ballots as the head version
         this.ballots.push(copy);
         return Promise.resolve(JSON.parse(JSON.stringify(copy)));
     }
 
     updateBallot(ballot: Ballot, _ctx:ILoggingContext, _reason:string): Promise<Ballot> {
-        var copy = JSON.parse(JSON.stringify(ballot));
+        const copy = JSON.parse(JSON.stringify(ballot));
         this.ballots.push(copy);
         return Promise.resolve(JSON.parse(JSON.stringify(copy)));
     }
@@ -29,7 +29,7 @@ export default class BallotsDB implements IBallotStore {
         const ballots = this.ballots.filter(
             (ballot) => ballot.election_id === election_id
         );
-        var resBallots = JSON.parse(JSON.stringify(ballots));
+        const resBallots = JSON.parse(JSON.stringify(ballots));
         return Promise.resolve(resBallots);
     }
 
@@ -65,7 +65,7 @@ export default class BallotsDB implements IBallotStore {
         if (!ballots) {
             return Promise.resolve(undefined);
         }
-        var resBallots = JSON.parse(JSON.stringify(ballots));
+        const resBallots = JSON.parse(JSON.stringify(ballots));
         return Promise.resolve(resBallots);
     }
 
@@ -76,7 +76,7 @@ export default class BallotsDB implements IBallotStore {
         if (!ballot) {
             return Promise.resolve(null);
         }
-        var resBallot = JSON.parse(JSON.stringify(ballot));
+        const resBallot = JSON.parse(JSON.stringify(ballot));
         return Promise.resolve(resBallot);
     }
 

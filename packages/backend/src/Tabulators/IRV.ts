@@ -58,12 +58,12 @@ export function IRV_STV(candidates: candidate[], votes: rawVote[], nWinners = 1,
     }
 
     let remainingCandidates = [...summaryData.candidates]
-    let activeVotes: vote[] = tallyVotes;
+    const activeVotes: vote[] = tallyVotes;
 
-    let weightedVotes: weightedVote[] = activeVotes.map(vote => ({ weight: Fraction(1), vote: vote }))
+    const weightedVotes: weightedVote[] = activeVotes.map(vote => ({ weight: Fraction(1), vote: vote }))
 
     // Initialize candidate vote pools to empty arrays
-    let candidateVoteLists: keyedObject<candidateVoteList> = Object.fromEntries(summaryData.candidates.map(c => [c.id, {
+    const candidateVoteLists: keyedObject<candidateVoteList> = Object.fromEntries(summaryData.candidates.map(c => [c.id, {
         candidate: c, 
         votes: [] as weightedVote[]
     }]))
@@ -87,7 +87,7 @@ export function IRV_STV(candidates: candidate[], votes: rawVote[], nWinners = 1,
 
         if (DEBUG) console.log("IRV Round");
 
-        let roundResults: irvRoundResults = {
+        const roundResults: irvRoundResults = {
             winners: [],
             runner_up: [],
             tied: [],
@@ -103,9 +103,9 @@ export function IRV_STV(candidates: candidate[], votes: rawVote[], nWinners = 1,
 
         // get max number of votes
 
-        let topCandidate = remainingCandidates[0];
-        let maxVotes: typeof Fraction = (topCandidate.hareScores.at(-1) as typeof Fraction);
-        let nActiveVotes: typeof Fraction = remainingCandidates.reduce((sum, c) => sum.add(c.hareScores.at(-1)), new Fraction(0));
+        const topCandidate = remainingCandidates[0];
+        const maxVotes: typeof Fraction = (topCandidate.hareScores.at(-1) as typeof Fraction);
+        const nActiveVotes: typeof Fraction = remainingCandidates.reduce((sum, c) => sum.add(c.hareScores.at(-1)), new Fraction(0));
         if (!proportional) {
             quota = Math.floor(nActiveVotes /2 + 1)
         }
@@ -124,8 +124,8 @@ export function IRV_STV(candidates: candidate[], votes: rawVote[], nWinners = 1,
 
             if (proportional) {
                 remainingCandidates.shift(); // remove top
-                let fractionalSurplus = new Fraction(maxVotes.sub(quota)).div(maxVotes)
-                let winningCandidateVotes = candidateVoteLists[topCandidate.id].votes;
+                const fractionalSurplus = new Fraction(maxVotes.sub(quota)).div(maxVotes)
+                const winningCandidateVotes = candidateVoteLists[topCandidate.id].votes;
                 candidateVoteLists[topCandidate.id].votes = []
                 winningCandidateVotes.forEach(vote => {
                     vote.weight = vote.weight.mul(fractionalSurplus).floor(5)
@@ -149,11 +149,11 @@ export function IRV_STV(candidates: candidate[], votes: rawVote[], nWinners = 1,
         }
         else {
             // find candidate with least votes and remove from remaining candidates
-            let eliminatedCandidate = remainingCandidates.pop() as irvCandidate;
+            const eliminatedCandidate = remainingCandidates.pop() as irvCandidate;
             if(remainingCandidates.length == 1 && (eliminatedCandidate.hareScores.at(-1) as typeof Fraction).equals(remainingCandidates[0].hareScores.at(-1) as typeof Fraction)){
                 results.tieBreakType = 'random';
             }
-            let eliminatedCandidateVotes = candidateVoteLists[eliminatedCandidate.id].votes;
+            const eliminatedCandidateVotes = candidateVoteLists[eliminatedCandidate.id].votes;
             candidateVoteLists[eliminatedCandidate.id].votes = []
             distributeVotes(remainingCandidates, candidateVoteLists, eliminatedCandidateVotes, results, electionSettings)
             if (DEBUG) console.log("eliminate", JSON.stringify(eliminatedCandidate));
@@ -188,21 +188,21 @@ function distributeVotes(remainingCandidates: irvCandidate[], candidateVotes: ke
 
     // we'll remove as votes get exhausted, hence the backwards iteration
     for(let i = votesToDistribute.length-1; i >= 0; i--){
-        let ballot = votesToDistribute[i];
-        let v = ballot.vote;
+        const ballot = votesToDistribute[i];
+        const v = ballot.vote;
 
         const mapZero = (n: number) => n == 0 ? Infinity : n;
-        let topCandidate = remainingCandidates.reduce((top, c) => mapZero(v.marks[top.id]) < mapZero(v.marks[c.id])? top : c)
-        let topRemainingRank: number = (v.overvote_rank && v.marks[topCandidate.id] > v.overvote_rank) ? v.overvote_rank : v.marks[topCandidate.id];
+        const topCandidate = remainingCandidates.reduce((top, c) => mapZero(v.marks[top.id]) < mapZero(v.marks[c.id])? top : c)
+        const topRemainingRank: number = (v.overvote_rank && v.marks[topCandidate.id] > v.overvote_rank) ? v.overvote_rank : v.marks[topCandidate.id];
 
-        let prevTopRank = Object.entries(v.marks).reduce((prevTopRank, [_, rank]) => {
+        const prevTopRank = Object.entries(v.marks).reduce((prevTopRank, [_, rank]) => {
             if(rank == 0 || rank >= topRemainingRank) return prevTopRank;
             return Math.max(prevTopRank, rank);
         }, 0); // 0 as default to we can catch front skips
 
         // TODO: get "2" from election settings
-        let exhaustedViaSkippedRankings = (topRemainingRank - prevTopRank) > (electionSettings?.exhaust_on_N_repeated_skipped_marks ?? 9999);
-        let exhaustedViaOvervote = !exhaustedViaSkippedRankings && v.overvote_rank && topRemainingRank == v.overvote_rank;
+        const exhaustedViaSkippedRankings = (topRemainingRank - prevTopRank) > (electionSettings?.exhaust_on_N_repeated_skipped_marks ?? 9999);
+        const exhaustedViaOvervote = !exhaustedViaSkippedRankings && v.overvote_rank && topRemainingRank == v.overvote_rank;
         if (topRemainingRank === 0 || exhaustedViaOvervote || exhaustedViaSkippedRankings) {
             if(exhaustedViaSkippedRankings) results.nExhaustedViaSkippedRank++;
             if(exhaustedViaOvervote) results.nExhaustedViaOvervote++;

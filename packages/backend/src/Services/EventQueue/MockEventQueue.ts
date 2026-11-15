@@ -30,7 +30,7 @@ export class MockEventQueue implements IEventQueue {
     }
 
     public async publish(queue:QueueName, data:object):Promise<string> {
-        var j = {
+        const j = {
             queue: queue,
             data: data,
             id: randomUUID()
@@ -43,7 +43,7 @@ export class MockEventQueue implements IEventQueue {
     // spacingMs is accepted for signature parity but ignored: the mock runs jobs
     // immediately so tests don't have to wait out a schedule.
     public async publishBatch(queue:QueueName, data:object[], _opts?:PublishBatchOptions):Promise<object> {
-        var j = data.map(d => ({
+        const j = data.map(d => ({
             queue: queue,
             data: d,
             id: randomUUID()
@@ -70,7 +70,7 @@ export class MockEventQueue implements IEventQueue {
     }
 
     private async processNextJob(){
-        var j = this._pendingJobs.shift();
+        const j = this._pendingJobs.shift();
         if (!j){
             console.info("Event queue empty");
             this._working = false;

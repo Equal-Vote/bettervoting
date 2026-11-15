@@ -7,10 +7,10 @@ import { Response, NextFunction } from 'express';
 import { Ballot } from "@equal-vote/star-vote-shared/domain_model/Ballot";
 import { WriteInData } from "@equal-vote/star-vote-shared/domain_model/WriteIn";
 
-var BallotModel = ServiceLocator.ballotsDb();
+const BallotModel = ServiceLocator.ballotsDb();
 
 const getWriteInNamesController = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
-    var electionId = req.election.election_id;
+    const electionId = req.election.election_id;
     Logger.debug(req, "getWriteInNames: " + electionId);
 
     expectPermission(req.user_auth.roles, permissions.canViewBallots)

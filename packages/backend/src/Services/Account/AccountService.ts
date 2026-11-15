@@ -51,7 +51,7 @@ export default class AccountService {
     }
 
     getToken = async (req: Request) => {
-        var params: Record<string, unknown> = {
+        const params: Record<string, unknown> = {
             grant_type: req.query.grant_type,
             client_id: this.authConfig.clientId,
             redirect_uri: req.query.redirect_uri,

@@ -54,9 +54,9 @@ const truncName = (name: string, maxSize: number) => {
 interface TagObject{
   [key: string]: string
 }
-let ElectionsModel =  ServiceLocator.electionsDb();
+const ElectionsModel =  ServiceLocator.electionsDb();
 export async function getMetaTags(req: Request) : Promise<TagObject>  {
-  let parts = req.url.split('/');
+  const parts = req.url.split('/');
   let election:Election|null;
 
   // list copied from App.tsx
@@ -71,10 +71,10 @@ export async function getMetaTags(req: Request) : Promise<TagObject>  {
     }
   }
 
-  let race = election?.races?.[0] ?? undefined;
-  let len = race?.candidates.length ?? 0;
-  let n_hidden = (len > 5) ? 1 : (5-len);
-  let n_cropped = (len > 5) ? 0 : (5-len);
+  const race = election?.races?.[0] ?? undefined;
+  const len = race?.candidates.length ?? 0;
+  const n_hidden = (len > 5) ? 1 : (5-len);
+  const n_cropped = (len > 5) ? 0 : (5-len);
 
   const sanitizeText = (text: string) => text ? sanitizeHtml(text, { allowedTags: [], allowedAttributes: {} }) : text;
 

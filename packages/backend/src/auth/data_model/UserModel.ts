@@ -16,8 +16,8 @@ export class UserModel {
     }
 
     public static fromJson(json: string):UserModel {
-        var obj = JSON.parse(json);
-        let res: UserModel = new UserModel(obj);
+        const obj = JSON.parse(json);
+        const res: UserModel = new UserModel(obj);
         return res;
     }
 

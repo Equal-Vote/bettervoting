@@ -34,8 +34,8 @@ export function Plurality(candidates: candidate[], votes: rawVote[], nWinners = 
 }
 
 const singleWinnerPlurality = (remainingCandidates: pluralityCandidate[], _summaryData: pluralitySummaryData): plurlaityRoundResults => {
-  let winner = remainingCandidates[0];
-  let tiedCandidates = remainingCandidates.filter(c => c.score == winner.score);
+  const winner = remainingCandidates[0];
+  const tiedCandidates = remainingCandidates.filter(c => c.score == winner.score);
 
   return {
     winners: [winner],

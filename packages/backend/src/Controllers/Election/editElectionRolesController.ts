@@ -6,7 +6,7 @@ import { BadRequest } from "@curveball/http-errors";
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
 
-var ElectionsModel = ServiceLocator.electionsDb();
+const ElectionsModel = ServiceLocator.electionsDb();
 
 
 const editElectionRoles = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
@@ -19,7 +19,7 @@ const editElectionRoles = async (req: IElectionRequest, res: Response, _next: Ne
     //     throw new BadRequest("Election is not editable")
     // }
     
-    var failMsg = "Failed to update Election roles";
+    const failMsg = "Failed to update Election roles";
     req.election.admin_ids = req.body.admin_ids
     req.election.audit_ids = req.body.audit_ids
     req.election.credential_ids = req.body.credential_ids

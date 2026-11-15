@@ -12,7 +12,7 @@ export class DemoPGStore {
 
     init():Promise<DemoPGStore> {
         console.info("DemoPGStore.init");
-		var query = `
+		const query = `
         CREATE TABLE IF NOT EXISTS ${this._tableName} (
             id SERIAL PRIMARY KEY,
             key VARCHAR UNIQUE,
@@ -20,7 +20,7 @@ export class DemoPGStore {
           );
         `;
         console.info(query);
-        var p =  this._postgresClient.query(query);
+        const p =  this._postgresClient.query(query);
         return p.then(() => {
             return this;
           });
@@ -29,12 +29,12 @@ export class DemoPGStore {
 
     set(key:string, value:string):Promise<string> {
         console.info(`DemoPGStore.set ${key} -> ${value}`);
-        var sqlString = `INSERT INTO ${this._tableName} (key, val)
+        const sqlString = `INSERT INTO ${this._tableName} (key, val)
         VALUES($1, $2)
         ON CONFLICT (key) 
         DO UPDATE SET val = $2;`;
 
-        var p =  this._postgresClient.query({
+        const p =  this._postgresClient.query({
             rowMode: 'array',
             text: sqlString,
             values: [key, value]
@@ -47,16 +47,16 @@ export class DemoPGStore {
 
     get(key:string):Promise<string | null> {
         console.info(`DemoPGStore.get ${key}`);
-        var sqlString = `SELECT * FROM ${this._tableName} WHERE key = $1`;
+        const sqlString = `SELECT * FROM ${this._tableName} WHERE key = $1`;
         console.info(sqlString);
 
-        var p =  this._postgresClient.query({
+        const p =  this._postgresClient.query({
             rowMode: 'array',
             text: sqlString,
             values: [key]
         });
         return p.then((response) => {
-            var rows = response.rows;
+            const rows = response.rows;
             if (rows.length == 0){
                 console.info(".get null");
                 return null;
@@ -67,10 +67,10 @@ export class DemoPGStore {
 
     delete(key:string):Promise<boolean> {
         console.info(`DemoPGStore.delete ${key}`);
-        var sqlString = `DELETE FROM ${this._tableName} WHERE key = $1`;
+        const sqlString = `DELETE FROM ${this._tableName} WHERE key = $1`;
         console.info(sqlString);
 
-        var p =  this._postgresClient.query({
+        const p =  this._postgresClient.query({
             rowMode: 'array',
             text: sqlString,
             values: [key]

@@ -1,7 +1,7 @@
 import { ILogger, ILoggingContext } from "./ILogger";
 import { LoggerImpl } from "./LoggerImpl";
 
-var _loggerInstance: ILogger;
+let _loggerInstance: ILogger;
 
 function debug(context?: ILoggingContext, message?: unknown, ...optionalParams: unknown[]): void {
   logger().debug(context, message, ...optionalParams);

@@ -46,7 +46,7 @@ const singleWinnerRankedRobin = (remainingCandidates: rankedRobinCandidate[], _s
     return roundResults
   }
 
-  let winners = remainingCandidates.filter(c => c.copelandScore === remainingCandidates[0].copelandScore);
+  const winners = remainingCandidates.filter(c => c.copelandScore === remainingCandidates[0].copelandScore);
 
   if (winners.length===1) {
     roundResults.winners.push(winners[0])

@@ -16,9 +16,9 @@ import useRace from '~/components/RaceContextProvider';
 export function IRVWinnerView ( {win}:{
   win: irvWinnerSearch, context: irvContext
 }) {
-  let {results, t} = useRace();
+  const {results: raceResults, t} = useRace();
 
-  results = results as irvResults;
+  const results = raceResults as irvResults;
 
   const firstRoundData = results.summaryData.candidates.map((c: irvCandidate) => ({
     name: c.name,

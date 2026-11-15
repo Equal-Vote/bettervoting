@@ -40,10 +40,9 @@ export class LoggerImpl {
     }
 
     log(context?:ILoggingContext, levelStr?:string,  message?: unknown, ...optionalParams: unknown[]):void { 
-        var msg = "";
-        var lvlStr = "";
-        var ctxStr = "";
-        var prefix = "";
+        let lvlStr = "";
+        let ctxStr = "";
+        let prefix = "";
         if (context!= null){
             ctxStr = "ctx:" + context.contextId;
             if (context.logPrefix == null){
@@ -58,7 +57,7 @@ export class LoggerImpl {
             lvlStr = levelStr+"  ";
         }
 
-        var msg = `${prefix}${ctxStr} ${lvlStr}${message}`;
+        const msg = `${prefix}${ctxStr} ${lvlStr}${message}`;
         console.info(msg, ...optionalParams);
     }
 }

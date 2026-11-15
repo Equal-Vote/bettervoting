@@ -39,7 +39,7 @@ const getElectionResults = async (req: IElectionRequest, res: Response, _next: N
         }
     )
 
-    let results: ElectionResults[] = []
+    const results: ElectionResults[] = []
     for (let race_index = 0; race_index < election.races.length; race_index++) {
         const race = election.races[race_index]
         const projection = projections[race_index]
