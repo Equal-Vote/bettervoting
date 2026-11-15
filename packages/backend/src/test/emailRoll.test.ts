@@ -21,8 +21,8 @@ describe("Email List Voter Auth", () => {
     beforeAll(() => {
         jest.clearAllMocks();
     });
-    var electionId = "";
-    var aliceVoterId = "";
+    let electionId = "";
+    let aliceVoterId = "";
 
     test("Create election, responds 200", async () => {
         const response = await th.createElection(

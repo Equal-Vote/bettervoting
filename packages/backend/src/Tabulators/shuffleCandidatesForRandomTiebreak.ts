@@ -37,7 +37,7 @@ export default  (electionCreateDate: Date | string, candidates: candidate[], raw
     }
 
     // >>> 0 coerces to unsigned 32-bit (wraps negatives to large positives) rather than Math.abs (which folds -x and +x onto the same value, halving the seed space)
-    let seed = (rawVoteCount + hashStringToInt(raceId)) >>> 0;
+    const seed = (rawVoteCount + hashStringToInt(raceId)) >>> 0;
     getTinyRand(0, seed).shuffle(candidates)
     candidates.forEach((c, i) => c.tieBreakOrder = i)
 }

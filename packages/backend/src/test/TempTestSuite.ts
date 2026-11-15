@@ -3,11 +3,11 @@ import { testDBCounter } from "./DBTest";
 
 export async function tempTestSuite(): Promise<string> {
 
-    var tests = [
+    const tests = [
         testMockUserStore(),
         testDBCounter()
     ];
 
-    var combine = await Promise.all(tests);
+    const combine = await Promise.all(tests);
     return "Test Results:  " + combine.join(",  ");
 }

@@ -37,7 +37,7 @@ async function* anonymizedBallotJsonChunks(ballots: AsyncIterable<Ballot>): Asyn
 }
 
 export const getAnonymizedBallotsByElectionID = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
-    var electionId = req.election.election_id;
+    const electionId = req.election.election_id;
     Logger.debug(req, "getAnonymizedBallotsByElectionID: " + electionId);
     const election = req.election;
     if (!election.settings.public_results) {

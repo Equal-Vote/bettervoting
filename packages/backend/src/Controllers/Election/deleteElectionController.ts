@@ -6,7 +6,7 @@ import { BadRequest } from "@curveball/http-errors";
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
 
-var ElectionsModel = ServiceLocator.electionsDb();
+const ElectionsModel = ServiceLocator.electionsDb();
 const className = "Elections.Controllers";
 
 const deleteElection = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
@@ -15,7 +15,7 @@ const deleteElection = async (req: IElectionRequest, res: Response, _next: NextF
     Logger.info(req, `${className}.deleteElection ${electionId}`)
     const success = await ElectionsModel.delete(electionId, req, `User manually deleting election`);
     if (!success) {
-        var msg = "Nothing to delete";
+        const msg = "Nothing to delete";
         Logger.error(req, msg);
         throw new BadRequest(msg)
     }

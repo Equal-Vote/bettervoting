@@ -18,24 +18,24 @@ import { Database } from "./Models/Database";
 import { SerializeParametersPlugin } from "./Models/serialize-parameters/serialize-parameters-plugin";
 import { Pool } from 'pg';
 
-var _postgresClient: Pool;
-var _DB: Kysely<Database>
-var _appInitContext = Logger.createContext("appInit");
-var _ballotsDb: IBallotStore;
-var _electionsDb: ElectionsDB;
-var _electionRollDb: ElectionRollDB;
-var _emailEventsDb: EmailEventsDB;
-var _castVoteStore: CastVoteStore;
-var _emailService: EmailService
-var _blobService: BlobService
-var _eventQueue: IEventQueue;
-var _accountService: AccountService;
-var _globalData: GlobalData;
+let _postgresClient: Pool;
+let _DB: Kysely<Database>
+const _appInitContext = Logger.createContext("appInit");
+let _ballotsDb: IBallotStore;
+let _electionsDb: ElectionsDB;
+let _electionRollDb: ElectionRollDB;
+let _emailEventsDb: EmailEventsDB;
+let _castVoteStore: CastVoteStore;
+let _emailService: EmailService
+let _blobService: BlobService
+let _eventQueue: IEventQueue;
+let _accountService: AccountService;
+let _globalData: GlobalData;
 
 
 function postgres(): Pool {
     if (_postgresClient == null) {
-        var connectionConfig = pgConnectionObject();
+        const connectionConfig = pgConnectionObject();
         // We can't log this since it has sensitive information
         // Logger.debug(_appInitContext, `Postgres Config:  ${JSON.stringify(connectionConfig)}}`);
         _postgresClient = new Pool(connectionConfig);
@@ -71,8 +71,8 @@ function database(): Kysely<Database> {
 }
 
 function pgConnectionObject(): { connectionString: string; ssl: { rejectUnauthorized: boolean } | false } {
-    var connectionStr = pgConnectionString();
-    var devDB = process.env.DEV_DATABASE;
+    const connectionStr = pgConnectionString();
+    const devDB = process.env.DEV_DATABASE;
     if (devDB === 'TRUE') {
         return {
             connectionString: connectionStr,

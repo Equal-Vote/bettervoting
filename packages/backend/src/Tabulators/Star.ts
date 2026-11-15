@@ -27,8 +27,8 @@ export function Star(candidates: candidate[], votes: rawVote[], nWinners = 1, _e
     nWinners,
     singleWinnerStar,
     (candidate: starCandidate, roundResults: roundResults<starCandidate>[]) => {
-      let winRound = roundResults.findIndex(round => round.winners[0].id == candidate.id)
-      let runnerUpRound = roundResults.findIndex(round => round.runner_up[0]?.id == candidate.id)
+      const winRound = roundResults.findIndex(round => round.winners[0].id == candidate.id)
+      const runnerUpRound = roundResults.findIndex(round => round.runner_up[0]?.id == candidate.id)
       return [
         // sort first by winning round
         winRound == -1 ? -Infinity : -winRound,
@@ -103,7 +103,7 @@ export function singleWinnerStar(remainingCandidates: starCandidate[], summaryDa
     })
 
     // HEAD-TO-HEAD TIEBREAK: there's a score tie for 2nd & 3rd place
-    let [left, right] = tiedCandidates.slice(0, 2);
+    const [left, right] = tiedCandidates.slice(0, 2);
     if(tiedCandidates.length > 2){
       roundResults.logs.push({
         key: 'tabulation_logs.star.pairwise_too_many_candidates',
@@ -172,7 +172,7 @@ export function singleWinnerStar(remainingCandidates: starCandidate[], summaryDa
 
     // HAPPY PATH: there's a clear winner
     if(left.winsAgainst[right.id] != right.winsAgainst[left.id]){
-      let [winner, runnerUp] = left.winsAgainst[right.id] ? [left, right] : [right, left];
+      const [winner, runnerUp] = left.winsAgainst[right.id] ? [left, right] : [right, left];
       const winnerVotes = winner.votesPreferredOver[runnerUp.id];
       const runnerUpVotes = runnerUp.votesPreferredOver[winner.id];
       roundResults.logs.push({
@@ -203,7 +203,7 @@ export function singleWinnerStar(remainingCandidates: starCandidate[], summaryDa
         stars: left.score,
       });
     }else{
-      let [winner, runnerUp] = left.score > right.score ? [left, right] : [right, left];
+      const [winner, runnerUp] = left.score > right.score ? [left, right] : [right, left];
       roundResults.logs.push({
         key: 'tabulation_logs.star.runoff_score_tiebreak',
         winner: winner.name,
@@ -223,7 +223,7 @@ export function singleWinnerStar(remainingCandidates: starCandidate[], summaryDa
         votes: left.fiveStarCount,
       });
     }else{
-      let [winner, runnerUp] = left.fiveStarCount > right.fiveStarCount ? [left, right] : [right, left];
+      const [winner, runnerUp] = left.fiveStarCount > right.fiveStarCount ? [left, right] : [right, left];
       roundResults.logs.push({
         key: 'tabulation_logs.star.runoff_five_star_tiebreak',
         winner: winner.name,
@@ -236,7 +236,7 @@ export function singleWinnerStar(remainingCandidates: starCandidate[], summaryDa
     }
 
     // RANDOM TIEBREAK: At a certain some point there's no other way 🤷
-    let [winner, runnerUp] = sortCandidates([left, right]) as starCandidatePair;
+    const [winner, runnerUp] = sortCandidates([left, right]) as starCandidatePair;
     roundResults.logs.push({
       key: `tabulation_logs.star.runoff_random`,
       winner: winner.name,

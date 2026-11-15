@@ -15,8 +15,8 @@ export class MockUserStore {
     }
 
     getByEmail(email: Email): Promise<UserModel|null> {
-        var val = this.indexByEmail.get(email);
-        var res = null;
+        const val = this.indexByEmail.get(email);
+        let res = null;
         if (val !== undefined){
             res = val.copy();
         }
@@ -24,8 +24,8 @@ export class MockUserStore {
     }
 
     getById(id: Uid): Promise<UserModel|null> {
-        var val = this.indexById.get(id);
-        var res = null;
+        const val = this.indexById.get(id);
+        let res = null;
         if (val != undefined){
             res = val.copy();
         }
@@ -37,16 +37,16 @@ export class MockUserStore {
         user = user.copy();
 
         //need to check if the email field is already used
-        var byEmail = await this.getByEmail(user.email);
+        const byEmail = await this.getByEmail(user.email);
         if (byEmail != null) {
             if (byEmail.id != user.id) {
                 throw new Error(`Email ${user.email} is already in use`);
             }
         }
 
-        var byId = await this.getById(user.id);
+        const byId = await this.getById(user.id);
         if (byId != null) {
-            var oldEmail = byId.email;
+            const oldEmail = byId.email;
             this.indexByEmail.delete(oldEmail);
         }
 

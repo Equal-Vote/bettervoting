@@ -27,7 +27,7 @@ export function formatMarkdown(text: string, options: FormatMarkdownOptions = {}
   let body = text;
 
   // Links first: [text](url) → <a href="url">text</a>
-  let linkParts = body.split(rLink);
+  const linkParts = body.split(rLink);
   body = linkParts.map((str, i) => {
     if (i % 3 === 0) return str;
     if (i % 3 === 2) return '';

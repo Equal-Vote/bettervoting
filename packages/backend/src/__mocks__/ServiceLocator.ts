@@ -11,17 +11,16 @@ import { MockEventQueue } from "../Services/EventQueue/MockEventQueue";
 import AccountService from "../Services/Account/__mocks__/AccountService"
 import GlobalData from "../Services/GlobalData";
 
-var _ballotsDb:IBallotStore;
-var _electionsDb:ElectionsDB;
-var _electionRollDb:IElectionRollStore;
-var _emailEventsDb:EmailEventsDB;
-var _emailService:EmailService;
-var _blobService:BlobService;
-var _castVoteStore:CastVoteStore;
-var _eventQueue:MockEventQueue;
-var _castVoteStore:CastVoteStore;;
-var _accountService:AccountService;
-var _globalData:GlobalData;
+let _ballotsDb:IBallotStore;
+let _electionsDb:ElectionsDB;
+let _electionRollDb:IElectionRollStore;
+let _emailEventsDb:EmailEventsDB;
+let _emailService:EmailService;
+let _blobService:BlobService;
+let _castVoteStore:CastVoteStore;
+let _eventQueue:MockEventQueue;
+let _accountService:AccountService;
+let _globalData:GlobalData;
 
 function ballotsDb():IBallotStore {
     if (_ballotsDb == null){

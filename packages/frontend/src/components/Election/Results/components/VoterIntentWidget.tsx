@@ -9,14 +9,15 @@ import { irvResults } from "@equal-vote/star-vote-shared/domain_model/ITabulator
 // eliminationOrder is an array of candidateIds
 const VoterIntentWidget = () => {
     const {t} = useElection();
-    let { results, race } = useRace();
+    const { results: raceResults, race } = useRace();
     const { ballotsForRace} = useAnonymizedBallots();
 
-    results = results as irvResults;
+    const results = raceResults as irvResults;
 
     const candidates = results.summaryData.candidates;
 
-    let [winner, runnerUp] = candidates.slice(0, 2);
+    const winner = candidates[0];
+    let runnerUp = candidates[1];
 
     const final_round_candidates = candidates.filter(c => c.hareScores.at(-1) != 0).length;
     if(final_round_candidates > 2){

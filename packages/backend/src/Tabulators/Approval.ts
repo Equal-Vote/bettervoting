@@ -33,8 +33,8 @@ export function Approval(candidates: candidate[], votes: rawVote[], nWinners = 1
 
 const singleWinnerApproval = (remainingCandidates: approvalCandidate[], _summaryData: approvalSummaryData): approvalRoundResults => {
 
-  let winner = remainingCandidates[0];
-  let tiedCandidates = remainingCandidates.filter(c => c.score == winner.score);
+  const winner = remainingCandidates[0];
+  const tiedCandidates = remainingCandidates.filter(c => c.score == winner.score);
 
   return {
     winners: [winner],

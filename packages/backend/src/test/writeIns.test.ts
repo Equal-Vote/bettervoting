@@ -47,7 +47,7 @@ const WriteInElection: Election = {
 } as Election;
 
 describe("Write-In Candidates", () => {
-    var election: Election;
+    let election: Election;
 
     test("Create election with write-ins enabled", async () => {
         const response = await th.createElection(WriteInElection, testInputs.user1token);
@@ -312,7 +312,7 @@ describe("Write-In Candidates", () => {
 });
 
 describe("Zero-ballot paths", () => {
-    var election: Election;
+    let election: Election;
 
     test("Create election", async () => {
         const response = await th.createElection({
@@ -361,7 +361,7 @@ describe("Zero-ballot paths", () => {
 });
 
 describe("Write-In Validation (setWriteInResults)", () => {
-    var election: Election;
+    let election: Election;
 
     beforeAll(async () => {
         const response = await th.createElection(WriteInElection, testInputs.user1token);

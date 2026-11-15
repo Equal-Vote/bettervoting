@@ -12,16 +12,16 @@ const pool = new Pool({
 
 export async function testDBCounter(): Promise<string> {
     console.info("testDBCounter");
-    var myKey = "testDBCounter";
+    const myKey = "testDBCounter";
 
-    var demodb = new DemoPGStore(pool, "demopgstore");
+    const demodb = new DemoPGStore(pool, "demopgstore");
     return demodb.init().then(() => {
         return demodb.get(myKey);
     }).then((num:string | null) => {    
         return parseInt(orDefault(num, "0"));
     }).then((count:number) => {
         count++;
-        var str = JSON.stringify(count);
+        const str = JSON.stringify(count);
         return demodb.set(myKey, str);
     }).then((res:string) => {
         return "testDBCounter vaue = " + res;

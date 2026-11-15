@@ -18,9 +18,9 @@ export async function getImage(
     if (!ctx) {
         return null
     }
-    let longerLength = 300;
-    let w = pixelCrop.width > pixelCrop.height ? longerLength : longerLength * pixelCrop.width / pixelCrop.height;
-    let h = pixelCrop.height > pixelCrop.width ? longerLength : longerLength * pixelCrop.height / pixelCrop.width;
+    const longerLength = 300;
+    const w = pixelCrop.width > pixelCrop.height ? longerLength : longerLength * pixelCrop.width / pixelCrop.height;
+    const h = pixelCrop.height > pixelCrop.width ? longerLength : longerLength * pixelCrop.height / pixelCrop.width;
     canvas.width = w
     canvas.height = h
     ctx.drawImage(image, pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height, 0, 0, w, h)

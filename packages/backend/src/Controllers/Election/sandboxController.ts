@@ -33,7 +33,7 @@ const getSandboxResults = async (req: Request, res: Response, _next: NextFunctio
         has_duplicate_rank: null,
     }))
 
-    let results: ElectionResults = VotingMethods[voting_method](candidates, cvr, num_winners);
+    const results: ElectionResults = VotingMethods[voting_method](candidates, cvr, num_winners);
 
     res.json(
         {

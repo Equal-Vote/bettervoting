@@ -57,7 +57,7 @@ class TinyRand0 extends TinyRandBase {
     // force numbers to be treated as 32–bit unsigned int
     let x = this.state[0] >>> 0;
     // x ^= (x << 11) & MASK32
-    let t = (x << 11) >>> 0;
+    const t = (x << 11) >>> 0;
     x = (x ^ t) >>> 0;
     // x ^= x >> 8 (use logical shift)
     x = (x ^ (x >>> 8)) >>> 0;
@@ -66,9 +66,9 @@ class TinyRand0 extends TinyRandBase {
     this.state[0] = this.state[1] >>> 0;
     this.state[1] = this.state[2] >>> 0;
     this.state[2] = this.state[3] >>> 0;
-    let w = this.state[3] >>> 0;
-    let t2 = w >>> 19;
-    let newW = ((w ^ t2) ^ x) >>> 0;
+    const w = this.state[3] >>> 0;
+    const t2 = w >>> 19;
+    const newW = ((w ^ t2) ^ x) >>> 0;
     this.state[3] = newW;
     return newW >>> 0;
   }

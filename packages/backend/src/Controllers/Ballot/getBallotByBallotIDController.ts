@@ -7,8 +7,8 @@ import { Response, NextFunction } from 'express';
 const BallotModel = ServiceLocator.ballotsDb();
 
 const getBallotByBallotID = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
-    var electionId = req.election.election_id;
-    var ballot_id = req.params.ballot_id
+    const electionId = req.election.election_id;
+    const ballot_id = req.params.ballot_id
     if (!ballot_id) {
         throw new BadRequest('No Ballot ID provided')
     }

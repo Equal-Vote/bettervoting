@@ -22,7 +22,7 @@ const hasPermission = (permission: permission) => {
   return (req: IElectionRequest, res: Response, next: NextFunction) => {
     Logger.debug(req, "\n= = = = =\n!!! hasPermission with: " + JSON.stringify(req.user_auth));
     if (!req.user_auth.roles.some( (role:roles) => permission.includes(role))) {
-      var msg = "Does not have permission";
+      const msg = "Does not have permission";
       Logger.info(req, msg);
       return responseErr(res, req, 401, msg);
     }
@@ -33,7 +33,7 @@ const hasPermission = (permission: permission) => {
 const isLoggedIn = (req: IRequest, res: Response, next: NextFunction) => {
   Logger.info(req, `${className}.isLoggedIn user=${!!req.user}`);
   if (!req.user) {
-    var msg = "Not Logged In";
+    const msg = "Not Logged In";
     Logger.info(req, msg);
     return responseErr(res, req, 401, msg);
   }
@@ -44,7 +44,7 @@ const assertOwnership = (req: IElectionRequest, res: Response, next: NextFunctio
   Logger.info(req, `${className}.assertOwnership`);
   Logger.debug(req, `${req.election.owner_id} ==? ${req.user?.sub}`);
   if (req.election.owner_id != req.user?.sub) {
-    var msg = "Unauthorized: User does not own electon";
+    const msg = "Unauthorized: User does not own electon";
     Logger.info(req, msg);
     return responseErr(res, req, 401, msg);
   }

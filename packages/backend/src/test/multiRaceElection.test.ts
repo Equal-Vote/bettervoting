@@ -12,7 +12,7 @@ afterEach(() => {
 });
 
 describe("Multi Race Election", () => {
-  var electionRes: Election;
+  let electionRes: Election;
   test("responds with 200 status", async () => {
     const response = await th.createElection(
       testInputs.MultiRaceElection,

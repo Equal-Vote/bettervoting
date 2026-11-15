@@ -87,7 +87,7 @@ const BALLOTS: NewBallot[] = [
 ].map(b => b as NewBallot);
 
 describe("Multi Race Results", () => {
-    var election: Election;
+    let election: Election;
 
     test("Create a two race election", async () => {
         const response = await th.createElection(TwoRaceElection, testInputs.user1token);

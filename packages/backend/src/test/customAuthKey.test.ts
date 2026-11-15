@@ -45,7 +45,7 @@ describe("Election with custom auth key", () => {
         sub: 'Alice1234',
      }, customKey.privateKey, { algorithm: 'RS256' });
 
-     var electionId = "";
+     let electionId = "";
 
     test("sanity: jwt can be verified", async()=> {
         const user = jwt.verify(user1TokenCustomSigned, customKey.publicKey);

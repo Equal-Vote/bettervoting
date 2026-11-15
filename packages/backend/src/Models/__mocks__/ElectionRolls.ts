@@ -21,7 +21,7 @@ export default class ElectionRollDB implements IElectionRollStore{
             Logger.debug(ctx, `Mock Election Roll Store:  submit:  ${JSON.stringify(roll)}`);
             // Mirrors the partial unique index: only head rows conflict, so a voter_id
             // whose rows have all been archived can be re-added.
-            var existing = self._electionRolls.find(x => x.election_id==roll.election_id && x.voter_id==roll.voter_id && x.head)
+            const existing = self._electionRolls.find(x => x.election_id==roll.election_id && x.voter_id==roll.voter_id && x.head)
             if (existing){
                 Logger.error(ctx, `Already have conflicting voter roll entry!  ${JSON.stringify(existing)}`);
             }
@@ -74,7 +74,7 @@ export default class ElectionRollDB implements IElectionRollStore{
 
     getElectionRoll(election_id: string, voter_id: string|null, email: string|null, ip_hash: string|null, ctx:ILoggingContext): Promise<[ElectionRoll] | null> {
         Logger.debug(ctx, `MockElectionRolls get election:${election_id}, voter_id:${voter_id}, email: ${email}, ip_hash: ${ip_hash}`);
-        let roll = this._electionRolls.filter(electionRolls => {
+        const roll = this._electionRolls.filter(electionRolls => {
             if (electionRolls.election_id!==election_id) return false
             if (!electionRolls.head) return false
             if (ip_hash && electionRolls.ip_hash===ip_hash) return true
@@ -95,8 +95,8 @@ export default class ElectionRollDB implements IElectionRollStore{
     update(voter_roll: NewElectionRoll, ctx: ILoggingContext, _reason: string, _db?: Kysely<Database> | Transaction<Database>): Promise<ElectionRoll | null> {
         Logger.debug(ctx, `MockElectionRolls update ${JSON.stringify(voter_roll)}`);
         const index = this._electionRolls.findIndex(electionRoll => {
-            var electionMatch = electionRoll.election_id===voter_roll.election_id;
-            var voterMatch = electionRoll.voter_id===voter_roll.voter_id;
+            const electionMatch = electionRoll.election_id===voter_roll.election_id;
+            const voterMatch = electionRoll.voter_id===voter_roll.voter_id;
             return electionMatch && voterMatch && electionRoll.head
         });
         if (index < 0){

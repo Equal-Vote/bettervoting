@@ -13,7 +13,7 @@ afterEach(() => {
 
 describe("Create Election", () => {
   describe("Good Election data provided", () => {
-    var electionRes: Election;
+    let electionRes: Election;
     test("responds with 200 status", async () => {
       const response = await th.createElection(
         testInputs.Election1,
@@ -43,7 +43,7 @@ describe("Create Election", () => {
   });
 
   describe("Election created with temp user", () => {
-    var electionRes: Election;
+    let electionRes: Election;
     test("responds with 200 status", async () => {
       const response = await th.createElection(
         testInputs.TempElection,

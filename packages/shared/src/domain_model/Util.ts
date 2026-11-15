@@ -13,7 +13,7 @@ export type GenericObject = {[key: string | number]: any};
 // NOTE: there's a couple of weird cases where passing the key as a function is necessary, but we may be able to remove this later
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getEntry = <ItemType extends GenericObject,>(arr: ItemType[], id: any, key: string | number | ((item: ItemType) => unknown) ='id'): ItemType => {
-  let match = arr.find(a => (typeof key === 'function')? key(a) == id : a[key] == id)
+  const match = arr.find(a => (typeof key === 'function')? key(a) == id : a[key] == id)
   if(match === undefined){
     throw new Error("Couldn't find match in array!")
   }

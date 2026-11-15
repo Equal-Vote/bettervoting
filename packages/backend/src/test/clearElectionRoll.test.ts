@@ -13,7 +13,7 @@ describe("Clear Election Roll", () => {
     beforeAll(() => {
         jest.clearAllMocks();
     });
-    var electionId = "";
+    let electionId = "";
     test("Create draft election, responds 200", async () => {
         const response = await th.createElection(
             { ...testInputs.EmailRollElection, state: 'draft' },

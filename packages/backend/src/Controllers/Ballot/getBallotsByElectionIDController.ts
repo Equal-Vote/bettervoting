@@ -9,7 +9,7 @@ import { Response, NextFunction } from 'express';
 const BallotModel = ServiceLocator.ballotsDb();
 
 const getBallotsByElectionID = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
-    var electionId = req.election.election_id;
+    const electionId = req.election.election_id;
     Logger.debug(req, "getBallotsByElectionID: " + electionId);
 
     expectPermission(req.user_auth.roles, permissions.canViewBallots)
