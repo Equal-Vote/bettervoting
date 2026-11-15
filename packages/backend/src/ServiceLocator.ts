@@ -4,9 +4,11 @@ import ElectionsDB from "./Models/Elections";
 import ElectionRollDB from "./Models/ElectionRolls";
 import EmailEventsDB from "./Models/EmailEvents";
 import EntitlementsDB from "./Models/Entitlements";
+import TransactionsDB from "./Models/Transactions";
 import CastVoteStore from "./Models/CastVoteStore";
 import EmailService from "./Services/Email/EmailService";
 import BlobService from "./Services/Blob/BlobService";
+import StripeService from "./Services/Stripe/StripeService";
 import { IBallotStore } from "./Models/IBallotStore";
 import { IEventQueue } from "./Services/EventQueue/IEventQueue";
 import PGBossEventQueue from "./Services/EventQueue/PGBossEventQueue";
@@ -27,9 +29,11 @@ let _electionsDb: ElectionsDB;
 let _electionRollDb: ElectionRollDB;
 let _emailEventsDb: EmailEventsDB;
 let _entitlementsDb: EntitlementsDB;
+let _transactionsDb: TransactionsDB;
 let _castVoteStore: CastVoteStore;
 let _emailService: EmailService
 let _blobService: BlobService
+let _stripeService: StripeService;
 let _eventQueue: IEventQueue;
 let _accountService: AccountService;
 let _globalData: GlobalData;
@@ -143,6 +147,13 @@ function entitlementsDb(): EntitlementsDB {
     return _entitlementsDb;
 }
 
+function transactionsDb(): TransactionsDB {
+    if (_transactionsDb == null) {
+        _transactionsDb = new TransactionsDB(database());
+    }
+    return _transactionsDb;
+}
+
 
 function castVoteStore(): CastVoteStore {
     if (_castVoteStore == null) {
@@ -174,6 +185,13 @@ function blobService(): BlobService {
     return _blobService ;
 }
 
+function stripeService(): StripeService {
+    if (_stripeService == null) {
+        _stripeService = new StripeService();
+    }
+    return _stripeService;
+}
+
 function accountService(): AccountService {
     if (_accountService == null) {
         _accountService = new AccountService();
@@ -188,4 +206,4 @@ function globalData(): GlobalData {
     return _globalData;
 }
 
-export default { ballotsDb, electionsDb, electionRollDb, emailEventsDb, entitlementsDb, emailService, accountService, castVoteStore, globalData, eventQueue, database, blobService };
+export default { ballotsDb, electionsDb, electionRollDb, emailEventsDb, entitlementsDb, transactionsDb, emailService, accountService, castVoteStore, globalData, eventQueue, database, blobService, stripeService };
