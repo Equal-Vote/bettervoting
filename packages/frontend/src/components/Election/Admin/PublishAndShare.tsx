@@ -4,7 +4,8 @@ import { Typography } from "@mui/material";
 import { PrimaryButton } from "../../styles";
 import { useNavigate } from 'react-router-dom';
 import ShareButton from "../ShareButton";
-import { useFinalizeElection, useSetOpenState } from "../../../hooks/useAPI";
+import { useEffect } from "react";
+import { useFinalizeElection, useGetRolls, useSetOpenState } from "../../../hooks/useAPI";
 import { SwitchSetting } from '../../util';
 import useConfirm from '../../ConfirmationDialogProvider';
 import useElection from '../../ElectionContextProvider';
@@ -12,11 +13,19 @@ import useAuthSession from '../../AuthSessionContextProvider';
 import { AdminPageNavigation } from '../Sidebar';
 import useOptimisticToggle from '~/hooks/useOptimisticToggle';
 
-export default () => {
+export default function PublishAndShare() {
     const authSession = useAuthSession()
-    const { t, election, refreshElection: fetchElection, permissions, enqueueWrite } = useElection()
+    const { t, election, entitlements, refreshElection: fetchElection, permissions, enqueueWrite } = useElection()
 
     const { makeRequest: finalize } = useFinalizeElection(election.election_id)
+
+    // Finalize is where the voter limit is enforced (validateEntitlements), so warn before the 402
+    const checkVoterLimit = election.state === 'draft' && election.settings.voter_access === 'closed' && entitlements !== undefined
+    const { data: rollData, makeRequest: fetchRolls } = useGetRolls(election.election_id)
+    useEffect(() => {
+        if (checkVoterLimit) fetchRolls()
+    }, [checkVoterLimit])
+    const overVoterLimit = checkVoterLimit && rollData != null && rollData.electionRoll.length > entitlements.voter_limit
 
     const { makeRequest: setOpenState } = useSetOpenState(election.election_id)
 
@@ -39,10 +48,14 @@ export default () => {
         const confirmed = await confirm(t('admin_home.finalize_confirm'));
         if (!confirmed) return;
         try {
-            await enqueueWrite(expected_update_date => finalize({ expected_update_date }));
+            // useFetch already shows the error as a snackbar, including the 402 when the roll is over the voter limit.
+            // TODO: replace that 402 snackbar with the itemized confirmation (checkout) once it exists.
+            const res = await enqueueWrite(expected_update_date => finalize({ expected_update_date }));
+            if (!res) return;
             await fetchElection();
         } catch (err) {
             console.error(err);
+            return;
         }
 
         const currentTime = new Date();
@@ -69,6 +82,14 @@ export default () => {
                 </Typography>
             }
         </Grid>
+        {overVoterLimit &&
+            // Stop-gap until the itemized cost section replaces it
+            <Grid size={12} sx={{ p: 1, pt: 2, pb: 0 }}>
+                <Typography align='center' variant="body1" sx={{ color: 'error.main', pl: 2 }}>
+                    Your voter count exceeds the free tier limit, please reach out to elections@equal.vote for an override.
+                </Typography>
+            </Grid>
+        }
         <Grid size={12} sx={{ p: 1, pt: 0, display: 'flex', alignItems: 'center' }}>
             <PrimaryButton
                 disabled={election.title.length === 0 || election.races.length === 0 || !hasPermission('canEditElectionState') || !authSession.isLoggedIn()}

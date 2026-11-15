@@ -6,6 +6,7 @@ import { BadRequest } from "@curveball/http-errors";
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
 import { innerDeleteAllBallotsForElectionID } from '../Ballot';
+import { validateEntitlements } from './entitlementUtils';
 
 const ElectionsModel = ServiceLocator.electionsDb();
 
@@ -23,6 +24,9 @@ const finalizeElection = async (req: IElectionRequest, res: Response, _next: Nex
         Logger.info(req, msg);
         throw new BadRequest(msg)
     }
+
+    // Payment happens at Finalize: a 402 here leaves the election in draft
+    await validateEntitlements(req.election, req);
 
     const failMsg = "Failed to update Election";
     // Use a finalized copy for the OC-protected update; leave req.election in draft state
