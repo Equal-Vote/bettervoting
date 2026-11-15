@@ -5,7 +5,7 @@ import { Imsg } from "./IEmail"
 import { formatMarkdown, makeButton } from "@equal-vote/star-vote-shared/utils/formatMarkdown";
 import sanitizeHtml from 'sanitize-html';
 import { Transaction } from "@equal-vote/star-vote-shared/domain_model/Transaction";
-import { CatalogPriceData, PAYMENT_DISCLAIMER } from "@equal-vote/star-vote-shared/config";
+import { CatalogPriceData, PAYMENT_DISCLAIMER } from "@equal-vote/star-vote-shared/domain_model/ProductCatalog";
 
 const emailSettings: Partial<Imsg> = {
     asm: process.env.SENDGRID_GROUP_ID ? {
