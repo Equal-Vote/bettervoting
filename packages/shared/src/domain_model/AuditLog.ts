@@ -7,7 +7,7 @@ import type { Election } from "./Election";
 // fact. The backend serves the log for these elections only to the election's
 // admins (canEditElection) and the frontend hides the link from everyone else.
 // Compared against electionDB.create_date.
-export const AUDIT_LOG_CUTOFF_DATE = '2026-12-01T00:00:00.000Z';
+export const AUDIT_LOG_CUTOFF_DATE = '2026-12-20T00:00:00.000Z';
 
 // Upper bound on the optional explanation an admin can attach to an auditable
 // action. Long enough for a paragraph, short enough that the log stays a log.
