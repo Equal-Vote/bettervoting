@@ -1,4 +1,4 @@
-import { Alert, Box, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControlLabel, MenuItem, Select, SelectChangeEvent, Typography } from "@mui/material";
+import { Alert, Box, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControlLabel, Link, MenuItem, Select, SelectChangeEvent, Typography } from "@mui/material";
 import { useState } from "react";
 import useAuthSession from "~/components/AuthSessionContextProvider";
 import useElection from "~/components/ElectionContextProvider";
@@ -91,6 +91,11 @@ const SendEmailDialog = ({open, onClose, onSubmit, targetedEmail=undefined, elec
         return '';
     })();
 
+    const signInAndClaim = () => {
+        sessionStorage.setItem('election_to_claim', election.election_id)
+        authSession.openLogin()
+    }
+
     // I experimented with these sizes till it felt right I wish there was a more dynamic solution, while maintaining the horizontal transition
     const sizes = {xs: '220px', sm: '380px', md: '550px'};
     return <Dialog
@@ -100,11 +105,6 @@ const SendEmailDialog = ({open, onClose, onSubmit, targetedEmail=undefined, elec
     >
         <DialogTitle>Prepare Email Blast</DialogTitle>
         <DialogContent>
-            {!authSession.hasVerifiedEmail() &&
-                <Alert severity='warning' sx={{ mb: 2 }}>
-                    {t(authSession.isLoggedIn() ? 'verified_email.send_unverified' : 'verified_email.send_sign_in')}
-                </Alert>
-            }
             <Box sx={{ display: "flex", flexDirection: "row" }}>
                 <Box sx={{ width: templateChosen ? 0 : sizes,
                     height: 'auto',
@@ -170,6 +170,22 @@ const SendEmailDialog = ({open, onClose, onSubmit, targetedEmail=undefined, elec
         </DialogContent>
         <DialogActions>
             <Box sx={{ width: sizes, display: "flex", flexDirection: "column" }}>
+                {!authSession.hasVerifiedEmail() && <Alert
+                    severity='warning'
+                    sx={{
+                        margin: 1,
+                        padding: '.2cm',
+                    }}>
+                    <Typography>
+                        {authSession.isLoggedIn() ? t('verified_email.send_unverified') : <>
+                            {/* Same flow as the other sign-in buttons: remember the election so it's claimed after login */}
+                            <Link component="button" type="button" onClick={signInAndClaim} sx={{ font: 'inherit', verticalAlign: 'baseline' }}>
+                                {t('verified_email.send_sign_in_link')}
+                            </Link>
+                            {' '}{t('verified_email.send_sign_in_rest')}
+                        </>}
+                    </Typography>
+                </Alert>}
                 {warning && <Alert 
                     severity='warning'
                     sx={{

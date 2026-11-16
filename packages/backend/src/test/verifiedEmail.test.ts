@@ -51,53 +51,30 @@ afterEach(() => {
     th.afterEach();
 });
 
-describe("Image upload requires a verified account", () => {
+describe("Image upload needs no account, but only accepts ordinary image types", () => {
     const upload = (cookies: Cookies, mimetype = 'image/jpeg') => {
         const r = request(app).post('/API/images');
         return (Object.keys(cookies).length > 0 ? r.set("Cookie", cookieHeader(cookies)) : r)
             .attach('file', Buffer.from('not really a jpeg'), { filename: 'image.jpg', contentType: mimetype });
     };
 
-    test("anonymous caller is refused and nothing is stored", async () => {
+    test("anonymous caller can upload", async () => {
         const res = await upload({});
-        expect(res.statusCode).toBe(401);
-        expect(res.body.error).toMatch(/Sign in with a verified email address to upload images/);
-        expect(blobService.uploaded.length).toBe(0);
-        th.testComplete();
-    });
-
-    test("temp id caller is refused", async () => {
-        const res = await upload({ temp_id: 'v-temp123' });
-        expect(res.statusCode).toBe(401);
-        expect(blobService.uploaded.length).toBe(0);
-        th.testComplete();
-    });
-
-    test("signed-in caller with an unverified email is told to verify it", async () => {
-        const res = await upload({ id_token: unverified });
-        expect(res.statusCode).toBe(403);
-        expect(res.body.error).toMatch(/Verify your email address to upload images/);
-        expect(blobService.uploaded.length).toBe(0);
-        th.testComplete();
-    });
-
-    test("token with no email_verified claim counts as unverified", async () => {
-        const res = await upload({ id_token: ownerWithoutClaim });
-        expect(res.statusCode).toBe(403);
-        expect(blobService.uploaded.length).toBe(0);
-        th.testComplete();
-    });
-
-    test("signed-in caller with a verified email can upload", async () => {
-        const res = await upload({ id_token: verified });
         expect(res.statusCode).toBe(200);
         expect(res.body.photo_filename).toBeTruthy();
         expect(blobService.uploaded.length).toBe(1);
         th.testComplete();
     });
 
-    test("verified caller cannot upload an SVG", async () => {
-        const res = await upload({ id_token: verified }, 'image/svg+xml');
+    test("signed-in caller with an unverified email can upload", async () => {
+        const res = await upload({ id_token: unverified });
+        expect(res.statusCode).toBe(200);
+        expect(blobService.uploaded.length).toBe(1);
+        th.testComplete();
+    });
+
+    test("an SVG is refused", async () => {
+        const res = await upload({}, 'image/svg+xml');
         expect(res.statusCode).not.toBe(200);
         expect(blobService.uploaded.length).toBe(0);
         th.testComplete();

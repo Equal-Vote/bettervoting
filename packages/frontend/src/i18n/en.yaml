@@ -1302,10 +1302,9 @@ verified_email:
   vote_description: This {{election}} gives one vote to each account email address, and the address on your account has not been verified yet. Log out and log back in to be sent a verification link, or check your account settings, then return to this page.
   log_out: Log out
   account_settings: Account settings
-  send_sign_in: Sign in with a verified email address to send emails to voters.
+  send_sign_in_link: Sign in
+  send_sign_in_rest: with a verified email address to send emails to voters.
   send_unverified: The email address on your account has not been verified. Verify it (log out and back in to be sent a link) before sending emails to voters.
-  photo_sign_in: Sign in with a verified email address to add photos.
-  photo_unverified: The email address on your account has not been verified. Verify it (log out and back in to be sent a link) before adding photos.
   photo_failed: The photo could not be uploaded.
 
 # Table filters

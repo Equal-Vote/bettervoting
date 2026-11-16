@@ -27,7 +27,7 @@ const authConfig = keycloakAuthConfig;
 export interface IAuthSession {
     isLoggedIn: () => boolean
     // Signed in AND the identity provider has verified the account's email address. The
-    // backend requires this for sending emails, uploading images, and voting by account email.
+    // backend requires this for sending emails and voting by account email.
     hasVerifiedEmail: () => boolean
     openLogin: () => void
     openLogout: () => void

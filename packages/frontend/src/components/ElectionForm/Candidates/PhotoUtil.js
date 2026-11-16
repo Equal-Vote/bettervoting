@@ -32,7 +32,7 @@ export async function getImage(
 }
 
 // Returns the server's JSON on success, or false on failure. On failure, onError (if given)
-// is called with the server's explanation, e.g. "Verify your email address to upload images".
+// is called with the server's explanation, e.g. that the file is too large.
 export const postImage = async (image, onError = undefined) => {
     const url = '/API/images'
     const fileOfBlob = new File([image], 'image.jpg', { type: "image/jpeg" });

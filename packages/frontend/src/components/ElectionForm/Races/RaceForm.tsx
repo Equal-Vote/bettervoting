@@ -15,7 +15,7 @@ import RaceDialog from './RaceDialog';
 import { Candidate } from '@equal-vote/star-vote-shared/domain_model/Candidate';
 import { Race as iRace } from '@equal-vote/star-vote-shared/domain_model/Race';
 import { getImage, postImage } from '../Candidates/PhotoUtil';
-import { usePhotoUploadGuard } from '../Candidates/usePhotoUploadGuard';
+import { usePhotoUploadError } from '../Candidates/usePhotoUploadError';
 
 interface RaceFormProps {
     raceIndex?: number,
@@ -68,7 +68,7 @@ export default function RaceForm({
 type InnerRaceFormProps = Pick<ReturnType<typeof useEditRace>, 'setErrors' | 'errors' | 'editedRace' | 'applyRaceUpdate'> & { open?: boolean };
 
 const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=true}: InnerRaceFormProps) => {
-    const { canUpload, onUploadError } = usePhotoUploadGuard();
+    const onUploadError = usePhotoUploadError();
     const flags = useFeatureFlags();
     const { election, t } = useElection()
     const isDisabled = election.state !== 'draft';
@@ -186,7 +186,6 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
     }
 
     const handlePhotoDrop = async (e) =>  {
-        if (!canUpload()) return;
         // load file data
         const names = []
         const promises = []

@@ -1,5 +1,4 @@
 import { Forbidden, Unauthorized } from "@curveball/http-errors";
-import { Response, NextFunction } from 'express';
 import { IRequest, IUser } from "../IRequest";
 
 // An email address only counts as the caller's identity when the token that carries it
@@ -21,8 +20,7 @@ export function hasUnverifiedEmail(user: IUser | null | undefined): boolean {
         && user.email_verified !== true;
 }
 
-// For powers that cost the platform something or reach third parties (sending email,
-// hosting uploads): the caller must be a BetterVoting account with a verified email.
+// For powers that reach third parties (sending email): the caller must be a BetterVoting account with a verified email.
 // An identity signed by an election's own auth_key does not qualify, because anyone can
 // create an election with a key of their choosing and sign whatever claims they like.
 // `action` completes the sentence "... to <action>".
@@ -37,15 +35,3 @@ export function expectVerifiedAccount(req: IRequest, action: string): string {
     }
     return email;
 }
-
-// Route-level form of expectVerifiedAccount, for use ahead of body parsers such as multer
-// so that an unqualified caller is refused before the server reads their upload.
-export const requireVerifiedAccount = (action: string) =>
-    (req: IRequest, _res: Response, next: NextFunction) => {
-        try {
-            expectVerifiedAccount(req, action);
-            next();
-        } catch (err: unknown) {
-            next(err);
-        }
-    };
