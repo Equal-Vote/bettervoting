@@ -50,6 +50,9 @@ export default function GenericBallotGrid({
     }
 
     const fontSX = { fontSize: { xs: '.7rem', md: '.8rem' } }
+    // With only two columns (a ranked race with two candidates) the two titles sit side by
+    // side and read as one word, so push each a little away from the other.
+    const titleNudge = columns.length === 2 ? '12px' : '0px';
     const gridTemplateRows = useMemo(() => {
         let rows = '';
         //left title is worst/best for STAR
@@ -130,14 +133,14 @@ export default function GenericBallotGrid({
                 />
             )}
 
-            {/* HEADING TITLES (i.e. worst best for STAR )*/}
+            {/* HEADING TITLES (worst/best over the STAR columns, best/worst over the rank columns) */}
             {leftTitle != '' && <>
                 {/* 1 px / 100 px is a hack to make sure the titles don't affect the other boxes in the column */}
                 <Box sx={{ width: '1px', margin: 'auto', gridArea: makeArea(1, 2) }}>
-                    <Typography align='center' className="columnDescriptor" sx={{ width: '100px', transform: 'translate(-50%)' }}>{leftTitle}</Typography>
+                    <Typography align='center' className="columnDescriptor" sx={{ width: '100px', transform: `translate(calc(-50% - ${titleNudge}))` }}>{leftTitle}</Typography>
                 </Box>
                 <Box sx={{ width: '1px', margin: 'auto', gridArea: makeArea(1, 1 + columns.length) }}>
-                    <Typography align='center' className="columnDescriptor" sx={{ width: '100px', transform: 'translate(-50%)' }}>{rightTitle}</Typography>
+                    <Typography align='center' className="columnDescriptor" sx={{ width: '100px', transform: `translate(calc(-50% + ${titleNudge}))` }}>{rightTitle}</Typography>
                 </Box>
             </>}
 

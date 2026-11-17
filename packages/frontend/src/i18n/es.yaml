@@ -82,16 +82,16 @@ ballot:
         Cómo se cuenta el Voto por Orden de Preferencia (RCV in inglés): Las boletas se cuentan en rondas de eliminación. En cada ronda, su voto va al candidato que clasificó más alto, si es posible.
         Si ningún candidato tiene una mayoría de los votos restantes, el candidato con menos votos es eliminado.
         Si su voto no puede transferirse, no se contará en rondas posteriores. Si un candidato tiene una mayoría de los votos restantes en una ronda, es elegido.
-      left_title: ''
-      right_title: ''
+      left_title: 'Mejor'
+      right_title: 'Peor'
     stv: 
       instruction_bullets:
         - Ordene a los {{candidates}} según su preferencia. (1ro, 2do, 3ro, etc.)
         - Ordenar a los {{candidates}} igualmente no está permitido.
         - '{{capital_candidates}} dejados en blanco se clasifican como último de su preferencia.'
       footer_multi_winner: ''
-      left_title: ''
-      right_title: ''
+      left_title: 'Mejor'
+      right_title: 'Peor'
     ranked_robin:
       instruction_bullets:
         - Ordene a los {{candidates}} según su preferencia.
@@ -100,8 +100,8 @@ ballot:
       footer_single_winner: |
         {{capital_candidates}} son comparados en enfrentamientos cara a cara.
         Un {{candidate}} gana un enfrentamiento si es mejor valorado que otro {{candidate}} por el número de votos.
-      left_title: ''
-      right_title: ''
+      left_title: 'Mejor'
+      right_title: 'Peor'
     choose_one:
       instruction_bullets:
         - Rellenar el círculo al lado de su(s) favorito(s)
