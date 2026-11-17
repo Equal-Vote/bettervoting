@@ -179,7 +179,7 @@ export const useGetResults = (election_id: string | undefined) => {
 }
 
 export const usePostBallot = (election_id: string | undefined) => {
-    return useFetch<{ ballot: NewBallot, receiptEmail?: string }, {ballot: Ballot}>(`/API/Election/${election_id}/vote`, 'post')
+    return useFetch<{ ballot: NewBallot }, {ballot: Ballot}>(`/API/Election/${election_id}/vote`, 'post')
 }
 
 export const useUploadBallots = (election_id: string | undefined) => {

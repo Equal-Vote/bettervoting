@@ -8,6 +8,7 @@ import { Race, VotingMethod, MethodTextKey, methodValueToTextKey } from '@equal-
 import { sharedConfig } from '@equal-vote/star-vote-shared/config';
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { expectPermission } from '../controllerUtils';
+import { getVerifiedEmail } from '../verifiedEmail';
 
 
 const ElectionsModel = ServiceLocator.electionsDb();
@@ -17,7 +18,8 @@ const ElectionRollModel = ServiceLocator.electionRollDb();
 const getElections = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     Logger.info(req, `getElections`);
     // var filter = (req.query.filter == undefined) ? "" : req.query.filter;
-    const email = req.user?.email || ''
+    // Listing by email (roles granted to it, rolls it appears on) needs the email verified.
+    const email = getVerifiedEmail(req.user) ?? ''
     const id = req.user?.sub || ''
 
     /////////// ELECTIONS WE OWN ////////////////

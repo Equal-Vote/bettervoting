@@ -5,6 +5,7 @@ import TextField from "@mui/material/TextField";
 import Typography from '@mui/material/Typography';
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle, FormHelperText, IconButton, Paper } from '@mui/material';
 import {getImage, postImage} from './PhotoUtil';
+import { usePhotoUploadError } from './usePhotoUploadError';
 import CloseIcon from '@mui/icons-material/Close';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import { CandidatePhoto, FileDropBox, PrimaryButton, SecondaryButton } from '../../styles';
@@ -28,9 +29,11 @@ const CandidatePhotoDialog = ({ onEditCandidate, candidate, open, handleClose }:
 
     const inputRef = useRef(null)
 
+    const onUploadError = usePhotoUploadError()
+
     const saveImage = async (photoFile) => {
         const image = await getImage(photoFile);
-        const response = await postImage(image)
+        const response = await postImage(image, onUploadError)
         if(response) onApplyEditCandidate((candidate) => { candidate.photo_filename = response.photo_filename })
     }
 
@@ -93,7 +96,7 @@ const CandidatePhotoDialog = ({ onEditCandidate, candidate, open, handleClose }:
 
 
 
-const LinkDialog = ({ onEditCandidate, candidate, open, handleClose }) => {
+const LinkDialog = ({ onEditCandidate, candidate, open, handleClose }: CandidatePhotoDialogProps) => {
     const onApplyEditCandidate = (updateFunc) => {
         const newCandidate = { ...candidate }
         updateFunc(newCandidate)
@@ -183,7 +186,7 @@ interface CandidateFormProps {
     electionState: string
 }
 
-export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled, special, inputRef, onKeyDown}: CandidateFormProps) => {
+const CandidateForm = ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled, special, inputRef, onKeyDown}: CandidateFormProps) => {
     const [open, setOpen] = useState(false);
     const [linkOpen, setLinkOpen] = useState(false);
     // Track hover and focus so the UI (actions + textarea underline) appears on hover or when the textbox is focused
@@ -276,3 +279,5 @@ export default ({ onEditCandidate, candidate, index, onDeleteCandidate, disabled
         </Paper >
     )
 }
+
+export default CandidateForm

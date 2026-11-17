@@ -1,4 +1,4 @@
-import { InternalServerError } from "@curveball/http-errors";
+import { BadRequest, InternalServerError } from "@curveball/http-errors";
 import Logger from '../Services/Logging/Logger';
 import { randomUUID } from "crypto";
 import { Request, Response, NextFunction } from 'express';
@@ -13,8 +13,15 @@ const BlobService = ServiceLocator.blobService();
 
 const CONTAINER_NAME = 'candidate-photos';
 
+// The frontend always re-encodes to a 300px JPEG (PhotoUtil.js), so anything else is
+// not coming from our UI. In particular this keeps out image/svg+xml, which can carry script.
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+// Uploads are buffered in memory before going to blob storage, so the cap is also a
+// bound on memory per request. A 300px JPEG is tens of kilobytes.
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
 const fileFilter = (req: any, file: any, cb: any) => {
-    if (file.mimetype.split("/")[0] === "image") {
+    if (ALLOWED_MIME_TYPES.includes(file.mimetype)) {
         cb(null, true);
     } else {
         cb(new multer.MulterError("LIMIT_UNEXPECTED_FILE"), false);
@@ -24,7 +31,7 @@ const fileFilter = (req: any, file: any, cb: any) => {
 const upload = multer({
     storage,
     fileFilter,
-    limits: { fileSize: 1000000000, files: 1 },
+    limits: { fileSize: MAX_IMAGE_BYTES, files: 1 },
   });
 
 interface ImageRequest extends Request {
@@ -34,6 +41,9 @@ interface ImageRequest extends Request {
 // TODO: add multer file and S3 types
 const uploadImageController = async (req: ImageRequest, res: Response, _next: NextFunction) => {
     const file = req.file
+    if (!file) {
+        throw new BadRequest("No image file provided");
+    }
     const blobName = `${randomUUID()}.jpg`;
     try {
       const photo_filename = await BlobService.uploadBufferToBlob(

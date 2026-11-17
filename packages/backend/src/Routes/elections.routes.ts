@@ -665,6 +665,10 @@ electionsRouter.post('/Election/:id/setOpenState', asyncHandler(setOpenState))
  *     responses:
  *       200:
  *         description: Invitations sent
+ *       401:
+ *         description: Not signed in, or no permission to send emails for this election
+ *       403:
+ *         description: Signed in, but the account's email is not verified
  *       404:
  *         description: Election not found */
 electionsRouter.post('/Election/:id/sendEmails', asyncHandler(sendEmailsController))

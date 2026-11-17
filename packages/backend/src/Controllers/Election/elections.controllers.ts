@@ -11,10 +11,11 @@ import { getOrCreateElectionRoll, checkForMissingAuthenticationData, getVoterAut
 import { ElectionRoll } from '@equal-vote/star-vote-shared/domain_model/ElectionRoll';
 import { sharedConfig } from '@equal-vote/star-vote-shared/config';
 import { hashString } from '../controllerUtils';
+import { getVerifiedEmail } from '../verifiedEmail';
 import { Conflict } from '@curveball/http-errors';
 
-var ElectionsModel =  ServiceLocator.electionsDb();
-var accountService = ServiceLocator.accountService();
+const ElectionsModel =  ServiceLocator.electionsDb();
+const accountService = ServiceLocator.accountService();
 const className="Elections.Controllers";
 
 const getElectionByID = async (req: IElectionRequest, res: Response, next: NextFunction) => {
@@ -23,7 +24,7 @@ const getElectionByID = async (req: IElectionRequest, res: Response, next: NextF
         return next();
     }
     try {
-        let election = await ElectionsModel.getElectionByID(req.params.id, req);
+        const election = await ElectionsModel.getElectionByID(req.params.id, req);
         if (!election) {
             throw new Error(`Election not found: ${req.params.id}`);
         }
@@ -31,7 +32,7 @@ const getElectionByID = async (req: IElectionRequest, res: Response, next: NextF
         req.election = election;
         return next();
     } catch (err: unknown) {
-        let failMsg = 'Election not found';
+        const failMsg = 'Election not found';
         Logger.error(req, `${failMsg} electionId=${req.params.id}: ${getErrorMessage(err)}`);
         return responseErr(res, req, 400, failMsg);
     }
@@ -60,8 +61,9 @@ const electionSpecificAuth = async (req: IElectionRequest, res: Response, next: 
         Logger.warn(req, `${className}.electionSpecificAuth: ignoring non-PEM auth_key`);
         return next();
     }
-    var user = accountService.extractUserFromRequest(req, electionKey);
+    const user = accountService.extractUserFromRequest(req, electionKey);
     req.user = user;
+    req.electionKeyAuth = true;
     return next();
 }
 
@@ -69,9 +71,9 @@ const electionPostAuthMiddleware = async (req: IElectionRequest, res: Response, 
     Logger.info(req, `${className}.electionPostAuthMiddleware ${req.params.id}`);
     try {
         // Update Election State
-        var election = req.election;
+        let election = req.election;
         if (!election){
-            var failMsg = "Election not found";
+            const failMsg = "Election not found";
             Logger.info(req, `${failMsg} electionId=${req.params.id}`);
             return responseErr(res, req, 400, failMsg);
         }
@@ -101,14 +103,19 @@ const electionPostAuthMiddleware = async (req: IElectionRequest, res: Response, 
           if((req.election.owner_id == req.user.sub && req.user.typ !== 'TEMP_ID') || tempUserAuth){
             req.user_auth.roles.push(roles.owner)
           }
-          if (req.election.admin_ids && req.election.admin_ids.includes(req.user.email as string)){
-            req.user_auth.roles.push(roles.admin)
-          }
-          if (req.election.audit_ids && req.election.audit_ids.includes(req.user.email as string)){
-            req.user_auth.roles.push(roles.auditor)
-          }
-          if (req.election.credential_ids && req.election.credential_ids.includes(req.user.email as string)){
-            req.user_auth.roles.push(roles.credentialer)
+          // Roles granted by email only go to a caller whose email is verified; otherwise
+          // anyone could register an account under an admin's address and inherit the role.
+          const verifiedEmail = getVerifiedEmail(req.user);
+          if (verifiedEmail !== null) {
+            if (req.election.admin_ids && req.election.admin_ids.includes(verifiedEmail)){
+              req.user_auth.roles.push(roles.admin)
+            }
+            if (req.election.audit_ids && req.election.audit_ids.includes(verifiedEmail)){
+              req.user_auth.roles.push(roles.auditor)
+            }
+            if (req.election.credential_ids && req.election.credential_ids.includes(verifiedEmail)){
+              req.user_auth.roles.push(roles.credentialer)
+            }
           }
         }
         req.user_auth.permissions = getPermissions(req.user_auth.roles)
@@ -116,7 +123,7 @@ const electionPostAuthMiddleware = async (req: IElectionRequest, res: Response, 
         Logger.debug(req,req.user_auth);
         return next();
     } catch (err: unknown) {
-        var failMsg = "Could not modify election";
+        const failMsg = "Could not modify election";
         Logger.error(req, `${failMsg} ${getErrorMessage(err)}`);
         return responseErr(res, req, 500, failMsg);
     }
@@ -128,11 +135,11 @@ async function updateElectionStateIfNeeded(req:IRequest, election:Election):Prom
     }
 
     const currentTime = new Date();
-    var stateChange = false;
-    var stateChangeMsg = "";
+    let stateChange = false;
+    let stateChangeMsg = "";
 
     if (election.state === 'finalized') {
-        var openElection = false;
+        let openElection = false;
         if (election.start_time) {
             const startTime = new Date(election.start_time);
             if (currentTime.getTime() > startTime.getTime()) {
@@ -178,7 +185,7 @@ async function updateElectionStateIfNeeded(req:IRequest, election:Election):Prom
 
 const returnElection = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     Logger.info(req, `${className}.returnElection ${req.params.id}`)
-    var election = req.election;
+    const election = req.election;
     
     const missingAuthData = checkForMissingAuthenticationData(req, election, req)
     let roll:ElectionRoll|null = null

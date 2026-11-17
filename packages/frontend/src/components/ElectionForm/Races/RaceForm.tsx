@@ -15,6 +15,7 @@ import RaceDialog from './RaceDialog';
 import { Candidate } from '@equal-vote/star-vote-shared/domain_model/Candidate';
 import { Race as iRace } from '@equal-vote/star-vote-shared/domain_model/Race';
 import { getImage, postImage } from '../Candidates/PhotoUtil';
+import { usePhotoUploadError } from '../Candidates/usePhotoUploadError';
 
 interface RaceFormProps {
     raceIndex?: number,
@@ -73,6 +74,7 @@ export default function RaceForm({
 }
 
 const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=true, allowWriteIns=true}: InnerRaceFormProps) => {
+    const onUploadError = usePhotoUploadError();
     const flags = useFeatureFlags();
     const { election, t } = useElection()
     const isDisabled = election.state !== 'draft';
@@ -202,11 +204,13 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
             parts.pop(); // drop extension
             names.push(parts.join('.'))
 
-            promises.push(getImage(URL.createObjectURL(f)).then(img => postImage(img)))
+            promises.push(getImage(URL.createObjectURL(f)).then(img => postImage(img, onUploadError)))
         }
 
-        // get photos
-        const photos = (await Promise.all(promises)).map(res => res.photo_filename);
+        // get photos; if the server refused any of them, don't add photo-less candidates
+        const responses = await Promise.all(promises);
+        if (responses.some(res => !res)) return;
+        const photos = responses.map(res => res.photo_filename);
 
         // create candidates
         const existingIds = new Set(editedRace.candidates.map(c => c.candidate_id));

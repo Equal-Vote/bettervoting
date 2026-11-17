@@ -21,7 +21,7 @@ There are two kinds:
 
 That is the complete list. BetterVoting never emails your voters on its own schedule.
 
-Email blasts require an election restricted to an email list — see [Security Options](security_options.md) for how to set that up. Ballot receipts are sent in any election, as long as the voter's email address is known.
+Email blasts require an election restricted to an email list — see [Security Options](security_options.md) for how to set that up. You also need to be signed in to an account with a verified email address to send one; an election started without signing in has to be claimed by signing in first. Ballot receipts are sent in any election, as long as the voter's email address is known.
 
 ## Sending an email blast
 
@@ -62,7 +62,7 @@ Before sending to real voters, use the **Test Email(s)** field at the top of the
 
 ## Ballot receipts
 
-When a voter submits a ballot, BetterVoting automatically emails them a receipt if it knows their address — from your email list, from their signed-in account, or from the optional receipt-email box on the ballot submission screen. The receipt:
+When a voter submits a ballot, BetterVoting automatically emails them a receipt if it knows their address — from your email list, or from their signed-in account if its email address is verified. Voters can't type in an address for the receipt. The receipt:
 
 - Thanks them for voting
 - Links to a page where they can verify their ballot and check its status at any time

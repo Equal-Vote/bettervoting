@@ -3,7 +3,6 @@ import 'dotenv/config';
 import testInputs from "./testInputs";
 import { TestHelper } from "./TestHelper";
 import ServiceLocator from "../ServiceLocator";
-import MockAccountService from "../Services/Account/__mocks__/AccountService";
 
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
@@ -12,7 +11,7 @@ import crypto from "crypto";
 const th = new TestHelper();
 // ServiceLocator is jest.mock()'d (see setupTests.ts), so accountService() actually
 // returns the mock AccountService, which has a `verify` toggle the real class lacks.
-const accountService = ServiceLocator.accountService() as unknown as MockAccountService;
+const accountService = ServiceLocator.accountService() as unknown as { verify: boolean };
 accountService.verify = true;
 
 afterEach(() => {
@@ -40,12 +39,15 @@ describe("Election with custom auth key", () => {
     const election = {...testInputs.OpenEmailElection};
     election.auth_key = customKey.publicKey;
 
+    // The integration asserts email_verified itself; without it the email is not
+    // used to identify the voter (see the last test in this file).
     const user1TokenCustomSigned = jwt.sign({ 
         email: 'Alice@email.com',
+        email_verified: true,
         sub: 'Alice1234',
      }, customKey.privateKey, { algorithm: 'RS256' });
 
-     var electionId = "";
+     let electionId = "";
 
     test("sanity: jwt can be verified", async()=> {
         const user = jwt.verify(user1TokenCustomSigned, customKey.publicKey);
@@ -114,6 +116,19 @@ describe("Election with custom auth key", () => {
         // Whether the request is authorized as a voter or not is incidental to this
         // assertion — the point is that without owner/admin role, auth_key is hidden.
         expect(response.election.auth_key).toBeUndefined();
+        th.testComplete();
+    });
+
+    test("Custom-key token without email_verified is not identified by its email", async () => {
+        const noClaim = jwt.sign({
+            email: 'Bob@email.com',
+            sub: 'Bob2345',
+        }, customKey.privateKey, { algorithm: 'RS256' });
+        const response = await th.requestBallot(electionId, null, noClaim);
+
+        expect(response.statusCode).toBe(200);
+        expect(response.voterAuth.authorized_voter).toBe(false);
+        expect(response.voterAuth.required).toBe('Email Verification Required');
         th.testComplete();
     });
 });
