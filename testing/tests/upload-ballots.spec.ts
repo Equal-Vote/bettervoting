@@ -345,6 +345,8 @@ test.describe('Upload paper ballots', () => {
         await enableUploadsAndOpen(page);
         await page.goto(`/${electionId}/admin/upload_ballots`);
         // one row per column of the template: ballot_id, voter_group, 3 candidates, 2 write-in pairs
+        // the column guide is collapsed until asked for
+        await page.getByRole('button', { name: 'How to fill in the ballot file' }).click();
         const guide = page.getByRole('table', { name: 'What goes in each column' });
         await expect(guide.getByRole('row')).toHaveCount(1 + 2 + 3 + 4);
         await expect(guide.getByRole('row', { name: /^Bob / })).toContainText('a score from 0 to 5');

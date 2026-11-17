@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import {
-    Alert, Box, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider,
+    Accordion, AccordionDetails, AccordionSummary, Alert, Box, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider,
     Link, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography,
 } from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Election } from "@equal-vote/star-vote-shared/domain_model/Election";
 import { acceptsUploadedBallots } from "@equal-vote/star-vote-shared/domain_model/ElectionSettings";
 import { methodValueToTextKey } from "@equal-vote/star-vote-shared/domain_model/Race";
@@ -146,13 +147,17 @@ function columnGuide(election: Election, columns: RaceColumns[], methodName: (rc
     return rows;
 }
 
-const HowToFillIn = ({ election }: { election: Election }) => {
+const HowToFillIn = ({ election, onDownloadTemplate }: { election: Election, onDownloadTemplate: () => void }) => {
     const { t } = useSubstitutedTranslation(election.settings.term_type);
     const columns = ballotCsvColumns(election);
     const rows = columnGuide(election, columns, rc => t(`methods.${methodValueToTextKey[rc.race.voting_method]}.short_name`));
     const anyWriteIns = columns.some(rc => rc.race.enable_write_in);
-    return <Box>
-        <Typography variant='h6' component='h3'>How to fill in the ballot file</Typography>
+    // Collapsed by default: it's reference material, and it pushed the upload itself down the page
+    return <Accordion disableGutters variant='outlined'>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls='how-to-fill-in-content' id='how-to-fill-in-header'>
+            <Typography variant='h6' component='h3'>How to fill in the ballot file</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
         <Typography variant='body2' sx={{ mb: 1 }}>
             One row per paper ballot, with these columns (the template has them in this order):
         </Typography>
@@ -182,7 +187,9 @@ const HowToFillIn = ({ election }: { election: Election }) => {
         <Typography variant='body2' sx={{ mt: 1 }}>
             More in the <Link href={HELP_URL} target='_blank' rel='noopener'>guide to uploading ballots</Link>.
         </Typography>
-    </Box>;
+        <SecondaryButton sx={{ mt: 2 }} onClick={onDownloadTemplate}>Download ballot file template</SecondaryButton>
+        </AccordionDetails>
+    </Accordion>;
 };
 
 // Typing the phrase is the point: this withdraws ballots that count
@@ -331,22 +338,31 @@ export default function UploadBallots() {
             Each upload is all or nothing: if any row has a problem, no ballots are added.
         </Typography>
 
-        {layoutProblem ? <Alert severity='warning'>{layoutProblem}</Alert> : <>
-            <HowToFillIn election={election} />
-            <SecondaryButton onClick={downloadTemplate}>Download ballot file template</SecondaryButton>
-        </>}
-        <FilePicker
-            label='ballot file'
-            loaded={ballotFile}
-            disabled={busy || !!layoutProblem}
-            onLoad={(fileName, text) => { picked(); setBallotFile({ fileName, result: parseBallotCsv(text, election) }); }}
-        />
-        {usesRoll && <FilePicker
-            label='voter file'
-            loaded={voterFile}
-            disabled={busy || !!layoutProblem}
-            onLoad={(fileName, text) => { picked(); setVoterFile({ fileName, result: parseVoterCsv(text) }); }}
-        />}
+        {layoutProblem
+            ? <Alert severity='warning'>{layoutProblem}</Alert>
+            : <HowToFillIn election={election} onDownloadTemplate={downloadTemplate} />}
+
+        <Divider />
+        <Typography variant='h6' component='h3'>{usesRoll ? 'Upload your files' : 'Upload your file'}</Typography>
+        {/* Side by side when there are two; each picker keeps its own problem list under it */}
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ alignItems: 'flex-start' }}>
+            <Box sx={{ flex: 1, minWidth: 0, width: '100%' }}>
+                <FilePicker
+                    label='ballot file'
+                    loaded={ballotFile}
+                    disabled={busy || !!layoutProblem}
+                    onLoad={(fileName, text) => { picked(); setBallotFile({ fileName, result: parseBallotCsv(text, election) }); }}
+                />
+            </Box>
+            {usesRoll && <Box sx={{ flex: 1, minWidth: 0, width: '100%' }}>
+                <FilePicker
+                    label='voter file'
+                    loaded={voterFile}
+                    disabled={busy || !!layoutProblem}
+                    onLoad={(fileName, text) => { picked(); setVoterFile({ fileName, result: parseVoterCsv(text) }); }}
+                />
+            </Box>}
+        </Stack>
 
         {request && (validationError
             ? <Alert severity='error'>{validationError}</Alert>
