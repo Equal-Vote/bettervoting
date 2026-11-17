@@ -4,7 +4,6 @@ export interface Imsg {
     subject: string,
     text: string,
     html: string,
-    asm?: {groupId: number}
     mail_settings?: {
         sandbox_mode?: {
             enable: boolean
