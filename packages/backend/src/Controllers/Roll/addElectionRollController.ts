@@ -6,7 +6,7 @@ import { expectPermission } from "../controllerUtils";
 import { BadRequest } from "@curveball/http-errors";
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
-import { sharedConfig } from "@equal-vote/star-vote-shared/config";
+import { getElectionEntitlements, voterLimitError } from "../Election/entitlementUtils";
 import { makeUniqueID, ID_LENGTHS, ID_PREFIXES } from "@equal-vote/star-vote-shared/utils/makeID";
 
 interface ElectionRollInput {
@@ -121,11 +121,13 @@ const addElectionRoll = async (req: IElectionRequest & { body: { electionRoll: E
             throw new BadRequest(`Some submitted voters already exist (${duplicateRolls.length} duplicates found)`)
         }
 
-        // Check for roll limit
-        const overrides = sharedConfig.ELECTION_VOTER_LIMIT_OVERRIDES as { [key: string]: number};
-        const voterLimit = overrides[req.election.election_id] ?? sharedConfig.FREE_TIER_PRIVATE_VOTER_LIMIT;
-        if(req.election.settings.voter_access == 'closed' && existingRolls.length + req.body.electionRoll.length > voterLimit){
-            throw new BadRequest(`Request Denied: this election is limited to ${voterLimit} voters`);
+        // Server-side backstop for the voter limit. Drafts are unlimited: payment happens at Finalize,
+        // which runs validateEntitlements. Past draft, the roll can't outgrow what's been paid for.
+        if(req.election.state !== 'draft' && req.election.settings.voter_access == 'closed'){
+            const { voter_limit: voterLimit } = await getElectionEntitlements(req.election.election_id, req);
+            if(existingRolls.length + req.body.electionRoll.length > voterLimit){
+                throw voterLimitError(voterLimit);
+            }
         }
     }
 
