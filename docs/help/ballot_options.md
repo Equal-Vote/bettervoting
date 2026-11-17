@@ -48,7 +48,6 @@ What the voter sees:
 
 - After submitting, the confirmation page shows an **Update Vote** button while the election is open.
 - The voter's email receipt contains a link they can use to return and update their ballot.
-- The ballot verification page tells voters whether updates are allowed: with updates off it says all ballots are final once submitted; with updates on it points to the receipt link, and once the election closes it says all ballots are final.
 
 {: .important }
 > Vote editing is only available for elections that invite voters by **email list**. It is not permitted on open-access elections, because updating a ballot requires knowing reliably which voter it belongs to.
@@ -76,7 +75,7 @@ Why limit rankings at all? With a large candidate field, a full ranking grid bec
 
 ## Write-in candidates
 
-Write-ins are enabled **per race**, not per election: in the race editor, click **+ Add Write-in** under the candidate list while the election is a draft. A "Write-in" entry appears at the bottom of the candidate list to show voters will have the option.
+Write-ins are enabled **per race**, not per election: in the race editor, click **+ Add Write-in** under the candidate list while the election is a draft. A "Write-in" entry appears at the bottom of the candidate list to show voters will have the option. Write-ins aren't offered in the quick-start wizard, so choose **Customize in editor** there if you want them. Because an administrator has to approve write-ins before they count (see below), an election with write-ins needs a signed-in owner: you'll have to sign in before you can finalize it.
 
 **What the voter sees:** below the candidate list, the ballot shows a *Write-in Candidates* box. The voter types a name, clicks **Add**, and the name appears as a new row on the ballot to be scored, ranked, or approved exactly like any listed candidate. 
 

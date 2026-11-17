@@ -3,15 +3,20 @@ import Logger from "../../Services/Logging/Logger";
 import { BadRequest } from "@curveball/http-errors";
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
+import { expectPermission } from "../controllerUtils";
+import { permissions } from "@equal-vote/star-vote-shared/domain_model/permissions";
 
 const BallotModel = ServiceLocator.ballotsDb();
 
 const getBallotByBallotID = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
-    var electionId = req.election.election_id;
-    var ballot_id = req.params.ballot_id
+    const electionId = req.election.election_id;
+    const ballot_id = req.params.ballot_id
     if (!ballot_id) {
         throw new BadRequest('No Ballot ID provided')
     }
+    // Only election staff may look up a ballot by id. If voters could, a ballot
+    // id would be a receipt proving how they voted (vote buying / coercion).
+    expectPermission(req.user_auth.roles, permissions.canViewBallots)
     Logger.debug(req, "getBallotByBallotID: " + ballot_id);
 
     const ballot = await BallotModel.getBallotByID(ballot_id, req);
