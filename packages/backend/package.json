@@ -41,7 +41,7 @@
     "pg-boss": "^8.0.0",
     "pg-cursor": "^2.21.0",
     "qs": "^6.15.2",
-    "sanitize-html": "^2.17.7",
+    "sanitize-html": "^2.18.1",
     "socket.io": "^4.7.5",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"
