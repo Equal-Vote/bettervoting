@@ -47,7 +47,7 @@ const WriteInElection: Election = {
 } as Election;
 
 describe("Write-In Candidates", () => {
-    var election: Election;
+    let election: Election;
 
     test("Create election with write-ins enabled", async () => {
         const response = await th.createElection(WriteInElection, testInputs.user1token);
@@ -312,7 +312,7 @@ describe("Write-In Candidates", () => {
 });
 
 describe("Zero-ballot paths", () => {
-    var election: Election;
+    let election: Election;
 
     test("Create election", async () => {
         const response = await th.createElection({
@@ -349,9 +349,9 @@ describe("Zero-ballot paths", () => {
         th.testComplete();
     });
 
-    test("getBallots returns empty list when no ballots exist", async () => {
+    test("anonymizedBallots returns empty list when no ballots exist", async () => {
         const res = await th.getRequest(
-            `/API/Election/${election.election_id}/ballots`,
+            `/API/Election/${election.election_id}/anonymizedBallots`,
             testInputs.user1token,
         );
         expect(res.statusCode).toBe(200);
@@ -361,7 +361,7 @@ describe("Zero-ballot paths", () => {
 });
 
 describe("Write-In Validation (setWriteInResults)", () => {
-    var election: Election;
+    let election: Election;
 
     beforeAll(async () => {
         const response = await th.createElection(WriteInElection, testInputs.user1token);

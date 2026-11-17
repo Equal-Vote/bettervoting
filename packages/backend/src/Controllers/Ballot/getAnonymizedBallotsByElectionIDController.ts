@@ -37,7 +37,7 @@ async function* anonymizedBallotJsonChunks(ballots: AsyncIterable<Ballot>): Asyn
 }
 
 export const getAnonymizedBallotsByElectionID = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
-    var electionId = req.election.election_id;
+    const electionId = req.election.election_id;
     Logger.debug(req, "getAnonymizedBallotsByElectionID: " + electionId);
     const election = req.election;
     if (!election.settings.public_results) {
@@ -52,8 +52,8 @@ export const getAnonymizedBallotsByElectionID = async (req: IElectionRequest, re
     // Stream ballots from a db cursor straight to the response so the full
     // payload is never held in memory (large elections were OOMing the pod).
     // The query returns ballots in random order so the response can't reveal
-    // ballot submission order — see getBallotsByElectionIDController for the
-    // threat model.
+    // ballot submission order: an admin could otherwise zip it against the
+    // roll's per-voter timestamps to deanonymize every vote.
     const ballots = BallotModel.streamSubmittedBallotsByElectionID(String(electionId), req);
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     try {

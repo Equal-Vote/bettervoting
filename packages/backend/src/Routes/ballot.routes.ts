@@ -1,5 +1,4 @@
 import {    
-    getBallotsByElectionID,
     deleteAllBallotsForElectionID,
     getBallotByBallotID,
     castVoteController,
@@ -17,41 +16,6 @@ import {
 import { Router } from 'express';
 import asyncHandler  from 'express-async-handler';
 export const ballotRouter = Router();
-
-/** 
- * @swagger
- * /Election/{id}/ballots:
- *   get:
- *     summary: Get ballots by election ID
- *     tags: [Ballots]
- *     security:
- *      - ApiKeyAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: string
- *         required: true
- *         description: The election ID
- *     responses:
- *       200:
- *         description: List of ballots
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 election:
- *                   type: object
- *                   $ref: '#/components/schemas/Election'
- *                 ballots:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Ballot'
- *       404:
- *         description: Election not found
-*/
-ballotRouter.get('/Election/:id/ballots', asyncHandler(getBallotsByElectionID))
 
 /**
  * @swagger

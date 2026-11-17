@@ -20,7 +20,7 @@ export default class BallotsDB implements IBallotStore {
     }
 
     async init(): Promise<IBallotStore> {
-        var appInitContext = Logger.createContext("appInit");
+        const appInitContext = Logger.createContext("appInit");
         Logger.debug(appInitContext, "BallotsDB.init");
         return this;
     }
@@ -64,7 +64,7 @@ export default class BallotsDB implements IBallotStore {
 
     private makeSubmitBallotsQuery(inputBallots: Ballot | Ballot[], ctx: ILoggingContext, reason: string,
                                    db: Kysely<Database> | Transaction<Database> = this._postgresClient): Promise<Ballot[] | Ballot> {
-        let ballots = Array.isArray(inputBallots)? inputBallots : [inputBallots];
+        const ballots = Array.isArray(inputBallots)? inputBallots : [inputBallots];
 
         // Strip legacy fields (see Ballot.ts) so callers can't write them.
         const sanitizedBallots = ballots.map(b => {
@@ -77,7 +77,7 @@ export default class BallotsDB implements IBallotStore {
             };
         });
 
-        let query = db
+        const query = db
             .insertInto(tableName)
             .values(sanitizedBallots)
             .returningAll()
@@ -128,8 +128,7 @@ export default class BallotsDB implements IBallotStore {
             .where('head', '=', true)
             .where('status', '=', 'submitted')
             // Randomize order in the database (gen_random_uuid() is backed by a
-            // strong RNG) so the response can't reveal ballot submission order —
-            // the streaming equivalent of secureShuffle in controllerUtils.
+            // strong RNG) so the response can't reveal ballot submission order.
             .orderBy(sql`gen_random_uuid()`)
             .stream(500) as AsyncIterableIterator<Ballot>;
     }
