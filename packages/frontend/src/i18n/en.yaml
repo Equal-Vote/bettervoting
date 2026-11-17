@@ -212,6 +212,7 @@ ballot_submitted:
   update_ballot_disabled: This election does not support ballot updates. All ballots are final once submitted
   update_ballot_enabled_open: You can update your ballot using the link in your email receipt
   update_ballot_enabled_closed: The election has closed. All ballots are final
+  lookup_staff_only: To protect voters from being pressured to prove how they voted, individual ballots can only be looked up by {{election}} staff.
   status: 'Status:'
   voter_group: 'Voter Group:'
   ballot_id: 'Ballot ID:'
