@@ -9,7 +9,7 @@ const ENTITLEMENT_DEFAULTS: ElectionEntitlements = {
 
 export const pricingConfig = {
     FREE_TIER_LIMIT,
-    BLOCK_SIZE: 200,
-    PRICE_PER_BLOCK_CENTS: 1000,
+    BLOCK_SIZE: 100,
+    PRICE_PER_BLOCK_CENTS: 600,
     ENTITLEMENT_DEFAULTS,
 };

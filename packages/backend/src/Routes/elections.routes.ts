@@ -13,6 +13,7 @@ import {
     editElection,
     editElectionRoles,
     finalizeElection,
+    createCheckoutSession,
     getElectionHistory,
     getElectionResults,
     getElections,
@@ -536,6 +537,65 @@ electionsRouter.delete('/Election/:id', asyncHandler(deleteElection))
  *       404:
  *         description: Election not found */
 electionsRouter.post('/Election/:id/finalize',asyncHandler(finalizeElection))
+
+/**
+ * @swagger
+ * /Election/{id}/CheckoutSession:
+ *   post:
+ *     summary: Start a Stripe Checkout Session to buy entitlements (e.g. voter-limit blocks) for an election
+ *     tags: [Elections]
+ *     security:
+ *      - ApiKeyAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The election ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               line_items:
+ *                 type: array
+ *                 description: The itemized cart; each line must exactly match the product catalog's pricing
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     entitlement_type:
+ *                       type: string
+ *                       example: voter_limit
+ *                     quantity:
+ *                       type: integer
+ *                       example: 3
+ *                       description: Number of units (e.g. voter blocks)
+ *                     unit_entitlement:
+ *                       type: integer
+ *                       description: Entitlement each unit grants (e.g. voters per block)
+ *                       example: 200
+ *                     unit_amount:
+ *                       type: integer
+ *                       description: Price per unit in cents
+ *                       example: 1000
+ *     responses:
+ *       200:
+ *         description: The hosted Stripe Checkout URL to redirect to
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 url:
+ *                   type: string
+ *       400:
+ *         description: The cart is empty or doesn't match the catalog
+ *       401:
+ *         description: Not signed in, or can't edit this election */
+electionsRouter.post('/Election/:id/CheckoutSession', asyncHandler(createCheckoutSession))
 
 /** 
  * @swagger

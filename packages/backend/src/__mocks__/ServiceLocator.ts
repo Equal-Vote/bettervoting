@@ -3,8 +3,10 @@ import ElectionsDB from "../Models/__mocks__/Elections";
 import ElectionRollDB from "../Models/__mocks__/ElectionRolls";
 import EmailEventsDB from "../Models/__mocks__/EmailEvents";
 import EntitlementsDB from "../Models/__mocks__/Entitlements";
+import TransactionsDB from "../Models/__mocks__/Transactions";
 import EmailService from "../Services/Email/__mocks__/EmailService";
 import BlobService from "../Services/Blob/__mocks__/BlobService";
+import MockStripeService from "../Services/Stripe/MockStripeService";
 import CastVoteStore from "../Models/__mocks__/CastVoteStore";
 import { IBallotStore } from "../Models/IBallotStore";
 import { IElectionRollStore } from "../Models/IElectionRollStore";
@@ -17,8 +19,10 @@ let _electionsDb:ElectionsDB;
 let _electionRollDb:IElectionRollStore;
 let _emailEventsDb:EmailEventsDB;
 let _entitlementsDb:EntitlementsDB;
+let _transactionsDb:TransactionsDB;
 let _emailService:EmailService;
 let _blobService:BlobService;
+let _stripeService:MockStripeService;
 let _castVoteStore:CastVoteStore;
 let _eventQueue:MockEventQueue;
 let _accountService:AccountService;
@@ -59,6 +63,13 @@ function entitlementsDb():EntitlementsDB {
     return _entitlementsDb;
 }
 
+function transactionsDb():TransactionsDB {
+    if (_transactionsDb == null){
+        _transactionsDb = new TransactionsDB();
+    }
+    return _transactionsDb;
+}
+
 function emailService():EmailService {
     if (_emailService == null){
         _emailService = new EmailService();
@@ -71,6 +82,13 @@ function blobService():BlobService {
         _blobService = new BlobService();
     }
     return _blobService;
+}
+
+function stripeService():MockStripeService {
+    if (_stripeService == null) {
+        _stripeService = new MockStripeService();
+    }
+    return _stripeService;
 }
 
 function castVoteStore():CastVoteStore {
@@ -102,4 +120,4 @@ function globalData():GlobalData {
     return _globalData;
 }
 
-export  default { ballotsDb, electionsDb, electionRollDb, emailEventsDb, entitlementsDb, emailService, blobService, castVoteStore, accountService, globalData, eventQueue };
+export  default { ballotsDb, electionsDb, electionRollDb, emailEventsDb, entitlementsDb, transactionsDb, emailService, blobService, stripeService, castVoteStore, accountService, globalData, eventQueue };
