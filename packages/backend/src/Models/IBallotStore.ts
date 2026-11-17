@@ -10,9 +10,15 @@ export interface BallotVotes {
     votes: Vote[];
 }
 
+/** The columns the public audit log reads from every version of a ballot. */
+export type BallotVersionRow = Pick<Ballot, 'ballot_id' | 'update_date' | 'history'>;
+
 export interface IBallotStore {
+    // Every version (head and non-head) of every ballot in the election, for the audit log
+    getBallotVersionsByElectionID: (election_id: string, ctx: ILoggingContext) => Promise<BallotVersionRow[]>;
     submitBallot: (ballot: Ballot, ctx: ILoggingContext, reason: string, db?: Kysely<Database> | Transaction<Database>) => Promise<Ballot>;
-    updateBallot: (ballot: Ballot, ctx: ILoggingContext, reason: string, db?: Kysely<Database> | Transaction<Database>) => Promise<Ballot>;
+    // Replaces the head version whose update_date is `expected_update_date`; throws Conflict otherwise (optimistic concurrency)
+    updateBallot: (ballot: Ballot, ctx: ILoggingContext, reason: string, expected_update_date: string, db?: Kysely<Database> | Transaction<Database>) => Promise<Ballot>;
     bulkSubmitBallots: (ballots: Ballot[], ctx: ILoggingContext, reason: string, db?: Kysely<Database> | Transaction<Database>) => Promise<Ballot[]>;
     getBallotByID: (ballot_id: string, ctx: ILoggingContext, db?: Kysely<Database> | Transaction<Database>) => Promise<Ballot | null>;
     getBallotsByElectionID: (election_id: string, ctx: ILoggingContext, db?: Kysely<Database> | Transaction<Database>) => Promise<Ballot[]>;

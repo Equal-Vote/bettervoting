@@ -12,6 +12,9 @@ export type CastVoteEvent = {
     roll?: ElectionRoll,
     userEmail?: string,
     isBallotUpdate: boolean,
+    // When isBallotUpdate: update_date of the head ballot row the new version was
+    // built from. The write is refused if that row is no longer the head.
+    expected_ballot_update_date?: string,
 }
 
 export default class CastVoteStore {
@@ -30,10 +33,16 @@ export default class CastVoteStore {
                 ballotToInsert.create_date = new Date().toISOString();
 
                 if (event.isBallotUpdate) {
+                    if (!event.expected_ballot_update_date) {
+                        throw new Error("CONCURRENT_BALLOT_UPDATE_DETECTED");
+                    }
+                    // Optimistic Concurrency Control: demote only the exact version this
+                    // update was built from, so two edits of one ballot can't both land.
                     const updateBallotResult = await trx.updateTable('ballotDB')
                         .where('ballot_id', '=', ballotToInsert.ballot_id)
                         .where('election_id', '=', ballotToInsert.election_id)
                         .where('head', '=', true)
+                        .where('update_date', '=', event.expected_ballot_update_date)
                         .set('head', false)
                         .execute();
                     

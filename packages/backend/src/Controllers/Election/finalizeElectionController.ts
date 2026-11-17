@@ -2,6 +2,7 @@ import ServiceLocator from '../../ServiceLocator';
 import Logger from '../../Services/Logging/Logger';
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { expectPermanentUser, expectPermission, expectUpdateDate } from "../controllerUtils";
+import { parseAuditNote } from "../auditNote";
 import { BadRequest } from "@curveball/http-errors";
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
@@ -39,7 +40,7 @@ const finalizeElection = async (req: IElectionRequest, res: Response, _next: Nex
         },
     }
     const expected_update_date = expectUpdateDate(req);
-    const updatedElection = await ElectionsModel.updateElection(finalizedElection, req, `Finalizing election`, expected_update_date);
+    const updatedElection = await ElectionsModel.updateElection(finalizedElection, req, `Finalizing election`, expected_update_date, parseAuditNote(req));
     if (!updatedElection) {
         Logger.info(req, failMsg);
         throw new BadRequest(failMsg)

@@ -226,6 +226,9 @@ ballotRouter.post('/Election/:id/vote', asyncHandler(castVoteController))
  *                  items:
  *                     type: object
  *                     $ref: '#/components/schemas/NewBallotWithVoterID'
+ *               audit_note:
+ *                  type: string
+ *                  description: Optional explanation shown next to this upload in the public audit log (max 1000 characters)
  *     responses:
  *       200:
  *         description: All Ballots Processed

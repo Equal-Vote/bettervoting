@@ -7,12 +7,13 @@ import ShareButton from "../ShareButton";
 import { useFinalizeElection, useSetOpenState } from "../../../hooks/useAPI";
 import { SwitchSetting } from '../../util';
 import useConfirm from '../../ConfirmationDialogProvider';
+import useAuditConfirm from './useAuditConfirm';
 import useElection from '../../ElectionContextProvider';
 import useAuthSession from '../../AuthSessionContextProvider';
 import { AdminPageNavigation } from '../Sidebar';
 import useOptimisticToggle from '~/hooks/useOptimisticToggle';
 
-export default () => {
+const PublishAndShare = () => {
     const authSession = useAuthSession()
     const { t, election, refreshElection: fetchElection, permissions, enqueueWrite } = useElection()
 
@@ -22,7 +23,7 @@ export default () => {
 
     const navigate = useNavigate()
 
-    const confirm = useConfirm()
+    const auditConfirm = useAuditConfirm()
     const emailConfirm = useConfirm()
 
     const hasPermission = (requiredPermission: string) => {
@@ -36,10 +37,10 @@ export default () => {
     </Box>
 
     const finalizeElection = async () => {
-        const confirmed = await confirm(t('admin_home.finalize_confirm'));
-        if (!confirmed) return;
+        const audit = await auditConfirm(t('admin_home.finalize_confirm'));
+        if (!audit) return;
         try {
-            await enqueueWrite(expected_update_date => finalize({ expected_update_date }));
+            await enqueueWrite(expected_update_date => finalize({ expected_update_date, ...audit }));
             await fetchElection();
         } catch (err) {
             console.error(err);
@@ -97,7 +98,10 @@ export default () => {
     </Box>
 
     const [isOpen, setIsOpen] = useOptimisticToggle(election.state === 'open', async (toggled) => {
-        const res = await enqueueWrite(expected_update_date => setOpenState({ open: toggled, expected_update_date }));
+        // Returning false reverts the switch to its committed value.
+        const audit = await auditConfirm(t(toggled ? 'audit_confirm.open' : 'audit_confirm.close'));
+        if (!audit) return false;
+        const res = await enqueueWrite(expected_update_date => setOpenState({ open: toggled, expected_update_date, ...audit }));
         // Same as setPublicResults in ElectionSettings: this write bypasses
         // updateElection, so nothing folds the new state into the context.
         // Stale election.state also mislabels the sidebar (Preview vs Live Ballot).
@@ -139,3 +143,5 @@ export default () => {
         <AdminPageNavigation />
     </>
 }
+
+export default PublishAndShare

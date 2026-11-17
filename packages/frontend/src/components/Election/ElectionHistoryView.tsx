@@ -1,16 +1,27 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Box, Typography } from "@mui/material";
 import useElection from "../ElectionContextProvider";
 import { useGetElectionHistory } from "../../hooks/useAPI";
 import EnhancedTable from "../EnhancedTable";
+import { electionHasAuditLog } from "@equal-vote/star-vote-shared/domain_model/AuditLog";
 
 const ElectionHistoryView = () => {
-    const { election, t } = useElection();
+    const { election, permissions, t } = useElection();
     const { data, isPending, error, makeRequest: getHistory } = useGetElectionHistory(election?.election_id);
+    // Elections created before the cutoff have no public log: the backend
+    // serves it only to the election's admins. Don't ask on behalf of anyone
+    // else, so the page explains why instead of showing an error.
+    const isPublic = electionHasAuditLog(election);
+    const isAdmin = !!permissions?.includes('canEditElection');
+    const hasAuditLog = isPublic || isAdmin;
+    // The server lists events in the order they happened, by exact time. Several events
+    // show only their day, so the table sorts the When column by this position instead of
+    // by the text it displays.
+    const events = useMemo(() => (data?.events ?? []).map((event, i) => ({ ...event, position: i })), [data]);
 
     useEffect(() => {
-        if (election?.election_id) getHistory();
-    }, [election?.election_id]);
+        if (election?.election_id && hasAuditLog) getHistory();
+    }, [election?.election_id, hasAuditLog]);
 
     return (
         <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
@@ -25,17 +36,22 @@ const ElectionHistoryView = () => {
                     {t('election_history.ladder_note')}
                 </Typography>
 
-                {error && (
+                <Typography variant="body2" sx={{ mb: 2, fontWeight: 'bold', color: isPublic ? 'text.secondary' : 'warning.main' }}>
+                    {t(isPublic ? 'election_history.public' : 'election_history.admin_only')}
+                </Typography>
+
+                {hasAuditLog && error && (
                     <Typography color="text.secondary">
                         {t('election_history.not_finalized')}
                     </Typography>
                 )}
 
-                {!error && (
+                {hasAuditLog && !error && (
                     <EnhancedTable
                         title={t('election_history.title')}
-                        headKeys={['history_event', 'history_description', 'history_when']}
-                        data={data?.events ?? []}
+                        hideTitle
+                        headKeys={['history_event', 'history_description', 'history_note', 'history_when']}
+                        data={events}
                         defaultSortBy='history_when'
                         // Rows aren't links — the audit log is the whole record.
                         handleOnClick={() => undefined}

@@ -14,11 +14,12 @@ import { Response, NextFunction } from 'express';
 import { Imsg } from '../../Services/Email/IEmail';
 import { logSafeHash } from '../../Services/Logging/logSafeHash';
 import { getErrorMessage } from '../../errorUtils';
+import { updateRollWithRetry } from '../Roll/rollHistoryUtils';
 
-var ElectionRollModel = ServiceLocator.electionRollDb();
-var ElectionModel = ServiceLocator.electionsDb();
-var EmailService = ServiceLocator.emailService();
-var EmailEventsDB = ServiceLocator.emailEventsDb();
+const ElectionRollModel = ServiceLocator.electionRollDb();
+const ElectionModel = ServiceLocator.electionsDb();
+const EmailService = ServiceLocator.emailService();
+const EmailEventsDB = ServiceLocator.emailEventsDb();
 const EventQueue = ServiceLocator.eventQueue();
 
 const className = "election.Controllers";
@@ -178,11 +179,11 @@ const sendEmailsController = async (req: IElectionRequest, res: Response, _next:
         )
     })
 
-    var failMsg = "Failed to send invitations";
+    const failMsg = "Failed to send invitations";
     Logger.info(req, `${className}.sendEmails enqueuing ${describeSendPlan(Jobs.length)}`);
     try {
         await (await EventQueue).publishBatch(SendEmailEventQueue, Jobs, { spacingMs: emailSendSpacingMs() });
-    } catch (err: any) {
+    } catch (err: unknown) {
         const msg = `Could not send invitations`;
         Logger.error(req, `${msg}: ${getErrorMessage(err)}`);
         throw new InternalServerError(failMsg)
@@ -218,7 +219,7 @@ async function handleSendEmailEvent(job: { id: string; data: email_request_event
     }
     // await sendEmail(ctx, event.election, electionRoll, event.sender, event.url)
     // TODO: I think this will always give a single element array, we can probably simplify this and be less generalized
-    let emails: Imsg[] = makeEmails(election, [electionRoll], event.url, event.email.subject, event.email.body, event.test_email != '');
+    const emails: Imsg[] = makeEmails(election, [electionRoll], event.url, event.email.subject, event.email.body, event.test_email != '');
 
     let emailResponse;
     try{
@@ -258,16 +259,22 @@ async function handleSendEmailEvent(job: { id: string; data: email_request_event
         timestamp: Date.now(),
     }
 
-    if (electionRoll.history == null) {
-        electionRoll.history = [];
-    }
-    electionRoll.history.push(historyUpdate)
-
+    // The email has already gone out, so its record must land even if the roll changed
+    // underneath us: updateRollWithRetry re-reads and re-applies this on conflict.
     try {
-        const updatedElectionRoll = await ElectionRollModel.update(electionRoll, ctx, `Email Sent`);
-        if (!updatedElectionRoll) {
-            throw new InternalServerError()
-        }
+        await updateRollWithRetry(
+            election.election_id,
+            electionRoll.voter_id,
+            (roll) => {
+                if (roll.history == null) {
+                    roll.history = [];
+                }
+                roll.history.push(historyUpdate)
+            },
+            ctx,
+            `Email Sent`,
+            electionRoll,
+        );
     } catch (err: unknown) {
         const msg = `Could not update election roll`;
         Logger.error(ctx, `${msg}: ${getErrorMessage(err)}`);
