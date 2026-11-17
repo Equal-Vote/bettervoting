@@ -1,7 +1,7 @@
 import ServiceLocator from '../../ServiceLocator';
 import Logger from '../../Services/Logging/Logger';
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
-import { expectPermission, expectUpdateDate } from "../controllerUtils";
+import { expectPermanentUser, expectPermission, expectUpdateDate } from "../controllerUtils";
 import { parseAuditNote } from "../auditNote";
 import { BadRequest } from "@curveball/http-errors";
 import { IElectionRequest } from "../../IRequest";
@@ -15,6 +15,9 @@ const className = "election.Controllers";
 const finalizeElection = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
     Logger.info(req, `${className}.finalize ${req.election.election_id}`);
     expectPermission(req.user_auth.roles, permissions.canEditElectionState)
+    // Temp owners hold canEditElectionState during their access window, but finalizing
+    // needs an account (the UI says "create a free account to finalize"); enforce it here too.
+    expectPermanentUser(req.user)
 
     if (req.election.state !== 'draft') {
         const msg = "Election already finalized";

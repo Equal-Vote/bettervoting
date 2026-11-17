@@ -21,6 +21,24 @@ describe("STAR Tests", () => {
         expect(results.elected[0].name).toBe('Allison');
         expect(results.roundResults[0].runner_up[0].name).toBe('Carmen');
     })
+    test("Candidate order puts the runoff runner-up second after a head-to-head tiebreak (#1776)", () => {
+        // Blacksmith and Angel tie for second on score; Angel wins their head-to-head and
+        // advances even though Blacksmith has more five-star votes, so score/five-star order
+        // would wrongly list Blacksmith second. Robot beats Angel in the runoff.
+        const candidates = ['Robot', 'Blacksmith', 'Angel']
+        const votes = [
+            [0, 1, 0],
+            [1, 5, 0],
+            [5, 0, 3],
+            [1, 3, 4],
+            [5, 2, 2],
+            [2, 2, 4]]
+        const results = Star(...mapMethodInputs(candidates, votes), 1)
+        expect(results.roundResults[0].tieBreakType).toBe('head_to_head');
+        expect(results.elected[0].name).toBe('Robot');
+        expect(results.roundResults[0].runner_up[0].name).toBe('Angel');
+        expect(results.summaryData.candidates.map(c => c.name)).toEqual(['Robot', 'Angel', 'Blacksmith']);
+    })
     test("Runnerup tie", () => {
         const candidates = ['Allison', 'Bill', 'Carmen', 'Doug']
         const votes = [
