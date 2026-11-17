@@ -48,7 +48,6 @@ What the voter sees:
 
 - After submitting, the confirmation page shows an **Update Vote** button while the election is open.
 - The voter's email receipt contains a link they can use to return and update their ballot.
-- The ballot verification page tells voters whether updates are allowed: with updates off it says all ballots are final once submitted; with updates on it points to the receipt link, and once the election closes it says all ballots are final.
 
 {: .important }
 > Vote editing is only available for elections that invite voters by **email list**. It is not permitted on open-access elections, because updating a ballot requires knowing reliably which voter it belongs to.
