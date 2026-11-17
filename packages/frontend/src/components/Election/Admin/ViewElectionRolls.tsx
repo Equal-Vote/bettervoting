@@ -16,6 +16,8 @@ import { PrimaryButton, SecondaryButton } from "~/components/styles";
 import ElectionAuthForm from "~/components/ElectionForm/Details/ElectionAuthForm";
 import useConfirm from "~/components/ConfirmationDialogProvider";
 import { AdminPageNavigation } from '../Sidebar';
+import { PAYMENT_RECEIVED_PARAM } from "./Payments/paymentsUtils";
+import FinalizeCostLink from "./Payments/FinalizeCostLink";
 import HeadToHeadChart from "../../../components/Election/Results/components/HeadToHeadChart";
 
 const ViewElectionRolls = () => {
@@ -27,14 +29,21 @@ const ViewElectionRolls = () => {
         if(election.settings.voter_access == 'closed')  fetchRolls()
     }, [])
     const [inspectingVoter, setInspectingVoter] = useState(false)
-    const [addRollPage, setAddRollPage] = useState(false)
-    const [uploadingRolls, setUploadingRolls] = useState(false)
-    // refetch on close since an upload may have partially succeeded
-    const closeAddRoll = () => { setAddRollPage(false); fetchRolls(); }
-    const [editedRoll, setEditedRoll] = useState<ElectionRollResponse|null>(null)
     const flags = useFeatureFlags();
     const navigate = useNavigate();
     const location = useLocation();
+    // Back from paying for an over-limit upload (see CheckoutReturn): reopen Add Voters to re-submit the list
+    const paymentsEnabled = flags.isSet('PAYMENTS')
+    const paymentReceived = paymentsEnabled && new URLSearchParams(location.search).has(PAYMENT_RECEIVED_PARAM)
+    const [addRollPage, setAddRollPage] = useState(paymentReceived)
+    const [uploadingRolls, setUploadingRolls] = useState(false)
+    // refetch on close since an upload may have partially succeeded
+    const closeAddRoll = () => {
+        setAddRollPage(false);
+        fetchRolls();
+        if (paymentReceived) navigate(location.pathname, { replace: true });
+    }
+    const [editedRoll, setEditedRoll] = useState<ElectionRollResponse|null>(null)
     const [dialogOpen, setDialogOpen] = useState(false);
 
     // Radios are pure projections of the canonical mode. Each click computes the
@@ -163,6 +172,9 @@ const ViewElectionRolls = () => {
                 </RadioGroup>
             </Box>}
 
+            {paymentsEnabled && election.state === 'draft' && voterAccess === 'closed' && data &&
+                <FinalizeCostLink voterCount={electionRollData.length} />
+            }
             {/* Turnout so far. Skipped until there's a voter list, since there's no turnout to chart yet */}
             {electionRollData.length > 0 &&
                 <HeadToHeadChart
@@ -242,7 +254,7 @@ const ViewElectionRolls = () => {
                 >
                     <DialogTitle sx={{m: 0}}>Adding Voters</DialogTitle>
                     <DialogContent>
-                        <AddElectionRoll onClose={closeAddRoll} onUploadingChange={setUploadingRolls}/>
+                        <AddElectionRoll onClose={closeAddRoll} onUploadingChange={setUploadingRolls} paymentReceived={paymentReceived}/>
                     </DialogContent>
                     <DialogActions>
                         <PrimaryButton disabled={uploadingRolls} onClick={closeAddRoll}>

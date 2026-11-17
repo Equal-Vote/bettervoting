@@ -1,6 +1,7 @@
 import { Election, NewElection } from "@equal-vote/star-vote-shared/domain_model/Election";
 import { VoterAuth } from '@equal-vote/star-vote-shared/domain_model/VoterAuth';
 import { ElectionEntitlements } from '@equal-vote/star-vote-shared/domain_model/Entitlement';
+import { CartLineItem } from '@equal-vote/star-vote-shared/domain_model/ProductCatalog';
 import { ElectionRoll, ElectionRollResponse } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll";
 import useFetch from "./useFetch";
 import { VotingMethod } from "@equal-vote/star-vote-shared/domain_model/Race";
@@ -134,6 +135,10 @@ export const useDeleteAllBallots = (election_id: string) => {
 
 export const useFinalizeElection = (election_id: string) => {
     return useFetch<{ expected_update_date: string }, { election: Election }>(`/API/Election/${election_id}/finalize`, 'post')
+}
+
+export const useCreateCheckoutSession = (election_id: string) => {
+    return useFetch<{ line_items: CartLineItem[] }, { url: string }>(`/API/Election/${election_id}/CheckoutSession`, 'post')
 }
 
 export const useClaimElection = (election_id: string) => {

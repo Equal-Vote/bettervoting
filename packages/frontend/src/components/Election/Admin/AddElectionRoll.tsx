@@ -8,20 +8,34 @@ import Box from '@mui/material/Box';
 import { Checkbox, FormGroup, FormControlLabel } from '@mui/material';
 import Papa from "papaparse";
 import LinearProgress from "@mui/material/LinearProgress";
+import { pricingConfig } from '@equal-vote/star-vote-shared/config';
+import { ElectionEntitlements } from '@equal-vote/star-vote-shared/domain_model/Entitlement';
+import { itemize } from '@equal-vote/star-vote-shared/domain_model/ProductCatalog';
+import { formatCount } from '@equal-vote/star-vote-shared/utils/numberFormat';
 import { useGetRolls } from "../../../hooks/useAPI";
 import useElection from "../../ElectionContextProvider";
 import useSnackbar from "../../SnackbarContext";
 import useFeatureFlags from "../../FeatureFlagContextProvider";
-import { pricingConfig } from '@equal-vote/star-vote-shared/config';
 import { PrimaryButton, SecondaryButton } from "~/components/styles";
 import useConfirm from '../../ConfirmationDialogProvider';
 import { findRollConflicts, uploadRollsBatched, RollInput } from './rollUploadUtils';
+import { useCheckout } from './Payments/useCheckout';
+import UploadPaymentDialog, { UploadPayment } from './Payments/UploadPaymentDialog';
+import AddVotersPricingNote from './Payments/AddVotersPricingNote';
+import PaymentReceivedBanner from './Payments/PaymentReceivedBanner';
 
 
-const AddElectionRoll = ({ onClose, onUploadingChange }: { onClose: () => void, onUploadingChange?: (uploading: boolean) => void }) => {
+interface AddElectionRollProps {
+    onClose: () => void,
+    onUploadingChange?: (uploading: boolean) => void,
+    paymentReceived?: boolean, // back from paying for an over-limit upload
+}
+
+const AddElectionRoll = ({ onClose, onUploadingChange, paymentReceived = false }: AddElectionRollProps) => {
     const { setSnack } = useSnackbar()
     const flags = useFeatureFlags();
-    const { election, entitlements, updateElection } = useElection()
+    const paymentsEnabled = flags.isSet('PAYMENTS')
+    const { election, entitlements, updateElection, refreshElection } = useElection()
     const [voterIDList, setVoterIDList] = useState('')
     const getRolls = useGetRolls(election.election_id)
     const [enableVoterID, setEnableVoterID] = useState(election.settings.voter_authentication.voter_id && election.settings.invitation !== 'email')
@@ -33,6 +47,8 @@ const AddElectionRoll = ({ onClose, onUploadingChange }: { onClose: () => void, 
     const [progress, setProgress] = useState<{ uploaded: number, total: number } | null>(null)
     const inputRef = useRef(null)
     const confirm = useConfirm();
+    const { startCheckout, isPending: checkoutPending } = useCheckout()
+    const [uploadPayment, setUploadPayment] = useState<UploadPayment | null>(null)
 
     useEffect(() => { onUploadingChange?.(busy) }, [busy])
 
@@ -64,9 +80,16 @@ const AddElectionRoll = ({ onClose, onUploadingChange }: { onClose: () => void, 
     }
 
     // The voter limit is hit either by the pre-upload check below or by the server's 402 Payment Required response
-    // (e.g. if the roll grew since we fetched it).
-    // TODO: open the itemized confirmation (checkout) here once it exists. Until then, explain the limit instead.
-    const onPaymentRequired = (message: string) => showError(message)
+    // (e.g. if the roll grew since we fetched it). With payments on, both open the upload payment dialog, priced for
+    // roll + upload; checkout runs before any (more) voters are added. With payments off, explain the limit instead.
+    const onPaymentRequired = (message: string, uploadCount: number, alreadyAdded: number, rollCount: number, currentEntitlements: ElectionEntitlements | undefined) => {
+        const lineItems = currentEntitlements ? itemize({ roll_count: rollCount }, currentEntitlements) : []
+        if (!paymentsEnabled || lineItems.length === 0) {
+            showError(message)
+            return
+        }
+        setUploadPayment({ uploadCount, alreadyAdded, rollCount, entitlements: currentEntitlements, lineItems })
+    }
 
     // Shared by the text field and the csv upload
     // 1. fetch the current roll so we can find conflicts (voters that are already on the list, or that repeat within this upload)
@@ -92,7 +115,9 @@ const AddElectionRoll = ({ onClose, onUploadingChange }: { onClose: () => void, 
             const requestedVoterCount = existing.electionRoll.length + uploadCount;
             if (election.state !== 'draft' && election.settings.voter_access == 'closed'
                 && voterLimit !== undefined && requestedVoterCount > voterLimit) {
-                onPaymentRequired(`This election is limited to ${voterLimit} voters, and this upload would bring it to ${requestedVoterCount}.`)
+                onPaymentRequired(
+                    `This election is limited to ${formatCount(voterLimit)} voters, and this upload would bring it to ${formatCount(requestedVoterCount)}.`,
+                    uploadCount, 0, requestedVoterCount, entitlements)
                 return
             }
 
@@ -151,7 +176,18 @@ const AddElectionRoll = ({ onClose, onUploadingChange }: { onClose: () => void, 
             )
 
             if (result.aborted && result.errorStatus === 402) {
-                onPaymentRequired(result.errorMessage ?? 'This election has reached its voter limit.')
+                const message = result.errorMessage ?? 'This election has reached its voter limit.'
+                if (!paymentsEnabled) {
+                    showError(message)
+                    return
+                }
+                // Re-price against fresh state: the roll (or the limit) changed since the pre-upload check.
+                // Batches before the 402 were added, so only the rest of this upload still needs room.
+                const remaining = uploadCount - result.uploaded
+                const fresh = await refreshElection()
+                const freshRolls = await getRolls.makeRequest()
+                if (!fresh || !freshRolls) return // useFetch already reported the error
+                onPaymentRequired(message, remaining, result.uploaded, freshRolls.electionRoll.length + remaining, fresh.entitlements)
                 return
             }
             if (result.aborted) {
@@ -251,12 +287,13 @@ const AddElectionRoll = ({ onClose, onUploadingChange }: { onClose: () => void, 
                     <Typography align='center' gutterBottom variant="h6" component="h6">
                         Enter voter data
                     </Typography>
+                    {paymentReceived && <PaymentReceivedBanner />}
 
                     <Typography align='center' component="p">
                         Enter your voter roll data in the field below.<br/>{`(1 ${emailListOnly ? "email" : "voter"} per row, no spaces)`}
                     </Typography>
 
-                    { election.settings.voter_access == 'closed' && entitlements &&
+                    { !paymentsEnabled && election.settings.voter_access == 'closed' && entitlements &&
                         <Typography align='center' component="p">
                         { entitlements.voter_limit !== pricingConfig.FREE_TIER_LIMIT ?
                             `* Your election is approved for ${entitlements.voter_limit} voters`
@@ -374,7 +411,14 @@ const AddElectionRoll = ({ onClose, onUploadingChange }: { onClose: () => void, 
                         </Typography>
                     </Grid>}
                 </Grid>
+                {paymentsEnabled && election.settings.voter_access == 'closed' && <AddVotersPricingNote />}
             </Container >
+            <UploadPaymentDialog
+                payment={uploadPayment}
+                pending={checkoutPending}
+                onCancel={() => setUploadPayment(null)}
+                onConfirm={payment => startCheckout(payment.lineItems, payment.entitlements)}
+            />
 
         </form >
     )
