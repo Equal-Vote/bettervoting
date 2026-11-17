@@ -25,6 +25,14 @@ interface RaceFormProps {
     dialogOpen?: boolean,
 }
 
+// The slice of useEditRace() that the inner form sections need.
+type InnerRaceFormProps = Pick<ReturnType<typeof useEditRace>, 'setErrors' | 'errors' | 'editedRace' | 'applyRaceUpdate'> & {
+    open?: boolean,
+    // The wizard has no write-in option: its "Publish Now" makes an ownerless election, and
+    // write-ins need an owner to approve them. Write-ins are set up in the full editor.
+    allowWriteIns?: boolean,
+}
+
 export const RACE_FORM_GAP = 0;
 
 export default function RaceForm({
@@ -56,7 +64,7 @@ export default function RaceForm({
                 </RaceDialog>
             }
             {styling == 'Wizard' && <>
-                <InnerRaceForm {...editRace}/>
+                <InnerRaceForm {...editRace} allowWriteIns={false}/>
                 <Box sx={{ mt: 3, display: "flex", flexDirection: "row", justifyContent: "flex-end", gap: 1 }}>
                     <PrimaryButton onClick={() => editRace.validateRace() && onConfirm(editRace.editedRace)}>Next</PrimaryButton>
                 </Box>
@@ -65,9 +73,7 @@ export default function RaceForm({
     )
 }
 
-type InnerRaceFormProps = Pick<ReturnType<typeof useEditRace>, 'setErrors' | 'errors' | 'editedRace' | 'applyRaceUpdate'> & { open?: boolean };
-
-const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=true}: InnerRaceFormProps) => {
+const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=true, allowWriteIns=true}: InnerRaceFormProps) => {
     const onUploadError = usePhotoUploadError();
     const flags = useFeatureFlags();
     const { election, t } = useElection()
@@ -262,7 +268,7 @@ const InnerRaceForm = ({setErrors, errors, editedRace, applyRaceUpdate, open=tru
                     </SortableList.Item>
                 )}
             />
-            {election.state == 'draft' && !editedRace.enable_write_in && <Box>
+            {allowWriteIns && election.state == 'draft' && !editedRace.enable_write_in && <Box>
                 <UtilityButton
                     onClick={() => applyRaceUpdate((race) => { race.enable_write_in = true; })}
                     sx={{ml: 1}}
