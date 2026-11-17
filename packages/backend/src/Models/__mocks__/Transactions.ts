@@ -15,7 +15,7 @@ export default class TransactionsDB {
         this._transactions.push({ ...transaction, id: this._nextId++ });
     }
 
-    async getByStripeSessionId(stripe_checkout_session_id: string, _ctx: ILoggingContext): Promise<Transaction | null> {
+    async getByStripeSessionId(stripe_checkout_session_id: string, _ctx: ILoggingContext, _trx?: KyselyTransaction<Database>): Promise<Transaction | null> {
         return this._transactions.find(t => t.stripe_checkout_session_id === stripe_checkout_session_id) ?? null;
     }
 
@@ -31,7 +31,7 @@ export default class TransactionsDB {
 
     async markExpired(stripe_checkout_session_id: string, _ctx: ILoggingContext): Promise<void> {
         const transaction = this._transactions.find(t => t.stripe_checkout_session_id === stripe_checkout_session_id);
-        if (transaction) {
+        if (transaction?.status === 'pending') {
             transaction.status = 'expired';
         }
     }

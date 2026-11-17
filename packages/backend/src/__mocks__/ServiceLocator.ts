@@ -4,6 +4,7 @@ import ElectionRollDB from "../Models/__mocks__/ElectionRolls";
 import EmailEventsDB from "../Models/__mocks__/EmailEvents";
 import EntitlementsDB from "../Models/__mocks__/Entitlements";
 import TransactionsDB from "../Models/__mocks__/Transactions";
+import MockDatabase from "../Models/__mocks__/Database";
 import EmailService from "../Services/Email/__mocks__/EmailService";
 import BlobService from "../Services/Blob/__mocks__/BlobService";
 import MockStripeService from "../Services/Stripe/MockStripeService";
@@ -27,6 +28,7 @@ let _castVoteStore:CastVoteStore;
 let _eventQueue:MockEventQueue;
 let _accountService:AccountService;
 let _globalData:GlobalData;
+let _database:MockDatabase;
 
 function ballotsDb():IBallotStore {
     if (_ballotsDb == null){
@@ -68,6 +70,14 @@ function transactionsDb():TransactionsDB {
         _transactionsDb = new TransactionsDB();
     }
     return _transactionsDb;
+}
+
+// Only supports transaction(); see MockDatabase
+function database():MockDatabase {
+    if (_database == null){
+        _database = new MockDatabase(transactionsDb(), entitlementsDb());
+    }
+    return _database;
 }
 
 function emailService():EmailService {
@@ -120,4 +130,4 @@ function globalData():GlobalData {
     return _globalData;
 }
 
-export  default { ballotsDb, electionsDb, electionRollDb, emailEventsDb, entitlementsDb, transactionsDb, emailService, blobService, stripeService, castVoteStore, accountService, globalData, eventQueue };
+export  default { ballotsDb, electionsDb, electionRollDb, emailEventsDb, entitlementsDb, transactionsDb, emailService, blobService, stripeService, castVoteStore, accountService, globalData, eventQueue, database };

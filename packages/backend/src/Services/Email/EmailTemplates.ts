@@ -4,6 +4,8 @@ import { ElectionRoll } from "@equal-vote/star-vote-shared/domain_model/Election
 import { Imsg } from "./IEmail"
 import { formatMarkdown, makeButton } from "@equal-vote/star-vote-shared/utils/formatMarkdown";
 import sanitizeHtml from 'sanitize-html';
+import { Transaction } from "@equal-vote/star-vote-shared/domain_model/Transaction";
+import { CatalogPriceData, PAYMENT_DISCLAIMER } from "@equal-vote/star-vote-shared/domain_model/ProductCatalog";
 
 const emailSettings: Partial<Imsg> = {
     asm: process.env.SENDGRID_GROUP_ID ? {
@@ -79,6 +81,43 @@ export function Receipt(election: Election, email: string, _ballot: Ballot, url:
     }
 }
 
+const formatCents = (cents: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cents / 100);
+
+// Itemized from the transaction's line_items snapshot: what was charged at checkout, not current pricing
+export function PaymentReceipt(transaction: Transaction, email: string, url: string, electionTitle?: string): Imsg {
+    const lines = transaction.line_items.map(line => {
+        const price = line.price_data as CatalogPriceData;
+        return { name: price.product_data.name, quantity: line.quantity, total: price.unit_amount * line.quantity };
+    });
+    const total = lines.reduce((sum, line) => sum + line.total, 0);
+    const electionUrl = `${url}/${transaction.election_id}/admin`;
+    const forElection = electionTitle ? ` for ${electionTitle}` : '';
+    return {
+        // The receipt is transactional, so it's sent regardless of the unsubscribe group
+        mail_settings: emailSettings.mail_settings,
+        to: email,
+        from: process.env.FROM_EMAIL_ADDRESS ?? '',
+        subject: `BetterVoting Payment Receipt${forElection}`,
+        text: [
+            `Thank you for your purchase${forElection}.`,
+            ...lines.map(line => `${line.name} x ${line.quantity}: ${formatCents(line.total)}`),
+            `Total: ${formatCents(total)}`,
+            `Manage your election at ${electionUrl}`,
+            PAYMENT_DISCLAIMER,
+        ].join('\n'),
+        html: emailTemplate(`
+          <div>
+            <p>Thank you for your purchase${sanitizeText(forElection)}.</p>
+            <table>
+              ${lines.map(line => `<tr><td>${sanitizeText(line.name)} &times; ${line.quantity}</td><td style="text-align:right">${formatCents(line.total)}</td></tr>`).join('')}
+              <tr><td><strong>Total</strong></td><td style="text-align:right"><strong>${formatCents(total)}</strong></td></tr>
+            </table>
+            <p>You can <a clicktracking="off" href="${electionUrl}">manage your election</a> at any time.</p>
+            <p><em>${PAYMENT_DISCLAIMER}</em></p>
+          </div>
+        `),
+    }
+}
 
 function emailTemplate(content: string) {
   // How to generate this
