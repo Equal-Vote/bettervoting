@@ -34,7 +34,7 @@ Follow these steps to add a new translation file
 1. Select ``Fork this repository`` (if prompted).
 1. Paste your translated text.
 1. [Create a Pull Request](1_github_101#creating-a-pull-request)
-1. Once your pull request is created a maintainer will review it shortly (ping [arendpeter@equal.vote](mailto:arendpeter@equal.vote) if it's not reviewed within a few days).
+1. Once your pull request is created a maintainer will review it shortly (ping [jackson@equal.vote](mailto:jackson@equal.vote) if it's not reviewed within a few days).
 
 ## Review Process
 

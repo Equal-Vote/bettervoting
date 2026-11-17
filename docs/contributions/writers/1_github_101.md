@@ -15,7 +15,7 @@ Luckily, all of your updates can be done using only the GitHub web interface (no
 
 Start by creating a GitHub account.
 
-Once the account is ready, [drop an email to arendpeter@equal.vote](mailto:arendpeter@equal.vote?subject=Triage%20Permissions%20Request&body=Hi%20there!%20Please%20add%20triage%20permissions%20for%20INSERT_GITHUB_USER_NAME.) with your github user name so that you can be given triage permissions for issue assignment in the future (this will not block any of the steps on this page, so feel free to proceed after emailing).
+Once the account is ready, [drop an email to jackson@equal.vote](mailto:jackson@equal.vote?subject=Triage%20Permissions%20Request&body=Hi%20there!%20Please%20add%20triage%20permissions%20for%20INSERT_GITHUB_USER_NAME.) with your github user name so that you can be given triage permissions for issue assignment in the future (this will not block any of the steps on this page, so feel free to proceed after emailing).
 
 ## Github Vocabulary
 
@@ -68,7 +68,7 @@ Once you're happy with your edits / additions. Proceed with the following to sub
 1. Update commit message and description as desired. This summarizes your change so it's easier to view in the change history.
 1. Click "Sign off and propose changes"
 1. Click "Create Pull Request"
-1. The code owner will usually review the Pull Request within a few days, but if they don't send an email to arendpeter@equal.vote
+1. The code owner will usually review the Pull Request within a few days, but if they don't send an email to jackson@equal.vote
 
 ## Editing a Pull Request
 
