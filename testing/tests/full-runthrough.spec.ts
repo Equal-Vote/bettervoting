@@ -45,15 +45,6 @@ test('Full Runthrough', async ({ page }) => {
 	await endTimeInput.pressSequentially('12122050');
 	await page.getByRole('button', { name: 'Save' }).click();
 
-	// Election Settings
-	await page.getByRole('link', { name: 'Settings' }).click();
-	// Rank limit is always shown as an inline segmented control (one toggle button
-	// per value); pick "8". Each button is labelled "<n> ranks". Asserting
-	// aria-pressed gives the optimistic write a settle point before we navigate away.
-	const rankEight = page.getByRole('button', { name: '8 ranks' });
-	await rankEight.click();
-	await expect(rankEight).toHaveAttribute('aria-pressed', 'true');
-
 	// Adding Race 1
 	await page.getByRole('link', { name: 'Build Ballot' }).click();
 	await page.getByRole('button', { name: 'Add Race' }).click();
@@ -109,6 +100,15 @@ test('Full Runthrough', async ({ page }) => {
 		'Candidate 10'
 	);
 	await raceDialog.getByRole('button', { name: 'Save' }).click();
+
+	// Election Settings. The rank limit only applies to ranked races, so it is greyed out
+	// until one exists (race 2 is Ranked Robin). It is an inline segmented control, one
+	// toggle button per value, each labelled "<n> ranks"; pick "8". Asserting aria-pressed
+	// gives the optimistic write a settle point before we navigate away.
+	await page.getByRole('link', { name: 'Settings' }).click();
+	const rankEight = page.getByRole('button', { name: '8 ranks' });
+	await rankEight.click();
+	await expect(rankEight).toHaveAttribute('aria-pressed', 'true');
 
 	// Finalize
 	await page.getByRole('link', { name: 'Publish & Share' }).click();
