@@ -1,0 +1,20 @@
+# CI-only overrides, layered on top of docker-compose.yml by the End-to-end tests workflow:
+#   docker compose -f docker-compose.yml -f docker-compose.ci.yml ...
+# Kept separate so local `docker compose up` doesn't need a GitHub Actions cache backend.
+services:
+  web:
+    build:
+      context: .
+      # Reuse unchanged layers (apt, npm ci, typescript install) across runs via the GitHub Actions cache.
+      # ignore-error so a cache outage (or a read-only token on fork PRs) never fails the build.
+      cache_from:
+        - type=gha,scope=e2e-web
+      cache_to:
+        - type=gha,scope=e2e-web,mode=max,ignore-error=true
+  playwright:
+    build:
+      context: ./testing
+      cache_from:
+        - type=gha,scope=e2e-playwright
+      cache_to:
+        - type=gha,scope=e2e-playwright,mode=max,ignore-error=true
