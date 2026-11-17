@@ -5,7 +5,7 @@
   "main": "./dist/index.js",
   "types": "./dist/types/index.d.ts",
   "scripts": {
-    "test": "npm install && npm test",
+    "test": "vitest run",
     "clean": "npx rimraf dist node_modules ../node_modules",
     "build": "tsc --project ./ && npm run generate:schema",
     "generate:schema": "typescript-json-schema tsconfig.json \"*\" --required --out dist/schema.json && node ./fixSchemaRefs.ts",
@@ -15,13 +15,14 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/sanitize-html": "^2.13.0",
     "@eslint/js": "^9.39.5",
+    "@types/sanitize-html": "^2.13.0",
     "eslint": "^9.39.5",
     "rimraf": "^5.0.5",
     "typescript": "^5.9.0",
+    "typescript-eslint": "^8.65.0",
     "typescript-json-schema": "^0.65.1",
-    "typescript-eslint": "^8.65.0"
+    "vitest": "^5.0.0"
   },
   "peerDependencies": {
     "typescript": "^5.9.0"

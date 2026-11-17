@@ -13,7 +13,9 @@ import useSnackbar from "../components/SnackbarContext";
 //  error: any | null, null by default until request error 
 //  makeRequest: (MyRequest) => Promise<ApiResponse|false>, if request errors response with false
 // }
-const useFetch = <Message, Response>(url: string, method: 'get' | 'post' | 'put' | 'delete', successMessage: string | ((data: Response) => string) | null = null) => {
+// errorSnack: false leaves showing the error to the caller (through `error`), for pages
+// that show it next to what caused it.
+const useFetch = <Message, Response>(url: string, method: 'get' | 'post' | 'put' | 'delete', successMessage: string | ((data: Response) => string) | null = null, errorSnack = true) => {
     const [isPending, setIsPending] = useState(false)
     const [error, setError] = useState<string>(null)
     const [data, setData] = useState<Response | null>(null)
@@ -53,7 +55,7 @@ const useFetch = <Message, Response>(url: string, method: 'get' | 'post' | 'put'
             }
             return data as Response;
         } catch (err) {
-            setSnack({
+            if (errorSnack) setSnack({
                 message: err.message ? err.message : 'Unknown error',
                 severity: "error",
                 open: true,

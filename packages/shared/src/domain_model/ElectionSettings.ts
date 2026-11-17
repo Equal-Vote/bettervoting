@@ -1,5 +1,6 @@
 import { timeZones, TimeZone } from "./Util";
 import { getVoterAuthenticationMode } from "./VoterAuthenticationMode";
+import { BALLOT_SUBMIT_TYPES, BallotSubmitType } from "./Ballot";
 
 export interface registration_field {
   field_name: string;
@@ -18,8 +19,40 @@ export interface authentication {
 }
 const TermTypes = ['poll', 'election'] as const;
 export type TermType = typeof TermTypes[number];
-export type VoterAccess = 'open' | 'closed' | 'registration';
-export type InvitationType = 'email' | 'address';
+export const VoterAcessArray = ['open', 'closed', 'registration'] as const;
+export type VoterAccess = typeof VoterAcessArray[number];
+export const InvitationTypes = ['email', 'address'] as const;
+export type InvitationType = typeof InvitationTypes[number];
+
+export const DEFAULT_ALLOWED_SUBMIT_TYPES: BallotSubmitType[] = ['submitted_via_browser'];
+
+// The three ways an admin can choose for ballots to come in. They are stored as
+// allowed_submit_types (see castVoteController and importBallotsController, which
+// enforce it); this is the admin-facing view of that list.
+export const BallotChannelsArray = ['online', 'online_and_uploads', 'uploads_only'] as const;
+export type BallotChannels = typeof BallotChannelsArray[number];
+
+const CHANNEL_SUBMIT_TYPES: Record<BallotChannels, BallotSubmitType[]> = {
+  online: DEFAULT_ALLOWED_SUBMIT_TYPES,
+  online_and_uploads: [...DEFAULT_ALLOWED_SUBMIT_TYPES, 'submitted_via_admin'],
+  uploads_only: ['submitted_via_admin'],
+};
+
+export const acceptsOnlineBallots = (settings: ElectionSettings) =>
+  (settings.allowed_submit_types ?? DEFAULT_ALLOWED_SUBMIT_TYPES).includes('submitted_via_browser');
+export const acceptsUploadedBallots = (settings: ElectionSettings) =>
+  (settings.allowed_submit_types ?? DEFAULT_ALLOWED_SUBMIT_TYPES).includes('submitted_via_admin');
+export const acceptsIntegrationBallots = (settings: ElectionSettings) =>
+  (settings.allowed_submit_types ?? DEFAULT_ALLOWED_SUBMIT_TYPES).includes('submitted_via_integration');
+
+export function getBallotChannels(settings: ElectionSettings): BallotChannels {
+  if (!acceptsUploadedBallots(settings)) return 'online';
+  return acceptsOnlineBallots(settings) ? 'online_and_uploads' : 'uploads_only';
+}
+
+export function setBallotChannels(settings: ElectionSettings, channels: BallotChannels): ElectionSettings {
+  return { ...settings, allowed_submit_types: [...CHANNEL_SUBMIT_TYPES[channels]] };
+}
 
 export interface ElectionSettings {
     voter_access?:         VoterAccess;  //   Who is able to vote in election?
@@ -38,6 +71,7 @@ export interface ElectionSettings {
     contact_email?: string; // Public contact email for voters to reach out to
     exhaust_on_N_repeated_skipped_marks?: number; // number of skipped ranks before exhausting
     draggable_ballot?: boolean; // Use draggable interface for IRV ballots
+    allowed_submit_types?: BallotSubmitType[]; // Which submission channels are allowed for this election
     voter_groups?: string[]; // Named voter groups for this election (FF_PRECINCTS)
     voter_groups_enabled?: boolean; // Whether voter groups are active (FF_PRECINCTS)
 }
@@ -49,6 +83,23 @@ function settingsCompatiblityValidation(settings: ElectionSettings): string {
         }
         if (settings.invitation != 'email') {
             errorMsg += 'Ballot updating is only permitted on email list elections.  ';
+        }
+        // An uploaded ballot has no voter behind it to update it, and an uploaded voter has
+        // no ballot of their own to edit, so the two never run in the same election.
+        if (settings.allowed_submit_types?.includes('submitted_via_admin')) {
+            errorMsg += 'Ballot updating cannot be combined with uploaded paper ballots.  ';
+        }
+    }
+    // Without online voting every ballot comes from the admin's upload, so limits on how
+    // voters reach the ballot mean nothing, and with a voter list the admin must know the
+    // voter ids to write the voter file. electionSettingsValidation has already checked
+    // that the mode is canonical before this runs.
+    if (!acceptsOnlineBallots(settings)) {
+        const mode = getVoterAuthenticationMode(settings);
+        if (mode === 'closed_bv_managed_ids') {
+            errorMsg += 'Elections without online voting need voter IDs you manage, not an email list.  ';
+        } else if (mode !== 'open_open' && mode !== 'closed_admin_managed_ids') {
+            errorMsg += 'Elections without online voting cannot limit voters by device, network or login.  ';
         }
     }
     return errorMsg;
@@ -97,6 +148,18 @@ export function electionSettingsValidation(obj:ElectionSettings): string | null 
   }
   if (obj.draggable_ballot && typeof obj.draggable_ballot !== 'boolean'){
     return "Invalid Draggable Ballot";
+  }
+  if (obj.allowed_submit_types !== undefined) {
+    if (!Array.isArray(obj.allowed_submit_types)) {
+      return "Invalid Allowed Submit Types";
+    }
+    if (obj.allowed_submit_types.length === 0) {
+      return "allowed_submit_types must not be empty";
+    }
+    const validTypes: readonly string[] = BALLOT_SUBMIT_TYPES;
+    if (!obj.allowed_submit_types.every((t: string) => validTypes.includes(t))) {
+      return "Invalid Allowed Submit Types value";
+    }
   }
   if (obj.voter_groups_enabled !== undefined && typeof obj.voter_groups_enabled !== 'boolean'){
     return "Invalid Voter Groups Enabled";

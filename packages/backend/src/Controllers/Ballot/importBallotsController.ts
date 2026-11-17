@@ -1,0 +1,230 @@
+import { Response, NextFunction } from 'express';
+import { Server } from "socket.io";
+import { BadRequest, Conflict, InternalServerError } from "@curveball/http-errors";
+import { randomUUID } from "crypto";
+import { Ballot, BallotSubmitType, isDeletedUpload, UPLOAD_DELETED_ACTION } from '@equal-vote/star-vote-shared/domain_model/Ballot';
+import { ElectionRoll, ElectionRollState } from '@equal-vote/star-vote-shared/domain_model/ElectionRoll';
+import { DEFAULT_ALLOWED_SUBMIT_TYPES } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
+import { permissions } from "@equal-vote/star-vote-shared/domain_model/permissions";
+import {
+    DeleteUploadedBallotsResponse,
+    describeRows,
+    getBallotImportMode,
+    getDefaultVoterKey,
+    importRowToVotes,
+    ImportBallotsRequest,
+    ImportBallotsResponse,
+    importRowVoterGroup,
+    normalizeVoterKey,
+    ROLL_UPLOAD_ACTION,
+    ROLL_UPLOAD_DELETED_ACTION,
+    UploadedBallotsSummary,
+    validateImportBallotsRequest,
+} from '@equal-vote/star-vote-shared/domain_model/BallotImport';
+import ServiceLocator from "../../ServiceLocator";
+import Logger from "../../Services/Logging/Logger";
+import { IElectionRequest } from "../../IRequest";
+import { expectPermission } from "../controllerUtils";
+import { innerGetGlobalElectionStats } from "../Election";
+import { io } from "../../socketHandler";
+import { getErrorMessage } from '../../errorUtils';
+
+const BallotModel = ServiceLocator.ballotsDb();
+const ElectionRollModel = ServiceLocator.electionRollDb();
+
+const ADMIN_SUBMIT_TYPE: BallotSubmitType = 'submitted_via_admin';
+
+// Looks up the roll row for each voter in the request, in request order. Every
+// problem is reported with the positions of the offending voters so the admin can
+// fix the file in one pass.
+async function resolveRolls(req: IElectionRequest, body: ImportBallotsRequest): Promise<ElectionRoll[]> {
+    const election = req.election;
+    const key = body.voter_key ?? getDefaultVoterKey(election.settings);
+    const existing = (await ElectionRollModel.getRollsByElectionID(election.election_id, req)) ?? [];
+    const byKey = new Map<string, ElectionRoll>();
+    for (const roll of existing) {
+        const value = key === 'email' ? roll.email : roll.voter_id;
+        if (value) byKey.set(normalizeVoterKey(key, value), roll);
+    }
+
+    const rolls: ElectionRoll[] = [];
+    const notOnRoll: number[] = [];
+    const notApproved: number[] = [];
+    const alreadyVoted: number[] = [];
+    body.voter_ids!.forEach((value, i) => {
+        const roll = byKey.get(normalizeVoterKey(key, value));
+        if (!roll) { notOnRoll.push(i); return; }
+        if (roll.state !== ElectionRollState.approved) { notApproved.push(i); return; }
+        if (roll.submitted) { alreadyVoted.push(i); return; }
+        rolls.push(roll);
+    });
+    if (notOnRoll.length > 0) throw new BadRequest(`Not on the voter list: ${describeRows('voter', notOnRoll)}`);
+    if (notApproved.length > 0) throw new BadRequest(`Not approved to vote: ${describeRows('voter', notApproved)}`);
+    if (alreadyVoted.length > 0) throw new BadRequest(`Already voted: ${describeRows('voter', alreadyVoted)}`);
+    return rolls;
+}
+
+// POST /Election/:id/importBallots — see BallotImport.ts (shared) for the two contexts.
+// Everything is validated up front and then written in one transaction, so the
+// response is either the counts or an error with nothing written.
+async function importBallotsController(req: IElectionRequest, res: Response, _next: NextFunction) {
+    Logger.info(req, "Import Ballots Controller");
+
+    expectPermission(req.user_auth.roles, permissions.canUploadBallots);
+
+    const election = req.election;
+    if (election == null) {
+        throw new BadRequest("Invalid election Id");
+    }
+    // In draft, uploads are test ballots: finalizing deletes them, like test votes cast online.
+    if (election.state !== 'draft' && election.state !== 'open') {
+        throw new BadRequest(`Ballots can only be imported while the election is a draft or open (state is '${election.state}')`);
+    }
+    const allowedTypes = election.settings.allowed_submit_types ?? DEFAULT_ALLOWED_SUBMIT_TYPES;
+    if (!allowedTypes.includes(ADMIN_SUBMIT_TYPE)) {
+        throw new BadRequest("Paper ballot uploads are not enabled for this election");
+    }
+    const mode = getBallotImportMode(election.settings);
+    // Settings validation already refuses this combination (see ElectionSettings.ts); this
+    // guards elections saved before that rule. An imported voter has no linked ballot, so
+    // the "update your ballot" flow would hand them a second one.
+    if (election.settings.ballot_updates) {
+        throw new BadRequest("Ballots cannot be imported into an election that lets voters update their ballot");
+    }
+
+    const body = req.body as ImportBallotsRequest;
+    const validationError = validateImportBallotsRequest(election, body);
+    if (validationError) {
+        Logger.info(req, `Import rejected: ${validationError}`);
+        throw new BadRequest(validationError);
+    }
+
+    const ballotIds = body.ballots.map(b => b.ballot_id.trim());
+    const existingIds = new Set(await BallotModel.getExistingBallotIDs(election.election_id, ballotIds, req));
+    if (existingIds.size > 0) {
+        const rows = ballotIds.map((id, i) => existingIds.has(id) ? i : -1).filter(i => i >= 0);
+        throw new BadRequest(`Already in this election: ${describeRows('ballot', rows)} (${[...existingIds].slice(0, 5).join(', ')})`);
+    }
+
+    // The voter file is checked against the voter list in draft too, so the admin can try
+    // their files, but voters are only marked once the election is open. Online test votes
+    // in draft don't touch the voter list either, and finalizing doesn't reset it.
+    const resolvedRolls = mode === 'roll' ? await resolveRolls(req, body) : [];
+    const rolls = election.state === 'open' ? resolvedRolls : [];
+
+    const now = Date.now();
+    const actor = req.user?.username ?? req.user?.email ?? '';
+    const ballots: Ballot[] = body.ballots.map((row, i) => ({
+        ballot_id: ballotIds[i],
+        election_id: election.election_id,
+        status: 'submitted',
+        date_submitted: now,
+        precinct: importRowVoterGroup(election, row),
+        votes: importRowToVotes(row, body.race_order),
+        history: [{ action_type: ADMIN_SUBMIT_TYPE, actor, timestamp: now }],
+        // generated by the store on insert
+        create_date: '',
+        update_date: '',
+        head: true,
+    }));
+    for (const roll of rolls) {
+        roll.history = [...(roll.history ?? []), { action_type: ROLL_UPLOAD_ACTION, actor, timestamp: now }];
+    }
+
+    try {
+        await ServiceLocator.castVoteStore().importBallots(
+            { requestId: req.contextId ?? randomUUID(), ballots, rolls },
+            Logger.createContext(req.contextId ?? randomUUID()),
+        );
+    } catch (e: unknown) {
+        const message = getErrorMessage(e);
+        if (message === "ALREADY_VOTED" || message === "CONCURRENT_ROLL_EDIT_DETECTED") {
+            Logger.info(req, `Import rejected: ${message}`);
+            throw new Conflict("A voter on the list changed while the import was running (they may have just voted online). Nothing was imported, please retry.");
+        }
+        Logger.error(req, `Could not import ballots: ${message}`);
+        throw new InternalServerError("Could not import ballots");
+    }
+
+    if (io != null) { // necessary for tests
+        (io as Server).to('landing_page').emit('updated_stats', await innerGetGlobalElectionStats(req));
+    }
+
+    const response: ImportBallotsResponse = { imported: ballots.length, voters_marked: rolls.length };
+    res.status(200).json(response);
+    Logger.debug(req, `Import Ballots Controller done: ${ballots.length} ballots, ${rolls.length} voters marked`);
+}
+
+// The uploaded ballots an election currently holds, and the voters those uploads marked
+const findUploads = async (req: IElectionRequest, electionId: string) => {
+    const ballots = await BallotModel.getBallotsByElectionID(electionId, req);
+    const uploaded = ballots.filter(b => b.head !== false && !isDeletedUpload(b.history)
+        && (b.history ?? []).some(a => a.action_type === ADMIN_SUBMIT_TYPE));
+    const rolls = ((await ElectionRollModel.getRollsByElectionID(electionId, req)) ?? [])
+        .filter(r => r.submitted && r.history?.at(-1)?.action_type === ROLL_UPLOAD_ACTION);
+    return { uploaded, rolls };
+};
+
+// GET /Election/:id/uploadedBallots — how many uploaded ballots there are to delete, so
+// the upload page only offers the delete when there is something to withdraw.
+async function getUploadedBallotsController(req: IElectionRequest, res: Response, _next: NextFunction) {
+    expectPermission(req.user_auth.roles, permissions.canUploadBallots);
+    if (req.election == null) throw new BadRequest("Invalid election Id");
+    const { uploaded, rolls } = await findUploads(req, req.election.election_id);
+    const response: UploadedBallotsSummary = { uploaded: uploaded.length, voters_marked: rolls.length };
+    res.status(200).json(response);
+}
+
+// POST /Election/:id/deleteUploadedBallots — the undo for uploads. Every uploaded ballot
+// is withdrawn and every voter an upload marked goes back to not having voted; online
+// ballots are untouched. Nothing is hard-deleted: the ballot rows are archived with a
+// deletion action, which the election history reports, and the ids can be uploaded again.
+async function deleteUploadedBallotsController(req: IElectionRequest, res: Response, _next: NextFunction) {
+    Logger.info(req, "Delete Uploaded Ballots Controller");
+    expectPermission(req.user_auth.roles, permissions.canUploadBallots);
+
+    const election = req.election;
+    if (election == null) throw new BadRequest("Invalid election Id");
+    if (election.state !== 'draft' && election.state !== 'open') {
+        throw new BadRequest(`Uploaded ballots can only be deleted while the election is a draft or open (state is '${election.state}')`);
+    }
+
+    const { uploaded, rolls } = await findUploads(req, election.election_id);
+
+    const now = Date.now();
+    const actor = req.user?.username ?? req.user?.email ?? '';
+    for (const roll of rolls) {
+        roll.history = [...(roll.history ?? []), { action_type: ROLL_UPLOAD_DELETED_ACTION, actor, timestamp: now }];
+    }
+    if (uploaded.length > 0 || rolls.length > 0) {
+        try {
+            await ServiceLocator.castVoteStore().deleteUploadedBallots({
+                requestId: req.contextId ?? randomUUID(),
+                election_id: election.election_id,
+                ballot_ids: uploaded.map(b => b.ballot_id),
+                rolls,
+                action: { action_type: UPLOAD_DELETED_ACTION, actor, timestamp: now },
+            }, Logger.createContext(req.contextId ?? randomUUID()));
+        } catch (e: unknown) {
+            const message = getErrorMessage(e);
+            if (message === "CONCURRENT_BALLOT_UPDATE_DETECTED" || message === "CONCURRENT_ROLL_EDIT_DETECTED") {
+                throw new Conflict("Something changed while the uploaded ballots were being deleted. Nothing was deleted, please retry.");
+            }
+            Logger.error(req, `Could not delete uploaded ballots: ${message}`);
+            throw new InternalServerError("Could not delete uploaded ballots");
+        }
+    }
+
+    if (io != null) {
+        (io as Server).to('landing_page').emit('updated_stats', await innerGetGlobalElectionStats(req));
+    }
+    const response: DeleteUploadedBallotsResponse = { deleted: uploaded.length, voters_unmarked: rolls.length };
+    Logger.info(req, `Deleted ${uploaded.length} uploaded ballots, unmarked ${rolls.length} voters`);
+    res.status(200).json(response);
+}
+
+export {
+    importBallotsController,
+    deleteUploadedBallotsController,
+    getUploadedBallotsController,
+}

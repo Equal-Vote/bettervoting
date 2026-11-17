@@ -13,6 +13,7 @@ const HISTORY_LABELS: Record<HistoryEvent['type'], string> = {
     preliminary_results_change: 'Preliminary Results',
     ballots_milestone: 'Ballots',
     upload_ballots: 'Ballots Uploaded',
+    uploaded_ballots_deleted: 'Uploads Deleted',
     ballots_edited_milestone: 'Ballot Edits',
     voter_id_revealed: 'Voter ID Revealed',
 };
@@ -39,6 +40,8 @@ export const describeHistoryEvent = (event: HistoryEvent, t: (k: string, v?: obj
             return t('election_history.desc.ballots_milestone', { count: event.count });
         case 'upload_ballots':
             return t('election_history.desc.upload_ballots', { count: event.count });
+        case 'uploaded_ballots_deleted':
+            return t('election_history.desc.uploaded_ballots_deleted', { count: event.count });
         case 'ballots_edited_milestone':
             return t('election_history.desc.edits_milestone', { count: event.count });
         case 'voter_id_revealed':
@@ -56,6 +59,7 @@ export const describeHistoryEvent = (event: HistoryEvent, t: (k: string, v?: obj
 const DAY_TRUNCATED: HistoryEvent['type'][] = [
     'ballots_milestone',
     'upload_ballots',
+    'uploaded_ballots_deleted',
     'ballots_edited_milestone',
     'voter_id_revealed',
 ];

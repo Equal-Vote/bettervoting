@@ -12,6 +12,8 @@ import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import SettingsIcon from '@mui/icons-material/Settings';
 import SendIcon from '@mui/icons-material/Send';
 import BarChartIcon from '@mui/icons-material/BarChart';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
+import { DEFAULT_ALLOWED_SUBMIT_TYPES } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
 import { PrimaryButton, SecondaryButton } from '../styles';
 
 function useAdminPages() {
@@ -19,6 +21,7 @@ function useAdminPages() {
     const flags = useFeatureFlags();
     const id = election.election_id;
     const isDraft = election.state === 'draft';
+    const acceptsPaperBallots = (election.settings.allowed_submit_types ?? DEFAULT_ALLOWED_SUBMIT_TYPES).includes('submitted_via_admin');
     return [
         { label: 'Admin Home',        path: `/${id}/admin`,              icon: <HomeIcon/> },
         { label: 'Build Ballot',      path: `/${id}/admin/build_ballot`, icon: <BallotIcon/> },
@@ -27,6 +30,7 @@ function useAdminPages() {
         { label: 'Settings',          path: `/${id}/admin/settings`,     icon: <SettingsIcon/> },
         { label: isDraft ? 'Preview Ballot' : 'Live Ballot',   path: `/${id}`,         icon: <PreviewIcon/> },
         { label: isDraft ? 'Preview Results' : 'Live Results', path: `/${id}/results`, icon: <BarChartIcon/> },
+        ...(acceptsPaperBallots ? [{ label: 'Upload Ballots', path: `/${id}/admin/upload_ballots`, icon: <UploadFileIcon/> }] : []),
         { label: 'Publish & Share',   path: `/${id}/admin/publish`,      icon: <SendIcon/> },
     ];
 }

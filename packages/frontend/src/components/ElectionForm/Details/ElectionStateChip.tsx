@@ -49,6 +49,8 @@ const getStateColor = (state: string) => {
       return 'green';
     case 'Ballots Uploaded':
       return 'purple';
+    case 'Uploads Deleted':
+      return 'orange';
     case 'Ballot Edits':
       return 'orange';
     case 'Voter ID Revealed':

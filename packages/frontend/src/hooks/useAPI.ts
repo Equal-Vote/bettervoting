@@ -7,6 +7,7 @@ import { ElectionResults } from "@equal-vote/star-vote-shared/domain_model/ITabu
 import { Ballot, NewBallot, AnonymizedBallot, NewBallotWithVoterID, BallotSubmitStatus } from "@equal-vote/star-vote-shared/domain_model/Ballot";
 import { email_request_data } from "@equal-vote/star-vote-backend/src/Controllers/Election/sendEmailController"
 import { WriteInCandidate, WriteInData } from "@equal-vote/star-vote-shared/domain_model/WriteIn";
+import { DeleteUploadedBallotsResponse, ImportBallotsRequest, ImportBallotsResponse, UploadedBallotsSummary } from "@equal-vote/star-vote-shared/domain_model/BallotImport";
 
 export const useGetElection = (electionID: string | undefined) => {
     return useFetch<undefined, {
@@ -25,6 +26,7 @@ export type HistoryEvent =
     | { type: 'preliminary_results_change'; timestamp: string; to: boolean }
     | { type: 'ballots_milestone'; timestamp: string; count: number }
     | { type: 'upload_ballots'; timestamp: string; count: number }
+    | { type: 'uploaded_ballots_deleted'; timestamp: string; count: number }
     | { type: 'ballots_edited_milestone'; timestamp: string; count: number }
     | { type: 'voter_id_revealed'; timestamp: string };
 
@@ -184,6 +186,19 @@ export const usePostBallot = (election_id: string | undefined) => {
 
 export const useUploadBallots = (election_id: string | undefined) => {
     return useFetch<{ ballots: NewBallotWithVoterID[] }, {responses: BallotSubmitStatus[]}>(`/API/Election/${election_id}/uploadBallots`, 'post')
+}
+
+// the upload page shows errors beside the files, so neither of these shows an error snackbar
+export const useImportBallots = (election_id: string | undefined) => {
+    return useFetch<ImportBallotsRequest, ImportBallotsResponse>(`/API/Election/${election_id}/importBallots`, 'post', null, false)
+}
+
+export const useGetUploadedBallots = (election_id: string | undefined) => {
+    return useFetch<undefined, UploadedBallotsSummary>(`/API/Election/${election_id}/uploadedBallots`, 'get', null, false)
+}
+
+export const useDeleteUploadedBallots = (election_id: string | undefined) => {
+    return useFetch<undefined, DeleteUploadedBallotsResponse>(`/API/Election/${election_id}/deleteUploadedBallots`, 'post', null, false)
 }
 
 export const useGetWriteIns = (election_id: string) => {

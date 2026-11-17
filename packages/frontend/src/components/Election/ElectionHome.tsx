@@ -10,6 +10,7 @@ import SupportBlurb from './SupportBlurb';
 import { PrimaryButton, SecondaryButton } from '../styles';
 import { FormattedDescription } from '../FormattedDescription';
 import { AdminPageNavigation } from './Sidebar';
+import { acceptsOnlineBallots } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
 
 const ElectionHome = () => {
   const { election, voterAuth } = useElection();
@@ -17,6 +18,8 @@ const ElectionHome = () => {
   const {t} = useSubstitutedTranslation(election.settings.term_type, {time_zone: election.settings.time_zone});
 
   const canUpdateBallot = (voterAuth.has_voted == true && election.settings.ballot_updates);
+  // An uploads-only election has nothing for voters to do here but read and see results
+  const online = acceptsOnlineBallots(election.settings);
 
   return (
     <>
@@ -56,7 +59,18 @@ const ElectionHome = () => {
             />
           </Box>
 
-          <VoterAuth />
+          {online && <VoterAuth />}
+
+          {!online && (election.state === 'open' || election.state === 'draft') &&
+            <Box sx={{ p: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+              <Typography align='center'>{t('election_home.no_online_voting')}</Typography>
+              {election.settings.public_results === true &&
+              <SecondaryButton href={`/${String(election?.election_id)}/results`} sx={{mx: 'auto', width: '90%', p:3}}>
+                  {t('election_home.or_view_results')}
+              </SecondaryButton>
+              }
+            </Box>
+          }
 
           {election.state === 'finalized' && election.start_time &&
             <Box sx={{ flexGrow: 1 }}>
@@ -66,7 +80,7 @@ const ElectionHome = () => {
             </Box>
           }
 
-          {election.state === 'open' && <>
+          {online && election.state === 'open' && <>
             {election.end_time &&
               <Box sx={{ flexGrow: 1 }}>
                 < Typography align='center' variant="h6" component="h6">
@@ -91,7 +105,7 @@ const ElectionHome = () => {
               </Box>
               }
             </>}
-          {election.state === 'draft' && <>
+          {online && election.state === 'draft' && <>
             <Box sx={{ p: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
               <PrimaryButton fullWidth href={`/${String(election?.election_id)}/vote`} name='vote' >
                 <Typography align='center' variant="h3" component="h3" sx={{ p: 2, fontWeight: "bold" }}>

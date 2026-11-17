@@ -11,6 +11,7 @@ import useElection from "../../ElectionContextProvider";
 import useFeatureFlags from "../../FeatureFlagContextProvider";
 import { ElectionRollResponse } from "@equal-vote/star-vote-shared/domain_model/ElectionRoll";
 import { getVoterAuthenticationMode, setVoterAuthenticationMode, VoterAuthenticationMode } from "@equal-vote/star-vote-shared/domain_model/VoterAuthenticationMode";
+import { BallotChannels, BallotChannelsArray, getBallotChannels, setBallotChannels } from "@equal-vote/star-vote-shared/domain_model/ElectionSettings";
 import SendEmailDialog from "./SendEmailDialog";
 import { PrimaryButton, SecondaryButton } from "~/components/styles";
 import ElectionAuthForm from "~/components/ElectionForm/Details/ElectionAuthForm";
@@ -113,9 +114,56 @@ const ViewElectionRolls = () => {
         await fetchRolls();
     }
 
+    // How ballots come in. Without online voting the voter options below narrow: there is no
+    // one-vote-per limit to set, and a voter list must use ids the admin manages, since the
+    // admin writes the voter file (settingsCompatiblityValidation in shared enforces both).
+    const channels = getBallotChannels(election.settings);
+    const uploadsOnly = channels === 'uploads_only';
+    const isDraft = election.state === 'draft';
+    const hasVoters = electionRollData.length > 0;
+    const channelBlocker = (c: BallotChannels): string | null => {
+        if (c === channels || c === 'online') return null;
+        if (election.settings.ballot_updates) return t('admin_home.ballot_channels.with_ballot_updates');
+        if (c === 'uploads_only' && mode === 'closed_bv_managed_ids' && hasVoters) return t('admin_home.ballot_channels.clear_email_list_first');
+        return null;
+    };
+    const writeChannels = (c: BallotChannels) => updateElection(e => {
+        let next = setBallotChannels(e.settings, c);
+        if (c === 'uploads_only') {
+            let current: VoterAuthenticationMode | null;
+            try { current = getVoterAuthenticationMode(next); } catch { current = null; }
+            if (current === 'closed_bv_managed_ids') next = setVoterAuthenticationMode(next, 'closed_admin_managed_ids');
+            else if (current !== 'closed_admin_managed_ids') next = setVoterAuthenticationMode(next, 'open_open');
+        }
+        e.settings = next;
+    });
+    const channelNote = BallotChannelsArray.map(channelBlocker).find(Boolean);
+
     const submittedCount = electionRollData.filter(voter => voter.submitted === true).length;
     return (
         <>
+            <Box>
+                <Typography>
+                    {t('admin_home.ballot_channels.question')}
+                </Typography>
+                <RadioGroup row>
+                    {BallotChannelsArray.map((c) =>
+                        <FormControlLabel
+                            key={c}
+                            value={c}
+                            control={<Radio/>}
+                            disabled={!isDraft || !!channelBlocker(c)}
+                            label={t(`admin_home.ballot_channels.${c}`)}
+                            onClick={() => {
+                                if (!isDraft || channelBlocker(c) || c === channels) return;
+                                writeChannels(c);
+                            }}
+                            checked={channels === c}
+                        />
+                    )}
+                </RadioGroup>
+                {isDraft && channelNote && <Typography variant='body2' color='text.secondary'>{channelNote}</Typography>}
+            </Box>
             <Box>
                 <Typography>
                     {t('wizard.restricted_question')}
@@ -132,14 +180,19 @@ const ViewElectionRolls = () => {
                             onClick={async () => {
                                 if(election.state !== 'draft' || electionRollData.length > 0) return; // not sure why disabled still allows me to do onclick
 
-                                writeMode(restricted ? 'closed_bv_managed_ids' : 'open_unique_cookie');
+                                writeMode(restricted
+                                    ? (uploadsOnly ? 'closed_admin_managed_ids' : 'closed_bv_managed_ids')
+                                    : (uploadsOnly ? 'open_open' : 'open_unique_cookie'));
                             }}
                             checked={voterAccess === (restricted ? 'closed' : 'open')}
                         />
                     )}
                 </RadioGroup>
             </Box>
-            {voterAccess == 'closed' && <Box>
+            {voterAccess == 'closed' && uploadsOnly && <Typography variant='body2' color='text.secondary'>
+                {t('admin_home.ballot_channels.uploads_only_ids')}
+            </Typography>}
+            {voterAccess == 'closed' && !uploadsOnly && <Box>
                 <Typography>
                     How would you like to identify your voters?
                 </Typography>
@@ -183,7 +236,9 @@ const ViewElectionRolls = () => {
                 />
             }
 
-            {voterAccess == 'open' && <ElectionAuthForm />}
+            {voterAccess == 'open' && (uploadsOnly
+                ? <Typography variant='body2' color='text.secondary'>{t('admin_home.ballot_channels.uploads_only_no_limit')}</Typography>
+                : <ElectionAuthForm />)}
             {voterAccess == 'closed' && <>
                 {!inspectingVoter && !addRollPage &&
                     <Box>
