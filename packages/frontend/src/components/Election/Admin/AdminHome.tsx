@@ -7,6 +7,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useArchiveEleciton, usePostElection } from "../../../hooks/useAPI";
 import { useSubstitutedTranslation } from '../../util';
 import useConfirm from '../../ConfirmationDialogProvider';
+import useAuditConfirm from './useAuditConfirm';
 import useElection from '../../ElectionContextProvider';
 import ElectionDetailsInlineForm from '../../ElectionForm/Details/ElectionDetailsInlineForm';
 import structuredClone from '@ungap/structured-clone';
@@ -32,6 +33,7 @@ const AdminHome = () => {
     const { makeRequest: postElection } = usePostElection()
     
     const confirm = useConfirm()
+    const auditConfirm = useAuditConfirm()
 
     const hasPermission = (requiredPermission: string) => {
         return (permissions && permissions.includes(requiredPermission))
@@ -64,10 +66,10 @@ const AdminHome = () => {
     }
 
     const archiveElection = async () => {
-        const confirmed = await confirm(t('admin_home.archive_confirm'))
-        if (!confirmed) return
+        const audit = await auditConfirm(t('admin_home.archive_confirm'))
+        if (!audit) return
         try {
-            await enqueueWrite(expected_update_date => archive({ expected_update_date }));
+            await enqueueWrite(expected_update_date => archive({ expected_update_date, ...audit }));
             await fetchElection()
         } catch (err) {
             console.error(err)

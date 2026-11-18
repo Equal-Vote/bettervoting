@@ -398,6 +398,9 @@ rollRouter.post('/Election/:id/rolls/unflag', asyncHandler(uninvalidateElectionR
  *               email:
  *                 type: string
  *                 description: Email address of the voter
+ *               audit_note:
+ *                 type: string
+ *                 description: Optional explanation shown next to the reveal in the public audit log (max 1000 characters)
  *             required:
  *               - email
  *     responses:

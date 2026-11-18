@@ -44,6 +44,9 @@ export interface BallotAction {
     action_type:string;
     actor:Uid;
     timestamp:number;
+    // Optional admin explanation, only on submitted_via_admin actions (the
+    // public audit log reports uploads as one event per batch). See AuditLog.ts.
+    audit_note?: string;
 }
 
 export interface BallotSubmitStatus {

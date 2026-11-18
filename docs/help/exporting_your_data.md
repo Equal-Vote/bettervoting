@@ -76,6 +76,6 @@ The reason: election admins can see which voters have voted and when. If the bal
 
 Only **submitted** ballots are included. Partially saved, uncast ballots are not part of the record.
 
-## Voters can find their own ballot
+## Ballot IDs aren't shared with voters
 
-Each row carries a `ballot_id`, and each voter is sent their own ballot ID in their email receipt after voting (and in the email receipt, if enabled). That gives every voter a receipt-check: find your ID in the published file and confirm your ballot is recorded exactly as you cast it — while nobody else can tell which row is yours.
+Each row carries a `ballot_id`, but voters are never told theirs. If they were, a voter could find their row and prove to someone else how they voted, which opens the door to vote buying and coercion.

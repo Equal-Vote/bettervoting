@@ -22,7 +22,7 @@ const electionRow = (
 const ballotRow = (
     ballot_id: string,
     ms: number,
-    history?: { action_type: string; timestamp: number }[],
+    history?: { action_type: string; timestamp: number; audit_note?: string }[],
 ): BallotHistoryRow => ({
     ballot_id,
     update_date: ms.toString(),
@@ -295,5 +295,50 @@ describe("election audit log", () => {
 
         expect(serialized).not.toContain('secret-ballot-id');
         expect(serialized).not.toContain('secret-admin');
+    });
+
+    test("attaches the admin's explanation to the action that carried it, and only that one", () => {
+        const elections: ElectionHistoryRow[] = [
+            electionRow('draft', day(0)),
+            { ...electionRow('finalized', day(1)), audit_note: 'Ballot approved by the board' },
+            { ...electionRow('open', day(2)), audit_note: null },
+            { ...electionRow('open', day(3), true), audit_note: 'Publishing early turnout' },
+            electionRow('closed', day(4), true),
+        ];
+
+        const { events } = buildHistory(elections, [], []);
+
+        expect(events).toEqual([
+            { type: 'state_change', timestamp: new Date(day(1)).toISOString(), from: 'draft', to: 'finalized', audit_note: 'Ballot approved by the board' },
+            { type: 'state_change', timestamp: new Date(day(2)).toISOString(), from: 'finalized', to: 'open' },
+            { type: 'preliminary_results_change', timestamp: new Date(day(3)).toISOString(), to: true, audit_note: 'Publishing early turnout' },
+            { type: 'state_change', timestamp: new Date(day(4)).toISOString(), from: 'open', to: 'closed' },
+        ]);
+        expect(events[1]).not.toHaveProperty('audit_note');
+        expect(events[3]).not.toHaveProperty('audit_note');
+    });
+
+    test("reports an upload batch's explanation once, and a reveal's alongside it", () => {
+        const elections = [electionRow('draft', day(0)), electionRow('finalized', day(1))];
+        const uploadStart = day(3, 9);
+        const ballots = Array.from({ length: 3 }, (_, i) =>
+            ballotRow(`u${i}`, uploadStart + i * 1000, [
+                { action_type: 'submitted_via_admin', timestamp: uploadStart + i * 1000, audit_note: 'Paper ballots from precinct 4' },
+            ]),
+        );
+        const rolls: RollHistoryRow[] = [
+            { history: [{ action_type: '🚨 VOTER_ID_REVEALED', actor: 'admin', timestamp: day(4), audit_note: 'Voter lost invite email' }] },
+            { history: [{ action_type: '🚨 VOTER_ID_REVEALED', actor: 'admin', timestamp: day(5) }] },
+        ];
+
+        const { events } = buildHistory(elections, ballots, rolls);
+
+        expect(only(events, 'upload_ballots')).toEqual([
+            { type: 'upload_ballots', timestamp: dayIso(3), count: 3, audit_note: 'Paper ballots from precinct 4' },
+        ]);
+        expect(only(events, 'voter_id_revealed')).toEqual([
+            { type: 'voter_id_revealed', timestamp: dayIso(4), audit_note: 'Voter lost invite email' },
+            { type: 'voter_id_revealed', timestamp: dayIso(5) },
+        ]);
     });
 });

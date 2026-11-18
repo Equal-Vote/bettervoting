@@ -8,6 +8,7 @@ import { expectPermission } from "../controllerUtils";
 import { InternalServerError, Unauthorized } from "@curveball/http-errors";
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
+import { updateRollWithRetry } from "./rollHistoryUtils";
 
 const className = "VoterRollState.Controllers";
 
@@ -43,26 +44,29 @@ const changeElectionRollState = async (req: IElectionRequest, newState: Election
         Logger.info(req, msg);
         throw new InternalServerError(msg);
         }
-    const currentState = roll.state
-    if (!validStates.includes(currentState)) {
-        throw new Unauthorized('Invalid election roll state transition')
-    }
-    roll.state = newState;
-    if (roll.history == null) {
-        roll.history = [];
-    }
-    roll.history.push({
-        action_type: newState,
-        actor: req.user?.email ?? '',
-        timestamp: Date.now(),
-    })
-    const updatedEntry = await ElectionRollModel.update(roll, req, "Changing Election Roll state to " + newState);
-    if (!updatedEntry) {
-        const msg = "Could not change election roll state";
-        Logger.error(req, "= = = = = = \n = = = = = ");
-        Logger.info(req, msg);
-        throw new InternalServerError(msg);
-    }
+    // The transition check runs inside the mutation so it is re-evaluated against
+    // the current head row if the first write loses a concurrency race.
+    await updateRollWithRetry(
+        req.election.election_id,
+        roll.voter_id,
+        (current) => {
+            if (!validStates.includes(current.state)) {
+                throw new Unauthorized('Invalid election roll state transition')
+            }
+            current.state = newState;
+            if (current.history == null) {
+                current.history = [];
+            }
+            current.history.push({
+                action_type: newState,
+                actor: req.user?.email ?? '',
+                timestamp: Date.now(),
+            })
+        },
+        req,
+        "Changing Election Roll state to " + newState,
+        roll,
+    );
 }
 
 export  {

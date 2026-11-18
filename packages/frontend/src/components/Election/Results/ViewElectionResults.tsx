@@ -11,12 +11,13 @@ import { BallotDataExport } from './BallotDataExport';
 import SupportBlurb from '../SupportBlurb';
 import { Election } from '@equal-vote/star-vote-shared/domain_model/Election';
 import { AdminPageNavigation } from '../Sidebar';
-import useFeatureFlags from '../../FeatureFlagContextProvider';
 import { SecondaryButton } from '../../styles';
+import { electionHasAuditLog } from '@equal-vote/star-vote-shared/domain_model/AuditLog';
 
 const ViewElectionResults = () => {
-    const flags = useFeatureFlags();
     const { election, permissions } = useElection();
+    // Pre-cutoff elections have no *public* log, but their admins can still open it.
+    const canViewAuditLog = electionHasAuditLog(election) || !!permissions?.includes('canEditElection');
     const { data, isPending, makeRequest: getResults } = useGetResults(election.election_id)
     // A draft's results are test results, shown to its admins whatever the setting says
     // (the Preview Results page); the server applies the same rule.
@@ -114,10 +115,7 @@ const ViewElectionResults = () => {
                   </Box>
                 )}
 
-                {/* The /history page is live for every finalized election
-                    regardless of this flag; the flag only controls whether
-                    voters are pointed at it while we iterate on presentation. */}
-                {flags.isSet('AUDIT_LOG') && election.state !== 'draft' && (
+                {election.state !== 'draft' && canViewAuditLog && (
                   <Box
                     sx={{
                       width: "100%",

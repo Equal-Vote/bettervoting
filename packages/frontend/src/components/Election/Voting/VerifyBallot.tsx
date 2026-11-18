@@ -15,19 +15,23 @@ import useFeatureFlags from "../../FeatureFlagContextProvider";
 
 
 const VerifyBallot = () => {
-    const { election } = useElection()
+    const { election, permissions: userPermissions } = useElection()
     const { ballot_id } = useParams();
     const { t } = useSubstitutedTranslation(election.settings.term_type);
     const flags = useFeatureFlags();
 
+    // Mirrors the server: only election staff may view a ballot by id.
+    const canView = userPermissions?.includes('canViewBallots');
+
     const { data, isPending, makeRequest: fetchBallot } = useGetBallot(election.election_id, ballot_id);
     useEffect(() => {
-        if (ballot_id) {
+        if (ballot_id && canView) {
             fetchBallot();
         }
-    }, [ballot_id]);
+    }, [ballot_id, canView]);
     return (
         <Container>
+            {!canView && <Typography align='center' sx={{ my: 4 }}>{t('ballot_submitted.lookup_staff_only')}</Typography>}
             {isPending && <div> Loading Data... </div>}
             {data?.ballot &&
                 <>

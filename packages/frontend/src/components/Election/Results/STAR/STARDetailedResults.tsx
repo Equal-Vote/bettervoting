@@ -16,21 +16,24 @@ const STARDetailedResults = () => {
     const {t} = useRace();
     results = results as starResults;
 
-    // Relies on summaryData.candidates being ordered by the backend so that
-    // position 0 is the runoff winner and position 1 is the runoff runner-up
-    // (see Star.ts's winRound / runnerUpRound sort key). The score table
-    // gold-highlights rows 1 and 2 via CSS (.starScoreTable tr:nth-child),
-    // so this ordering is what makes the highlight track the actual finalists
-    // rather than score-position — a tiebreaker (five-star, random, etc.)
-    // can advance a runner-up that isn't the second-highest scorer.
+    // Finalists come from the tabulator's explicit fields, not from candidate order.
     // Only reached for single-winner STAR (see Results.tsx).
-    const [winner, runnerUp] = results.summaryData.candidates;
+    const winner = results.roundResults[0]?.winners[0];
+    const runnerUp = results.roundResults[0]?.runner_up[0];
+    if (!winner || !runnerUp) return null;
     const finalistOpponent: Record<string, string> = {
         [winner.id]: runnerUp.id,
         [runnerUp.id]: winner.id,
     };
 
-    const tableData: candidateTableEntry[] = results.summaryData.candidates.map((c) => ({
+    // The score table highlights its first two rows (.starScoreTable in index.css), so put
+    // the finalists there and list everyone else after them in the backend's order.
+    const orderedCandidates = [
+        winner,
+        runnerUp,
+        ...results.summaryData.candidates.filter(c => c.id !== winner.id && c.id !== runnerUp.id),
+    ];
+    const tableData: candidateTableEntry[] = orderedCandidates.map((c) => ({
         name: c.name,
         votes: c.score,
         runoffVotes: finalistOpponent[c.id] !== undefined

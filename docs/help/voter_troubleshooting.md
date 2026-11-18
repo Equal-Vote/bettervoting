@@ -98,7 +98,7 @@ After a successful submission you land on a page headed *"Ballot Submitted"* —
 Beyond that, there are two positive confirmations:
 
 - **The receipt email.** In the submit dialog you can have a receipt sent (*"Send Ballot Receipt Email?"*). If your email is already known — from your voting link or your account — the dialog shows where the receipt will go; otherwise you can type an address into the optional field. The receipt's subject is *"Ballot Receipt For"* followed by the election title. **If no email address is provided, no receipt is sent** — there is no way to generate one later, so enter an address if you want proof.
-- **The verification page.** The receipt email links to a page where you can view your ballot and its status at any time. It shows your ballot ID, each choice as recorded, and the status **Submitted**. Your ballot ID appears only in this receipt — it is deliberately not shown in your browser after voting, which protects voters from being pressured to prove how they voted.
+- **No ballot lookup.** You aren't given a ballot ID or a link to view your ballot after voting. This is deliberate: it protects voters from being pressured to prove how they voted.
 
 If the election publishes live tallies, you may also be able to watch the count as it happens — see [Preliminary Results](preliminary_results.md). Whether results are visible, and when, is the organiser's choice.
 
