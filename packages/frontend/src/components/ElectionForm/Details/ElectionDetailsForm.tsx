@@ -113,15 +113,12 @@ export default function ElectionDetailsForm({editedElection, applyUpdate, errors
                                         applyUpdate(election => { 
                                             election.start_time = defaultStartTime;
                                             election.end_time = defaultEndTime;
-                                            election.settings.publish_results_on_close = true;
                                         })
                                     }
                                     else {
                                         applyUpdate(election => { 
                                             election.start_time = undefined;
                                             election.end_time = undefined;
-                                            // only a scheduled election publishes on its own
-                                            election.settings.publish_results_on_close = undefined;
                                         })
                                     }
                                 }
@@ -129,16 +126,6 @@ export default function ElectionDetailsForm({editedElection, applyUpdate, errors
                             />
                         }
                         label={t('election_details.enable_times')} />
-                    {enableStartEndTime &&
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={editedElection.settings.publish_results_on_close === true}
-                                    onChange={(e) => applyUpdate(election => { election.settings.publish_results_on_close = e.target.checked })}
-                                />
-                            }
-                            label={t('election_details.publish_results_on_close')} />
-                    }
                 </FormGroup>
             </Grid>
 

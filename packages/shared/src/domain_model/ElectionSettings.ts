@@ -1,3 +1,4 @@
+import { ElectionState } from "./ElectionStates";
 import { timeZones, TimeZone } from "./Util";
 import { getVoterAuthenticationMode } from "./VoterAuthenticationMode";
 
@@ -38,12 +39,31 @@ export interface ElectionSettings {
     contact_email?: string; // Public contact email for voters to reach out to
     exhaust_on_N_repeated_skipped_marks?: number; // number of skipped ranks before exhausting
     draggable_ballot?: boolean; // Use draggable interface for IRV ballots
-    // Turn public_results on when the election closes at its end time. Only scheduled
-    // elections close that way; closing one by hand never publishes on its own.
-    publish_results_on_close?: boolean;
+    // Whether results may be revealed while the election is still taking votes. Off unless
+    // set, and only editable in draft, so voters in an election without it know nobody
+    // sees a tally before it closes. See canRevealResults / resultsAreRevealed.
+    allow_preliminary_results?: boolean;
     voter_groups?: string[]; // Named voter groups for this election (FF_PRECINCTS)
     voter_groups_enabled?: boolean; // Whether voter groups are active (FF_PRECINCTS)
 }
+type ElectionForResults = { state: ElectionState, settings: Pick<ElectionSettings, 'public_results' | 'allow_preliminary_results'> };
+
+// No more votes can come in, so a tally is the final result rather than a preliminary one.
+export const votingIsOver = (election: Pick<ElectionForResults, 'state'>) =>
+  election.state === 'closed' || election.state === 'archived';
+
+// Whether an admin may reveal the results right now: always once voting is over, and
+// before that only in an election that was set up to allow preliminary results.
+export const canRevealResults = (election: ElectionForResults) =>
+  votingIsOver(election) || election.settings.allow_preliminary_results === true;
+
+// Whether the results are visible to everyone right now. public_results alone is not
+// enough: an election that doesn't allow preliminary results shows nothing while votes
+// can still come in, however public_results came to be set (reopened after revealing,
+// set through the API when the election was created).
+export const resultsAreRevealed = (election: ElectionForResults) =>
+  election.settings.public_results === true && canRevealResults(election);
+
 function settingsCompatiblityValidation(settings: ElectionSettings): string {
     let errorMsg = ''
     if (settings.ballot_updates) {
@@ -101,8 +121,8 @@ export function electionSettingsValidation(obj:ElectionSettings): string | null 
   if (obj.draggable_ballot && typeof obj.draggable_ballot !== 'boolean'){
     return "Invalid Draggable Ballot";
   }
-  if (obj.publish_results_on_close !== undefined && typeof obj.publish_results_on_close !== 'boolean'){
-    return "Invalid Publish Results On Close";
+  if (obj.allow_preliminary_results !== undefined && typeof obj.allow_preliminary_results !== 'boolean'){
+    return "Invalid Allow Preliminary Results";
   }
   if (obj.voter_groups_enabled !== undefined && typeof obj.voter_groups_enabled !== 'boolean'){
     return "Invalid Voter Groups Enabled";

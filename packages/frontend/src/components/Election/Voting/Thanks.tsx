@@ -1,3 +1,4 @@
+import { resultsAreRevealed } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import ShareButton from "../ShareButton";
@@ -35,7 +36,7 @@ const Thanks = () => {
                 }
 
                 <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', flexDirection: { xs: 'column', sm: 'column' } }} >
-                    {['draft', 'open', 'closed'].includes(election.state) && election.settings.public_results === true &&
+                    {['draft', 'open', 'closed'].includes(election.state) && resultsAreRevealed(election) &&
                         <Box sx={{ width: '100%',  p: 1, px:{xs: 5, sm: 1} }}>
                             <PrimaryButton
                                 type='button'

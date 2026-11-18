@@ -12,6 +12,7 @@ import useElection from '../../ElectionContextProvider';
 import useAuthSession from '../../AuthSessionContextProvider';
 import { AdminPageNavigation } from '../Sidebar';
 import useOptimisticToggle from '~/hooks/useOptimisticToggle';
+import { canRevealResults, votingIsOver } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
 
 const PublishAndShare = () => {
     const authSession = useAuthSession()
@@ -113,7 +114,16 @@ const PublishAndShare = () => {
     // The server's answer is the source of truth, and this write doesn't go through
     // updateElection, so refetch to fold the new value into the election context.
     const [publicResults, setPublicResults] = useOptimisticToggle(election.settings.public_results ?? false, async (toggled) => {
-        const res = await enqueueWrite(expected_update_date => setPublicResultsRequest({ public_results: toggled, expected_update_date }));
+        // The switch reads the same whenever it is used. What changes is the dialog:
+        // revealing while votes can still come in means preliminary results, and the
+        // dialog says what that does and links to the page about it.
+        const dialog = !toggled ? 'hide_results' : votingIsOver(election) ? 'reveal_results' : 'reveal_results_while_open';
+        const audit = await auditConfirm({
+            title: t(`audit_confirm.${dialog}.title`),
+            message: dialog === 'reveal_results_while_open' ? t('audit_confirm.reveal_results_while_open.message', { newWindow: true }) : undefined,
+        });
+        if (!audit) return false;
+        const res = await enqueueWrite(expected_update_date => setPublicResultsRequest({ public_results: toggled, expected_update_date, ...audit }));
         if (res) await fetchElection();
         return !!res && res.election?.settings?.public_results === toggled;
     });
@@ -140,19 +150,16 @@ const PublishAndShare = () => {
                 {election.state === 'finalized' && election.start_time && (
                     <Typography variant="body2">{t('admin_home.header_start_time', {datetime: election.start_time})}</Typography>
                 )}
-                {/* One stored value, public_results, named for what turning it on does right now:
-                    a running tally while votes can still come in, the final results once closed */}
+                {/* Until the election is closed this only works in an election set up to
+                    allow preliminary results; the server refuses it otherwise. Hiding is
+                    never blocked. */}
                 <SwitchSetting
-                    label={election.state === 'closed' ? t('election_settings.public_results') : t('election_settings.preliminary_results')}
+                    label={t('election_settings.public_results')}
                     toggled={publicResults}
                     onToggle={setPublicResults}
-                    disabled={!canEditState}
+                    disabled={!canEditState || (!publicResults && !canRevealResults(election))}
+                    disabledMessage={canRevealResults(election) ? undefined : t('disabled_msgs.reveal_results_when_open')}
                 />
-                {election.state !== 'closed' && election.end_time && (
-                    <Typography variant="body2">
-                        {t(election.settings.publish_results_on_close === true ? 'admin_home.results_publish_on_close' : 'admin_home.results_hidden_on_close')}
-                    </Typography>
-                )}
             </Box>
         )}
 

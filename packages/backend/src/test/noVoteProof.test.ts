@@ -27,7 +27,7 @@ describe("Voters can't prove how they voted", () => {
         // public_results lets the admin list ballots (to learn the id) while the election is open.
         const created = await th.createElection({
             ...electionInput,
-            settings: { ...electionInput.settings, public_results: true },
+            settings: { ...electionInput.settings, public_results: true, allow_preliminary_results: true },
         } as Election, testInputs.user1token);
         expect(created.statusCode).toBe(200);
         const electionId = created.election.election_id;

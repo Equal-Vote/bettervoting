@@ -53,6 +53,12 @@ test('Full Runthrough', async ({ page }) => {
 	const rankEight = page.getByRole('button', { name: '8 ranks' });
 	await rankEight.click();
 	await expect(rankEight).toHaveAttribute('aria-pressed', 'true');
+	// This test reads the winner off the results page while the election is still open,
+	// which only an election that allows preliminary results can show. The setting is
+	// draft-only, so it has to be turned on here.
+	const allowPreliminary = page.getByRole('switch', { name: /Allow Preliminary Results/ });
+	await allowPreliminary.check();
+	await expect(allowPreliminary).toBeChecked();
 
 	// Adding Race 1
 	await page.getByRole('link', { name: 'Build Ballot' }).click();
@@ -115,13 +121,15 @@ test('Full Runthrough', async ({ page }) => {
 	await page.getByRole('button', { name: 'Finalize Poll'}).click();
 	await page.getByRole('button', { name: 'Submit'}).click();
 
-	// Results are hidden by default while voting is open, and this test reads the winner
-	// off the results page, so turn preliminary results on (still on Publish & Share)
+	// Results start hidden, so reveal them (still on Publish & Share). The election is
+	// open, so the dialog is the preliminary-results warning; confirm it.
 	const published = page.waitForResponse(response =>
 		response.url().endsWith(`/API/Election/${electionId}/setPublicResults`) &&
 		response.request().method() === 'POST'
 	);
-	await page.getByRole('switch', { name: /Show Preliminary Results/ }).check();
+	await page.getByRole('switch', { name: /Reveal Results/ }).click();
+	await expect(page.getByRole('dialog')).toContainText('preliminary results');
+	await page.getByRole('button', { name: 'Submit' }).click();
 	expect((await (await published).json()).election.settings.public_results).toBe(true);
 
 	// Vote

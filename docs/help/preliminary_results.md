@@ -8,23 +8,27 @@ grand_parent: Running an Election
 
 # Preliminary Results
 
-When an election has **Show Preliminary Results** turned on, the running tally is visible to anyone with the election link while voting is still happening. This is great for casual polls, transparent community decisions, and demos — but it changes how the election behaves in some ways that voters and admins should understand before turning it on.
+Preliminary results are results revealed while an election is still open: the running tally is visible to anyone with the election link while voting is still happening. This is great for casual polls, transparent community decisions, and demos — but it changes how the election behaves in some ways that voters and admins should understand before turning it on.
 
-**Show Preliminary Results is off by default.** New elections hide the tally while voting is open. If you want a live tally, turn on **Show Preliminary Results** on the **Publish & Share** page after reading this page.
+**Preliminary results are not allowed by default.** An election only has them if **Allow Preliminary Results** was turned on in its **Settings** before it was finalized. That setting cannot be changed afterwards. With it off, nobody, the election's admins included, can see a tally until the election is closed.
 
-**Publishing the final results is a separate step.** Once an election is closed, the same switch on **Publish & Share** reads **Publish Results**, and turning it on makes the results public. If your election has start and end times, you can tick **Publish results when the election ends** next to them while setting it up, and the results are published at the moment it closes without you doing anything. An election you close by hand never publishes on its own.
+**Revealing results is one switch.** The **Reveal Results** switch on the **Publish & Share** page makes the results public. Once an election is closed it always works, and it reveals the final results. While the election is still open it only works if the election allows preliminary results, and BetterVoting first shows a warning that links to this page. Results are never revealed automatically: closing an election, by hand or at its end time, leaves them hidden until an admin turns the switch on.
+
+**It goes in the audit log.** Revealing or hiding results is recorded in the election's audit log, and an entry for results revealed while voting was still open says so.
+
+**If you reopen an election** that does not allow preliminary results, its results are hidden again until it is closed.
 
 This page is for both voters (so you know what other people can see when you vote) and admins (so you can make an informed choice about whether to enable it).
 
-## What "Show Preliminary Results" actually shows
+## What preliminary results actually show
 
-When the setting is on:
+When results are revealed while the election is open:
 
 - Anyone who visits the election page sees a **Preliminary Results** view with the current tally.
 - The tally updates as ballots come in. A new ballot changes the numbers immediately.
 - After the election closes, the same view becomes the final results.
 
-When the setting is off, the tally is hidden from everyone (both admins and voters) until the election is closed and the results are published.
+Otherwise the tally is hidden from everyone (both admins and voters) until the election is closed and the results are revealed.
 
 ## What admins can see during an election
 
@@ -32,11 +36,11 @@ Independent of this setting, the admin always has access to a voter list that sh
 
 > **However**, if preliminary results are visible, an admin (or anyone watching the live tally) can combine the live tally with the voter-status list to infer some voters' choices. The simplest version: if only one voter casts a ballot during some window, the change in the tally during that window *is* that voter's ballot. With small numbers of voters or quiet periods, this kind of "delta analysis" can de-anonymize individual votes even though no single screen explicitly shows them.
 
-This is not a bug — it's a fundamental consequence of showing tallies live alongside a per-voter status list. If ballot secrecy matters to your election, leave preliminary results off until the election closes.
+This is not a bug — it's a fundamental consequence of showing tallies live alongside a per-voter status list. If ballot secrecy matters to your election, leave **Allow Preliminary Results** off.
 
 ## Preliminary results combined with editable ballots
 
-BetterVoting has a separate setting called **Allow Voters To Edit Vote** that lets voters change their ballot until the election closes. When both settings are enabled at the same time, voters can see how the election is going and then change their votes in response.
+BetterVoting has a separate setting called **Allow Voters To Edit Vote** that lets voters change their ballot until the election closes. When an election has that setting and shows preliminary results at the same time, voters can see how the election is going and then change their votes in response.
 
 This is a legitimate feature for some kinds of polls (e.g. deliberative groups that want to converge through discussion and revision). It also opens the door to **coordinated vote-switching**:
 
@@ -44,22 +48,22 @@ This is a legitimate feature for some kinds of polls (e.g. deliberative groups t
 - When their preferred candidate is behind, they can direct supporters to switch their vote to a backup choice, change rankings, or alter scores.
 - Because edits are silent and there is no rate limit, a coordinated swing in the final minutes can land before other voters notice.
 
-The methods on BetterVoting, are designed to reduce the incentive to vote strategically, but this combination partially undoes that benefit. **If you are running a serious election and want sincere ballots, we recommend either leaving preliminary results off until the election closes, or turning off editable ballots.** BetterVoting will let you enable both, but you should do so deliberately.
+The methods on BetterVoting, are designed to reduce the incentive to vote strategically, but this combination partially undoes that benefit. **If you are running a serious election and want sincere ballots, we recommend either leaving preliminary results off, or turning off editable ballots.** BetterVoting will let you enable both, but you should do so deliberately.
 
-## Turning the setting off after it has been on
+## Hiding results after they have been revealed
 
-An admin can turn **Show Preliminary Results** off at any time, and the tally page will stop being visible to voters and the public from that point forward.
+An admin can turn **Reveal Results** off at any time, and the tally page will stop being visible to voters and the public from that point forward.
 
-> **Turning the setting off does not un-reveal what has already been seen.** Anyone who looked at the tally while it was visible may have screenshotted, shared, or simply remembered it. Search engines, social media, and chat platforms can also retain copies. Treat the decision to show preliminary results as effectively one-way for any number you wouldn't want public, even briefly.
+> **Hiding results does not un-reveal what has already been seen.** Anyone who looked at the tally while it was visible may have screenshotted, shared, or simply remembered it. Search engines, social media, and chat platforms can also retain copies. Treat the decision to show preliminary results as effectively one-way for any number you wouldn't want public, even briefly.
 
-The reverse switch — turning preliminary results **on** mid-election — is also possible, and it immediately exposes the full current tally.
+In an election that allows preliminary results, revealing them mid-election immediately exposes the full current tally.
 
 ## Recommendations
 
 - **Casual polls, demos, opinion gathering**: Showing preliminary results is usually fine, and often what people expect.
-- **Serious elections where ballot secrecy matters**: Leave preliminary results off until the election is closed. Publish the final results after close.
+- **Serious elections where ballot secrecy matters**: Leave **Allow Preliminary Results** off. Reveal the final results after the election is closed.
 - **Serious elections where you want sincere ballots**: Do not combine preliminary results with editable ballots. Pick one.
-- **If you change your mind**: Remember that turning the setting off doesn't undo what was already visible.
+- **If you change your mind**: Remember that hiding results doesn't undo what was already visible.
 
 ## Related
 

@@ -1,3 +1,4 @@
+import { resultsAreRevealed } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import { Paper } from "@mui/material";
@@ -83,7 +84,7 @@ const ElectionHome = () => {
                     {voterAuth.has_voted ? t('editable_ballots.edit_vote') : t('election_home.vote')}
                   </Typography>
                 </PrimaryButton>
-                {election.settings.public_results === true &&
+                {resultsAreRevealed(election) &&
                 <SecondaryButton href={`/${String(election?.election_id)}/results`} sx={{mx: 'auto', width: '90%', p:3}}>
                     {t('election_home.or_view_results')}
                 </SecondaryButton>
@@ -98,7 +99,7 @@ const ElectionHome = () => {
                   {t('election_home.vote')}
                 </Typography>
               </PrimaryButton >
-              {election.settings.public_results === true &&
+              {resultsAreRevealed(election) &&
               <SecondaryButton href={`/${String(election?.election_id)}/results`} sx={{mx: 'auto', width: '90%', p:3}}>
                   {t('election_home.or_view_results')}
               </SecondaryButton >
@@ -122,8 +123,8 @@ const ElectionHome = () => {
               </Typography>
             </Box>
           }
-          {/* Show results button only if public_results enabled and voter has voted or election is closed */}
-          {(election.settings.public_results === true &&
+          {/* Show results button only if results are revealed and voter has voted or election is closed */}
+          {(resultsAreRevealed(election) &&
             (election.state === 'open' && voterAuth.has_voted && !canUpdateBallot) || election.state === 'closed') &&
             <SecondaryButton href={`/${String(election?.election_id)}/results`} sx={{mx: 'auto', width: '90%', p:3}}>
               {t('election_home.view_results')}

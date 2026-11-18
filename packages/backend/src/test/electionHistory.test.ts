@@ -84,6 +84,27 @@ describe("election audit log", () => {
         ]);
     });
 
+    test("says whether results were revealed while votes could still come in", () => {
+        const { events } = buildHistory(
+            [
+                electionRow('draft', day(0), false),
+                electionRow('finalized', day(1), false),
+                electionRow('open', day(2), true),   // revealed while open: preliminary
+                electionRow('open', day(3), false),
+                electionRow('closed', day(4), false),
+                electionRow('closed', day(5), true), // revealed after closing: final
+            ],
+            [],
+            [],
+        );
+
+        expect(only(events, 'preliminary_results_change').map(e => [e.to, e.preliminary])).toEqual([
+            [true, true],
+            [false, true],
+            [true, false],
+        ]);
+    });
+
     test("reports preliminary results being toggled on and off", () => {
         const { events } = buildHistory(
             [
@@ -311,7 +332,7 @@ describe("election audit log", () => {
         expect(events).toEqual([
             { type: 'state_change', timestamp: new Date(day(1)).toISOString(), from: 'draft', to: 'finalized', audit_note: 'Ballot approved by the board' },
             { type: 'state_change', timestamp: new Date(day(2)).toISOString(), from: 'finalized', to: 'open' },
-            { type: 'preliminary_results_change', timestamp: new Date(day(3)).toISOString(), to: true, audit_note: 'Publishing early turnout' },
+            { type: 'preliminary_results_change', timestamp: new Date(day(3)).toISOString(), to: true, preliminary: true, audit_note: 'Publishing early turnout' },
             { type: 'state_change', timestamp: new Date(day(4)).toISOString(), from: 'open', to: 'closed' },
         ]);
         expect(events[1]).not.toHaveProperty('audit_note');

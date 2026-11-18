@@ -3,6 +3,7 @@ import Logger from "../../Services/Logging/Logger";
 import { Unauthorized } from "@curveball/http-errors";
 import { expectPermission } from "../controllerUtils";
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
+import { resultsAreRevealed } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
 import { AnonymizedBallot, Ballot } from "@equal-vote/star-vote-shared/domain_model/Ballot";
@@ -40,11 +41,11 @@ export const getAnonymizedBallotsByElectionID = async (req: IElectionRequest, re
     const electionId = req.election.election_id;
     Logger.debug(req, "getAnonymizedBallotsByElectionID: " + electionId);
     const election = req.election;
-    // Same rule as getElectionResults: ballots are served once results are published,
+    // Same rule as getElectionResults: ballots are served once results are revealed,
     // and before that only a draft's test ballots, to its admins.
-    if (!election.settings.public_results) {
+    if (!resultsAreRevealed(election)) {
         if (election.state !== 'draft') {
-            const msg = `Ballot access only permitted once results have been published`;
+            const msg = `Ballot access only permitted once results have been revealed`;
             Logger.info(req, msg);
             throw new Unauthorized(msg)
         }

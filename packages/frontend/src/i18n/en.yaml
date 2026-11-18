@@ -32,8 +32,9 @@ election_history:
   desc:
     state_initial: 'Election entered "{{to}}" state'
     state_change: 'State changed from "{{from}}" to "{{to}}"'
-    preliminary_on: Preliminary results enabled
-    preliminary_off: Preliminary results disabled
+    results_revealed: Results revealed
+    results_revealed_preliminary: Preliminary results revealed while voting was still open
+    results_hidden: Results hidden
     ballots_milestone: 'Ballots cast reached {{count}}'
     upload_ballots: 'An admin uploaded {{count}} ballot(s)'
     edits_milestone: 'Ballot edits reached {{count}}'
@@ -50,10 +51,15 @@ audit_confirm:
     title: Open {{capital_election}}?
   close:
     title: Close {{capital_election}}?
-  preliminary_on:
-    title: Publish Preliminary Results?
-  preliminary_off:
-    title: Hide Preliminary Results?
+  reveal_results:
+    title: Reveal Results?
+  # Revealing while votes can still come in. The switch is worded the same as after
+  # closing; this dialog is where the admin is told these are preliminary results.
+  reveal_results_while_open:
+    title: Reveal Results While Voting Is Still Open?
+    message: This {{election}} is still open, so what you are about to reveal are **preliminary results**. Everyone with the link will see a running tally. That can change how the remaining voters {{vote}}, and when few {{votes}} come in it can expose how individual voters voted. Hiding the results later does not undo what people have already seen. The audit log will record that results were revealed while voting was open. [Read about preliminary results](https://docs.bettervoting.com/help/preliminary_results.html) before you continue.
+  hide_results:
+    title: Hide Results?
   reveal_voter_id:
     title: Obtain Unique Voting URL
     message: This action reveals the unique voting link for the voter. This should only be done if the voter is unable to acquire their voting link through their email inbox.
@@ -734,6 +740,7 @@ tabulation_logs:
 disabled_msgs:
     ballot_updates_when_open: Only supported when election uses email list
     is_public_when_voter_list: Only supported when anyone with the link can {{vote}}
+    reveal_results_when_open: This {{election}} does not allow preliminary results, so its results can be revealed once it is closed
     voter_groups_when_open: Only supported when {{election}} uses a voter list
 
 #######################################
@@ -783,12 +790,20 @@ tips:
     description: Allow voters to change their vote while election is still open
 
   public_results:
-    title: Public Results
+    title: Reveal Results
     description: >
       Controls whether the public can see {{election}} results. Off by default.
-      While the {{election}} is open, turning this on shows voters preliminary results after they submit their {{ballot}}.
-      Once it is closed, turning this on publishes the final results.
-      High-profile {{elections}} typically keep results hidden until the {{election}} closes.
+      Once the {{election}} is closed, turning this on reveals the final results.
+      While it is still open, this only works if the {{election}} was set up to allow preliminary results,
+      and it shows voters a running tally after they submit their {{ballot}}.
+    learn_link: https://docs.bettervoting.com/help/preliminary_results.html
+
+  allow_preliminary_results:
+    title: Allow Preliminary Results
+    description: >
+      Lets you reveal results while the {{election}} is still open. Off by default, and it can only be changed
+      before the {{election}} is finalized. With it off, nobody, admins included, can see a tally until the {{election}} is closed.
+      High-profile {{elections}} typically leave this off.
     learn_link: https://docs.bettervoting.com/help/preliminary_results.html
 
   voter_groups:
@@ -1112,8 +1127,6 @@ admin_home:
   header_start_time: Your {{election}} will open on {{datetime, datetime}}
   header_end_time: Your {{election}} will end on {{datetime, datetime}}
   header_ended_time: Your {{election}} ended on {{datetime, datetime}}
-  results_publish_on_close: Results will be published when the {{election}} ends.
-  results_hidden_on_close: Results will stay hidden when the {{election}} ends, until you publish them here.
 
   time_start_to_end: '{{datetime, datetime}} - {{datetime2, datetime}}'
   time_only_start: Starts on {{datetime, datetime}}
@@ -1216,7 +1229,6 @@ election_details:
   title: '{{capital_election}} Title'
   description: '{{capital_election}} Description'
   enable_times: Enable Start/End Times?
-  publish_results_on_close: Publish results when the {{election}} ends
   time_zone: Time Zone
   start_date: Start Date
   end_date: End Date
@@ -1232,9 +1244,9 @@ election_settings:
 
   ballot_updates: Allow Voters To Edit Vote !tip(ballot_updates)
 
-  preliminary_results: Show Preliminary Results !tip(public_results)
+  allow_preliminary_results: Allow Preliminary Results !tip(allow_preliminary_results)
 
-  public_results: Publish Results !tip(public_results)
+  public_results: Reveal Results !tip(public_results)
 
   voter_groups: Set Voter Groups !tip(voter_groups)
 

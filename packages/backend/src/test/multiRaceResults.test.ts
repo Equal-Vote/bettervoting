@@ -60,6 +60,7 @@ const TwoRaceElection: Election = {
         voter_access: 'open',
         voter_authentication: {},
         public_results: true,
+        allow_preliminary_results: true,
     } as ElectionSettings,
 } as Election;
 
@@ -87,7 +88,7 @@ const BALLOTS: NewBallot[] = [
 ].map(b => b as NewBallot);
 
 describe("Multi Race Results", () => {
-    var election: Election;
+    let election: Election;
 
     test("Create a two race election", async () => {
         const response = await th.createElection(TwoRaceElection, testInputs.user1token);

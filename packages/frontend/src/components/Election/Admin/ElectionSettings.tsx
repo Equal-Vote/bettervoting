@@ -102,6 +102,7 @@ export default function ElectionSettings() {
 
                     <ElectionSwitchSetting settingKey="random_candidate_order" />
                     <ElectionSwitchSetting settingKey="ballot_updates" />
+                    <ElectionSwitchSetting settingKey="allow_preliminary_results" />
                     <ElectionSwitchSetting settingKey="require_instruction_confirmation" />
                     <ElectionSwitchSetting settingKey="draggable_ballot" />
                     {/* Also can't use ElectionSwitchSetting — is_public lives on the

@@ -107,6 +107,7 @@ test.beforeEach(async ({ context, request }) => {
                     },
                     "ballot_updates": false,
                     "public_results": true,
+                    "allow_preliminary_results": true,
                     "time_zone": "America/Denver",
                     "random_candidate_order": false,
                     "require_instruction_confirmation": true,
