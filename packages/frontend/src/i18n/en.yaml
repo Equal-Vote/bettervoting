@@ -57,7 +57,7 @@ audit_confirm:
   # closing; this dialog is where the admin is told these are preliminary results.
   reveal_results_while_open:
     title: Reveal Results While Voting Is Still Open?
-    message: This {{election}} is still open, so what you are about to reveal are **preliminary results**. Everyone with the link will see a running tally. That can change how the remaining voters {{vote}}, and when few {{votes}} come in it can expose how individual voters voted. Hiding the results later does not undo what people have already seen. The audit log will record that results were revealed while voting was open. [Read about preliminary results](https://docs.bettervoting.com/help/preliminary_results.html) before you continue.
+    message: This {{election}} is still open, so what you are about to reveal are **preliminary results**. Everyone with the link will see a running tally. That can influence people who have not voted yet, and when only a few people vote at a time it can expose how individual voters voted. Hiding the results later does not undo what people have already seen. The audit log will record that results were revealed while voting was open. [Read about preliminary results](https://docs.bettervoting.com/help/preliminary_results.html) before you continue.
   hide_results:
     title: Hide Results?
   reveal_voter_id:
