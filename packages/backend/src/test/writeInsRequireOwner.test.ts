@@ -38,6 +38,7 @@ const makeElection = (owner_id: string | null, enable_write_in: boolean, state: 
         voter_access: 'open',
         voter_authentication: { ip_address: true },
         public_results: true,
+        allow_preliminary_results: true,
     } as ElectionSettings,
 } as Election);
 

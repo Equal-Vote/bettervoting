@@ -4,7 +4,7 @@ import { Typography } from "@mui/material";
 import { PrimaryButton } from "../../styles";
 import { useNavigate } from 'react-router-dom';
 import ShareButton from "../ShareButton";
-import { useFinalizeElection, useSetOpenState } from "../../../hooks/useAPI";
+import { useFinalizeElection, useSetOpenState, useSetPublicResults } from "../../../hooks/useAPI";
 import { SwitchSetting } from '../../util';
 import useConfirm from '../../ConfirmationDialogProvider';
 import useAuditConfirm from './useAuditConfirm';
@@ -12,6 +12,7 @@ import useElection from '../../ElectionContextProvider';
 import useAuthSession from '../../AuthSessionContextProvider';
 import { AdminPageNavigation } from '../Sidebar';
 import useOptimisticToggle from '~/hooks/useOptimisticToggle';
+import { canRevealResults, votingIsOver } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
 
 const PublishAndShare = () => {
     const authSession = useAuthSession()
@@ -20,6 +21,7 @@ const PublishAndShare = () => {
     const { makeRequest: finalize } = useFinalizeElection(election.election_id)
 
     const { makeRequest: setOpenState } = useSetOpenState(election.election_id)
+    const { makeRequest: setPublicResultsRequest } = useSetPublicResults(election.election_id)
 
     const navigate = useNavigate()
 
@@ -109,6 +111,23 @@ const PublishAndShare = () => {
         return !!res;
     });
     
+    // The server's answer is the source of truth, and this write doesn't go through
+    // updateElection, so refetch to fold the new value into the election context.
+    const [publicResults, setPublicResults] = useOptimisticToggle(election.settings.public_results ?? false, async (toggled) => {
+        // The switch reads the same whenever it is used. What changes is the dialog:
+        // revealing while votes can still come in means preliminary results, and the
+        // dialog says what that does and links to the page about it.
+        const dialog = !toggled ? 'hide_results' : votingIsOver(election) ? 'reveal_results' : 'reveal_results_while_open';
+        const audit = await auditConfirm({
+            title: t(`audit_confirm.${dialog}.title`),
+            message: dialog === 'reveal_results_while_open' ? t('audit_confirm.reveal_results_while_open.message', { newWindow: true }) : undefined,
+        });
+        if (!audit) return false;
+        const res = await enqueueWrite(expected_update_date => setPublicResultsRequest({ public_results: toggled, expected_update_date, ...audit }));
+        if (res) await fetchElection();
+        return !!res && res.election?.settings?.public_results === toggled;
+    });
+
     const hasScheduledTimes = !!(election.start_time || election.end_time);
     const canEditState = permissions?.includes('canEditElectionState') ?? false;
 
@@ -131,6 +150,16 @@ const PublishAndShare = () => {
                 {election.state === 'finalized' && election.start_time && (
                     <Typography variant="body2">{t('admin_home.header_start_time', {datetime: election.start_time})}</Typography>
                 )}
+                {/* Until the election is closed this only works in an election set up to
+                    allow preliminary results; the server refuses it otherwise. Hiding is
+                    never blocked. */}
+                <SwitchSetting
+                    label={t('election_settings.public_results')}
+                    toggled={publicResults}
+                    onToggle={setPublicResults}
+                    disabled={!canEditState || (!publicResults && !canRevealResults(election))}
+                    disabledMessage={canRevealResults(election) ? undefined : t('disabled_msgs.reveal_results_when_open')}
+                />
             </Box>
         )}
 

@@ -49,7 +49,7 @@ export const makeDefaultElection = () => {
                 voter_id: true,
             },
             ballot_updates: false,
-            public_results: true,
+            public_results: false, // results start hidden; revealing them before the election closes also needs allow_preliminary_results
             random_candidate_order: true,
             require_instruction_confirmation: false,
             draggable_ballot: false,

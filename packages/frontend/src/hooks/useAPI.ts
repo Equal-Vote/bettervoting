@@ -24,7 +24,7 @@ export const useElectionExists = (electionID: string | undefined) => {
 // when taking the action (see useAuditConfirm); absent when none was given.
 export type HistoryEvent =
     | { type: 'state_change'; timestamp: string; from: string | null; to: string; audit_note?: string }
-    | { type: 'preliminary_results_change'; timestamp: string; to: boolean; audit_note?: string }
+    | { type: 'preliminary_results_change'; timestamp: string; to: boolean; preliminary?: boolean; audit_note?: string }
     | { type: 'ballots_milestone'; timestamp: string; count: number }
     | { type: 'upload_ballots'; timestamp: string; count: number; audit_note?: string }
     | { type: 'ballots_edited_milestone'; timestamp: string; count: number }

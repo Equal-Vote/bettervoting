@@ -43,7 +43,7 @@ const getStateColor = (state: string) => {
     // expect a few. Red would read as an alarm to voters when it isn't one.
     case 'State':
       return 'blue';
-    case 'Preliminary Results':
+    case 'Results':
       return 'purple';
     case 'Ballots':
       return 'green';

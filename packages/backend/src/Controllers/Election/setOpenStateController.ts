@@ -38,6 +38,13 @@ const setOpenState = async (req: IElectionRequest, res: Response, _next: NextFun
         throw new BadRequest(msg);
     }
 
+    // Results revealed while the election was closed would turn into preliminary results
+    // the moment it reopens. Unless the election allows those, hide them in the same
+    // write; the audit log then shows the reopening and the hiding together.
+    if (open && election.settings.public_results && election.settings.allow_preliminary_results !== true) {
+        election.settings.public_results = false;
+    }
+
     const expected_update_date = expectUpdateDate(req);
     const updatedElection = await ElectionsModel.updateElection(req.election, req, "Open or close election", expected_update_date, parseAuditNote(req));
     if (!updatedElection) {

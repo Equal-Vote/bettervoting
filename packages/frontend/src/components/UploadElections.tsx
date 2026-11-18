@@ -81,6 +81,7 @@ const UploadElections = () => {
                     public_archive_id: addToPublicArchive? cvr.name.split('.')[0] : undefined,
                     settings: {
                         ...defaultElection.settings,
+                        public_results: true, // uploaded elections are already closed; keep their results viewable
                         max_rankings: maxRankings,
                         voter_access: 'open',
                         ...inferences?.settings ?? {},

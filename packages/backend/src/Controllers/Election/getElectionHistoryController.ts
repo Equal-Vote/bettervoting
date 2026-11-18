@@ -6,6 +6,8 @@ import { Response, NextFunction } from 'express';
 import { ElectionRollAction } from '@equal-vote/star-vote-shared/domain_model/ElectionRoll';
 import { BallotAction } from '@equal-vote/star-vote-shared/domain_model/Ballot';
 import { AUDIT_LOG_CUTOFF_DATE, electionHasAuditLog } from '@equal-vote/star-vote-shared/domain_model/AuditLog';
+import { votingIsOver } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
+import { ElectionState } from '@equal-vote/star-vote-shared/domain_model/ElectionStates';
 import { hasPermission, permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 
 const ElectionsModel = ServiceLocator.electionsDb();
@@ -55,7 +57,8 @@ type MilestoneType = 'ballots_milestone' | 'ballots_edited_milestone';
 // omitted, not null, when there was none.
 export type HistoryEvent =
     | { type: 'state_change'; timestamp: string; from: string | null; to: string; audit_note?: string }
-    | { type: 'preliminary_results_change'; timestamp: string; to: boolean; audit_note?: string }
+    // `preliminary`: the election could still take votes when the results were revealed or hidden
+    | { type: 'preliminary_results_change'; timestamp: string; to: boolean; preliminary: boolean; audit_note?: string }
     | { type: 'ballots_milestone'; timestamp: string; count: number }
     | { type: 'ballots_edited_milestone'; timestamp: string; count: number }
     | { type: 'upload_ballots'; timestamp: string; count: number; audit_note?: string }
@@ -148,7 +151,7 @@ export const buildHistory = (
         const publicResults = row.settings?.public_results ?? false;
         if (prevPublicResults !== null && publicResults !== prevPublicResults) {
             pairs.push({
-                event: { type: 'preliminary_results_change', timestamp: msToIso(rowMs), to: publicResults, ...withNote(row.audit_note) },
+                event: { type: 'preliminary_results_change', timestamp: msToIso(rowMs), to: publicResults, preliminary: !votingIsOver({ state: row.state as ElectionState }), ...withNote(row.audit_note) },
                 rawMs: rowMs,
             });
         }
