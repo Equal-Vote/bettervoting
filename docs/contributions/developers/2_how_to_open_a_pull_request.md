@@ -11,21 +11,21 @@ parent: 💻 Developers
 
 A pull request (PR) enables you to send changes from your fork on GitHub to BetterVoting's main repository. Once you are done making changes to the code, you can follow these guidelines to open a PR.
 
-> Your PR should be in English. If you're interested in helping with translations, message the [#_software-dev slack channel](https://starvoting.slack.com/archives/C01EBAT283H)
+> Your PR should be in English. If you're interested in helping with translations, message the [#_bettervoting slack channel](https://starvoting.slack.com/archives/C01EBAT283H)
 
-> If you haven't joined the STAR Voting slack yet, you can follow the instructions [here](https://www.starvoting.us/get_involved) to get added
+> If you haven't joined the STAR Voting slack yet, you can follow the [sign up instructions](https://www.starvoting.org/join_next) to get added
 
 ## Prepare a good PR title
 
 We recommend using [conventional title and messages](https://www.conventionalcommits.org/) for commits and pull request. The convention has the following format:
 
-> `<type>([optional scope(s)]): <description>`
+> `<type>: <description>`
 >
 > For example:
 >
-> `fix(learn): tests for the do...while loop challenge`
+> `fix: tests for the do...while loop challenge`
 
-When opening a Pull Request(PR), you can use the below to determine the type, scope (optional), and description.
+When opening a Pull Request(PR), you can use the below to determine the type and description.
 
 **Type:**
 
@@ -36,9 +36,6 @@ When opening a Pull Request(PR), you can use the below to determine the type, sc
 | chore | Changes that are not related to code or tests.            |
 | docs  | Changes to `/docs` directory or the contributing guidelines, etc.                |
 
-**Scope:**
-
-You can select a scope from [this list of labels](https://github.com/Equal-Vote/bettervoting/labels?q=scope).
 
 **Description:**
 
@@ -46,10 +43,10 @@ Keep it short (less than 30 characters) and simple, you can add more information
 
 Some examples of good PR titles would be:
 
-- `fix(a11y): improved search bar contrast`
+- `fix: improved search bar contrast`
 - `feat: add more tests to HTML and CSS challenges`
-- `fix(api,client): prevent CORS errors on form submission`
-- `docs(i18n): Chinese translation of local setup`
+- `fix: prevent CORS errors on form submission`
+- `docs: Chinese translation of local setup`
 
 ## Proposing a Pull Request
 
@@ -82,11 +79,11 @@ Some examples of good PR titles would be:
 
 ## Feedback on pull requests
 
-> :tada: Congratulations on making a PR and thanks a lot for taking the time to contribute.
+> 🎉 Congratulations on making a PR and thanks a lot for taking the time to contribute.
 
 Our contributors will now take a look and leave you feedback. Please be patient with the fellow moderators and respect their time. All pull requests are reviewed in due course.
 
-And as always, feel free to ask questions on the [#_software-dev slack channel](https://starvoting.slack.com/archives/C01EBAT283H).
+And as always, feel free to ask questions on the [#_bettervoting slack channel](https://starvoting.slack.com/archives/C01EBAT283H).
 
 ## Conflicts on a pull request
 
