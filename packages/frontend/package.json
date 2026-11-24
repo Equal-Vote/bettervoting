@@ -14,7 +14,7 @@
     "@ungap/structured-clone": "0.3.4",
     "crypto-browserify": "^3.12.1",
     "fast-levenshtein": "^3.0.0",
-    "i18next": "^26.0.0",
+    "i18next": "^26.3.4",
     "i18next-browser-languagedetector": "^7.2.0",
     "jwt-decode": "^3.1.2",
     "luxon": "^3.3.0",
