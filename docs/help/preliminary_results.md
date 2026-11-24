@@ -12,6 +12,8 @@ Preliminary results are results revealed while an election is still open: the ru
 
 **Preliminary results are not allowed by default.** An election only has them if **Allow Preliminary Results** was turned on in its **Settings** before it was finalized. That setting cannot be changed afterwards. With it off, nobody, the election's admins included, can see a tally until the election is closed.
 
+**The exception is a quick poll made with "Publish Now".** A poll published straight from the home page has no owner, so nobody could ever reveal its results. It shows its running tally from the start instead. To keep results hidden while people vote, choose "Customize in editor".
+
 **Revealing results is one switch.** The **Reveal Results** switch on the **Publish & Share** page makes the results public. Once an election is closed it always works, and it reveals the final results. While the election is still open it only works if the election allows preliminary results, and BetterVoting first shows a warning that links to this page. Results are never revealed automatically: closing an election, by hand or at its end time, leaves them hidden until an admin turns the switch on.
 
 **It goes in the audit log.** Revealing or hiding results is recorded in the election's audit log, and an entry for results revealed while voting was still open says so.

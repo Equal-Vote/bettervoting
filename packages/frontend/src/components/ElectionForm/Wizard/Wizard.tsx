@@ -49,7 +49,7 @@ export const makeDefaultElection = () => {
                 voter_id: true,
             },
             ballot_updates: false,
-            public_results: false, // results start hidden; revealing them before the election closes also needs allow_preliminary_results
+            public_results: false, // results start hidden; revealing them before the election closes also needs allow_preliminary_results. onNext overrides both for "Publish Now"
             random_candidate_order: true,
             require_instruction_confirmation: false,
             draggable_ballot: false,
@@ -157,7 +157,14 @@ const Wizard = () => {
             return; // dialog dismissed — stay on wizard with inputs intact
         }
         if (confirmed) {
-            onAddElection({...updatedElection, owner_id: null, state: 'finalized', settings: setVoterAuthenticationMode(updatedElection.settings, 'open_unique_cookie')}, '/')
+            // "Publish Now" makes an election nobody owns, so nobody could ever turn on
+            // "Reveal Results" for it. It shows its running tally from the start instead.
+            const settings = {
+                ...setVoterAuthenticationMode(updatedElection.settings, 'open_unique_cookie'),
+                allow_preliminary_results: true,
+                public_results: true,
+            };
+            onAddElection({...updatedElection, owner_id: null, state: 'finalized', settings}, '/')
         } else {
             await onCustomize(updatedElection);
         }
