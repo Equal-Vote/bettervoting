@@ -4,6 +4,7 @@ import { Forbidden } from "@curveball/http-errors";
 import { expectPermission } from "../controllerUtils";
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
 import { VotingMethods } from '../../Tabulators/VotingMethodSelecter';
+import { resultsAreRevealed } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
 import { ElectionResults, rawVote } from "@equal-vote/star-vote-shared/domain_model/ITabulators";
@@ -18,10 +19,16 @@ const getElectionResults = async (req: IElectionRequest, res: Response, _next: N
 
     Logger.info(req, `getElectionResults: ${electionId}`);
 
-    if (!election.settings.public_results) {
-        if (election.state == 'open') {
-            const msg = `Preliminary results not enabled for election ${electionId}`;
-            Logger.error(req, msg);
+    // Until results are revealed nobody gets them, the election's admins included: an
+    // admin who could read the outcome first could decide what to do with the election
+    // knowing it. While votes can still come in, revealing also needs the election to
+    // allow preliminary results (resultsAreRevealed). The exception is a draft, whose
+    // ballots are test ballots that its admins preview.
+    // getAnonymizedBallotsByElectionID follows the same rule.
+    if (!resultsAreRevealed(election)) {
+        if (election.state !== 'draft') {
+            const msg = `Results have not been revealed for election ${electionId}`;
+            Logger.info(req, msg);
             throw new Forbidden(msg);
         }
         expectPermission(req.user_auth.roles, permissions.canViewPreliminaryResults)
@@ -39,7 +46,7 @@ const getElectionResults = async (req: IElectionRequest, res: Response, _next: N
         }
     )
 
-    let results: ElectionResults[] = []
+    const results: ElectionResults[] = []
     for (let race_index = 0; race_index < election.races.length; race_index++) {
         const race = election.races[race_index]
         const projection = projections[race_index]
@@ -95,7 +102,7 @@ const getElectionResults = async (req: IElectionRequest, res: Response, _next: N
         results[race_index] = {
             ...tabulationResult,
             perm,
-            // @ts-ignore - roundResults is a complicated type but we're just returning a slightly modified version of the original so the type should be consistent
+            // @ts-expect-error - roundResults is a complicated type but we're just returning a slightly modified version of the original so the type should be consistent
             roundResults: tabulationResult.roundResults.map(rr => ({
                 ...rr,
                 logs: rr.logs.map(log => {

@@ -3,18 +3,19 @@ import Logger from "../../Services/Logging/Logger";
 import { Unauthorized } from "@curveball/http-errors";
 import { expectPermission, secureShuffle } from "../controllerUtils";
 import { permissions } from '@equal-vote/star-vote-shared/domain_model/permissions';
+import { resultsAreRevealed } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
 import { IElectionRequest } from "../../IRequest";
 import { Response, NextFunction } from 'express';
 
 const BallotModel = ServiceLocator.ballotsDb();
 
 const getBallotsByElectionID = async (req: IElectionRequest, res: Response, _next: NextFunction) => {
-    var electionId = req.election.election_id;
+    const electionId = req.election.election_id;
     Logger.debug(req, "getBallotsByElectionID: " + electionId);
 
     expectPermission(req.user_auth.roles, permissions.canViewBallots)
-    if (!req.election.settings.public_results && req.election.state !== 'closed') {
-        const msg = `Ballot access only permited when public results are enabled or election has closed`;
+    if (!resultsAreRevealed(req.election) && req.election.state !== 'draft') {
+        const msg = `Ballot access only permitted once results have been revealed`;
         Logger.info(req, msg);
         throw new Unauthorized(msg)
     }

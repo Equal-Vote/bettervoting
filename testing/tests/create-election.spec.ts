@@ -32,6 +32,15 @@ test.describe('Create Election', () => {
 
         // Confirm Title
         await expect(page.getByRole('heading', { name: 'Favorite Fruit' })).toBeVisible({timeout: 2000})
+
+        // Nobody owns a "Publish Now" poll, so nobody could reveal its results later:
+        // it is created showing them while it is open.
+        const publishedId = new URL(page.url()).pathname.split('/')[1];
+        const published = await (await page.request.get(`${API_BASE_URL}/Election/${publishedId}`)).json();
+        expect(published.election.settings.allow_preliminary_results).toBe(true);
+        expect(published.election.settings.public_results).toBe(true);
+        expect((await page.request.get(`${API_BASE_URL}/ElectionResult/${publishedId}`)).status()).toBe(200);
+
         await page.getByRole('link', { name: 'Vote', exact: true }).click();
 
         // Confirm Candidates

@@ -10,7 +10,7 @@ import { HistoryEvent } from '../../hooks/useAPI';
 // English rather than translated — same as the other group-filtered columns.
 const HISTORY_LABELS: Record<HistoryEvent['type'], string> = {
     state_change: 'State',
-    preliminary_results_change: 'Preliminary Results',
+    preliminary_results_change: 'Results',
     ballots_milestone: 'Ballots',
     upload_ballots: 'Ballots Uploaded',
     ballots_edited_milestone: 'Ballot Edits',
@@ -32,9 +32,12 @@ export const describeHistoryEvent = (event: HistoryEvent, t: (k: string, v?: obj
                 ? t('election_history.desc.state_initial', { to: event.to })
                 : t('election_history.desc.state_change', { from: event.from, to: event.to });
         case 'preliminary_results_change':
-            return event.to
-                ? t('election_history.desc.preliminary_on')
-                : t('election_history.desc.preliminary_off');
+            // Revealing results while votes can still come in is the entry a reader of
+            // the log most needs to notice, so it gets its own wording.
+            if (!event.to) return t('election_history.desc.results_hidden');
+            return event.preliminary
+                ? t('election_history.desc.results_revealed_preliminary')
+                : t('election_history.desc.results_revealed');
         case 'ballots_milestone':
             return t('election_history.desc.ballots_milestone', { count: event.count });
         case 'upload_ballots':

@@ -34,6 +34,7 @@ const election: Election = {
         voter_authentication: { voter_id: true },
         ballot_updates: false,
         public_results: true,
+        allow_preliminary_results: true,
         random_candidate_order: true,
         require_instruction_confirmation: true,
         term_type: 'poll',

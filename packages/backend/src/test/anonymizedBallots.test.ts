@@ -40,6 +40,7 @@ const BaseElection: Election = {
         voter_access: 'open',
         voter_authentication: {},
         public_results: true,
+        allow_preliminary_results: true,
     } as ElectionSettings,
 } as Election;
 
@@ -55,7 +56,7 @@ const makeBallot = (election_id: string, aliceScore: number, bobScore: number): 
 } as NewBallot);
 
 describe("Anonymized ballots endpoint", () => {
-    var election: Election;
+    let election: Election;
 
     test("Create election and submit ballots", async () => {
         const response = await th.createElection(BaseElection, testInputs.user1token);

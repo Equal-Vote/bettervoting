@@ -1,3 +1,4 @@
+import { resultsAreRevealed } from '@equal-vote/star-vote-shared/domain_model/ElectionSettings';
 import { Fragment, useEffect } from "react"
 import Grid from "@mui/material/Grid";
 import Typography from '@mui/material/Typography';
@@ -37,7 +38,7 @@ const VerifyBallot = () => {
                 <>
                 <Box sx={{ maxWidth: '800px', margin: 'auto', display: "flex", flexDirection: "column", alignItems: "center" }}>
                     <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', flexDirection: { xs: 'column', sm: 'row' } }} >
-                        {['draft', 'open', 'closed'].includes(election.state) && election.settings.public_results === true &&
+                        {['draft', 'open', 'closed'].includes(election.state) && resultsAreRevealed(election) &&
                             <Box sx={{ width: '100%',  p: 1, px:{xs: 5, sm: 1} }}>
                                 <SecondaryButton
                                     type='button'

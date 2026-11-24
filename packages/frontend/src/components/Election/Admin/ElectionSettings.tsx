@@ -8,9 +8,7 @@ import { useSubstitutedTranslation, SwitchSetting, SECONDARY_INDENT } from '~/co
 import useElection from '~/components/ElectionContextProvider';
 import useOptimisticToggle from "~/hooks/useOptimisticToggle";
 import { AdminPageNavigation } from '../Sidebar';
-import { useSetPublicResults } from '~/hooks/useAPI';
 import DialogTextField from '~/components/DialogTextField';
-import useAuditConfirm from './useAuditConfirm';
 import useFeatureFlags from '~/components/FeatureFlagContextProvider';
 import VoterGroupGrid from './VoterGroupGrid';
 
@@ -45,33 +43,12 @@ function ElectionSwitchSetting({ settingKey, disabled, disabledMessage, onToggle
 }
 
 export default function ElectionSettings() {
-    const { election, updateElection, enqueueWrite, refreshElection } = useElection()
+    const { election, updateElection } = useElection()
     const min_rankings = 3;
     const max_rankings = Number(process.env.REACT_APP_MAX_BALLOT_RANKS) ? Number(process.env.REACT_APP_MAX_BALLOT_RANKS) : 8;
     const default_rankings = Number(process.env.REACT_APP_DEFAULT_BALLOT_RANKS) ? Number(process.env.REACT_APP_DEFAULT_BALLOT_RANKS) : 6;
 
     const {t} = useSubstitutedTranslation(election.settings.term_type, {min_rankings, max_rankings});
-
-    const { makeRequest: makePublicResultsRequest } = useSetPublicResults(election.election_id)
-    const auditConfirm = useAuditConfirm()
-
-    const [publicResults, setPublicResults] = useOptimisticToggle(
-        election.settings.public_results ?? false,
-        async (v) => {
-            // Returning false reverts the switch to its committed value.
-            const audit = await auditConfirm(t(v ? 'audit_confirm.preliminary_on' : 'audit_confirm.preliminary_off'));
-            if (!audit) return false;
-            const res = await enqueueWrite(expected_update_date =>
-                makePublicResultsRequest({ public_results: v, expected_update_date, ...audit })
-            );
-            // updateElection updates the context as a side effect of building its
-            // request body, but this write doesn't go through it, so the context
-            // would keep the pre-write value until the next GET — leaving this page
-            // and coming back would re-mount the switch showing the old setting.
-            if (res) await refreshElection();
-            return !!res && res.election?.settings?.public_results === v;
-        }
-    );
 
     // is_public is a top-level Election column, not an entry in Election.settings, so
     // this can't use ElectionSwitchSetting (which writes into election.settings).
@@ -125,14 +102,9 @@ export default function ElectionSettings() {
 
                     <ElectionSwitchSetting settingKey="random_candidate_order" />
                     <ElectionSwitchSetting settingKey="ballot_updates" />
+                    <ElectionSwitchSetting settingKey="allow_preliminary_results" />
                     <ElectionSwitchSetting settingKey="require_instruction_confirmation" />
                     <ElectionSwitchSetting settingKey="draggable_ballot" />
-                    {/* Note: this can't use ElectionSwitchSetting because we need to use the results from makePublicResultsRequest as the source of truth */}
-                    <SwitchSetting
-                        label={election.state === 'closed' || election.state === 'archived' ? t('election_settings.public_results') : t('election_settings.preliminary_results')}
-                        toggled={publicResults}
-                        onToggle={setPublicResults}
-                    />
                     {/* Also can't use ElectionSwitchSetting — is_public lives on the
                         election, not on election.settings. */}
                     <SwitchSetting

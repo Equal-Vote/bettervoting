@@ -24,8 +24,6 @@ election_history:
   desc:
     state_initial: 'Wybory weszły w stan "{{to}}"'
     state_change: 'Stan zmienił się z "{{from}}" na "{{to}}"'
-    preliminary_on: Wyniki wstępne włączone
-    preliminary_off: Wyniki wstępne wyłączone
     ballots_milestone: 'Liczba oddanych kart do głosowania osiągnęła {{count}}'
     upload_ballots: 'Administrator wgrał {{count}} kart(y) do głosowania'
     edits_milestone: 'Liczba edycji kart do głosowania osiągnęła {{count}}'
